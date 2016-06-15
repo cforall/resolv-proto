@@ -2,7 +2,10 @@
 #include <iostream>
 #include <string>
 
-#include "ast.h"
+#include "decl.h"
+#include "expr.h"
+#include "type.h"
+#include "utility.h"
 
 /// Skips all whitespace at token; mutates parameter and returns true if any change.
 /// token must not be null.
@@ -123,7 +126,7 @@ bool parse_subexpr(char *&token, ExprList& exprs) {
 	// Check for type expression
 	int t;
 	if ( parse_int(end, t) ) {
-		exprs.emplace_back( make_ptr<VarExpr>( TypeVar{ t } ) );
+		exprs.emplace_back( ptr<Expr,VarExpr>( Type{ t } ) );
 		token = end;
 		return true;
 	}
@@ -145,7 +148,7 @@ bool parse_subexpr(char *&token, ExprList& exprs) {
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
-	exprs.emplace_back( make_ptr<FuncExpr>( std::move(name), std::move(args) ) );
+	exprs.emplace_back( ptr<Expr, FuncExpr>( std::move(name), std::move(args) ) );
 	token = end;
 	return true;
 }
