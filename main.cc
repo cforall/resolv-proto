@@ -115,6 +115,81 @@ bool parse_decl(char *line, FuncList& decls) {
 	return true;
 }
 
+/// Parses a subexpression; returns true and adds the expression to exprs if found.
+/// line must not be null.
+bool parse_subexpr(char *&token, ExprList& exprs) {
+	char *end = token;
+	
+	// Check for type expression
+	int t;
+	if ( parse_int(end, t) ) {
+		exprs.emplace_back( make_ptr<VarExpr>( TypeVar{ t } ) );
+		token = end;
+		return true;
+	}
+	
+	// Check for function call
+	std::string name;
+	if ( ! parse_name(end, name) ) return false;
+	match_whitespace(end);
+	if ( ! match_char(end, '(') ) return false;
+	
+	// Read function args
+	ExprList args;
+	match_whitespace(end);
+	while ( parse_subexpr(end, args) ) {
+		match_whitespace(end);
+	}
+	
+	// Find closing bracket
+	if ( ! match_char(end, ')') ) return false;
+	match_whitespace(end);
+	
+	exprs.emplace_back( make_ptr<FuncExpr>( std::move(name), std::move(args) ) );
+	token = end;
+	return true;
+}
+
+/// Parses an expression from line; returns true and adds the expression to 
+/// exprs if found; will fail if given a valid expr that does not consume the 
+/// whole line. line must not be null.
+bool parse_expr(char *line, ExprList& exprs) {
+	match_whitespace(line);
+	return parse_subexpr(line, exprs) && is_empty(line);
+}
+
+/// Parses input according to the format described on main.
+/// Returns true and sets decls and exprs if appropriate, prints errors otherwise
+bool parse_input( std::istream& in, FuncList& decls, ExprList& exprs ) {
+	std::string line;
+	std::string delim = "%%";
+	unsigned n = 0;
+	
+	// parse declarations
+	while ( std::getline(in, line) ) {
+		++n;
+		if ( line == delim ) break;
+		
+		bool ok = parse_decl(const_cast<char*>(line.data()), decls);
+		if ( ! ok ) {
+			std::cerr << "Invalid declaration [" << n << "]: \"" << line << "\"" << std::endl;
+			return false;
+		}
+	}
+	
+	// parse expressions
+	while ( std::getline(in, line) ) {
+		++n;
+		bool ok = parse_expr(const_cast<char*>(line.data()), exprs);
+		if ( ! ok ) {
+			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;
+			return false;
+		}
+	}
+	
+	return true;
+}
+
 /// Driver for resolver prototype;
 /// Reads in files according to the following format:
 ///
@@ -143,17 +218,11 @@ bool parse_decl(char *line, FuncList& decls) {
 /// variables. 
 int main(int argc, char **argv) {
 	FuncList decls;
-	std::string line;
-	std::string delim = "%%";
+	ExprList exprs;
 	
-	while ( std::getline(std::cin, line) ) {
-		if ( line == delim ) break;
-		
-		bool ok = parse_decl(const_cast<char*>(line.data()), decls);
-		if ( ! ok ) {
-			std::cerr << "Invalid input: \"" << line << "\"" << std::endl;
-		}
-	}
+	if ( ! parse_input( std::cin, decls, exprs ) ) return 1;
 	
 	for ( auto& decl : decls ) { std::cout << decl << std::endl; }
+	std::cout << "%%" << std::endl;
+	for ( auto& expr : exprs ) { std::cout << *expr << std::endl; }
 }
