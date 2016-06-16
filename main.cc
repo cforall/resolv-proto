@@ -72,8 +72,8 @@ bool parse_name(char *&token, std::string& ret) {
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// decls if found; will fail if given a valid decl that does not consume the 
 /// whole line. line must not be null.
-bool parse_decl(char *line, FuncList& decls) {
-	TypeList returns, params;
+bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
+	RefList<Type> returns, params;
 	std::string name;
 	std::string tag;
 	int t;
@@ -82,7 +82,8 @@ bool parse_decl(char *line, FuncList& decls) {
 	// parse return types
 	match_whitespace(line);
 	while ( parse_int(line, t) ) {
-		returns.emplace_back( t );
+		Ref<Type> ty = find_ref( types, make<ConcType>( t ) );
+		returns.emplace_back( ty );
 		match_whitespace(line);
 	}
 	
@@ -101,7 +102,8 @@ bool parse_decl(char *line, FuncList& decls) {
 	// parse parameters
 	match_whitespace(line);
 	while( parse_int(line, t) ) {
-		params.emplace_back( t );
+		Ref<Type> ty = find_ref( types, make<ConcType>( t ) );
+		params.emplace_back( ty );
 		match_whitespace(line);
 	}
 	
@@ -110,9 +112,9 @@ bool parse_decl(char *line, FuncList& decls) {
 	
 	// pass completed declaration into return list
 	if ( saw_tag ) {
-		decls.emplace_back( name, tag, params, returns );
+		decls.emplace_back( make<FuncDecl>(name, tag, params, returns) );
 	} else {
-		decls.emplace_back( name, params, returns );
+		decls.emplace_back( make<FuncDecl>(name, params, returns) );
 	}
 	
 	return true;
@@ -120,13 +122,14 @@ bool parse_decl(char *line, FuncList& decls) {
 
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
-bool parse_subexpr(char *&token, ExprList& exprs) {
+bool parse_subexpr(char *&token, List<Expr>& exprs, Set<Type>& types) {
 	char *end = token;
 	
 	// Check for type expression
 	int t;
 	if ( parse_int(end, t) ) {
-		exprs.emplace_back( ptr<Expr,VarExpr>( Type{ t } ) );
+		Ref<Type> ty = find_ref( types, make<ConcType>( t ) );
+		exprs.emplace_back( make<VarExpr>( ty ) );
 		token = end;
 		return true;
 	}
@@ -138,9 +141,9 @@ bool parse_subexpr(char *&token, ExprList& exprs) {
 	if ( ! match_char(end, '(') ) return false;
 	
 	// Read function args
-	ExprList args;
+	List<Expr> args;
 	match_whitespace(end);
-	while ( parse_subexpr(end, args) ) {
+	while ( parse_subexpr(end, args, types) ) {
 		match_whitespace(end);
 	}
 	
@@ -148,7 +151,7 @@ bool parse_subexpr(char *&token, ExprList& exprs) {
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
-	exprs.emplace_back( ptr<Expr, FuncExpr>( std::move(name), std::move(args) ) );
+	exprs.emplace_back( make<FuncExpr>( name, std::move(args) ) );
 	token = end;
 	return true;
 }
@@ -156,14 +159,15 @@ bool parse_subexpr(char *&token, ExprList& exprs) {
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr(char *line, ExprList& exprs) {
+bool parse_expr(char *line, List<Expr>& exprs, Set<Type>& types) {
 	match_whitespace(line);
-	return parse_subexpr(line, exprs) && is_empty(line);
+	return parse_subexpr(line, exprs, types) && is_empty(line);
 }
 
 /// Parses input according to the format described on main.
 /// Returns true and sets decls and exprs if appropriate, prints errors otherwise
-bool parse_input( std::istream& in, FuncList& decls, ExprList& exprs ) {
+bool parse_input( std::istream& in, List<Decl>& decls, List<Expr>& exprs, 
+                  Set<Type>& types ) {
 	std::string line;
 	std::string delim = "%%";
 	unsigned n = 0;
@@ -173,7 +177,7 @@ bool parse_input( std::istream& in, FuncList& decls, ExprList& exprs ) {
 		++n;
 		if ( line == delim ) break;
 		
-		bool ok = parse_decl(const_cast<char*>(line.data()), decls);
+		bool ok = parse_decl(const_cast<char*>(line.data()), decls, types);
 		if ( ! ok ) {
 			std::cerr << "Invalid declaration [" << n << "]: \"" << line << "\"" << std::endl;
 			return false;
@@ -183,7 +187,7 @@ bool parse_input( std::istream& in, FuncList& decls, ExprList& exprs ) {
 	// parse expressions
 	while ( std::getline(in, line) ) {
 		++n;
-		bool ok = parse_expr(const_cast<char*>(line.data()), exprs);
+		bool ok = parse_expr(const_cast<char*>(line.data()), exprs, types);
 		if ( ! ok ) {
 			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;
 			return false;
@@ -220,12 +224,13 @@ bool parse_input( std::istream& in, FuncList& decls, ExprList& exprs ) {
 /// with the leaf nodes represented by type identifiers corresponding to 
 /// variables. 
 int main(int argc, char **argv) {
-	FuncList decls;
-	ExprList exprs;
+	List<Decl> decls;
+	List<Expr> exprs;
+	Set<Type> types;
 	
-	if ( ! parse_input( std::cin, decls, exprs ) ) return 1;
+	if ( ! parse_input( std::cin, decls, exprs, types ) ) return 1;
 	
-	for ( auto& decl : decls ) { std::cout << decl << std::endl; }
+	for ( auto& decl : decls ) { std::cout << *decl << std::endl; }
 	std::cout << "%%" << std::endl;
 	for ( auto& expr : exprs ) { std::cout << *expr << std::endl; }
 }

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "type.h"
+#include "utility.h"
 
 /// A resolvable expression
 class Expr {
@@ -22,19 +23,15 @@ inline std::ostream& operator<< (std::ostream& out, const Expr& e) {
 	return out;
 }
 
-/// A pointer to an expression
-typedef std::unique_ptr<Expr> ExprPtr;
-
-/// A list of expressions
-typedef std::vector<ExprPtr> ExprList;
-
 /// A variable expression
 class VarExpr : public Expr {
-	Type ty_;  ///< Type of variable expression
+	Ref<Type> ty_;  ///< Type of variable expression
 protected:
-	virtual void write(std::ostream& out) const { out << ty_; }
+	virtual void write(std::ostream& out) const { out << *ty_; }
 public:
-	VarExpr(Type&& ty_) : ty_(std::move(ty_)) {}
+	typedef Expr Base;
+	
+	VarExpr(const Ref<Type>& ty_) : ty_(ty_) {}
 	
 	VarExpr(const VarExpr&) = default;
 	VarExpr(VarExpr&&) = default;
@@ -42,12 +39,12 @@ public:
 	VarExpr& operator= (VarExpr&&) = default;
 	virtual ~VarExpr() = default;
 	
-	Type ty() const { return ty_; }
+	Ref<Type> ty() const { return ty_; }
 };
 
 class FuncExpr : public Expr {
 	std::string name_;  ///< Name of function called
-	ExprList args_;     ///< Arguments to call
+	List<Expr> args_;   ///< Arguments to call
 protected:
 	virtual void write(std::ostream& out) const {
 		out << name_ << "(";
@@ -55,8 +52,10 @@ protected:
 		out << " )";
 	}
 public:
-	FuncExpr(std::string&& name_, ExprList&& args_)
-		: name_(std::move(name_)), args_(std::move(args_)) {}
+	typedef Expr Base;
+	
+	FuncExpr(const std::string& name_, List<Expr>&& args_)
+		: name_(name_), args_(std::move(args_)) {}
 	
 	FuncExpr(const FuncExpr&) = default;
 	FuncExpr(FuncExpr&&) = default;
@@ -65,5 +64,5 @@ public:
 	virtual ~FuncExpr() = default;
 	
 	const std::string& name() const { return name_; }
-	const ExprList& args() const { return args_; }
+	const List<Expr>& args() const { return args_; }
 };

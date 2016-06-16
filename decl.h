@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "type.h"
+#include "utility.h"
 
 /// A resolver declaration
 class Decl {
@@ -21,35 +22,34 @@ inline std::ostream& operator<< (std::ostream& out, const Decl& d) {
 	return out;
 }
 
-/// A pointer to a declaration
-typedef std::unique_ptr<Decl> DeclPtr;
-
-/// A list of declarations
-typedef std::vector<DeclPtr> DeclList;
-
 /// A function declaration
 class FuncDecl : public Decl {
-	std::string name_;  ///< Name of function
-	std::string tag_;   ///< Disambiguating tag for function
-	TypeList params_;   ///< Parameter types of function
-	TypeList returns_;  ///< Return types of function
+	std::string name_;       ///< Name of function
+	std::string tag_;        ///< Disambiguating tag for function
+	RefList<Type> params_;   ///< Parameter types of function
+	RefList<Type> returns_;  ///< Return types of function
 protected:
-	void write(std::ostream& out) const {
-		for ( auto& t : returns_ ) { out << t << " "; }
+	virtual void write(std::ostream& out) const {
+		for ( auto& t : returns_ ) { out << *t << " "; }
 		out << name_;
 		if ( ! tag_.empty() ) { out << "-" << tag_; }
-		for ( auto& t : params_ ) { out << " " << t; }
+		for ( auto& t : params_ ) { out << " " << *t; }
 	}
 public:
-	FuncDecl(const std::string& name_, const TypeList& params_, const TypeList& returns_)
+	typedef Decl Base;
+	
+	FuncDecl(const std::string& name_, const RefList<Type>& params_, 
+	         const RefList<Type>& returns_)
 		: name_(name_), tag_(), params_(params_), returns_(returns_) {}
-	FuncDecl(const std::string& name_, const std::string& tag_, const TypeList& params_, const TypeList& returns_)
+	FuncDecl(const std::string& name_, const std::string& tag_, 
+	         const RefList<Type>& params_, const RefList<Type>& returns_)
 		: name_(name_), tag_(tag_), params_(params_), returns_(returns_) {}
 	
 	FuncDecl(const FuncDecl&) = default;
 	FuncDecl(FuncDecl&&) = default;
 	FuncDecl& operator= (const FuncDecl&) = default;
 	FuncDecl& operator= (FuncDecl&&) = default;
+	virtual ~FuncDecl() = default;
 	
 	bool operator== (const FuncDecl& that) const { 
 		return name_ == that.name_ && tag_ == that.tag_;
@@ -58,9 +58,6 @@ public:
 	
 	const std::string& name() const { return name_; }
 	const std::string& tag() const { return tag_; }
-	const TypeList& params() const { return params_; }
-	const TypeList& returns() const { return returns_; }
+	const RefList<Type>& params() const { return params_; }
+	const RefList<Type>& returns() const { return returns_; }
 };
-
-/// A list of function declarations
-typedef std::vector<FuncDecl> FuncList;
