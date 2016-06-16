@@ -82,7 +82,7 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 	// parse return types
 	match_whitespace(line);
 	while ( parse_int(line, t) ) {
-		returns.push_back( find_ref( types, make<ConcType>( t ) ) );
+		returns.push_back( get_ref( types, make<ConcType>( t ) ) );
 		match_whitespace(line);
 	}
 	
@@ -101,7 +101,7 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 	// parse parameters
 	match_whitespace(line);
 	while( parse_int(line, t) ) {
-		params.push_back( find_ref( types, make<ConcType>( t ) ) );
+		params.push_back( get_ref( types, make<ConcType>( t ) ) );
 		match_whitespace(line);
 	}
 	
@@ -126,7 +126,7 @@ bool parse_subexpr(char *&token, List<Expr>& exprs, Set<Type>& types) {
 	// Check for type expression
 	int t;
 	if ( parse_int(end, t) ) {
-		Ref<Type> ty = find_ref( types, make<ConcType>( t ) );
+		Ref<Type> ty = get_ref( types, make<ConcType>( t ) );
 		exprs.push_back( make<VarExpr>( ty ) );
 		token = end;
 		return true;
