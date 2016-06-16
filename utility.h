@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstddef>
+#include <functional>
 #include <memory>
 #include <unordered_set>
 #include <utility>
@@ -18,7 +18,7 @@ using Ref = const T*;
 template<typename T>
 using Shared = std::shared_ptr<T>;
 
-/// Make an expression pointer; T must define a T::Base type
+/// Make an owned pointer; T must define a T::Base type
 template<typename T, typename... Args>
 inline Ptr<typename T::Base> make( Args&&... args ) {
 	typedef typename T::Base Base;
@@ -28,9 +28,13 @@ inline Ptr<typename T::Base> make( Args&&... args ) {
 
 using std::make_shared;
 
-/// Borrow an expression pointer
+/// Borrow an owned pointer
 template<typename T>
 inline Ref<T> ref( const Ptr<T>& p ) { return p.get(); }
+
+/// Borrow an lvalue
+template<typename T>
+inline Ref<T> ref( T& p ) { return &p; } 
 
 /// Owning list of pointers
 template<typename T>
@@ -47,15 +51,13 @@ using SharedList = std::vector< Shared<T> >;
 /// Hasher for underlying type of pointers
 template<typename T>
 struct ByValueHash {
-	std::size_t operator() (const Ptr<T>& p) const { return p->hash(); }
+	std::size_t operator() (const Ptr<T>& p) const { return std::hash<T>()(*p); }
 };
 
 /// Equality checker for underlying type of pointers
 template<typename T>
 struct ByValueEquals {
-	bool operator() (const Ptr<T>& p, const Ptr<T>& q) const {
-		return p->equals(*q);
-	}
+	bool operator() (const Ptr<T>& p, const Ptr<T>& q) const { return *p == *q; }
 };
 
 /// Owning set of pointers
