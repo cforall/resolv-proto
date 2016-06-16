@@ -72,7 +72,7 @@ bool parse_name(char *&token, std::string& ret) {
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// decls if found; will fail if given a valid decl that does not consume the 
 /// whole line. line must not be null.
-bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
+bool parse_decl(char *line, List<Decl>& decls, SortedSet<ConcType>& types) {
 	RefList<Type> returns, params;
 	std::string name;
 	std::string tag;
@@ -82,7 +82,7 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 	// parse return types
 	match_whitespace(line);
 	while ( parse_int(line, t) ) {
-		returns.push_back( get_ref( types, make<ConcType>( t ) ) );
+		returns.push_back( get_ref( types, make_ptr<ConcType>( t ) ) );
 		match_whitespace(line);
 	}
 	
@@ -101,7 +101,7 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 	// parse parameters
 	match_whitespace(line);
 	while( parse_int(line, t) ) {
-		params.push_back( get_ref( types, make<ConcType>( t ) ) );
+		params.push_back( get_ref( types, make_ptr<ConcType>( t ) ) );
 		match_whitespace(line);
 	}
 	
@@ -120,13 +120,13 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
-bool parse_subexpr(char *&token, List<Expr>& exprs, Set<Type>& types) {
+bool parse_subexpr(char *&token, List<Expr>& exprs, SortedSet<ConcType>& types) {
 	char *end = token;
 	
 	// Check for type expression
 	int t;
 	if ( parse_int(end, t) ) {
-		Ref<Type> ty = get_ref( types, make<ConcType>( t ) );
+		Ref<Type> ty = get_ref( types, make_ptr<ConcType>( t ) );
 		exprs.push_back( make<VarExpr>( ty ) );
 		token = end;
 		return true;
@@ -157,7 +157,7 @@ bool parse_subexpr(char *&token, List<Expr>& exprs, Set<Type>& types) {
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr(char *line, List<Expr>& exprs, Set<Type>& types) {
+bool parse_expr(char *line, List<Expr>& exprs, SortedSet<ConcType>& types) {
 	match_whitespace(line);
 	return parse_subexpr(line, exprs, types) && is_empty(line);
 }
@@ -165,7 +165,7 @@ bool parse_expr(char *line, List<Expr>& exprs, Set<Type>& types) {
 /// Parses input according to the format described on main.
 /// Returns true and sets decls and exprs if appropriate, prints errors otherwise
 bool parse_input( std::istream& in, List<Decl>& decls, List<Expr>& exprs, 
-                  Set<Type>& types ) {
+                  SortedSet<ConcType>& types ) {
 	std::string line;
 	std::string delim = "%%";
 	unsigned n = 0;
@@ -224,7 +224,7 @@ bool parse_input( std::istream& in, List<Decl>& decls, List<Expr>& exprs,
 int main(int argc, char **argv) {
 	List<Decl> decls;
 	List<Expr> exprs;
-	Set<Type> types;
+	SortedSet<ConcType> types;
 	
 	if ( ! parse_input( std::cin, decls, exprs, types ) ) return 1;
 	

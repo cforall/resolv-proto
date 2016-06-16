@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <set>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -18,12 +19,18 @@ using Ref = const T*;
 template<typename T>
 using Shared = std::shared_ptr<T>;
 
-/// Make an owned pointer; T must define a T::Base type
+/// Make an owned pointer to T of type T::Base
 template<typename T, typename... Args>
 inline Ptr<typename T::Base> make( Args&&... args ) {
 	typedef typename T::Base Base;
 	return Ptr<Base>{ 
 		dynamic_cast<Base*>( new T( std::forward<Args>(args)... ) ) };
+}
+
+/// Make an owned pointer to T
+template<typename T, typename... Args>
+inline Ptr<T> make_ptr( Args&&... args ) {
+	return Ptr<T>{ new T( std::forward<Args>(args)... ) };
 }
 
 using std::make_shared;
@@ -60,21 +67,44 @@ struct ByValueEquals {
 	bool operator() (const Ptr<T>& p, const Ptr<T>& q) const { return *p == *q; }
 };
 
+/// Comparator for underlying type of pointers
+template<typename T>
+struct ByValueCompare {
+	bool operator() (const Ptr<T>& p, const Ptr<T>& q) const { return *p < *q; }
+};
+
 /// Owning set of pointers
 template<typename T>
 using Set = std::unordered_set< Ptr<T>, ByValueHash<T>, ByValueEquals<T> >;
+
+/// Owning sorted set of pointers
+template<typename T>
+using SortedSet = std::set< Ptr<T>, ByValueCompare<T> >;
 
 /// Gets canonical Ref for an object from the set;
 /// If the object does not exist in the set, is inserted
 template<typename T>
 inline Ref<T> get_ref(Set<T>& s, Ptr<T>&& x) {
-	return ref( *s.emplace( std::move(x) ).first );
+	return ref( *s.insert( std::move(x) ).first );
+}
+
+/// Gets canonical Ref for an object from the set;
+/// If the object does not exist in the set, is inserted
+template<typename T>
+inline Ref<T> get_ref(SortedSet<T>& s, Ptr<T>&& x) {
+	return ref( *s.insert( std::move(x) ).first );
 }
 
 /// Gets canonical Ref for an object from the set;
 /// If the object does not exist in the set, returns nullptr
 template<typename T>
 inline Ref<T> find_ref(const Set<T>& s, Ptr<T>&& x) {
+	auto it = s.find(x);
+	return it == s.end() ? nullptr : ref( *it );
+}
+
+template<typename T>
+inline Ref<T> find_ref(const SortedSet<T>& s, Ptr<T>&& x) {
 	auto it = s.find(x);
 	return it == s.end() ? nullptr : ref( *it );
 }

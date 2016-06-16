@@ -42,6 +42,8 @@ namespace std {
 
 /// Represents a concrete type in the simplified resolver
 class ConcType : public Type {
+	friend std::hash<ConcType>;
+	
 	int id_;  ///< Numeric ID for type
 public:
 	typedef Type Base;
@@ -56,6 +58,7 @@ public:
 	
 	bool operator== (const ConcType& that) const { return id_ == that.id_; }
 	bool operator!= (const ConcType& that) const { return !(*this == that); }
+	bool operator< (const ConcType& that) const { return id_ < that.id_; }
 	
 	int id() const { return id_; }
 	
@@ -69,3 +72,11 @@ protected:
 	
 	virtual std::size_t hash() const { return std::hash<int>()(id_); }
 };
+
+namespace std {
+	template<> struct hash<ConcType> {
+		typedef ConcType argument_type;
+		typedef std::size_t result_type;
+		result_type operator() (const argument_type& t) { return t.hash(); }
+	};
+}
