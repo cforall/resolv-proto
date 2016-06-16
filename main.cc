@@ -82,8 +82,7 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 	// parse return types
 	match_whitespace(line);
 	while ( parse_int(line, t) ) {
-		Ref<Type> ty = find_ref( types, make<ConcType>( t ) );
-		returns.emplace_back( ty );
+		returns.push_back( find_ref( types, make<ConcType>( t ) ) );
 		match_whitespace(line);
 	}
 	
@@ -102,8 +101,7 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 	// parse parameters
 	match_whitespace(line);
 	while( parse_int(line, t) ) {
-		Ref<Type> ty = find_ref( types, make<ConcType>( t ) );
-		params.emplace_back( ty );
+		params.push_back( find_ref( types, make<ConcType>( t ) ) );
 		match_whitespace(line);
 	}
 	
@@ -112,9 +110,9 @@ bool parse_decl(char *line, List<Decl>& decls, Set<Type>& types) {
 	
 	// pass completed declaration into return list
 	if ( saw_tag ) {
-		decls.emplace_back( make<FuncDecl>(name, tag, params, returns) );
+		decls.push_back( make<FuncDecl>(name, tag, params, returns) );
 	} else {
-		decls.emplace_back( make<FuncDecl>(name, params, returns) );
+		decls.push_back( make<FuncDecl>(name, params, returns) );
 	}
 	
 	return true;
@@ -129,7 +127,7 @@ bool parse_subexpr(char *&token, List<Expr>& exprs, Set<Type>& types) {
 	int t;
 	if ( parse_int(end, t) ) {
 		Ref<Type> ty = find_ref( types, make<ConcType>( t ) );
-		exprs.emplace_back( make<VarExpr>( ty ) );
+		exprs.push_back( make<VarExpr>( ty ) );
 		token = end;
 		return true;
 	}
@@ -151,7 +149,7 @@ bool parse_subexpr(char *&token, List<Expr>& exprs, Set<Type>& types) {
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
-	exprs.emplace_back( make<FuncExpr>( name, std::move(args) ) );
+	exprs.push_back( make<FuncExpr>( name, std::move(args) ) );
 	token = end;
 	return true;
 }
