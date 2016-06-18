@@ -61,3 +61,24 @@ public:
 	const RefList<Type>& params() const { return params_; }
 	const RefList<Type>& returns() const { return returns_; }
 };
+
+/// A "variable" declaration
+class VarDecl : public Decl {
+	Ref<ConcType> ty_;  ///< Type of variable
+protected:
+	virtual void write(std::ostream& out) const { out << *ty_; }
+public:
+	typedef Decl Base;
+	
+	VarDecl(Ref<ConcType> ty_) : ty_(ty_) {}
+	
+	VarDecl(const VarDecl&) = default;
+	VarDecl(VarDecl&&) = default;
+	VarDecl& operator= (const VarDecl&) = default;
+	VarDecl& operator= (VarDecl&&) = default;
+	
+	bool operator== (const VarDecl& that) const { return ty_ == that.ty_; }
+	bool operator!= (const VarDecl& that) const { return !(*this == that); }
+	
+	Ref<ConcType> ty() const { return ty_; }
+};

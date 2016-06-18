@@ -39,21 +39,29 @@ using std::make_shared;
 template<typename T>
 inline Ref<T> ref( const Ptr<T>& p ) { return p.get(); }
 
+/// Borrow a shared pointer
+template<typename T>
+inline Ref<T> ref( const Shared<T>& p ) { return p.get(); }
+
 /// Borrow an lvalue
 template<typename T>
-inline Ref<T> ref( T& p ) { return &p; } 
+inline Ref<T> ref( T& p ) { return &p; }
+
+/// Underlying list type
+template<typename T>
+using RawList = std::vector<T>;
 
 /// Owning list of pointers
 template<typename T>
-using List = std::vector< Ptr<T> >;
+using List = RawList< Ptr<T> >;
 
 /// List of borrowed pointers
 template<typename T>
-using RefList = std::vector< Ref<T> >;
+using RefList = RawList< Ref<T> >;
 
 /// List of shared pointers
 template<typename T>
-using SharedList = std::vector< Shared<T> >;
+using SharedList = RawList< Shared<T> >;
 
 /// Hasher for underlying type of pointers
 template<typename T>
@@ -73,13 +81,29 @@ struct ByValueCompare {
 	bool operator() (const Ptr<T>& p, const Ptr<T>& q) const { return *p < *q; }
 };
 
+/// Underlying set type
+template<typename T, typename Hash = std::hash<T>, typename KeyEqual = std::equal_to<T> >
+using RawSet = std::unordered_set< T, Hash, KeyEqual >;
+
+/// Underlying sorted set type
+template<typename T, typename KeyCompare = std::less<T> >
+using RawSortedSet = std::set< T, KeyCompare >;
+
+/// Common base for by-pointer sets
+template<typename T, template<typename> typename P>
+using ByPtrSet = RawSet< P<T>, ByValueHash<T>, ByValueEquals<T> >;
+
+/// Common base for by-pointer sorted sets
+template<typename T, template<typename> typename P>
+using ByPtrSortedSet = RawSortedSet< P<T>, ByValueCompare<T> >;
+
 /// Owning set of pointers
 template<typename T>
-using Set = std::unordered_set< Ptr<T>, ByValueHash<T>, ByValueEquals<T> >;
+using Set = ByPtrSet< T, Ptr >;
 
 /// Owning sorted set of pointers
 template<typename T>
-using SortedSet = std::set< Ptr<T>, ByValueCompare<T> >;
+using SortedSet = ByPtrSortedSet< T, Ptr >;
 
 /// Gets canonical Ref for an object from the set;
 /// If the object does not exist in the set, is inserted
