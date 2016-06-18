@@ -6,7 +6,7 @@
 
 /// Typed interpretation of an expression
 struct Interpretation {
-	Ref<Decl> decl;                   /// Base declaration for interpretation
-	Cost cost;                        /// Cost of interpretation
-	SharedList<Interpretation> subs;  /// Subexpression interpretations
+	Ref<Decl> decl;                       /// Base declaration for interpretation
+	Cost cost;                            /// Cost of interpretation
+	List<Interpretation, ByShared> subs;  /// Subexpression interpretations
 };

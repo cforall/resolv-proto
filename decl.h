@@ -24,10 +24,10 @@ inline std::ostream& operator<< (std::ostream& out, const Decl& d) {
 
 /// A function declaration
 class FuncDecl : public Decl {
-	std::string name_;       ///< Name of function
-	std::string tag_;        ///< Disambiguating tag for function
-	RefList<Type> params_;   ///< Parameter types of function
-	RefList<Type> returns_;  ///< Return types of function
+	std::string name_;           ///< Name of function
+	std::string tag_;            ///< Disambiguating tag for function
+	List<Type, ByRef> params_;   ///< Parameter types of function
+	List<Type, ByRef> returns_;  ///< Return types of function
 protected:
 	virtual void write(std::ostream& out) const {
 		for ( auto& t : returns_ ) { out << *t << " "; }
@@ -38,11 +38,11 @@ protected:
 public:
 	typedef Decl Base;
 	
-	FuncDecl(const std::string& name_, const RefList<Type>& params_, 
-	         const RefList<Type>& returns_)
+	FuncDecl(const std::string& name_, const List<Type, ByRef>& params_, 
+	         const List<Type, ByRef>& returns_)
 		: name_(name_), tag_(), params_(params_), returns_(returns_) {}
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const RefList<Type>& params_, const RefList<Type>& returns_)
+	         const List<Type, ByRef>& params_, const List<Type, ByRef>& returns_)
 		: name_(name_), tag_(tag_), params_(params_), returns_(returns_) {}
 	
 	FuncDecl(const FuncDecl&) = default;
@@ -58,8 +58,8 @@ public:
 	
 	const std::string& name() const { return name_; }
 	const std::string& tag() const { return tag_; }
-	const RefList<Type>& params() const { return params_; }
-	const RefList<Type>& returns() const { return returns_; }
+	const List<Type, ByRef>& params() const { return params_; }
+	const List<Type, ByRef>& returns() const { return returns_; }
 };
 
 /// A "variable" declaration

@@ -71,10 +71,10 @@ bool parse_name(char *&token, std::string& ret) {
 }
 
 /// Parses a declaration from line; returns true and adds the declaration to 
-/// decls if found; will fail if given a valid decl that does not consume the 
+/// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
-bool parse_decl(char *line, List<Decl>& decls, SortedSet<ConcType>& types) {
-	RefList<Type> returns, params;
+bool parse_decl(char *line, List<Decl>& funcs, SortedSet<ConcType>& types) {
+	List<Type, ByRef> returns, params;
 	std::string name;
 	std::string tag;
 	int t;
@@ -111,9 +111,9 @@ bool parse_decl(char *line, List<Decl>& decls, SortedSet<ConcType>& types) {
 	
 	// pass completed declaration into return list
 	if ( saw_tag ) {
-		decls.push_back( make<FuncDecl>(name, tag, params, returns) );
+		funcs.push_back( make<FuncDecl>(name, tag, params, returns) );
 	} else {
-		decls.push_back( make<FuncDecl>(name, params, returns) );
+		funcs.push_back( make<FuncDecl>(name, params, returns) );
 	}
 	
 	return true;
@@ -121,7 +121,7 @@ bool parse_decl(char *line, List<Decl>& decls, SortedSet<ConcType>& types) {
 
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
-bool parse_subexpr(char *&token, List<Expr>& exprs, SortedSet<ConcType>& types) {
+bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types ) {
 	char *end = token;
 	
 	// Check for type expression
@@ -158,14 +158,14 @@ bool parse_subexpr(char *&token, List<Expr>& exprs, SortedSet<ConcType>& types) 
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr(char *line, List<Expr>& exprs, SortedSet<ConcType>& types) {
+bool parse_expr( char *line, List<Expr>& exprs, SortedSet<ConcType>& types ) {
 	match_whitespace(line);
 	return parse_subexpr(line, exprs, types) && is_empty(line);
 }
 
 /// Parses input according to the format described on main.
-/// Returns true and sets decls and exprs if appropriate, prints errors otherwise
-bool parse_input( std::istream& in, List<Decl>& decls, List<Expr>& exprs, 
+/// Returns true and sets funcs and exprs if appropriate, prints errors otherwise
+bool parse_input( std::istream& in, List<Decl>& funcs, List<Expr>& exprs, 
                   SortedSet<ConcType>& types ) {
 	std::string line;
 	std::string delim = "%%";
@@ -176,7 +176,7 @@ bool parse_input( std::istream& in, List<Decl>& decls, List<Expr>& exprs,
 		++n;
 		if ( line == delim ) break;
 		
-		bool ok = parse_decl(const_cast<char*>(line.data()), decls, types);
+		bool ok = parse_decl(const_cast<char*>(line.data()), funcs, types);
 		if ( ! ok ) {
 			std::cerr << "Invalid declaration [" << n << "]: \"" << line << "\"" << std::endl;
 			return false;
@@ -223,14 +223,15 @@ bool parse_input( std::istream& in, List<Decl>& decls, List<Expr>& exprs,
 /// with the leaf nodes represented by type identifiers corresponding to 
 /// variables. 
 int main(int argc, char **argv) {
-	List<Decl> decls;
+	List<Decl> funcs;
+	List<VarDecl, Raw> vars;
 	List<Expr> exprs;
 	SortedSet<ConcType> types;
 	
-	if ( ! parse_input( std::cin, decls, exprs, types ) ) return 1;
+	if ( ! parse_input( std::cin, funcs, exprs, types ) ) return 1;
 	
 	std::cout << std::endl;
-	for ( auto& decl : decls ) { std::cout << *decl << std::endl; }
+	for ( auto& func : funcs ) { std::cout << *func << std::endl; }
 	std::cout << "%%" << std::endl;
 	for ( auto& expr : exprs ) { std::cout << *expr << std::endl; }
 	

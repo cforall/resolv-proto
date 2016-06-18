@@ -47,63 +47,74 @@ inline Ref<T> ref( const Shared<T>& p ) { return p.get(); }
 template<typename T>
 inline Ref<T> ref( T& p ) { return &p; }
 
-/// Underlying list type
-template<typename T>
-using RawList = std::vector<T>;
-
-/// Owning list of pointers
-template<typename T>
-using List = RawList< Ptr<T> >;
-
-/// List of borrowed pointers
-template<typename T>
-using RefList = RawList< Ref<T> >;
-
-/// List of shared pointers
-template<typename T>
-using SharedList = RawList< Shared<T> >;
-
 /// Hasher for underlying type of pointers
-template<typename T>
+template<typename T, template<typename> typename P>
 struct ByValueHash {
-	std::size_t operator() (const Ptr<T>& p) const { return std::hash<T>()(*p); }
+	std::size_t operator() (const P<T>& p) const { return std::hash<T>()(*p); }
 };
 
 /// Equality checker for underlying type of pointers
-template<typename T>
+template<typename T, template<typename> typename P>
 struct ByValueEquals {
-	bool operator() (const Ptr<T>& p, const Ptr<T>& q) const { return *p == *q; }
+	bool operator() (const P<T>& p, const P<T>& q) const { return *p == *q; }
 };
 
 /// Comparator for underlying type of pointers
-template<typename T>
+template<typename T, template<typename> typename P>
 struct ByValueCompare {
-	bool operator() (const Ptr<T>& p, const Ptr<T>& q) const { return *p < *q; }
+	bool operator() (const P<T>& p, const P<T>& q) const { return *p < *q; }
 };
 
-/// Underlying set type
-template<typename T, typename Hash = std::hash<T>, typename KeyEqual = std::equal_to<T> >
-using RawSet = std::unordered_set< T, Hash, KeyEqual >;
-
-/// Underlying sorted set type
-template<typename T, typename KeyCompare = std::less<T> >
-using RawSortedSet = std::set< T, KeyCompare >;
-
-/// Common base for by-pointer sets
-template<typename T, template<typename> typename P>
-using ByPtrSet = RawSet< P<T>, ByValueHash<T>, ByValueEquals<T> >;
-
-/// Common base for by-pointer sorted sets
-template<typename T, template<typename> typename P>
-using ByPtrSortedSet = RawSortedSet< P<T>, ByValueCompare<T> >;
-
-/// Owning set of pointers
+/// Traits class for owned pointer
 template<typename T>
-using Set = ByPtrSet< T, Ptr >;
+struct ByPtr {
+	typedef Ptr<T> Element;
+	typedef ByValueHash<T, Ptr> Hash;
+	typedef ByValueEquals<T, Ptr> Equals;
+	typedef ByValueCompare<T, Ptr> Compare;
+};
 
-/// Owning sorted set of pointers
+/// Traits class for borrowed pointer
 template<typename T>
-using SortedSet = ByPtrSortedSet< T, Ptr >;
+struct ByRef {
+	typedef Ref<T> Element;
+	typedef ByValueHash<T, Ref> Hash;
+	typedef ByValueEquals<T, Ref> Equals;
+	typedef ByValueCompare<T, Ref> Compare;
+};
+
+/// Traits class for owned pointer
+template<typename T>
+struct ByShared {
+	typedef Shared<T> Element;
+	typedef ByValueHash<T, Shared> Hash;
+	typedef ByValueEquals<T, Shared> Equals;
+	typedef ByValueCompare<T, Shared> Compare;
+};
+
+/// Traits class for raw value
+template<typename T>
+struct Raw {
+	typedef T Element;
+	typedef std::hash<T> Hash;
+	typedef std::equal_to<T> Equals;
+	typedef std::less<T> Compare;
+};
+
+/// List type
+template<typename T, template<typename> typename Storage = ByPtr>
+using List = std::vector<typename Storage<T>::Element>;
+
+/// Set type
+template<typename T, template<typename> typename Storage = ByPtr>
+using Set = std::unordered_set<typename Storage<T>::Element,
+                               typename Storage<T>::Hash,
+							   typename Storage<T>::Equals>;
+
+/// Sorted set type
+template<typename T, template<typename> typename Storage = ByPtr>
+using SortedSet = std::set<typename Storage<T>::Element,
+                           typename Storage<T>::Compare>;
 
 /// Gets canonical Ref for an object from the set;
 /// If the object does not exist in the set, is inserted
@@ -127,6 +138,8 @@ inline Ref<T> find_ref(const Set<T>& s, Ptr<T>&& x) {
 	return it == s.end() ? nullptr : ref( *it );
 }
 
+/// Gets canonical Ref for an object from the set;
+/// If the object does not exist in the set, returns nullptr
 template<typename T>
 inline Ref<T> find_ref(const SortedSet<T>& s, Ptr<T>&& x) {
 	auto it = s.find(x);
