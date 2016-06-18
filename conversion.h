@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <unordered_map>
 #include <vector>
 
@@ -9,6 +10,7 @@
 
 /// Graph of conversions
 class ConversionGraph {
+	friend std::ostream& operator<< (std::ostream&, const ConversionGraph&);
 public:
 	struct ConversionNode;
 	
@@ -51,9 +53,9 @@ private:
 	/// Returns the node for ty, creating one if none exists
 	ConversionNode& try_insert( Ref<Type> ty ) {
 		auto it = nodes.find( ty );
-		return it == nodes.end() ?
-			*nodes.emplace_hint( it, ty, ConversionNode{ ty } ) :
-			*it;
+		return ( it == nodes.end() ?
+			nodes.emplace_hint( it, ty, ConversionNode{ ty } ) :
+			it )->second;
 	}
 public:
 	/// Returns a list of all the conversions for ty
@@ -67,7 +69,7 @@ public:
 		ConversionNode& fromNode = try_insert( from );
 		ConversionNode& toNode = try_insert( to );
 		
-		fromNode.conversions.emplace_back( toNode, cost );
+		fromNode.conversions.emplace_back( ref(toNode), cost );
 	}
 };
 

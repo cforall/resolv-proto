@@ -1,7 +1,20 @@
+#include <ostream>
+
 #include "conversion.h"
 #include "utility.h"
 
-ConversionGraph::ConversionList ConversionGraph::no_conversions = {};
+const ConversionGraph::ConversionList ConversionGraph::no_conversions = {};
+
+std::ostream& operator<< ( std::ostream& out, const ConversionGraph& g ) {
+	for ( auto& u : g.nodes ) {
+		out << *u.first << std::endl;
+		for ( auto& v : u.second.conversions ) {
+			out << " => " << *(v.to->type) << " " << v.cost << std::endl; 
+		}
+	}
+	
+	return out;
+}
 
 ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
 	ConversionGraph g;
@@ -14,7 +27,7 @@ ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
 		while ( to != types.end() ) {
 			Ref<ConcType> f = ref( *from );
 			Ref<ConcType> t = ref( *to );
-			g.insert( f, t, Cost{ 0, t->id() - f->id() } );
+			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
 			
 			++to;
 		}
@@ -27,7 +40,7 @@ ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
 			
 			Ref<ConcType> f = ref( *from );
 			Ref<ConcType> t = ref( *to );
-			g.insert( f, t, Cost{ f->id() - t->id(), 0 } );
+			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
 		} while ( to != types.begin() );
 	}
 	

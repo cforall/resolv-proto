@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 
+#include "conversion.h"
 #include "decl.h"
 #include "expr.h"
 #include "type.h"
@@ -228,7 +229,12 @@ int main(int argc, char **argv) {
 	
 	if ( ! parse_input( std::cin, decls, exprs, types ) ) return 1;
 	
+	std::cout << std::endl;
 	for ( auto& decl : decls ) { std::cout << *decl << std::endl; }
 	std::cout << "%%" << std::endl;
 	for ( auto& expr : exprs ) { std::cout << *expr << std::endl; }
+	
+	ConversionGraph conversions = make_conversions( types );
+	
+	std::cout << std::endl << conversions;
 }
