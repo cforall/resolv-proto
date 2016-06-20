@@ -23,7 +23,7 @@ inline std::ostream& operator<< (std::ostream& out, const Decl& d) {
 }
 
 /// A function declaration
-class FuncDecl : public Decl {
+class FuncDecl final : public Decl {
 	std::string name_;           ///< Name of function
 	std::string tag_;            ///< Disambiguating tag for function
 	List<Type, ByRef> params_;   ///< Parameter types of function
@@ -49,7 +49,7 @@ public:
 	FuncDecl(FuncDecl&&) = default;
 	FuncDecl& operator= (const FuncDecl&) = default;
 	FuncDecl& operator= (FuncDecl&&) = default;
-	virtual ~FuncDecl() = default;
+	~FuncDecl() = default;
 	
 	bool operator== (const FuncDecl& that) const { 
 		return name_ == that.name_ && tag_ == that.tag_;
@@ -63,7 +63,7 @@ public:
 };
 
 /// A "variable" declaration
-class VarDecl : public Decl {
+class VarDecl final : public Decl {
 	Ref<ConcType> ty_;  ///< Type of variable
 protected:
 	virtual void write(std::ostream& out) const { out << *ty_; }
@@ -76,6 +76,7 @@ public:
 	VarDecl(VarDecl&&) = default;
 	VarDecl& operator= (const VarDecl&) = default;
 	VarDecl& operator= (VarDecl&&) = default;
+	~VarDecl() = default;
 	
 	bool operator== (const VarDecl& that) const { return ty_ == that.ty_; }
 	bool operator!= (const VarDecl& that) const { return !(*this == that); }
