@@ -7,165 +7,162 @@
 
 /// An iterator for a map with collection-type values that iterates over the 
 /// collections contained in the map entries
-/// @param Iter the outer iterator type
-template<typename Iter>
+/// @param Underlying the underlying map type
+template<typename Underlying>
 class FlatMapIter : public std::iterator<
-		std::input_iterator_tag,
-		typename Iter::value_type::second_type::value_type
-		typename Iter::value_type::second_type::difference_type
-		typename Iter::value_type::second_type::pointer
-		typename Iter::value_type::second_type::reference > {
-friend class ConstFlatMapIter;
+		std::forward_iterator_tag,
+		typename Underlying::value_type::second_type::value_type,
+		typename Underlying::value_type::second_type::difference_type,
+		typename Underlying::value_type::second_type::pointer,
+		typename Underlying::value_type::second_type::reference > {
+template<typename U> friend class ConstFlatMapIter;
 public:
-	typedef typename Iter::value_type::second_type InnerColl;
+	typedef typename Underlying::value_type::second_type InnerColl;
+	typedef typename Underlying::iterator Iter;
 	typedef typename InnerColl::iterator Inner;
 	typedef typename InnerColl::reference reference;
 	typedef typename InnerColl::pointer pointer;
 
 private:
-	Iter i;
-	Inner j;
-	bool j_set;
+	Iter i;   ///< Current iterator for outer range
+	Iter e;   ///< End iterator for outer range
+	Inner j;  ///< Inner iterator (not set if i == e)
 	
-	/// Gets j, initializing it to i->begin() if needed
-	Inner& get_j() {
-		if ( ! j_set ) {
-			j = i->begin();
-			j_set = true;
+	void init_j() {
+		while ( i != e ) {
+			if ( ! i->second.empty() ) {
+				j = i->second.begin();
+				break;
+			}
+			++i;
 		}
-		return j;
 	}
 	
-	/// Clears j
-	void clear_j() { j_set = false; }
-	
 public:
-	/// Constructs a new iterator wrapping i (which may not be dereferencable)
-	FlatMapIter( const Iter& i ) 
-		: i(i), j_set(false) { /* j deliberately uninitialized */ }
+	FlatMapIter() = default;
 	
-	/// Constructs a new iterator wrapping (i, j)
-	FlatMapIter( const Iter& i, const Inner& j )
-		: i(i), j(j), j_set(true) {}
+	/// Constructs a new end iterator
+	FlatMapIter( const Iter& e ) : i(e), e(e), j() {}
 	
-	FlatMapIter( const FlatMapIter<Iter>& o )
-		: i(o.i), j_set(o.j_set) { if ( j_set ) j = o.j; }
-	FlatMapIter<Iter>& operator= ( const FlatMapIter<Iter>& o ) {
-		i = o.i;
-		j_set = o.j_set;
-		if ( j_set ) j = o.j;
+	/// Constructs a new iterator wrapping [i, e)
+	FlatMapIter( const Iter& i, const Iter& e ) : i(i), e(e) { init_j(); }
+	
+	/// Constructs a new iterator wrapping [i.j, e)
+	FlatMapIter( const Iter& i, const Iter& e, const Inner& j ) : i(i), e(e), j(j) {}
+	
+	FlatMapIter( const FlatMapIter<Underlying>& ) = default;
+	FlatMapIter<Underlying>& operator= ( const FlatMapIter<Underlying>& ) = default;
+	 
+	reference operator* () { return *j; }
+	pointer operator-> () { return j.operator->(); }
+	
+	FlatMapIter<Underlying>& operator++ () {
+		if ( ++j == i->second.end() ) {
+			++i;
+			init_j();
+		}
 		
 		return *this;
 	}
-	 
-	reference operator* () { return *get_j(); }
-	pointer operator-> () { return get_j().operator->(); }
-	
-	FlatMapIter<Iter>& operator++ () {
-		if ( get_j() != i->end() ) {
-			++j;
-		} else {
-			++i;
-			clear_j();
-		}
-		return *this;
-	}
-	FlatMapIter<Iter> operator++(int) {
-		FlatMapIter<Iter> tmp = *this; ++(*this); return tmp;
+	FlatMapIter<Underlying> operator++(int) {
+		FlatMapIter<Underlying> tmp = *this; ++(*this); return tmp;
 	}
 	
-	bool operator== ( const FlatMapIter<Iter>& o ) const {
-		// i's need to match, j's need to be either both unset, or match
-		return i == o.i 
-			&& ( j_set ? (o.j_set && j == o.j) : ! o.j_set );
+	bool operator== ( const FlatMapIter<Underlying>& o ) const {
+		// i's need to match, j's need to match if not at end of range
+		return i == o.i && ( i == e || j == o.j );
 	}
-	bool operator!= ( const FlatMapIter<Iter>& o ) const { return !(*this == o); }
+	bool operator!= ( const FlatMapIter<Underlying>& o ) const {
+		return !(*this == o);
+	}
 };
 
 /// An const iterator for a map with collection-type values that iterates over 
 /// the collections contained in the map entries
-/// @param Iter the outer iterator type
-template<typename Iter>
+/// @param Underlying the underlying map type
+template<typename Underlying>
 class ConstFlatMapIter : public std::iterator<
-		std::input_iterator_tag,
-		typename Iter::value_type::second_type::value_type
-		typename Iter::value_type::second_type::difference_type
-		typename Iter::value_type::second_type::const_pointer
-		typename Iter::value_type::second_type::const_reference > {
+		std::forward_iterator_tag,
+		typename Underlying::value_type::second_type::value_type,
+		typename Underlying::value_type::second_type::difference_type,
+		typename Underlying::value_type::second_type::const_pointer,
+		typename Underlying::value_type::second_type::const_reference > {
 public:
-	typedef typename Iter::value_type::second_type InnerColl;
+	typedef typename Underlying::value_type::second_type InnerColl;
+	typedef typename Underlying::const_iterator Iter;
 	typedef typename InnerColl::const_iterator Inner;
 	typedef typename InnerColl::const_reference reference;
 	typedef typename InnerColl::const_pointer pointer;
 
 private:
-	Iter i;
-	Inner j;
-	bool j_set;
+	Iter i;   ///< Current iterator for outer range
+	Iter e;   ///< End iterator for outer range
+	Inner j;  ///< Inner iterator (not set if i == e)
 	
-	/// Gets j, initializing it to i->begin() if needed
-	Inner& get_j() {
-		if ( ! j_set ) {
-			j = i->cbegin();
-			j_set = true;
+	void init_j() {
+		while ( i != e ) {
+			if ( ! i->second.empty() ) {
+				j = i->second.begin();
+				break;
+			}
+			++i;
 		}
-		return j;
 	}
-	
-	/// Clears j
-	void clear_j() { j_set = false; }
 	
 public:
-	/// Constructs a new iterator wrapping i (which may not be dereferencable)
-	ConstFlatMapIter( const Iter& i ) 
-		: i(i), j_set(false) { /* j deliberately uninitialized */ }
+	ConstFlatMapIter() = default;
 	
-	/// Constructs a new iterator wrapping (i, j)
-	ConstFlatMapIter( const Iter& i, const Inner& j )
-		: i(i), j(j), j_set(true) {}
+	/// Constructs a new end iterator
+	ConstFlatMapIter( const Iter& e ) : i(e), e(e), j() {}
 	
-	ConstFlatMapIter( const ConstFlatMapIter<Iter>& o )
-		: i(o.i), j_set(o.j_set) { if ( j_set ) j = o.j; }
-	ConstFlatMapIter<Iter>& operator= ( const ConstFlatMapIter<Iter>& o ) {
+	/// Constructs a new iterator wrapping [i, e)
+	ConstFlatMapIter( const Iter& i, const Iter& e ) : i(i), e(e) { init_j(); }
+	
+	/// Constructs a new iterator wrapping [i.j, e)
+	ConstFlatMapIter( const Iter& i, const Iter& e, const Inner& j )
+		: i(i), e(e), j(j) {}
+	
+	ConstFlatMapIter( const ConstFlatMapIter<Underlying>& ) = default;
+	ConstFlatMapIter<Underlying>& operator= ( const ConstFlatMapIter<Underlying>& ) 
+		 = default;
+	ConstFlatMapIter( const FlatMapIter<Underlying>& o )
+		: i(o.i), e(o.e), j(o.j) {}
+	ConstFlatMapIter<Underlying>& operator= ( const FlatMapIter<Underlying>& o ) {
 		i = o.i;
-		j_set = o.j_set;
-		if ( j_set ) j = o.j;
+		e = o.e;
+		j = o.j;
 		
 		return *this;
 	}
-	ConstFlatMapIter( const FlatMapIter<Iter>& o )
-		: i(o.i), j_set(o.j_set) { if ( j_set ) j = o.j; }
-	ConstFlatMapIter<Iter>& operator= ( const FlatMapIter<Iter>& o ) {
-		i = o.i;
-		j_set = o.j_set;
-		if ( j_set ) j = o.j;
-		
-		return *this;
-	}
 	
-	reference operator* () { return *get_j(); }
-	pointer operator-> () { return get_j().operator->(); }
+	reference operator* () { return *j; }
+	pointer operator-> () { return j.operator->(); }
 	
-	ConstFlatMapIter<Iter>& operator++ () {
-		if ( get_j() != i->cend() ) {
-			++j;
-		} else {
+	ConstFlatMapIter<Underlying>& operator++ () {
+		if ( ++j == i->second.end() ) {
 			++i;
-			clear_j();
+			init_j();
 		}
+		
 		return *this;
 	}
-	ConstFlatMapIter<Iter> operator++(int) {
-		ConstFlatMapIter<Iter> tmp = *this; ++(*this); return tmp;
+	ConstFlatMapIter<Underlying> operator++(int) {
+		ConstFlatMapIter<Underlying> tmp = *this; ++(*this); return tmp;
 	}
 	
-	bool operator== ( const ConstFlatMapIter<Iter>& o ) const {
-		// i's need to match, j's need to be either both unset, or match
-		return i == o.i 
-			&& ( j_set ? (o.j_set && j == o.j) : ! o.j_set );
+	bool operator== ( const ConstFlatMapIter<Underlying>& o ) const {
+		// i's need to match, j's need to match if not at end of range
+		return i == o.i && ( i == e || j == o.j );
 	}
-	bool operator!= ( const ConstFlatMapIter<Iter>& o ) const { return !(*this == o); }
+	bool operator!= ( const ConstFlatMapIter<Underlying>& o ) const {
+		return !(*this == o);
+	}
 };
+
+/// Wrapper around std::unordered_map declaration with the proper number of template 
+/// parameters for use with FlatMap
+template<typename K, typename V>
+using std_unordered_map = std::unordered_map<K, V>;
 
 /// A map holding a collection that iterates and inserts directly into the 
 /// contained collection.
@@ -175,7 +172,7 @@ public:
 ///                 inner collection
 /// @param Map      the underlying map type [default std::unordered_map]
 template<typename Key, typename Inner, typename Extract, 
-         template<typename, typename> typename Map = std::unordered_map>
+         template<typename, typename> class Map = std_unordered_map>
 class FlatMap {
 public:
 	typedef Map<Key, Inner> Underlying;
@@ -187,8 +184,8 @@ public:
 	typedef typename Inner::const_reference const_reference;
 	typedef typename Inner::pointer pointer;
 	typedef typename Inner::const_pointer const_pointer;
-	typedef FlatMapIter<typename Underlying::iterator> iterator;
-	typedef ConstFlatMapIter<typename Underlying::const_iterator> const_iterator;
+	typedef FlatMapIter<Underlying> iterator;
+	typedef ConstFlatMapIter<Underlying> const_iterator;
 
 private:
 	Underlying m;  ///< Underlying map
@@ -204,12 +201,12 @@ private:
 	}
 	
 public:
-	iterator begin() { return m.begin(); }
-	const_iterator begin() const { return m.begin(); }
-	const_iterator cbegin() const { return m.cbegin(); }
-	iterator end() { return m.end(); }
-	const_iterator end() const { return m.end(); }
-	const_iterator cend() const { return m.cend(); }
+	iterator begin() { return iterator{ m.begin(), m.end() }; }
+	const_iterator begin() const { return const_iterator{ m.begin(), m.end() }; }
+	const_iterator cbegin() const { return const_iterator{ m.cbegin(), m.cend() }; }
+	iterator end() { return iterator{ m.end() }; }
+	const_iterator end() const { return const_iterator{ m.end() }; }
+	const_iterator cend() const { return const_iterator{ m.cend() }; }
 	
 	bool empty() const { return n == 0; }
 	size_type size() const { return n; }
@@ -219,36 +216,49 @@ public:
 	iterator insert( const value_type& v ) {
 		const Key& k = Extract()( v );
 		auto i = find_or_create( k );
-		auto j = i->insert( i->end(), v );
+		auto j = i->second.insert( i->second.end(), v );
 		++n;
 		
-		return iterator{i, j};
+		return iterator{ i, m.end(), j };
 	}
 	iterator insert( value_type&& v ) {
 		const Key& k = Extract()( v );
 		auto i = find_or_create( k );
-		auto j = i->insert( i->end(), std::move(v) );
+		auto j = i->second.insert( i->second.end(), std::move(v) );
 		++n;
 		
-		return iterator{i, j};
+		return iterator{ i, m.end(), j };
 	}
 	iterator insert( const const_iterator&, const value_type& v ) { 
 		return insert(v);
 	}
-	iterator insert( const const_iterator&, value_type&& ) {
+	iterator insert( const const_iterator&, value_type&& v ) {
 		return insert( std::move(v) );
 	}
 	
-	iterator find( const Key& k ) { return m.find( k ); }
-	const_iterator find( const Key& k ) const { return m.find( k ); }
+	iterator find( const Key& k ) {
+		auto i = m.find( k );
+		return i == m.end() || i->second.empty() ?
+			iterator{ m.end() } : iterator{ i, m.end() };
+	}
+	const_iterator find( const Key& k ) const {
+		auto i = m.find( k );
+		return i == m.end() || i->second.empty() ?
+			const_iterator{ m.end() } : const_iterator{ i, m.end() };
+	}
 	size_type count( const Key& k ) const {
 		auto i = m.find( k );
-		return i == m.end() ? 0 : i->size();
+		return i == m.end() ? 0 : i->second.size();
 	}
 	
 	Inner& operator[] ( const Key& k ) { return *find_or_create( k ); }
 };
 
+/// Wrapper around std::map declaration with the proper number of template 
+/// parameters for use with FlatMap
+template<typename K, typename V>
+using std_map = std::map<K, V>;
+
 /// Wrapper for flat map using a sorted map
 template<typename Key, typename Inner, typename Extract>
-using SortedFlatMap = FlatMap<Key, Inner, Extract, std::map>;
+using SortedFlatMap = FlatMap<Key, Inner, Extract, std_map>;

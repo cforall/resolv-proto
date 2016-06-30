@@ -5,6 +5,7 @@
 #include "conversion.h"
 #include "decl.h"
 #include "expr.h"
+#include "func_table.h"
 #include "type.h"
 #include "utility.h"
 
@@ -73,7 +74,7 @@ bool parse_name(char *&token, std::string& ret) {
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
-bool parse_decl(char *line, List<Decl>& funcs, SortedSet<ConcType>& types) {
+bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
 	List<Type, ByRef> returns, params;
 	std::string name;
 	std::string tag;
@@ -111,9 +112,9 @@ bool parse_decl(char *line, List<Decl>& funcs, SortedSet<ConcType>& types) {
 	
 	// pass completed declaration into return list
 	if ( saw_tag ) {
-		funcs.push_back( make<FuncDecl>(name, tag, params, returns) );
+		funcs.insert( FuncDecl{name, tag, params, returns} );
 	} else {
-		funcs.push_back( make<FuncDecl>(name, params, returns) );
+		funcs.insert( FuncDecl{name, params, returns} );
 	}
 	
 	return true;
@@ -165,7 +166,7 @@ bool parse_expr( char *line, List<Expr>& exprs, SortedSet<ConcType>& types ) {
 
 /// Parses input according to the format described on main.
 /// Returns true and sets funcs and exprs if appropriate, prints errors otherwise
-bool parse_input( std::istream& in, List<Decl>& funcs, List<Expr>& exprs, 
+bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
                   SortedSet<ConcType>& types ) {
 	std::string line;
 	std::string delim = "%%";
@@ -223,7 +224,7 @@ bool parse_input( std::istream& in, List<Decl>& funcs, List<Expr>& exprs,
 /// with the leaf nodes represented by type identifiers corresponding to 
 /// variables. 
 int main(int argc, char **argv) {
-	List<Decl> funcs;
+	FuncTable funcs;
 	List<VarDecl, Raw> vars;
 	List<Expr> exprs;
 	SortedSet<ConcType> types;
@@ -231,7 +232,7 @@ int main(int argc, char **argv) {
 	if ( ! parse_input( std::cin, funcs, exprs, types ) ) return 1;
 	
 	std::cout << std::endl;
-	for ( auto& func : funcs ) { std::cout << *func << std::endl; }
+	for ( auto& func : funcs ) { std::cout << func << std::endl; }
 	std::cout << "%%" << std::endl;
 	for ( auto& expr : exprs ) { std::cout << *expr << std::endl; }
 	
