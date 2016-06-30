@@ -49,19 +49,19 @@ template<typename T>
 inline Ref<T> ref( T& p ) { return &p; }
 
 /// Hasher for underlying type of pointers
-template<typename T, template<typename> typename P>
+template<typename T, template<typename> class P>
 struct ByValueHash {
 	std::size_t operator() (const P<T>& p) const { return std::hash<T>()(*p); }
 };
 
 /// Equality checker for underlying type of pointers
-template<typename T, template<typename> typename P>
+template<typename T, template<typename> class P>
 struct ByValueEquals {
 	bool operator() (const P<T>& p, const P<T>& q) const { return *p == *q; }
 };
 
 /// Comparator for underlying type of pointers
-template<typename T, template<typename> typename P>
+template<typename T, template<typename> class P>
 struct ByValueCompare {
 	bool operator() (const P<T>& p, const P<T>& q) const { return *p < *q; }
 };
@@ -103,17 +103,17 @@ struct Raw {
 };
 
 /// List type
-template<typename T, template<typename> typename Storage = ByPtr>
+template<typename T, template<typename> class Storage = ByPtr>
 using List = std::vector<typename Storage<T>::Element>;
 
 /// Set type
-template<typename T, template<typename> typename Storage = ByPtr>
+template<typename T, template<typename> class Storage = ByPtr>
 using Set = std::unordered_set<typename Storage<T>::Element,
                                typename Storage<T>::Hash,
 							   typename Storage<T>::Equals>;
 
 /// Sorted set type
-template<typename T, template<typename> typename Storage = ByPtr>
+template<typename T, template<typename> class Storage = ByPtr>
 using SortedSet = std::set<typename Storage<T>::Element,
                            typename Storage<T>::Compare>;
 
