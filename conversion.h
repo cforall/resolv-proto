@@ -1,7 +1,12 @@
 #pragma once
 
-#include <ostream>
+#ifdef RP_SORTED
+#include <map>
+#else
 #include <unordered_map>
+#endif
+
+#include <ostream>
 #include <vector>
 
 #include "cost.h"
@@ -45,10 +50,17 @@ public:
 	};
 	
 private:
+#ifdef RP_SORTED
+	template<typename K, typename V>
+	using NodeMap = std::map<K, V>;
+#else
+	template<typename K, typename V>
+	using NodeMap = std::unordered_map<K, V>;
+#endif
 	/// Dummy empty conversion list
 	static const ConversionList no_conversions;
 	/// Storage for underlying conversions
-	std::unordered_map< Ref<Type>, ConversionNode > nodes;
+	NodeMap< Ref<Type>, ConversionNode > nodes;
 	
 	/// Returns the node for ty, creating one if none exists
 	ConversionNode& try_insert( Ref<Type> ty ) {

@@ -1,2 +1,3 @@
 rp
 *.o
+.lastmakeflags
