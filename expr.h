@@ -25,13 +25,13 @@ inline std::ostream& operator<< (std::ostream& out, const Expr& e) {
 
 /// A variable expression
 class VarExpr : public Expr {
-	Ref<Type> ty_;  ///< Type of variable expression
+	Ref<ConcType> ty_;  ///< Type of variable expression
 protected:
 	virtual void write(std::ostream& out) const { out << *ty_; }
 public:
 	typedef Expr Base;
 	
-	VarExpr(const Ref<Type>& ty_) : ty_(ty_) {}
+	VarExpr(const Ref<ConcType>& ty_) : ty_(ty_) {}
 	
 	VarExpr(const VarExpr&) = default;
 	VarExpr(VarExpr&&) = default;
@@ -39,7 +39,7 @@ public:
 	VarExpr& operator= (VarExpr&&) = default;
 	virtual ~VarExpr() = default;
 	
-	Ref<Type> ty() const { return ty_; }
+	Ref<ConcType> ty() const { return ty_; }
 };
 
 class FuncExpr : public Expr {

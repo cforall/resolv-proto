@@ -128,7 +128,7 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types 
 	// Check for type expression
 	int t;
 	if ( parse_int(end, t) ) {
-		Ref<Type> ty = get_ref( types, make_ptr<ConcType>( t ) );
+		Ref<ConcType> ty = get_ref( types, make_ptr<ConcType>( t ) );
 		exprs.push_back( make<VarExpr>( ty ) );
 		token = end;
 		return true;
@@ -225,7 +225,6 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 /// variables. 
 int main(int argc, char **argv) {
 	FuncTable funcs;
-	List<VarDecl, Raw> vars;
 	List<Expr> exprs;
 	SortedSet<ConcType> types;
 	

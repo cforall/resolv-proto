@@ -33,6 +33,10 @@ inline Cost& operator+= (Cost& a, const Cost& b) {
 	return a;
 }
 
+inline Cost operator- (const Cost& a, const Cost& b) {
+	return Cost{ a.unsafe - b.unsafe,  a.safe - b.safe };
+}
+
 inline bool operator== (const Cost& a, const Cost& b) {
 	return a.unsafe == b.unsafe && a.safe == b.safe;
 }

@@ -11,10 +11,12 @@
 /// A resolver declaration
 class Decl {
 	friend std::ostream& operator<< (std::ostream&, const Decl&);
-protected:
-	virtual void write(std::ostream& out) const = 0;
+	template<typename T, typename P> friend Ptr<T> clone( const P& p );
 public:
 	virtual ~Decl() = default;
+protected:
+	virtual void write(std::ostream& out) const = 0;
+	virtual Ptr<Decl> clone() const = 0;
 };
 
 inline std::ostream& operator<< (std::ostream& out, const Decl& d) {
@@ -28,13 +30,6 @@ class FuncDecl final : public Decl {
 	std::string tag_;            ///< Disambiguating tag for function
 	List<Type, ByRef> params_;   ///< Parameter types of function
 	List<Type, ByRef> returns_;  ///< Return types of function
-protected:
-	virtual void write(std::ostream& out) const {
-		for ( auto& t : returns_ ) { out << *t << " "; }
-		out << name_;
-		if ( ! tag_.empty() ) { out << "-" << tag_; }
-		for ( auto& t : params_ ) { out << " " << *t; }
-	}
 public:
 	typedef Decl Base;
 	
@@ -60,13 +55,23 @@ public:
 	const std::string& tag() const { return tag_; }
 	const List<Type, ByRef>& params() const { return params_; }
 	const List<Type, ByRef>& returns() const { return returns_; }
+
+protected:
+	virtual void write(std::ostream& out) const {
+		for ( auto& t : returns_ ) { out << *t << " "; }
+		out << name_;
+		if ( ! tag_.empty() ) { out << "-" << tag_; }
+		for ( auto& t : params_ ) { out << " " << *t; }
+	}
+	
+	virtual Ptr<Decl> clone() const {
+		return make( name_, tag_, params_, returns_ );
+	}
 };
 
 /// A "variable" declaration
 class VarDecl final : public Decl {
 	Ref<ConcType> ty_;  ///< Type of variable
-protected:
-	virtual void write(std::ostream& out) const { out << *ty_; }
 public:
 	typedef Decl Base;
 	
@@ -82,4 +87,8 @@ public:
 	bool operator!= (const VarDecl& that) const { return !(*this == that); }
 	
 	Ref<ConcType> ty() const { return ty_; }
+protected:
+	virtual void write(std::ostream& out) const { out << *ty_; }
+	
+	virtual Ptr<Decl> clone() const { return make( ty_ ); }
 };

@@ -12,13 +12,13 @@
 template<typename T>
 using Ptr = std::unique_ptr<T>;
 
+/// Ref-counted pointer to T; must be constructable from T*
+template<typename T>
+using Shared = std::shared_ptr<const T>;
+
 /// Borrowed pointer to T
 template<typename T>
 using Ref = const T*;
-
-/// Ref-counted pointer to T; must be constructable from T*
-template<typename T>
-using Shared = std::shared_ptr<T>;
 
 /// Make an owned pointer to T of type T::Base
 template<typename T, typename... Args>
@@ -34,7 +34,27 @@ inline Ptr<T> make_ptr( Args&&... args ) {
 	return Ptr<T>{ new T( std::forward<Args>(args)... ) };
 }
 
+/// Make a shared pointer to T
 using std::make_shared;
+
+/// Clone an object into a fresh pointer having the same runtime type
+template<typename T, typename P>
+Ptr<T> clone( const P& p ) { return p->clone(); }
+
+/// Get a mutable copy of the value pointed to by a shared pointer
+template<typename T>
+Ptr<T> mut( Shared<T>&& p ) {
+	if ( p.unique() ) {
+		// deliberately leak ptr by swapping with shared pointer that won't release
+		auto leaker = Shared<T>{ nullptr, [](const T*){} }; 
+		p.swap( leaker );
+		return Ptr<T>{ const_cast<T*>( leaker.get() ) }; 
+	} else {
+		Ptr<T> q = clone( p );
+		p.reset();
+		return q;
+	}
+}
 
 /// Borrow an owned pointer
 template<typename T>
@@ -47,6 +67,16 @@ inline Ref<T> ref( const Shared<T>& p ) { return p.get(); }
 /// Borrow an lvalue
 template<typename T>
 inline Ref<T> ref( T& p ) { return &p; }
+
+/// Borrow a pointer or value as a different type, returning nullptr if not 
+/// runtime compatible
+template<typename T, typename F>
+inline Ref<T> ref_as( Ref<F> p ) {
+	return dynamic_cast< Ref<T> >( p );
+} 
+
+template<typename T, typename P>
+inline Ref<T> ref_as( const P& p ) { return ref_as( ref(p) ); }
 
 /// Hasher for underlying type of pointers
 template<typename T, template<typename> class P>
