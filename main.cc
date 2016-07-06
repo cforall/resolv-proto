@@ -122,14 +122,15 @@ bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
 
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
-bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types ) {
+bool parse_subexpr( char *&token, List<Expr, ByShared>& exprs, 
+                    SortedSet<ConcType>& types ) {
 	char *end = token;
 	
 	// Check for type expression
 	int t;
 	if ( parse_int(end, t) ) {
 		Ref<ConcType> ty = get_ref( types, make_ptr<ConcType>( t ) );
-		exprs.push_back( make<VarExpr>( ty ) );
+		exprs.push_back( make_shared<VarExpr>( ty ) );
 		token = end;
 		return true;
 	}
@@ -141,7 +142,7 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types 
 	if ( ! match_char(end, '(') ) return false;
 	
 	// Read function args
-	List<Expr> args;
+	List<Expr, ByShared> args;
 	match_whitespace(end);
 	while ( parse_subexpr(end, args, types) ) {
 		match_whitespace(end);
@@ -151,7 +152,7 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types 
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
-	exprs.push_back( make<FuncExpr>( name, move(args) ) );
+	exprs.push_back( make_shared<FuncExpr>( name, move(args) ) );
 	token = end;
 	return true;
 }
@@ -159,14 +160,15 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types 
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr( char *line, List<Expr>& exprs, SortedSet<ConcType>& types ) {
+bool parse_expr( char *line, List<Expr, ByShared>& exprs, 
+                 SortedSet<ConcType>& types ) {
 	match_whitespace(line);
 	return parse_subexpr(line, exprs, types) && is_empty(line);
 }
 
 /// Parses input according to the format described on main.
 /// Returns true and sets funcs and exprs if appropriate, prints errors otherwise
-bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
+bool parse_input( std::istream& in, FuncTable& funcs, List<Expr, ByShared>& exprs, 
                   SortedSet<ConcType>& types ) {
 	std::string line;
 	std::string delim = "%%";
@@ -225,7 +227,7 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 /// variables. 
 int main(int argc, char **argv) {
 	FuncTable funcs;
-	List<Expr> exprs;
+	List<Expr, ByShared> exprs;
 	SortedSet<ConcType> types;
 	
 	if ( ! parse_input( std::cin, funcs, exprs, types ) ) return 1;

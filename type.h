@@ -5,9 +5,14 @@
 #include <ostream>
 #include <set>
 
+#include "utility.h"
+
 /// A type declaration
 class Type {
 	friend std::ostream& operator<< (std::ostream&, const Type&);
+	template<typename T> friend Ptr<T> clone( const Ptr<T>& );
+	template<typename T> friend Ptr<T> clone( const Shared<T>& );
+	template<typename T> friend Ptr<T> clone( Ref<T> );
 	friend bool operator== (const Type&, const Type&);
 	friend std::hash<Type>;
 public:
@@ -15,6 +20,8 @@ public:
 protected:
 	/// Print this object to the output stream
 	virtual void write(std::ostream &) const = 0;
+	/// Create a fresh copy of this object with the same runtime type
+	virtual Ptr<Type> clone() const = 0;
 	/// Check this type for equality with other types
 	virtual bool equals(const Type&) const = 0; 
 	/// Hash this type
@@ -64,6 +71,8 @@ public:
 	
 protected:
 	virtual void write(std::ostream& out) const { out << id_; }
+	
+	virtual Ptr<Type> clone() const { return make<ConcType>( id_ ); }
 	
 	virtual bool equals(const Type& obj) const {
 		const ConcType* that = dynamic_cast<const ConcType*>(&obj);

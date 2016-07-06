@@ -38,8 +38,22 @@ inline Ptr<T> make_ptr( Args&&... args ) {
 using std::make_shared;
 
 /// Clone an object into a fresh pointer having the same runtime type
-template<typename T, typename P>
-Ptr<T> clone( const P& p ) { return p->clone(); }
+template<typename T>
+Ptr<T> clone( const Ptr<T>& p ) { return p->clone(); }
+
+template<typename T>
+Ptr<T> clone( const Shared<T>& p ) { return p->clone(); }
+
+template<typename T>
+Ptr<T> clone( Ref<T> p ) { return p->clone(); }
+
+/// Clone all the elements in a collection of Ptr<T>
+template<typename C>
+C cloneAll( const C& c ) {
+	C d;
+	for ( const auto& e : c ) { d.insert( d.end(), clone(e) ); }
+	return d;
+}
 
 /// Get a mutable copy of the value pointed to by a shared pointer
 template<typename T>

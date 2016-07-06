@@ -11,7 +11,9 @@
 /// A resolver declaration
 class Decl {
 	friend std::ostream& operator<< (std::ostream&, const Decl&);
-	template<typename T, typename P> friend Ptr<T> clone( const P& p );
+	template<typename T> friend Ptr<T> clone( const Ptr<T>& );
+	template<typename T> friend Ptr<T> clone( const Shared<T>& );
+	template<typename T> friend Ptr<T> clone( Ref<T> );
 public:
 	virtual ~Decl() = default;
 protected:

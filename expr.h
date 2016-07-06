@@ -12,10 +12,14 @@
 /// A resolvable expression
 class Expr {
 	friend std::ostream& operator<< (std::ostream&, const Expr&);
-protected:
-	virtual void write(std::ostream& out) const = 0;
+	template<typename T> friend Ptr<T> clone( const Ptr<T>& );
+	template<typename T> friend Ptr<T> clone( const Shared<T>& );
+	template<typename T> friend Ptr<T> clone( Ref<T> );
 public:
 	virtual ~Expr() = default;
+protected:
+	virtual void write(std::ostream& out) const = 0;
+	virtual Ptr<Expr> clone() const = 0;
 };
 
 inline std::ostream& operator<< (std::ostream& out, const Expr& e) {
@@ -26,8 +30,6 @@ inline std::ostream& operator<< (std::ostream& out, const Expr& e) {
 /// A variable expression
 class VarExpr : public Expr {
 	Ref<ConcType> ty_;  ///< Type of variable expression
-protected:
-	virtual void write(std::ostream& out) const { out << *ty_; }
 public:
 	typedef Expr Base;
 	
@@ -40,21 +42,20 @@ public:
 	virtual ~VarExpr() = default;
 	
 	Ref<ConcType> ty() const { return ty_; }
+
+protected:
+	virtual void write(std::ostream& out) const { out << *ty_; }
+	
+	virtual Ptr<Expr> clone() const { return make<VarExpr>( ty_ ); }
 };
 
 class FuncExpr : public Expr {
-	std::string name_;  ///< Name of function called
-	List<Expr> args_;   ///< Arguments to call
-protected:
-	virtual void write(std::ostream& out) const {
-		out << name_ << "(";
-		for (auto& arg : args_) { out << " " << *arg; } 
-		out << " )";
-	}
+	std::string name_;           ///< Name of function called
+	List<Expr, ByShared> args_;  ///< Arguments to call
 public:
 	typedef Expr Base;
 	
-	FuncExpr(const std::string& name_, List<Expr>&& args_)
+	FuncExpr(const std::string& name_, List<Expr, ByShared>&& args_)
 		: name_( name_ ), args_( move(args_) ) {}
 	
 	FuncExpr(const FuncExpr&) = default;
@@ -64,5 +65,16 @@ public:
 	virtual ~FuncExpr() = default;
 	
 	const std::string& name() const { return name_; }
-	const List<Expr>& args() const { return args_; }
+	const List<Expr, ByShared>& args() const { return args_; }
+
+protected:
+	virtual void write(std::ostream& out) const {
+		out << name_ << "(";
+		for (auto& arg : args_) { out << " " << *arg; } 
+		out << " )";
+	}
+	
+	virtual Ptr<Expr> clone() const {
+		return make<FuncExpr>( name_, cloneAll( args_ ) );
+	}
 };
