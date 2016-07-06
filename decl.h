@@ -65,7 +65,7 @@ protected:
 	}
 	
 	virtual Ptr<Decl> clone() const {
-		return make( name_, tag_, params_, returns_ );
+		return make<FuncDecl>( name_, tag_, params_, returns_ );
 	}
 };
 
@@ -90,5 +90,5 @@ public:
 protected:
 	virtual void write(std::ostream& out) const { out << *ty_; }
 	
-	virtual Ptr<Decl> clone() const { return make( ty_ ); }
+	virtual Ptr<Decl> clone() const { return make<VarDecl>( ty_ ); }
 };
