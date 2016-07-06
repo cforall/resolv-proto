@@ -224,7 +224,7 @@ public:
 	iterator insert( value_type&& v ) {
 		const Key& k = Extract()( v );
 		auto i = find_or_create( k );
-		auto j = i->second.insert( i->second.end(), std::move(v) );
+		auto j = i->second.insert( i->second.end(), move(v) );
 		++n;
 		
 		return iterator{ i, m.end(), j };
@@ -233,7 +233,7 @@ public:
 		return insert(v);
 	}
 	iterator insert( const const_iterator&, value_type&& v ) {
-		return insert( std::move(v) );
+		return insert( move(v) );
 	}
 	
 	iterator find( const Key& k ) {

@@ -31,7 +31,7 @@ protected:
 public:
 	typedef Expr Base;
 	
-	VarExpr(const Ref<ConcType>& ty_) : ty_(ty_) {}
+	VarExpr(const Ref<ConcType>& ty_) : ty_( ty_ ) {}
 	
 	VarExpr(const VarExpr&) = default;
 	VarExpr(VarExpr&&) = default;
@@ -55,7 +55,7 @@ public:
 	typedef Expr Base;
 	
 	FuncExpr(const std::string& name_, List<Expr>&& args_)
-		: name_(name_), args_(std::move(args_)) {}
+		: name_( name_ ), args_( move(args_) ) {}
 	
 	FuncExpr(const FuncExpr&) = default;
 	FuncExpr(FuncExpr&&) = default;

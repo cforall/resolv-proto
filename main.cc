@@ -151,7 +151,7 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types 
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
-	exprs.push_back( make<FuncExpr>( name, std::move(args) ) );
+	exprs.push_back( make<FuncExpr>( name, move(args) ) );
 	token = end;
 	return true;
 }

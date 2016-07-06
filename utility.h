@@ -78,6 +78,9 @@ inline Ref<T> ref_as( Ref<F> p ) {
 template<typename T, typename P>
 inline Ref<T> ref_as( const P& p ) { return ref_as( ref(p) ); }
 
+/// Take ownership of a value
+using std::move;
+
 /// Hasher for underlying type of pointers
 template<typename T, template<typename> class P>
 struct ByValueHash {
@@ -151,14 +154,14 @@ using SortedSet = std::set<typename Storage<T>::Element,
 /// If the object does not exist in the set, is inserted
 template<typename T>
 inline Ref<T> get_ref(Set<T>& s, Ptr<T>&& x) {
-	return ref( *s.insert( std::move(x) ).first );
+	return ref( *s.insert( move(x) ).first );
 }
 
 /// Gets canonical Ref for an object from the set;
 /// If the object does not exist in the set, is inserted
 template<typename T>
 inline Ref<T> get_ref(SortedSet<T>& s, Ptr<T>&& x) {
-	return ref( *s.insert( std::move(x) ).first );
+	return ref( *s.insert( move(x) ).first );
 }
 
 /// Gets canonical Ref for an object from the set;
