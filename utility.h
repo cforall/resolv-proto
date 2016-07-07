@@ -37,39 +37,6 @@ inline Ptr<T> make_ptr( Args&&... args ) {
 /// Make a shared pointer to T
 using std::make_shared;
 
-/// Clone an object into a fresh pointer having the same runtime type
-template<typename T>
-Ptr<T> clone( const Ptr<T>& p ) { return p->clone(); }
-
-template<typename T>
-Ptr<T> clone( const Shared<T>& p ) { return p->clone(); }
-
-template<typename T>
-Ptr<T> clone( Ref<T> p ) { return p->clone(); }
-
-/// Clone all the elements in a collection of Ptr<T>
-template<typename C>
-C cloneAll( const C& c ) {
-	C d;
-	for ( const auto& e : c ) { d.insert( d.end(), clone(e) ); }
-	return d;
-}
-
-/// Get a mutable copy of the value pointed to by a shared pointer
-template<typename T>
-Ptr<T> mut( Shared<T>&& p ) {
-	if ( p.unique() ) {
-		// deliberately leak ptr by swapping with shared pointer that won't release
-		auto leaker = Shared<T>{ nullptr, [](const T*){} }; 
-		p.swap( leaker );
-		return Ptr<T>{ const_cast<T*>( leaker.get() ) }; 
-	} else {
-		Ptr<T> q = clone( p );
-		p.reset();
-		return q;
-	}
-}
-
 /// Borrow an owned pointer
 template<typename T>
 inline Ref<T> ref( const Ptr<T>& p ) { return p.get(); }
@@ -87,13 +54,48 @@ inline Ref<T> ref( T& p ) { return &p; }
 template<typename T, typename F>
 inline Ref<T> ref_as( Ref<F> p ) {
 	return dynamic_cast< Ref<T> >( p );
-} 
-
-template<typename T, typename P>
-inline Ref<T> ref_as( const P& p ) { return ref_as( ref(p) ); }
+}
 
 /// Take ownership of a value
 using std::move;
+
+/// Shallow copy of an object
+template<typename T>
+inline T copy( const T& x ) { return x; }
+
+/// Clone an object into a fresh pointer having the same runtime type
+template<typename T>
+inline Ptr<T> clone( const Ptr<T>& p ) { return p->clone(); }
+
+template<typename T>
+inline Ptr<T> clone( const Shared<T>& p ) { return p->clone(); }
+
+template<typename T>
+inline Ptr<T> clone( Ref<T> p ) { return p->clone(); }
+
+/// Clone all the elements in a collection of Ptr<T>
+template<typename C>
+inline C cloneAll( const C& c ) {
+	C d;
+	for ( const auto& e : c ) { d.insert( d.end(), clone(e) ); }
+	return d;
+}
+
+/// Get a mutable copy of the value pointed to by a shared pointer
+template<typename T>
+inline Ptr<T> mut( Shared<T>&& p ) {
+	if ( p.unique() ) {
+		// deliberately leak ptr by swapping with shared pointer that won't release
+		auto leaker = Shared<T>{ nullptr, [](const T*){} }; 
+		p.swap( leaker );
+		return Ptr<T>{ const_cast<T*>( leaker.get() ) }; 
+	} else {
+		// replace this pointer to p with a fresh clone 
+		Ptr<T> q = clone( p );
+		p.reset();
+		return q;
+	}
+}
 
 /// Hasher for underlying type of pointers
 template<typename T, template<typename> class P>

@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "conversion.h"
+#include "decl.h"
 #include "type.h"
 #include "utility.h"
 
@@ -25,23 +27,32 @@ protected:
 inline std::ostream& operator<< (std::ostream& out, const Expr& e) {
 	e.write(out);
 	return out;
-}
+};
+
+/// An expression that is already typed
+class TypedExpr : public Expr {
+public:
+	/// Get the resolved type for this expression
+	virtual Ref<Type> type() const = 0; 
+};
 
 /// A variable expression
-class VarExpr : public Expr {
+class VarExpr : public TypedExpr {
 	Ref<ConcType> ty_;  ///< Type of variable expression
 public:
 	typedef Expr Base;
 	
 	VarExpr(const Ref<ConcType>& ty_) : ty_( ty_ ) {}
 	
-	VarExpr(const VarExpr&) = default;
+/*	VarExpr(const VarExpr&) = default;
 	VarExpr(VarExpr&&) = default;
 	VarExpr& operator= (const VarExpr&) = default;
 	VarExpr& operator= (VarExpr&&) = default;
 	virtual ~VarExpr() = default;
+*/	
+	virtual Ref<ConcType> ty() const { return ty_; }
 	
-	Ref<ConcType> ty() const { return ty_; }
+	virtual Ref<Type> type() const { return ty_; }
 
 protected:
 	virtual void write(std::ostream& out) const { out << *ty_; }
@@ -49,6 +60,36 @@ protected:
 	virtual Ptr<Expr> clone() const { return make<VarExpr>( ty_ ); }
 };
 
+/// A cast expression
+class CastExpr : public TypedExpr {
+	Shared<Expr> arg_;      ///< Argument to the cast
+	Ref<Conversion> cast_;  ///< Conversion applied
+public:
+	typedef Expr Base;
+	
+	CastExpr(const Shared<Expr>& arg_, Ref<Conversion> cast_)
+		: arg_( arg_ ), cast_( cast_ ) {}
+	
+/*	CastExpr(const CastExpr&) = default;
+	CastExpr(CastExpr&&) = default;
+	CastExpr& operator= (const CastExpr&) = default;
+	CastExpr& operator= (CastExpr&&) = default;
+	virtual ~CastExpr() = default;
+*/	
+	const Shared<Expr>& arg() const { return arg_; }
+	Ref<Conversion> cast() const { return cast_; }
+	
+	virtual Ref<Type> type() const { return cast->to->type; }
+	
+protected:
+	virtual void write(std::ostream& out) const {
+		out << *arg_ << " => " << *type();
+	}
+	
+	virtual Ptr<Expr> clone() const { return make<CastExpr>( arg_, cast_ ); }
+};
+
+/// An untyped function call expression
 class FuncExpr : public Expr {
 	std::string name_;           ///< Name of function called
 	List<Expr, ByShared> args_;  ///< Arguments to call
@@ -58,12 +99,12 @@ public:
 	FuncExpr(const std::string& name_, List<Expr, ByShared>&& args_)
 		: name_( name_ ), args_( move(args_) ) {}
 	
-	FuncExpr(const FuncExpr&) = default;
+/*	FuncExpr(const FuncExpr&) = default;
 	FuncExpr(FuncExpr&&) = default;
 	FuncExpr& operator= (const FuncExpr&) = default;
 	FuncExpr& operator= (FuncExpr&&) = default;
 	virtual ~FuncExpr() = default;
-	
+*/	
 	const std::string& name() const { return name_; }
 	const List<Expr, ByShared>& args() const { return args_; }
 
@@ -75,6 +116,35 @@ protected:
 	}
 	
 	virtual Ptr<Expr> clone() const {
-		return make<FuncExpr>( name_, cloneAll( args_ ) );
+		return make<FuncExpr>( name_, copy( args_ ) );
+	}
+};
+
+/// A typed function call expression
+class CallExpr : public TypedExpr {
+	Ref<FuncDecl> func_;         ///< Function called
+	List<Expr, ByShared> args_;  ///< Function arguments
+public:
+	typedef Expr Base;
+	
+	CallExpr(Ref<FuncDecl> func_, List<Expr, ByShared>&& args_)
+		: func_( func_ ), args_( move(args_) ) {}
+	
+	Ref<FuncDecl> func() const { return func_; }
+	const List<Expr, ByShared>& args() const { return args_; }
+	
+	// TODO switch returns to single type, add tuple and void types
+	Ref<Type> type() const { return func_->returns(); }
+protected:
+	virtual void write(std::ostream& out) const {
+		out << func_->name();
+		if ( ! func_->tag().empty() ) { out << "-" << func_->tag(); }
+		out << "(";
+		for (auto& arg : args_) { out << " " << *arg; }
+		out << " )"; 
+	}
+	
+	virtual Ptr<Expr> clone() const {
+		return make<CallExpr>( func_, copy( args_ ) );
 	}
 };

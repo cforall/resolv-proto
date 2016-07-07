@@ -17,6 +17,9 @@ class Type {
 	friend std::hash<Type>;
 public:
 	virtual ~Type() = default;
+	
+	/// How many elemental types are represented by this type
+	virtual unsigned n_types() const = 0;
 protected:
 	/// Print this object to the output stream
 	virtual void write(std::ostream &) const = 0;
@@ -57,17 +60,19 @@ public:
 	
 	ConcType(int id_) : id_(id_) {}
 	
-	ConcType(const ConcType&) = default;
+/*	ConcType(const ConcType&) = default;
 	ConcType(ConcType&&) = default;
 	ConcType& operator= (const ConcType&) = default;
 	ConcType& operator= (ConcType&&) = default;
 	virtual ~ConcType() = default;
-	
+*/	
 	bool operator== (const ConcType& that) const { return id_ == that.id_; }
 	bool operator!= (const ConcType& that) const { return !(*this == that); }
 	bool operator< (const ConcType& that) const { return id_ < that.id_; }
 	
 	int id() const { return id_; }
+	
+	virtual unsigned n_types() const { return 1; }
 	
 protected:
 	virtual void write(std::ostream& out) const { out << id_; }
@@ -88,4 +93,66 @@ namespace std {
 		typedef std::size_t result_type;
 		result_type operator() (const argument_type& t) { return t.hash(); }
 	};
+}
+
+/// Represents the lack of a return type
+class VoidType : public Type {
+public:
+	typedef Type Base;
+	
+	virtual unsigned n_types() const { return 0; }
+	
+protected:
+	virtual void write(std::ostream& out) const { out << "Void"; }
+	
+	virtual Ptr<Type> clone() const { return make<VoidType>(); }
+	
+	virtual bool equals(const Type& obj) const {
+		return dynamic_cast<const VoidType*>(&obj) != nullptr;
+	}
+	
+	virtual std::size_t hash() const { return 0; }
+};
+
+/// Represents multiple return types; must be more than one
+class TupleType : public Type {
+	List<Type, ByRef> types_;
+public:
+	typedef Type Base;
+	
+	TupleType(const List<Type, ByRef& types_)
+		: types_(types_) { assert( types_.size() > 1 ); }
+	
+	const List<Type, ByRef>& types() const { return types_; }
+	
+	virtual unsigned n_types() const { return types_.size(); }
+	
+protected:
+	 virtual void write(std::ostream& out) const {
+		 auto it = types_.begin();
+		 out << **it;
+		 for(; it != types_.end(); ++it) { out << " " << **it; }
+	 }
+	 
+	 virtual Ptr<Type> clone() const { return make<TupleType>( types_ ); }
+	 
+	 virtual bool equals(const Type& obj) const {
+		 const TupleType* that = dynamic_cast<const TupleType*>(&obj);
+		 if ( ! that ) return false;
+		 
+		 if ( types_.size() != that->types_.size() ) return false;
+		 for (unsigned i = 0; i < types_.size(); ++i) {
+			 if ( *types_[i] != *that->types_[i] ) return false;
+		 }
+		 return true;
+	 }
+	 
+	 virtual std::size_t hash() const {
+		 std::size_t r = types_.size();
+		 for (const auto& ty : types_) {
+			 r <<= 1;
+			 r ^= std::hash<Type>{}( *ty );
+		 }
+		 return r;
+	 }
 }

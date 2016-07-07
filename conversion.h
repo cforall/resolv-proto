@@ -85,5 +85,7 @@ public:
 	}
 };
 
+using ConversionGraph::Conversion;
+
 /// Make a graph of conversions from an existing set of concrete types
 ConversionGraph make_conversions( const SortedSet<ConcType>& types );
