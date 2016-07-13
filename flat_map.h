@@ -56,6 +56,8 @@ public:
 	reference operator* () { return *j; }
 	pointer operator-> () { return j.operator->(); }
 	
+	InnerColl& operator() () { return i->second; }
+	
 	FlatMapIter<Underlying>& operator++ () {
 		if ( ++j == i->second.end() ) {
 			++i;
@@ -138,6 +140,8 @@ public:
 	reference operator* () { return *j; }
 	pointer operator-> () { return j.operator->(); }
 	
+	const InnerColl& operator() () const { return i->second; }
+	
 	ConstFlatMapIter<Underlying>& operator++ () {
 		if ( ++j == i->second.end() ) {
 			++i;
@@ -200,6 +204,18 @@ private:
 			i;
 	}
 	
+	/// Creates an iterator from an underlying iterator
+	iterator from_underlying( const typename Underlying::iterator& i ) {
+		return i == m.end() || i->second.empty() ?
+			iterator{ m.end() } : iterator{ i, m.end() };
+	}
+	
+	/// Creates a const iterator from an underlying const iterator
+	const_iterator from_underlying( const typename Underlying::const_iterator& i ) {
+		return i == m.end() || i->second.empty() ?
+			const_iterator{ m.end() } : const_iterator{ i, m.end() };
+	}
+	
 public:
 	iterator begin() { return iterator{ m.begin(), m.end() }; }
 	const_iterator begin() const { return const_iterator{ m.begin(), m.end() }; }
@@ -237,18 +253,22 @@ public:
 	}
 	
 	iterator find( const Key& k ) {
-		auto i = m.find( k );
-		return i == m.end() || i->second.empty() ?
-			iterator{ m.end() } : iterator{ i, m.end() };
+		return from_underlying( m.find( k ) );
 	}
 	const_iterator find( const Key& k ) const {
-		auto i = m.find( k );
-		return i == m.end() || i->second.empty() ?
-			const_iterator{ m.end() } : const_iterator{ i, m.end() };
+		return from_underlying( m.find( k ) );
 	}
 	size_type count( const Key& k ) const {
 		auto i = m.find( k );
 		return i == m.end() ? 0 : i->second.size();
+	}
+	std::pair<iterator, iterator> equal_range( const Key& k ) {
+		auto r = m.equal_range( k );
+		return { from_underlying( r.first ), from_underlying( r.second ) };
+	}
+	std::pair<const_iterator, const_iterator> equal_range( const Key& k ) const {
+		auto r = m.equal_range( k );
+		return { from_underlying( r.first ), from_underlying( r.second ) };
 	}
 	
 	Inner& operator[] ( const Key& k ) { return *find_or_create( k ); }

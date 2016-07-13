@@ -1,19 +1,41 @@
 #pragma once
 
+#include <functional>
+
 #include "conversion.h"
 #include "expr.h"
 #include "interpretation.h"
 #include "utility.h"
 
+/// Effect to run on invalid interpretation; argument is the expression which could 
+/// not be resolved
+typedef std::function<void(Ref<Expr>)> InvalidEffect;
+
+/// Effect to run on ambiguous interpretation; arguments are the expression which 
+/// could not be resolved and an iterator pair representing the first ambiguous 
+/// candidate and the iterator after the last (range is guaranteed to be non-empty)
+typedef std::function<void(Ref<Expr>,
+                           InterpretationList::iterator, 
+	                       InterpretationList::iterator)> AmbiguousEffect;  
+
 /// State-tracking class for resolving expressions
 class Resolver {
 	ConversionGraph conversions;  ///< Conversions between known types
-	List<VarDecl, Raw>& vars;     ///< Dummy "variable" declarations
+	FuncTable& funcs;             ///< Known function declarations
+	
+	/// Effect to run on invalid interpretation
+	InvalidEffect& on_invalid;
+	/// Effect to run on ambiguous interpretation
+	AmbiguousEffect& on_ambiguous;
 	
 public:
-	Resolver( ConversionGraph&& conversions, List<VarDecl, Raw>& vars )
-		: conversions( move(conversions) ), vars( vars ) {}
+	Resolver( ConversionGraph&& conversions, FuncTable&& funcs,
+	          InvalidEffect& on_invalid, AmbiguousEffect& on_ambiguous )
+		: conversions( move(conversions) ), funcs( move(funcs) ),
+		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ) {}
 
 	/// Resolve best interpretation of input expression
-	Interpretation operator() ( Ref<Expr> expr );
+	/// Will return invalid interpretation and run appropriate effect if resolution 
+	/// fails
+	Interpretation operator() ( Shared<Expr>& expr );
 };

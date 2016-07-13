@@ -42,7 +42,7 @@ class VarExpr : public TypedExpr {
 public:
 	typedef Expr Base;
 	
-	VarExpr(const Ref<ConcType>& ty_) : ty_( ty_ ) {}
+	VarExpr(Ref<ConcType> ty_) : ty_( ty_ ) {}
 	
 /*	VarExpr(const VarExpr&) = default;
 	VarExpr(VarExpr&&) = default;
@@ -133,8 +133,8 @@ public:
 	Ref<FuncDecl> func() const { return func_; }
 	const List<Expr, ByShared>& args() const { return args_; }
 	
-	// TODO switch returns to single type, add tuple and void types
-	Ref<Type> type() const { return func_->returns(); }
+	virtual Ref<Type> type() const { return func_->returns(); }
+	
 protected:
 	virtual void write(std::ostream& out) const {
 		out << func_->name();
@@ -147,4 +147,52 @@ protected:
 	virtual Ptr<Expr> clone() const {
 		return make<CallExpr>( func_, copy( args_ ) );
 	}
+};
+
+/// An ambiguous interpretation with a given type
+class AmbiguousExpr : public TypedExpr {
+	Ref<Type> type_;
+public:
+	typedef Expr Base;
+	
+	AmbiguousExpr( Ref<Type> type_ ) : type_( type_ ) {}
+	
+	virtual Ref<Type> type() const { return type_; }
+
+protected:
+	 virtual void write(std::ostream& out) const {
+		 out << "<ambiguous expression of type " << *type_ << ">";
+	 }
+	 
+	 virtual Ptr<Expr> clone() const { return make<AmbiguousExpr>( type_ ); }
+};
+
+/// A single element of the returned tuple from a function expression
+class TupleElementExpr : public TypedExpr {
+	Shared<CallExpr> call_;
+	unsigned ind_;
+public:
+	typedef Expr Base;
+	
+	TupleElementExpr( const Shared<CallExpr>& call_, unsigned ind_ )
+		: call_( call_ ), ind_( ind_ ) {}
+	
+	const Shared<CallExpr>& call() const { return call_; }
+	
+	unsigned ind() const { return ind; }
+	
+	virtual Ref<Type> type() const {
+		return ref_as<TupleType>( call_->type() )->types[ ind_ ];
+	}
+
+protected:
+	virtual void write(std::ostream& out) const {
+		if ( ind_ == 0 ) {
+			out << *call_ << "[0]";
+		} else {
+			out << "[" << ind_ << "]";
+		}
+	}
+	
+	virtual Ptr<Expr> clone() const { return make<TupleElementExpr>( call_, ind_ ); }
 };

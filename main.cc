@@ -6,6 +6,7 @@
 #include "decl.h"
 #include "expr.h"
 #include "func_table.h"
+#include "interpretation.h"
 #include "type.h"
 #include "utility.h"
 
@@ -199,6 +200,22 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr, ByShared>& expr
 	return true;
 }
 
+/// Effect for invalid expression
+void on_invalid( Ref<Expr> e ) {
+	std::cout << "ERROR: no valid resolution for " << *e << std::endl;
+}
+
+/// Effect for ambiguous resolution
+void on_ambiguous( Ref<Expr> e, InterpretationList::iterator i, 
+                   InterpretationList::iterator end ) {
+	std::cout << "ERROR: ambiguous resolution for " << *e << "\n"
+	          << "       candidates are:" << std::endl;
+	
+	for(; i != end; ++i) {
+		std::cout << "\n" << *i;
+	}
+}
+
 /// Driver for resolver prototype;
 /// Reads in files according to the following format:
 ///
@@ -240,4 +257,14 @@ int main(int argc, char **argv) {
 	ConversionGraph conversions = make_conversions( types );
 	
 	std::cout << std::endl << conversions;
+	
+	Resolver resolve{ move(conversions), move(funcs), on_invalid, on_ambiguous };
+	for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
+		std::cout << "\n";
+		Interpretation i = resolve( *e );
+		if ( i.is_valid() ) {
+			std::cout << i;
+			*e = i.expr;
+		} 
+	}
 }

@@ -19,7 +19,7 @@ public:
 	virtual ~Type() = default;
 	
 	/// How many elemental types are represented by this type
-	virtual unsigned n_types() const = 0;
+	virtual unsigned size() const = 0;
 protected:
 	/// Print this object to the output stream
 	virtual void write(std::ostream &) const = 0;
@@ -72,7 +72,7 @@ public:
 	
 	int id() const { return id_; }
 	
-	virtual unsigned n_types() const { return 1; }
+	virtual unsigned size() const { return 1; }
 	
 protected:
 	virtual void write(std::ostream& out) const { out << id_; }
@@ -100,7 +100,7 @@ class VoidType : public Type {
 public:
 	typedef Type Base;
 	
-	virtual unsigned n_types() const { return 0; }
+	virtual unsigned size() const { return 0; }
 	
 protected:
 	virtual void write(std::ostream& out) const { out << "Void"; }
@@ -125,7 +125,7 @@ public:
 	
 	const List<Type, ByRef>& types() const { return types_; }
 	
-	virtual unsigned n_types() const { return types_.size(); }
+	virtual unsigned size() const { return types_.size(); }
 	
 protected:
 	 virtual void write(std::ostream& out) const {

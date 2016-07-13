@@ -56,6 +56,20 @@ inline Ref<T> ref_as( Ref<F> p ) {
 	return dynamic_cast< Ref<T> >( p );
 }
 
+template<typename T, typename F>
+inline Ref<T> ref_as( Ptr<F> p ) {
+	return dynamic_cast< Ref<T> >( ref(p) );
+}
+
+template<typename T, typename F>
+inline Ref<T> ref_as( Shared<F> p ) {
+	return dynamic_cast< Ref<T> >( ref(p) );
+}
+
+/// Share a pointer as a different type, returning nullptr if not runtime compatible
+template<class T, class U>
+using shared_as = std::dynamic_pointer_cast<T, U>;
+
 /// Take ownership of a value
 using std::move;
 

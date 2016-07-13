@@ -20,17 +20,16 @@ struct ExtractName {
 typedef List<FuncDecl, Raw> FuncList;
 
 #ifdef RP_SORTED
-/// Backing storage for a set of function declarations with the same name, 
-/// indexed by number of parameters
-typedef SortedFlatMap<unsigned, FuncList, ExtractNParams> FuncParamMap;
-
-/// Backing storage for a set of function declarations, indexed by name
-typedef SortedFlatMap<std::string, FuncParamMap, ExtractName> FuncTable;
+	template<typename Key, Inner, Extract>
+	using FuncMap = SortedFlatMap<Key, Inner, Extract>; 
 #else
+	template<typename Key, Inner, Extract>
+	using FuncMap = FlatMap<Key, Inner, Extract>;
+#endif
+
 /// Backing storage for a set of function declarations with the same name, 
 /// indexed by number of parameters
-typedef FlatMap<unsigned, FuncList, ExtractNParams> FuncParamMap;
+typedef FuncMap<unsigned, FuncList, ExtractNParams> FuncParamMap;
 
 /// Backing storage for a set of function declarations, indexed by name
-typedef FlatMap<std::string, FuncParamMap, ExtractName> FuncTable;
-#endif
+typedef FuncMap<std::string, FuncParamMap, ExtractName> FuncTable;
