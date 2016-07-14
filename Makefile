@@ -1,31 +1,56 @@
 CXXFLAGS = -O0 -ggdb --std=c++11
+DEPFLAGS = -MMD -MP
 
-.PHONY: clean prebuild
+.PHONY: all clean distclean prebuild
 
+# set default target to rp
+all: rp
+
+# handle make flags
 -include .lastmakeflags
 
 ifdef SORTED
 CXXFLAGS += -DRP_SORTED
 endif
 
-OBJS = conversion.o
-
-HOBJS = decl.h flat_map.h func_table.h type.h expr.h utility.h
-
-rp: prebuild main.cc $(OBJS) $(HOBJS)
-	$(CXX) $(CXXFLAGS) -o rp main.cc $(OBJS) $(LDFLAGS)
-
-conversion.o: prebuild conversion.cc conversion.h cost.h type.h utility.h
-	$(CXX) $(CXXFLAGS) -c conversion.cc $(LDFLAGS)	
-
-clean:
-	-rm conversion.o
-	-rm rp
-
 ifeq ($(LAST_SORTED),$(SORTED))
-prebuild: 
+prebuild:
 else
 prebuild: clean
 	@echo "LAST_SORTED=${SORTED}" > .lastmakeflags
-	
 endif
+
+# rewrite object generation to auto-determine dependencies, run prebuild
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+
+%.o : %.c
+%.o : %.c %d prebuild
+	$(COMPILE.c) $(OUTPUT_OPTION) %<
+
+%.o : %.cc
+%.o : %.cc %.d prebuild
+	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+
+# system objects
+OBJS = conversion.o resolver.o
+
+rp: main.cc rp.d prebuild $(OBJS)
+	$(COMPILE.cc) -o rp main.cc $(OBJS) $(LDFLAGS)
+
+clean:
+	-rm $(OBJS)
+	-rm rp
+
+distclean: clean
+	-rm $(OBJS:.o=.d)
+	-rm .lastmakeflags
+
+# so make doesn't fail without dependency files
+%.d: ;
+
+# so make won't delete dependency files
+.PRECIOUS: %.d
+
+# include dependency files
+-include: $(OBJS:.o=.d)
