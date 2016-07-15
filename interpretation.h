@@ -7,41 +7,54 @@
 #include "type.h"
 #include "utility.h"
 
+/// An ambiguous interpretation with a given type
+class AmbiguousExpr : public TypedExpr {
+	Brw<Type> type_;
+public:
+	typedef Expr Base;
+	
+	AmbiguousExpr( Brw<Type> type_ ) : type_( type_ ) {}
+	
+	virtual Ptr<Expr> clone() const { return make<AmbiguousExpr>( type_ ); }
+	
+	virtual Brw<Type> type() const { return type_; }
+
+protected:
+	 virtual void write(std::ostream& out) const {
+		 out << "<ambiguous expression of type " << *type_ << ">";
+	 }
+};
+
 /// Typed interpretation of an expression
 struct Interpretation {
 	Shared<TypedExpr> expr;  /// Base expression for interpretation
 	Cost cost;               /// Cost of interpretation
 	
-/*	Interpretation() = default;
-	Interpretation(const Interpretation&) = default;
-	Interpretation(Interpretation&&) = default;
-	Interpretation& operator= (const Interpretation&) = default;
-	Interpretation& operator= (Interpretation&&) = default;
-*/	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0]
 	Interpretation( Shared<TypedExpr>&& expr = Shared<TypedExpr>{}, 
 	                Cost&& cost = Cost{} )
 		: expr( std::move(expr) ), cost( std::move(cost) ) {}
 	
-	/// true iff the interpretation is ambiguous
+	/// true iff the interpretation is ambiguous; 
+	/// interpretation must have a valid base
 	bool is_ambiguous() const {
-		return ref_as<AmbiguousExpr>( expr ) != nullptr;
+		return brw_as<AmbiguousExpr>( expr ) != nullptr;
 	}
 	
 	/// true iff the interpretation is unambiguous and has a valid base
 	bool is_valid() const { return expr != nullptr && ! is_ambiguous(); }
 	
 	/// Get the type of the interpretation
-	Ref<Type> type() const { return expr->type(); }
+	Brw<Type> type() const { return expr->type(); }
 	
 	/// Returns a fresh invalid interpretation
 	static Interpretation make_invalid() { return Interpretation{}; }
 };
 
-std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
+inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	if ( i.expr == nullptr ) {
-		out << "<<INVALID>>" << std::endl;
+		out << "<invalid interpretation>" << std::endl;
 		return out;
 	}
 	

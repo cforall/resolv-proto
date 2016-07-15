@@ -21,19 +21,19 @@ prebuild: clean
 endif
 
 # rewrite object generation to auto-determine dependencies, run prebuild
-COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
 
 %.o : %.c
 %.o : %.c %d prebuild
-	$(COMPILE.c) $(OUTPUT_OPTION) %<
+	$(COMPILE.c) $(OUTPUT_OPTION) -c %<
 
 %.o : %.cc
 %.o : %.cc %.d prebuild
-	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # system objects
-OBJS = conversion.o resolver.o
+OBJS = conversion.o parser.o resolver.o
 
 rp: main.cc rp.d prebuild $(OBJS)
 	$(COMPILE.cc) -o rp main.cc $(OBJS) $(LDFLAGS)

@@ -211,7 +211,7 @@ private:
 	}
 	
 	/// Creates a const iterator from an underlying const iterator
-	const_iterator from_underlying( const typename Underlying::const_iterator& i ) {
+	const_iterator from_underlying( const typename Underlying::const_iterator& i ) const {
 		return i == m.end() || i->second.empty() ?
 			const_iterator{ m.end() } : const_iterator{ i, m.end() };
 	}

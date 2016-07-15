@@ -20,10 +20,10 @@ struct ExtractName {
 typedef List<FuncDecl, Raw> FuncList;
 
 #ifdef RP_SORTED
-	template<typename Key, Inner, Extract>
+	template<typename Key, typename Inner, typename Extract>
 	using FuncMap = SortedFlatMap<Key, Inner, Extract>; 
 #else
-	template<typename Key, Inner, Extract>
+	template<typename Key, typename Inner, typename Extract>
 	using FuncMap = FlatMap<Key, Inner, Extract>;
 #endif
 

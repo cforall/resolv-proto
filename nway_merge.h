@@ -1,7 +1,7 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
-#include <queue>
 #include <utility>
 #include <vector>
 
@@ -10,10 +10,6 @@ template<typename T>
 struct identity {
 	const T& operator() ( const T& x ) { return x; }
 };
-
-/// Wrapper around std::vector with proper number of template parameters
-template<typename T>
-using std_vector = std::vector<T>;
 
 /// Default validator for n-way merge.
 ///
@@ -27,16 +23,11 @@ using std_vector = std::vector<T>;
 template<typename Q>
 struct always_valid {
 	/// Returns true.
-	bool operator() ( const std::vector< Q >& queues, 
-	                  const std::vector< unsigned >& inds ) {
+	bool operator() ( const std::vector<Q>& queues, 
+	                  const std::vector<unsigned>& inds ) {
 		return true;
 	}
 };
-
-/// Wrapper around std::priority_queue with the proper number of template parameters
-template<typename T>
-using std_priority_queue = std::priority_queue<T>;
-
 
 /// Given n > 1 sorted queues of T, produces a list of combination tuples ordered  
 /// by the sum of their elements.
@@ -45,20 +36,20 @@ using std_priority_queue = std::priority_queue<T>;
 /// @param K        the sorting key type [default T]
 /// @param Extract  the key extraction function [default identity<T>]
 /// @param Q        the underlying queue type for the queues of T 
-///                 [default std_vector]
+///                 [default std::vector<T>]
 /// @param Valid    The combination validator [default always_valid]
-/// @param OutQ     the output queue type [default std_priority_queue]
+/// @param Sorted   Should this merge be in sorted order?
 template<typename T, 
          typename K = T, 
 		 typename Extract = identity<T>, 
-		 template<typename> class Q = std_vector,
-		 typename Valid = always_valid< Q<T> >, 
-         template<typename> class OutQ = std_priority_queue>
-class NWaySumMerge {
+		 typename Q = std::vector<T>,
+		 typename Valid = always_valid<Q>, 
+         bool Sorted = true>
+class NWayMerge {
 	/// Combination of queue elements
 	struct Combination {
 		/// Indices of elements in backing queues
-		std::vector< unsigned > inds;
+		std::vector<unsigned> inds;
 		/// Cost of the combination (sum of elements in appropriate queues)
 		K cost;
 		/// First queue index where this combination can be increased
@@ -81,14 +72,12 @@ class NWaySumMerge {
 		}
 	};
 	
-	std::vector< Q<T> > queues;  ///< Underlying n queues
-	OutQ< Combination > out_q;   ///< Combinations currently considered
-	
-	void update_cost(  )
+	std::vector<Q> queues;           ///< Underlying n queues
+	std::vector<Combination> out_q;  ///< Combinations currently considered
 	
 	/// Inserts all valid successors for the given indexes, starting at lex_ind,
 	/// Where the combination at inds has cost k
-	void insert_next( const std::vector< unsigned >& inds, const K& k,
+	void insert_next( const std::vector<unsigned>& inds, const K& k,
 	                  unsigned lex_ind ) {
 		unsigned n = queues.size();
 		Extract cost;
@@ -109,7 +98,8 @@ class NWaySumMerge {
 			
 			// add combination (or successors) to output queue
 			if ( valid( queues, new_inds ) ) {
-				out_q.emplace( std::move(new_inds), std::move(new_k), i );
+				out_q.emplace_back( std::move(new_inds), std::move(new_k), i );
+				if ( Sorted ) std::push_heap( out_q.begin(), out_q.end() );
 			} else {
 				insert_next( new_inds, new_k, lex_ind );
 			}
@@ -132,19 +122,20 @@ class NWaySumMerge {
 		}
 		
 		/// Put min-element (or successors) on out queue
-		auto inds = std::vector<unsigned>{ n, 0 };
+		auto inds = std::vector<unsigned>( n, 0 );
 		if ( Valid{}( queues, inds ) ) {
-			out_q.emplace( std::move(inds), std::move(k), 0 );
+			out_q.emplace_back( std::move(inds), std::move(k), 0 );
+			// no need to sort heap, only one element
 		} else {
 			insert_next( inds, k, 0 );
 		}
 	}
 	
 public:
-	NWaySumMerge( const std::vector< Q<T> >& queues )
+	NWayMerge( const std::vector<Q>& queues )
 		: queues( queues ), out_q() { init_out_q(); }
 	
-	NWaySumMerge( std::vector< Q<T> >&& queues )
+	NWayMerge( std::vector<Q>&& queues )
 		: queues( std::move(queues) ), out_q() { init_out_q(); }
 	
 	/// true iff there are no more combinations
@@ -153,12 +144,12 @@ public:
 	unsigned size() const { return out_q.size(); }
 	
 	/// Get top combination [undefined behaviour if empty()] 
-	std::pair< K, std::vector< T > > top() const {
-		Combination& c = out_q.top();
+	std::pair< K, std::vector<T> > top() const {
+		const Combination& c = out_q.front();
 		unsigned n = queues.size();
 		
-		std::vector< T > ts;
-		els.reserve( n );
+		std::vector<T> ts;
+		ts.reserve( n );
 		
 		for ( unsigned i = 0; i < n; ++i ) {
 			ts.push_back( queues[i][ c.inds[i] ] );
@@ -170,21 +161,19 @@ public:
 	/// Remove top combination (generates any subsequent combinations)
 	void pop() {
 		// Generate successors for top element
-		Combination& c = out_q.top();
+		const Combination& c = out_q.front();
 		insert_next( c.inds, c.cost, c.lex_ind );
 		// Remove top from underlying queue
-		out_q.pop();
+		if ( Sorted ) std::pop_heap( out_q.begin(), out_q.end() );
+		else std::swap( out_q.front(), out_q.back() );
+		out_q.pop_back();
 	}
 };
 
-/// Wrapper around std::queue with the proper number of template parameters
-template<typename T>
-using std_queue = std::queue<T>;
-
-/// N-way sum merge that produces its output tuples in an unordered fashion
+/// N-way merge that produces its output tuples in an unordered fashion
 template<typename T, 
          typename K = T, 
 		 typename Extract = identity<T>, 
-		 template<typename> class Q = std_vector,
-		 typename Valid = always_valid< Q<T> > >
-using UnorderedNWayMerge = NWayMerge<T, K, Extract, Q, Valid, std_queue>;
+		 typename Q = std::vector<T>,
+		 typename Valid = always_valid<Q> >
+using UnsortedNWayMerge = NWayMerge<T, K, Extract, Q, Valid, false>;

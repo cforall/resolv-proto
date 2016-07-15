@@ -25,8 +25,8 @@ ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
 		auto to = from;
 		++to;
 		while ( to != types.end() ) {
-			Ref<ConcType> f = ref( *from );
-			Ref<ConcType> t = ref( *to );
+			Brw<ConcType> f = brw( *from );
+			Brw<ConcType> t = brw( *to );
 			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
 			
 			++to;
@@ -38,8 +38,8 @@ ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
 		do {
 			--to;
 			
-			Ref<ConcType> f = ref( *from );
-			Ref<ConcType> t = ref( *to );
+			Brw<ConcType> f = brw( *from );
+			Brw<ConcType> t = brw( *to );
 			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
 		} while ( to != types.begin() );
 	}

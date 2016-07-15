@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -10,21 +11,19 @@
 /// A type declaration
 class Type {
 	friend std::ostream& operator<< (std::ostream&, const Type&);
-	template<typename T> friend Ptr<T> clone( const Ptr<T>& );
-	template<typename T> friend Ptr<T> clone( const Shared<T>& );
-	template<typename T> friend Ptr<T> clone( Ref<T> );
 	friend bool operator== (const Type&, const Type&);
 	friend std::hash<Type>;
 public:
 	virtual ~Type() = default;
+	
+	/// Create a fresh copy of this object with the same runtime type
+	virtual Ptr<Type> clone() const = 0;
 	
 	/// How many elemental types are represented by this type
 	virtual unsigned size() const = 0;
 protected:
 	/// Print this object to the output stream
 	virtual void write(std::ostream &) const = 0;
-	/// Create a fresh copy of this object with the same runtime type
-	virtual Ptr<Type> clone() const = 0;
 	/// Check this type for equality with other types
 	virtual bool equals(const Type&) const = 0; 
 	/// Hash this type
@@ -60,12 +59,8 @@ public:
 	
 	ConcType(int id_) : id_(id_) {}
 	
-/*	ConcType(const ConcType&) = default;
-	ConcType(ConcType&&) = default;
-	ConcType& operator= (const ConcType&) = default;
-	ConcType& operator= (ConcType&&) = default;
-	virtual ~ConcType() = default;
-*/	
+	virtual Ptr<Type> clone() const { return make<ConcType>( id_ ); }
+
 	bool operator== (const ConcType& that) const { return id_ == that.id_; }
 	bool operator!= (const ConcType& that) const { return !(*this == that); }
 	bool operator< (const ConcType& that) const { return id_ < that.id_; }
@@ -76,8 +71,6 @@ public:
 	
 protected:
 	virtual void write(std::ostream& out) const { out << id_; }
-	
-	virtual Ptr<Type> clone() const { return make<ConcType>( id_ ); }
 	
 	virtual bool equals(const Type& obj) const {
 		const ConcType* that = dynamic_cast<const ConcType*>(&obj);
@@ -100,12 +93,12 @@ class VoidType : public Type {
 public:
 	typedef Type Base;
 	
+	virtual Ptr<Type> clone() const { return make<VoidType>(); }
+	
 	virtual unsigned size() const { return 0; }
 	
 protected:
 	virtual void write(std::ostream& out) const { out << "Void"; }
-	
-	virtual Ptr<Type> clone() const { return make<VoidType>(); }
 	
 	virtual bool equals(const Type& obj) const {
 		return dynamic_cast<const VoidType*>(&obj) != nullptr;
@@ -116,14 +109,16 @@ protected:
 
 /// Represents multiple return types; must be more than one
 class TupleType : public Type {
-	List<Type, ByRef> types_;
+	List<Type, ByBrw> types_;
 public:
 	typedef Type Base;
 	
-	TupleType(const List<Type, ByRef& types_)
+	TupleType(const List<Type, ByBrw>& types_)
 		: types_(types_) { assert( types_.size() > 1 ); }
 	
-	const List<Type, ByRef>& types() const { return types_; }
+	virtual Ptr<Type> clone() const { return make<TupleType>( types_ ); }
+	
+	const List<Type, ByBrw>& types() const { return types_; }
 	
 	virtual unsigned size() const { return types_.size(); }
 	
@@ -133,8 +128,6 @@ protected:
 		 out << **it;
 		 for(; it != types_.end(); ++it) { out << " " << **it; }
 	 }
-	 
-	 virtual Ptr<Type> clone() const { return make<TupleType>( types_ ); }
 	 
 	 virtual bool equals(const Type& obj) const {
 		 const TupleType* that = dynamic_cast<const TupleType*>(&obj);
@@ -155,4 +148,4 @@ protected:
 		 }
 		 return r;
 	 }
-}
+};

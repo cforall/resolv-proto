@@ -4,6 +4,7 @@
 #include <iterator>
 #include <memory>
 #include <set>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -18,7 +19,7 @@ using Shared = std::shared_ptr<const T>;
 
 /// Borrowed pointer to T
 template<typename T>
-using Ref = const T*;
+using Brw = const T*;
 
 /// Make an owned pointer to T of type T::Base
 template<typename T, typename... Args>
@@ -37,38 +38,55 @@ inline Ptr<T> make_ptr( Args&&... args ) {
 /// Make a shared pointer to T
 using std::make_shared;
 
+/// Checks if T is Ptr<U>, Shared<U>, or Brw<U> for some U,
+/// for template metaprogramming
+template<typename T>
+struct is_pointer_type : std::false_type {};
+
+template<typename U>
+struct is_pointer_type< Ptr<U> > : std::true_type {};
+template<typename U>
+struct is_pointer_type< Shared<U> > : std::true_type {};
+template<typename U>
+struct is_pointer_type< Brw<U> > : std::true_type {};
+
 /// Borrow an owned pointer
 template<typename T>
-inline Ref<T> ref( const Ptr<T>& p ) { return p.get(); }
+inline Brw<T> brw( const Ptr<T>& p ) { return p.get(); }
 
 /// Borrow a shared pointer
 template<typename T>
-inline Ref<T> ref( const Shared<T>& p ) { return p.get(); }
+inline Brw<T> brw( const Shared<T>& p ) { return p.get(); }
 
 /// Borrow an lvalue
-template<typename T>
-inline Ref<T> ref( T& p ) { return &p; }
+template<typename T,
+         typename = typename std::enable_if<!is_pointer_type<T>::value, T>::type>
+inline Brw<T> brw( T& p ) {
+	return &p;
+}
 
 /// Borrow a pointer or value as a different type, returning nullptr if not 
 /// runtime compatible
 template<typename T, typename F>
-inline Ref<T> ref_as( Ref<F> p ) {
-	return dynamic_cast< Ref<T> >( p );
+inline Brw<T> brw_as( Brw<F> p ) {
+	return dynamic_cast< Brw<T> >( p );
 }
 
 template<typename T, typename F>
-inline Ref<T> ref_as( Ptr<F> p ) {
-	return dynamic_cast< Ref<T> >( ref(p) );
+inline Brw<T> brw_as( const Ptr<F>& p ) {
+	return dynamic_cast< Brw<T> >( brw(p) );
 }
 
 template<typename T, typename F>
-inline Ref<T> ref_as( Shared<F> p ) {
-	return dynamic_cast< Ref<T> >( ref(p) );
+inline Brw<T> brw_as( const Shared<F>& p ) {
+	return dynamic_cast< Brw<T> >( brw(p) );
 }
 
 /// Share a pointer as a different type, returning nullptr if not runtime compatible
-template<class T, class U>
-using shared_as = std::dynamic_pointer_cast<T, U>;
+template <typename T, typename U>
+inline Shared<T> shared_as( const Shared<U>& p ) {
+	return std::dynamic_pointer_cast<const T>( p );
+}
 
 /// Take ownership of a value
 using std::move;
@@ -85,7 +103,7 @@ template<typename T>
 inline Ptr<T> clone( const Shared<T>& p ) { return p->clone(); }
 
 template<typename T>
-inline Ptr<T> clone( Ref<T> p ) { return p->clone(); }
+inline Ptr<T> clone( Brw<T> p ) { return p->clone(); }
 
 /// Clone all the elements in a collection of Ptr<T>
 template<typename C>
@@ -140,11 +158,11 @@ struct ByPtr {
 
 /// Traits class for borrowed pointer
 template<typename T>
-struct ByRef {
-	typedef Ref<T> Element;
-	typedef ByValueHash<T, Ref> Hash;
-	typedef ByValueEquals<T, Ref> Equals;
-	typedef ByValueCompare<T, Ref> Compare;
+struct ByBrw {
+	typedef Brw<T> Element;
+	typedef ByValueHash<T, Brw> Hash;
+	typedef ByValueEquals<T, Brw> Equals;
+	typedef ByValueCompare<T, Brw> Compare;
 };
 
 /// Traits class for owned pointer
@@ -180,32 +198,32 @@ template<typename T, template<typename> class Storage = ByPtr>
 using SortedSet = std::set<typename Storage<T>::Element,
                            typename Storage<T>::Compare>;
 
-/// Gets canonical Ref for an object from the set;
+/// Gets canonical reference for an object from the set;
 /// If the object does not exist in the set, is inserted
 template<typename T>
-inline Ref<T> get_ref(Set<T>& s, Ptr<T>&& x) {
-	return ref( *s.insert( move(x) ).first );
+inline Brw<T> get_canon(Set<T>& s, Ptr<T>&& x) {
+	return brw( *s.insert( move(x) ).first );
 }
 
-/// Gets canonical Ref for an object from the set;
+/// Gets canonical reference for an object from the set;
 /// If the object does not exist in the set, is inserted
 template<typename T>
-inline Ref<T> get_ref(SortedSet<T>& s, Ptr<T>&& x) {
-	return ref( *s.insert( move(x) ).first );
+inline Brw<T> get_canon(SortedSet<T>& s, Ptr<T>&& x) {
+	return brw( *s.insert( move(x) ).first );
 }
 
-/// Gets canonical Ref for an object from the set;
+/// Gets canonical reference for an object from the set;
 /// If the object does not exist in the set, returns nullptr
 template<typename T>
-inline Ref<T> find_ref(const Set<T>& s, Ptr<T>&& x) {
+inline Brw<T> find_canon(const Set<T>& s, Ptr<T>&& x) {
 	auto it = s.find(x);
-	return it == s.end() ? nullptr : ref( *it );
+	return it == s.end() ? nullptr : brw( *it );
 }
 
-/// Gets canonical Ref for an object from the set;
+/// Gets canonical reference for an object from the set;
 /// If the object does not exist in the set, returns nullptr
 template<typename T>
-inline Ref<T> find_ref(const SortedSet<T>& s, Ptr<T>&& x) {
+inline Brw<T> find_canon(const SortedSet<T>& s, Ptr<T>&& x) {
 	auto it = s.find(x);
-	return it == s.end() ? nullptr : ref( *it );
+	return it == s.end() ? nullptr : brw( *it );
 }
