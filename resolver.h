@@ -8,8 +8,8 @@
 #include "interpretation.h"
 #include "utility.h"
 
-/// Effect to run on invalid interpretation; argument is the expression which could 
-/// not be resolved
+/// Effect to run on invalid interpretation; argument is the expression which 
+/// could not be resolved
 typedef std::function<void(Brw<Expr>)> InvalidEffect;
 
 /// Effect to run on ambiguous interpretation; arguments are the expression which 
@@ -29,10 +29,10 @@ class Resolver {
 	/// Effect to run on ambiguous interpretation
 	AmbiguousEffect& on_ambiguous;
 	
-	/// Recursively resolve interpretations, expanding conversions if not at the top 
-	/// level.
-	/// May return ambiguous interpretations, but otherwise will not return invalid 
-	/// interpretations.
+	/// Recursively resolve interpretations, expanding conversions if not at the 
+	/// top level.
+	/// May return ambiguous interpretations, but otherwise will not return 
+	/// invalid interpretations.
 	InterpretationList resolve( const Shared<Expr>& expr, bool topLevel = false );
 	
 public:
@@ -42,7 +42,7 @@ public:
 		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ) {}
 
 	/// Resolve best interpretation of input expression
-	/// Will return invalid interpretation and run appropriate effect if resolution 
-	/// fails
+	/// Will return invalid interpretation and run appropriate effect if 
+	/// resolution fails
 	Interpretation operator() ( const Shared<Expr>& expr );
 };

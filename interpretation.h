@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <utility>
 
 #include "cost.h"
 #include "expr.h"
@@ -35,6 +36,13 @@ struct Interpretation {
 	Interpretation( Shared<TypedExpr>&& expr = Shared<TypedExpr>{}, 
 	                Cost&& cost = Cost{} )
 		: expr( std::move(expr) ), cost( std::move(cost) ) {}
+	
+	friend void swap(Interpretation& a, Interpretation& b) {
+		using std::swap;
+
+		swap(a.expr, b.expr);
+		swap(a.cost, b.cost);
+	}
 	
 	/// true iff the interpretation is ambiguous; 
 	/// interpretation must have a valid base

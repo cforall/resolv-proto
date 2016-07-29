@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <vector>
 
@@ -205,26 +206,35 @@ Interpretation Resolver::operator() ( const Shared<Expr>& expr ) {
 		on_invalid( brw(expr) );
 		return Interpretation::make_invalid();
 	}
-	
-	// sort results by cost
+
 	if ( results.size() > 1 ) {
-		std::sort( results.begin(), results.end(), 
-			[](const Interpretation& a, const Interpretation& b) {
-				return a.cost < b.cost;
-			});
+		// sort min-cost results to beginning
+		InterpretationList::iterator min_pos = results.begin();
+		for ( InterpretationList::iterator i = results.begin() + 1;
+		      i != results.end(); ++i ) {
+			if ( i->cost == min_pos->cost ) {
+				// duplicate minimum cost; swap into next minimum position
+				++min_pos;
+				std::iter_swap( min_pos, i );
+			} else if ( i->cost < min_pos->cost ) {
+				// new minimum cost; swap into first position
+				min_pos = results.begin();
+				std::iter_swap( min_pos, i );
+			}
+		}
+
+		// ambiguous if more than one min-cost interpretation
+		if ( min_pos != results.begin() ) {
+			on_ambiguous( brw(expr), results.begin(), ++min_pos );
+			return Interpretation::make_invalid();
+		}
 	}
 	
-	// TODO handle ambiguous candidates from conversion expansion
 	Interpretation& candidate = results.front();
-	if ( results.size() == 1 ) return move(candidate);
 	
-	// check for multiple min-cost interpretations
-	unsigned next_cost;
-	for ( next_cost = 1; next_cost < results.size(); ++next_cost ) {
-		if ( results[next_cost].cost > candidate.cost ) break;
-	}
-	if ( next_cost > 1 ) {
-		on_ambiguous( brw(expr), results.begin(), results.begin() + next_cost );
+	// handle ambiguous candidate from conversion expansion
+	if ( candidate.is_ambiguous() ) {
+		on_ambiguous( brw(expr), results.begin(), results.begin() + 1 );
 		return Interpretation::make_invalid();
 	}
 	

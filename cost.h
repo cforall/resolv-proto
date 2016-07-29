@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <utility>
 
 /// Cost of an expression interpretation
 struct Cost {
@@ -14,6 +15,13 @@ struct Cost {
 	Cost(Cost&&) = default;
 	Cost& operator= (const Cost&) = default;
 	Cost& operator= (Cost&&) = default;
+
+	friend void swap(Cost& a, Cost& b) {
+		using std::swap;
+
+		swap(a.unsafe, b.unsafe);
+		swap(a.safe, b.safe);
+	}
 	
 	/// Generates a new cost from an integer difference; the cost will have 
 	/// the same magnitude as diff, unsafe if diff is negative, safe if diff 
