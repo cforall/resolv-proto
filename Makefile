@@ -13,11 +13,16 @@ ifdef SORTED
 CXXFLAGS += -DRP_SORTED
 endif
 
-ifeq ($(LAST_SORTED),$(SORTED))
+ifdef USER_CONVS
+CXXFLAGS += -DRP_USER_CONVS
+endif
+
+ifeq "${LAST_SORTED};${LAST_USER_CONVS}" "${SORTED};${USER_CONVS}"
 prebuild:
 else
 prebuild: clean
 	@echo "LAST_SORTED=${SORTED}" > .lastmakeflags
+	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
 endif
 
 # rewrite object generation to auto-determine dependencies, run prebuild

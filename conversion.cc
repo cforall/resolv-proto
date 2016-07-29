@@ -19,6 +19,7 @@ std::ostream& operator<< ( std::ostream& out, const ConversionGraph& g ) {
 ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
 	ConversionGraph g;
 	
+#ifdef RP_USER_CONVS
 	// no conversions for empty or single-element set
 	if ( types.size() <= 1 ) return g;
 
@@ -37,6 +38,32 @@ ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
 		low = high;
 		++high;
 	} while ( high != types.end() );
-
+#else
+	// loop over from types
+	for ( auto from = types.begin(); from != types.end(); ++from ) {
+		// do safe conversions
+		auto to = from;
+		++to;
+		while ( to != types.end() ) {
+			Brw<ConcType> f = brw( *from );
+			Brw<ConcType> t = brw( *to );
+			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
+			
+			++to;
+		}
+		
+		// do unsafe conversions
+		if ( from == types.begin() ) continue; // --types.begin() is invalid
+		to = from;
+		do {
+			--to;
+			
+			Brw<ConcType> f = brw( *from );
+			Brw<ConcType> t = brw( *to );
+			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
+		} while ( to != types.begin() );
+	}
+#endif
+	
 	return g;
 }
