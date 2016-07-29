@@ -16,29 +16,41 @@ std::ostream& operator<< ( std::ostream& out, const ConversionGraph& g ) {
 	return out;
 }
 
-ConversionGraph make_conversions( const SortedSet<ConcType>& types ) {
+ConversionGraph make_conversions( SortedSet<ConcType>& types ) {
 	ConversionGraph g;
-	
-#ifdef RP_USER_CONVS
+
 	// no conversions for empty or single-element set
 	if ( types.size() <= 1 ) return g;
+	
+#ifdef RP_USER_CONVS
+	// generate single-step conversions between all types, adding more if needed
+	int min = (*types.begin())->id();
+	int max = (*types.rbegin())->id();
 
-	auto high = types.begin();
-	auto low = high;
-	++high;
-	do {
-		Brw<ConcType> lo = brw( *low );
-		Brw<ConcType> hi = brw( *high );
+	// safe conversions first
+	Brw<ConcType> prev = brw( *types.begin() );
+	for (int i = min+1; i < max; ++i) {
+		// insert type if needed
+		Brw<ConcType> crnt = get_canon( types, make_ptr<ConcType>( i ) );
+		// single-step safe conversion
+		g.insert( prev, crnt, Cost{ 0, 1 } );
 
-		// safe conversion
-		g.insert( lo, hi, Cost::from_diff( hi->id() - lo->id() ) );
-		// unsafe conversion
-		g.insert( hi, lo, Cost::from_diff( lo->id() - hi->id() ) );
+		prev = crnt;
+	}
+	Brw<ConcType> crnt = brw( *types.rbegin() );
+	g.insert( prev, crnt, Cost{ 0, 1 } );
 
-		low = high;
-		++high;
-	} while ( high != types.end() );
-#else
+	// then unsafe
+	prev = crnt;
+	auto j = types.rbegin();
+	for (++j; j != types.rend(); ++j) {
+		crnt = brw( *j );  // inserted by prior loop
+		// single-step unsafe conversion]
+		g.insert( prev, crnt, Cost{ 1, 0 } );
+
+		prev = crnt;
+	}
+#else // ! RP_USER_CONVS
 	// loop over from types
 	for ( auto from = types.begin(); from != types.end(); ++from ) {
 		// do safe conversions
