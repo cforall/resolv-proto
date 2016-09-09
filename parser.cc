@@ -112,9 +112,9 @@ bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
 	
 	// pass completed declaration into return list
 	if ( saw_tag ) {
-		funcs.insert( FuncDecl{name, tag, params, returns} );
+		funcs.insert( new FuncDecl{name, tag, params, returns} );
 	} else {
-		funcs.insert( FuncDecl{name, params, returns} );
+		funcs.insert( new FuncDecl{name, params, returns} );
 	}
 	
 	return true;

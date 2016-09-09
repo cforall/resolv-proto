@@ -26,16 +26,15 @@ void on_ambiguous( const Expr* e, InterpretationList::iterator i,
 
 int main(int argc, char **argv) {
 	FuncTable funcs;
-	// TODO make exprs ByPtr
 	List<Expr> exprs;
 	SortedSet<ConcType> types;
 	
 	if ( ! parse_input( std::cin, funcs, exprs, types ) ) return 1;
 	
 	std::cout << std::endl;
-	for ( auto& func : funcs ) { std::cout << func << std::endl; }
+	for ( auto&& func : funcs ) { std::cout << *func << std::endl; }
 	std::cout << "%%" << std::endl;
-	for ( auto& expr : exprs ) { std::cout << *expr << std::endl; }
+	for ( auto&& expr : exprs ) { std::cout << *expr << std::endl; }
 	
 	ConversionGraph conversions = make_conversions( types );
 	
@@ -50,5 +49,5 @@ int main(int argc, char **argv) {
 			*e = i.expr;
 		} 
 	}
-	collect( funcs );
+	collect();
 }

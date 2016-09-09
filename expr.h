@@ -120,14 +120,11 @@ class CallExpr : public TypedExpr {
 public:
 	typedef Expr Base;
 	
-	CallExpr( const FuncDecl* func_, const List<Expr>& args_ )
-		: func_( func_ ), args_( args_ ) {}
-
-	CallExpr( const FuncDecl& func_, List<Expr>&& args_ = List<Expr>{} )
-		: func_( &func_ ), args_( move(args_) ) {}
+	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{} )
+		: func_( func_ ), args_( move(args_) ) {}
 	
 	virtual Expr* clone() const {
-		return new CallExpr( func_, args_ );
+		return new CallExpr( func_, copy(args_) );
 	}
 
 	virtual void accept( Visitor& v ) const { v.visit( this ); }

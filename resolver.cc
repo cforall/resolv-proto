@@ -22,9 +22,9 @@ InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
 	if ( withNParams == funcs.end() ) return results;
 	
 	// attempt to match functions to arguments
-	for ( auto& func : withNParams() ) {
+	for ( auto&& func : withNParams() ) {
 		// skip functions returning no values, unless at top level
-		if ( ! topLevel && func.returns()->size() == 0 ) continue;
+		if ( ! topLevel && func->returns()->size() == 0 ) continue;
 			
 		// create new zero-cost interpretation for resolved call
 		results.push_back( new Interpretation(new CallExpr( func ), Cost{}) );
@@ -90,12 +90,12 @@ InterpretationList matchFuncs( const Funcs& funcs, Combos&& combos,
 		if ( withNParams == funcs.end() ) continue;
 		
 		// attempt to match functions to arguments
-		for ( auto& func : withNParams() ) {
+		for ( auto&& func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( ! topLevel && func.returns()->size() == 0 ) continue;
+			if ( ! topLevel && func->returns()->size() == 0 ) continue;
 			
 			// skip functions that don't match the type
-			if ( ! argsMatchParams( args( combo ), func.params() ) )
+			if ( ! argsMatchParams( args( combo ), func->params() ) )
 				continue;
 			
 			// create new interpretation for resolved call
