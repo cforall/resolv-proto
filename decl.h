@@ -5,14 +5,15 @@
 #include <string>
 #include <vector>
 
+#include "ast.h"
+#include "data.h"
 #include "type.h"
-#include "utility.h"
 
 /// A resolver declaration
-class Decl {
+class Decl : public ASTNode {
 	friend std::ostream& operator<< (std::ostream&, const Decl&);
 public:
-	virtual Ptr<Decl> clone() const = 0;
+	virtual Decl* clone() const = 0;
 	
 	virtual ~Decl() = default;
 protected:
@@ -26,20 +27,20 @@ inline std::ostream& operator<< (std::ostream& out, const Decl& d) {
 
 /// A function declaration
 class FuncDecl final : public Decl {
-	std::string name_;          ///< Name of function
-	std::string tag_;           ///< Disambiguating tag for function
-	List<Type, ByBrw> params_;  ///< Parameter types of function
-	Ptr<Type> returns_;         ///< Return types of function
+	std::string name_;     ///< Name of function
+	std::string tag_;      ///< Disambiguating tag for function
+	List<Type> params_;    ///< Parameter types of function
+	const Type* returns_;  ///< Return types of function
 	
 	/// Generate appropriate return type from return list
-	static Ptr<Type> gen_returns(const List<Type, ByBrw>& rs) {
+	static const Type* gen_returns(const List<Type>& rs) {
 		switch ( rs.size() ) {
 		case 0:
-			return make<VoidType>();
+			return new VoidType();
 		case 1:
-			return rs.front()->clone();
+			return rs.front();
 		default:
-			return make<TupleType>( rs );
+			return new TupleType( rs );
 		}
 	}
 	
@@ -47,23 +48,25 @@ public:
 	typedef Decl Base;
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const List<Type, ByBrw>& params_, Brw<Type> returns_)
+	         const List<Type>& params_, const Type* returns_)
 		: name_(name_), tag_(tag_), params_(params_), 
-		  returns_( returns_->clone() ) {}
+		  returns_( returns_ ) {}
 	
-	FuncDecl(const std::string& name_, const List<Type, ByBrw>& params_, 
-	         const List<Type, ByBrw>& returns_)
+	FuncDecl(const std::string& name_, const List<Type>& params_, 
+	         const List<Type>& returns_)
 		: name_(name_), tag_(), params_(params_), 
 		  returns_( gen_returns( returns_ ) ) {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const List<Type, ByBrw>& params_, const List<Type, ByBrw>& returns_)
+	         const List<Type>& params_, const List<Type>& returns_)
 		: name_(name_), tag_(tag_), params_(params_), 
 		  returns_( gen_returns( returns_ ) ) {}
 	
-	virtual Ptr<Decl> clone() const {
-		return make<FuncDecl>( name_, tag_, params_, brw(returns_) );
+	virtual Decl* clone() const {
+		return new FuncDecl( name_, tag_, params_, returns_ );
 	}
+
+	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	bool operator== (const FuncDecl& that) const { 
 		return name_ == that.name_ && tag_ == that.tag_;
@@ -72,10 +75,14 @@ public:
 	
 	const std::string& name() const { return name_; }
 	const std::string& tag() const { return tag_; }
-	const List<Type, ByBrw>& params() const { return params_; }
-	Brw<Type> returns() const { return brw(returns_); }
+	const List<Type>& params() const { return params_; }
+	const Type* returns() const { return returns_; }
 
 protected:
+	virtual void trace(const GC& gc) const {
+		gc << params_ << returns_;
+	}
+
 	virtual void write(std::ostream& out) const {
 		out << *returns_ << " ";
 		out << name_;
@@ -86,18 +93,22 @@ protected:
 
 /// A "variable" declaration
 class VarDecl final : public Decl {
-	Brw<ConcType> ty_;  ///< Type of variable
+	const ConcType* ty_;  ///< Type of variable
 public:
 	typedef Decl Base;
 	
-	VarDecl(Brw<ConcType> ty_) : ty_(ty_) {}
+	VarDecl(const ConcType* ty_) : ty_(ty_) {}
 	
-	virtual Ptr<Decl> clone() const { return make<VarDecl>( ty_ ); }
+	virtual Decl* clone() const { return new VarDecl( ty_ ); }
+
+	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	bool operator== (const VarDecl& that) const { return ty_ == that.ty_; }
 	bool operator!= (const VarDecl& that) const { return !(*this == that); }
 	
-	Brw<ConcType> ty() const { return ty_; }
+	const ConcType* ty() const { return ty_; }
 protected:
+	virtual void trace(const GC& gc) const { gc << ty_; }
+
 	virtual void write(std::ostream& out) const { out << *ty_; }
 };

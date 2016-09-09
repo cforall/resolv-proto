@@ -6,16 +6,15 @@
 #include "expr.h"
 #include "func_table.h"
 #include "interpretation.h"
-#include "utility.h"
 
 /// Effect to run on invalid interpretation; argument is the expression which 
 /// could not be resolved
-typedef std::function<void(Brw<Expr>)> InvalidEffect;
+typedef std::function<void(const Expr*)> InvalidEffect;
 
 /// Effect to run on ambiguous interpretation; arguments are the expression which 
 /// could not be resolved and an iterator pair representing the first ambiguous 
 /// candidate and the iterator after the last (range is guaranteed to be non-empty)
-typedef std::function<void(Brw<Expr>,
+typedef std::function<void(const Expr*,
                            InterpretationList::iterator, 
 	                       InterpretationList::iterator)> AmbiguousEffect;  
 
@@ -33,7 +32,7 @@ class Resolver {
 	/// top level.
 	/// May return ambiguous interpretations, but otherwise will not return 
 	/// invalid interpretations.
-	InterpretationList resolve( const Shared<Expr>& expr, bool topLevel = false );
+	InterpretationList resolve( const Expr* expr, bool topLevel = false );
 	
 public:
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
@@ -44,5 +43,5 @@ public:
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 
 	/// resolution fails
-	Interpretation operator() ( const Shared<Expr>& expr );
+	Interpretation operator() ( const Expr* expr );
 };

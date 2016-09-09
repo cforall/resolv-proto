@@ -14,6 +14,7 @@ template<typename T,
 		 typename Valid = always_valid<Q> >
 inline auto unsorted_eager_merge( std::vector<Q>&& queues ) 
 		-> std::vector< std::pair< K, std::vector<T> > > {
+	// TODO Use simple iteration, rather than the queue abstraction of NWayMerge
 	auto merge = UnsortedNWayMerge<T, K, Extract, Q, Valid>{ std::move(queues) };
 	
 	std::vector< std::pair< K, std::vector<T> > > v;

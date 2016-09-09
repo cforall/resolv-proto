@@ -4,38 +4,43 @@
 #include <utility>
 
 #include "cost.h"
+#include "data.h"
 #include "expr.h"
+#include "gc.h"
 #include "type.h"
-#include "utility.h"
 
 /// An ambiguous interpretation with a given type
 class AmbiguousExpr : public TypedExpr {
-	Brw<Type> type_;
+	const Type* type_;
 public:
 	typedef Expr Base;
 	
-	AmbiguousExpr( Brw<Type> type_ ) : type_( type_ ) {}
+	AmbiguousExpr( const Type* type_ ) : type_( type_ ) {}
 	
-	virtual Ptr<Expr> clone() const { return make<AmbiguousExpr>( type_ ); }
+	virtual Expr* clone() const { return new AmbiguousExpr( type_ ); }
+
+	virtual void accept( Visitor& ) const { /* do nothing; AmbiguousExpr isn't known by Visitor */ }
 	
-	virtual Brw<Type> type() const { return type_; }
+	virtual const Type* type() const { return type_; }
 
 protected:
-	 virtual void write(std::ostream& out) const {
-		 out << "<ambiguous expression of type " << *type_ << ">";
-	 }
+	virtual void trace(const GC& gc) const { gc << type_; }
+
+	virtual void write(std::ostream& out) const {
+		out << "<ambiguous expression of type " << *type_ << ">";
+	}
 };
 
 /// Typed interpretation of an expression
-struct Interpretation {
-	Shared<TypedExpr> expr;  /// Base expression for interpretation
-	Cost cost;               /// Cost of interpretation
+struct Interpretation : public GC_Object {
+	const TypedExpr* expr;  /// Base expression for interpretation
+	Cost cost;              /// Cost of interpretation
 	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0]
-	Interpretation( Shared<TypedExpr>&& expr = Shared<TypedExpr>{}, 
+	Interpretation( const TypedExpr* expr = nullptr, 
 	                Cost&& cost = Cost{} )
-		: expr( std::move(expr) ), cost( std::move(cost) ) {}
+		: expr( expr ), cost( move(cost) ) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
 		using std::swap;
@@ -47,14 +52,14 @@ struct Interpretation {
 	/// true iff the interpretation is ambiguous; 
 	/// interpretation must have a valid base
 	bool is_ambiguous() const {
-		return brw_as<AmbiguousExpr>( expr ) != nullptr;
+		return dynamic_cast<const AmbiguousExpr*>( expr ) != nullptr;
 	}
 	
 	/// true iff the interpretation is unambiguous and has a valid base
 	bool is_valid() const { return expr != nullptr && ! is_ambiguous(); }
 	
 	/// Get the type of the interpretation
-	Brw<Type> type() const { return expr->type(); }
+	const Type* type() const { return expr->type(); }
 	
 	/// Returns a fresh invalid interpretation
 	static Interpretation make_invalid() { return Interpretation{}; }
@@ -72,4 +77,4 @@ inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 }
 
 /// List of interpretations
-typedef List<Interpretation, Raw> InterpretationList;
+typedef List<Interpretation> InterpretationList;

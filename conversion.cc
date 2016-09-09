@@ -1,9 +1,15 @@
 #include <ostream>
 
 #include "conversion.h"
-#include "utility.h"
+#include "gc.h"
 
 const ConversionGraph::ConversionList ConversionGraph::no_conversions = {};
+
+GC& operator<< (const GC& gc, const ConversionGraph& g) {
+	for ( auto& v : g.nodes ) {
+		gc << v.first << v.second.type;
+	}
+}
 
 std::ostream& operator<< ( std::ostream& out, const ConversionGraph& g ) {
 	for ( auto& u : g.nodes ) {
@@ -28,24 +34,24 @@ ConversionGraph make_conversions( SortedSet<ConcType>& types ) {
 	int max = (*types.rbegin())->id();
 
 	// safe conversions first
-	Brw<ConcType> prev = brw( *types.begin() );
+	const ConcType* prev = *types.begin();
 	for (int i = min+1; i < max; ++i) {
 		// insert type if needed
-		Brw<ConcType> crnt = get_canon( types, make_ptr<ConcType>( i ) );
+		const ConcType* crnt = get_canon( types, i );
 		// single-step safe conversion
 		g.insert( prev, crnt, Cost{ 0, 1 } );
 
 		prev = crnt;
 	}
-	Brw<ConcType> crnt = brw( *types.rbegin() );
+	const ConcType* crnt = *types.rbegin();
 	g.insert( prev, crnt, Cost{ 0, 1 } );
 
 	// then unsafe
 	prev = crnt;
 	auto j = types.rbegin();
 	for (++j; j != types.rend(); ++j) {
-		crnt = brw( *j );  // inserted by prior loop
-		// single-step unsafe conversion]
+		crnt = *j;  // inserted by prior loop
+		// single-step unsafe conversion
 		g.insert( prev, crnt, Cost{ 1, 0 } );
 
 		prev = crnt;
@@ -57,8 +63,8 @@ ConversionGraph make_conversions( SortedSet<ConcType>& types ) {
 		auto to = from;
 		++to;
 		while ( to != types.end() ) {
-			Brw<ConcType> f = brw( *from );
-			Brw<ConcType> t = brw( *to );
+			const ConcType* f = *from;
+			const ConcType* t = *to;
 			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
 			
 			++to;
@@ -70,8 +76,8 @@ ConversionGraph make_conversions( SortedSet<ConcType>& types ) {
 		do {
 			--to;
 			
-			Brw<ConcType> f = brw( *from );
-			Brw<ConcType> t = brw( *to );
+			const ConcType* f = *from;
+			const ConcType* t = *to;
 			g.insert( f, t, Cost::from_diff( t->id() - f->id() ) );
 		} while ( to != types.begin() );
 	}

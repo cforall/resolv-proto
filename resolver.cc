@@ -6,11 +6,11 @@
 
 #include "cost.h"
 #include "eager_merge.h"
+#include "expand_conversions.h"
 #include "expr.h"
 #include "func_table.h"
 #include "interpretation.h"
 #include "nway_merge.h"
-#include "utility.h"
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
@@ -27,10 +27,7 @@ InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
 		if ( ! topLevel && func.returns()->size() == 0 ) continue;
 			
 		// create new zero-cost interpretation for resolved call
-		results.emplace_back( 
-			make_shared<CallExpr>( brw(func) ),
-			Cost{}
-		);
+		results.push_back( new Interpretation(new CallExpr( func ), Cost{}) );
 	}
 	
 	return results;
@@ -41,37 +38,37 @@ unsigned argNParams( const Interpretation& arg ) { return arg.type()->size(); }
 
 unsigned argNParams( const InterpretationList& args ) {
 	unsigned n_params = 0;
-	for ( const Interpretation& i : args ) {
-		n_params += i.type()->size();
+	for ( const Interpretation* i : args ) {
+		n_params += i->type()->size();
 	}
 	return n_params;
 }
 
 /// true iff type of arg matches params[0]; params should have a single element
-bool argsMatchParams( const Interpretation& arg, const List<Type, ByBrw>& params ) {
+bool argsMatchParams( const Interpretation& arg, const List<Type>& params ) {
 	return *arg.type() == *params[0];
 } 
 
 /// true iff types of args match parameter types; 
 /// args and params should have the same length 
 bool argsMatchParams( const InterpretationList& args, 
-                      const List<Type, ByBrw>& params ) {
+                      const List<Type>& params ) {
 	for (unsigned i = 0; i < args.size(); ++i) {
-		if ( *args[i].type() != *params[i] ) return false;
+		if ( *args[i]->type() != *params[i] ) return false;
 	}
 	return true;
 }
 
 /// Create a list of argument expressions from a single interpretation
-List<Expr, ByShared> argsFrom( const Interpretation& i ) {
-	return List<Expr, ByShared>{ 1, i.expr };
+List<Expr> argsFrom( const Interpretation& i ) {
+	return List<Expr>{ 1, i.expr };
 }
 
 /// Create a list of argument expressions from a list of interpretations
-List<Expr, ByShared> argsFrom( const InterpretationList& is ) {
-	List<Expr, ByShared> args;
-	for ( auto& i : is ) {
-		args.push_back( i.expr );
+List<Expr> argsFrom( const InterpretationList& is ) {
+	List<Expr> args;
+	for ( const Interpretation* i : is ) {
+		args.push_back( i->expr );
 	}
 	return args;
 }
@@ -86,7 +83,7 @@ InterpretationList matchFuncs( const Funcs& funcs, Combos&& combos,
                                bool topLevel = false ) {
 	InterpretationList results;
 	
-	for ( auto& combo : combos ) {
+	for ( auto&& combo : combos ) {
 		// find function with appropriate number of parameters, 
 		// skipping combo if none
 		auto withNParams = funcs.find( argNParams( args( combo ) ) );
@@ -102,11 +99,10 @@ InterpretationList matchFuncs( const Funcs& funcs, Combos&& combos,
 				continue;
 			
 			// create new interpretation for resolved call
-			results.emplace_back( 
-				make_shared<CallExpr>( brw(func), 
-				                       argsFrom( args( combo ) ) ),
+			results.push_back( new Interpretation( 
+				new CallExpr( func, argsFrom( args( combo ) ) ),
 				cost( combo )
-			);
+			) );
 		}
 	}
 	
@@ -115,7 +111,7 @@ InterpretationList matchFuncs( const Funcs& funcs, Combos&& combos,
 
 /// Extracts the cost from an interpretation
 struct interpretation_cost {
-	const Cost& operator() ( const Interpretation& i ) { return i.cost; }	
+	const Cost& operator() ( const Interpretation* i ) { return i->cost; }	
 };
 
 /// Combination validator that fails on ambiguous interpretations in combinations
@@ -123,19 +119,20 @@ struct interpretation_unambiguous {
 	bool operator() ( const std::vector< InterpretationList >& queues,
 	                  const std::vector< unsigned >& inds ) {
 		for( unsigned i = 0; i < queues.size(); ++i ) {
-			if ( queues[ i ][ inds[i] ].is_ambiguous() ) return false;
+			if ( queues[ i ][ inds[i] ]->is_ambiguous() ) return false;
 		}
 		return true;
 	}
 };
 
-InterpretationList Resolver::resolve( const Shared<Expr>& expr, bool topLevel ) {
+InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 	InterpretationList results;
 	
-	if ( Shared<TypedExpr> typedExpr = shared_as<TypedExpr>( expr ) ) {
+	// TODO switch dynamic cast for virtual call (test performance)
+	if ( const TypedExpr* typedExpr = dynamic_cast<const TypedExpr*>( expr ) ) {
 		// do nothing for expressions which are already typed
-		results.push_back( move( typedExpr ) );
-	} else if ( Brw<FuncExpr> funcExpr = brw_as<FuncExpr>( expr ) ) {
+		results.push_back( new Interpretation(typedExpr) );
+	} else if ( const FuncExpr* funcExpr = dynamic_cast<const FuncExpr*>( expr ) ) {
 		// find candidates with this function name, skipping if none
 		auto withName = funcs.find( funcExpr->name() );
 		if ( withName == funcs.end() ) return results;
@@ -149,11 +146,11 @@ InterpretationList Resolver::resolve( const Shared<Expr>& expr, bool topLevel ) 
 				results = 
 					matchFuncs( withName(),
 				                resolve( funcExpr->args().front() ),
-								[](const Interpretation& i) -> const Interpretation& {
-									return i;
+								[](const Interpretation* i) -> const Interpretation& {
+									return *i;
 								},
-								[](const Interpretation& i) -> Cost {
-									return i.cost;
+								[](const Interpretation* i) -> Cost {
+									return i->cost;
 								}, 
 								topLevel );
 			} break;
@@ -168,7 +165,7 @@ InterpretationList Resolver::resolve( const Shared<Expr>& expr, bool topLevel ) 
 				}
 				
 				auto merged = unsorted_eager_merge<
-					Interpretation,
+					const Interpretation*,
 					Cost,
 					interpretation_cost,
 					InterpretationList,
@@ -191,19 +188,20 @@ InterpretationList Resolver::resolve( const Shared<Expr>& expr, bool topLevel ) 
 		assert(false && "Unsupported expression type");
 	}
 	
+	// Expand results by applying user conversions (except at top level)
 	if ( ! topLevel ) {
-		// TODO expand conversions
+		expandConversions( results );
 	}
 	
 	return results;
 }
 
-Interpretation Resolver::operator() ( const Shared<Expr>& expr ) {
+Interpretation Resolver::operator() ( const Expr* expr ) {
 	InterpretationList results = resolve( expr, true );
 	
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {
-		on_invalid( brw(expr) );
+		on_invalid( expr );
 		return Interpretation::make_invalid();
 	}
 
@@ -212,11 +210,11 @@ Interpretation Resolver::operator() ( const Shared<Expr>& expr ) {
 		InterpretationList::iterator min_pos = results.begin();
 		for ( InterpretationList::iterator i = results.begin() + 1;
 		      i != results.end(); ++i ) {
-			if ( i->cost == min_pos->cost ) {
+			if ( (*i)->cost == (*min_pos)->cost ) {
 				// duplicate minimum cost; swap into next minimum position
 				++min_pos;
 				std::iter_swap( min_pos, i );
-			} else if ( i->cost < min_pos->cost ) {
+			} else if ( (*i)->cost < (*min_pos)->cost ) {
 				// new minimum cost; swap into first position
 				min_pos = results.begin();
 				std::iter_swap( min_pos, i );
@@ -225,16 +223,16 @@ Interpretation Resolver::operator() ( const Shared<Expr>& expr ) {
 
 		// ambiguous if more than one min-cost interpretation
 		if ( min_pos != results.begin() ) {
-			on_ambiguous( brw(expr), results.begin(), ++min_pos );
+			on_ambiguous( expr, results.begin(), ++min_pos );
 			return Interpretation::make_invalid();
 		}
 	}
 	
-	Interpretation& candidate = results.front();
+	const Interpretation& candidate = *results.front();
 	
 	// handle ambiguous candidate from conversion expansion
 	if ( candidate.is_ambiguous() ) {
-		on_ambiguous( brw(expr), results.begin(), results.begin() + 1 );
+		on_ambiguous( expr, results.begin(), results.begin() + 1 );
 		return Interpretation::make_invalid();
 	}
 	

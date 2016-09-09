@@ -7,15 +7,14 @@
 #include "parser.h"
 #include "resolver.h"
 #include "type.h"
-#include "utility.h"
 
 /// Effect for invalid expression
-void on_invalid( Brw<Expr> e ) {
+void on_invalid( const Expr* e ) {
 	std::cout << "ERROR: no valid resolution for " << *e << std::endl;
 }
 
 /// Effect for ambiguous resolution
-void on_ambiguous( Brw<Expr> e, InterpretationList::iterator i, 
+void on_ambiguous( const Expr* e, InterpretationList::iterator i, 
                    InterpretationList::iterator end ) {
 	std::cout << "ERROR: ambiguous resolution for " << *e << "\n"
 	          << "       candidates are:" << std::endl;
@@ -27,7 +26,8 @@ void on_ambiguous( Brw<Expr> e, InterpretationList::iterator i,
 
 int main(int argc, char **argv) {
 	FuncTable funcs;
-	List<Expr, ByShared> exprs;
+	// TODO make exprs ByPtr
+	List<Expr> exprs;
 	SortedSet<ConcType> types;
 	
 	if ( ! parse_input( std::cin, funcs, exprs, types ) ) return 1;
@@ -50,4 +50,5 @@ int main(int argc, char **argv) {
 			*e = i.expr;
 		} 
 	}
+	collect( funcs );
 }

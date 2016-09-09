@@ -1,10 +1,11 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "decl.h"
 #include "flat_map.h"
-#include "utility.h"
+#include "gc.h"
 
 /// Functor to extract the number of parameters from a function declaration
 struct ExtractNParams {
@@ -17,7 +18,7 @@ struct ExtractName {
 };
 
 /// Backing storage for an unindexed set of functions
-typedef List<FuncDecl, Raw> FuncList;
+typedef std::vector<FuncDecl> FuncList;
 
 #ifdef RP_SORTED
 	template<typename Key, typename Inner, typename Extract>
@@ -33,3 +34,10 @@ typedef FuncMap<unsigned, FuncList, ExtractNParams> FuncParamMap;
 
 /// Backing storage for a set of function declarations, indexed by name
 typedef FuncMap<std::string, FuncParamMap, ExtractName> FuncTable;
+
+inline const GC& operator<< (const GC& gc, const FuncTable& funcs) {
+	for ( const FuncDecl& obj : funcs ) {
+		gc << &obj;
+	}
+	return gc;
+}

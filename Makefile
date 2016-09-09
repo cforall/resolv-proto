@@ -38,7 +38,7 @@ COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # system objects
-OBJS = conversion.o parser.o resolver.o
+OBJS = conversion.o gc.o parser.o resolver.o
 
 rp: main.cc rp.d prebuild $(OBJS)
 	$(COMPILE.cc) -o rp main.cc $(OBJS) $(LDFLAGS)

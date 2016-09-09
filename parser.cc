@@ -8,7 +8,6 @@
 #include "expr.h"
 #include "func_table.h"
 #include "type.h"
-#include "utility.h"
 
 /// Skips all whitespace at token; mutates parameter and returns true if any change.
 /// token must not be null.
@@ -76,7 +75,7 @@ bool parse_name(char *&token, std::string& ret) {
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
 bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
-	List<Type, ByBrw> returns, params;
+	List<Type> returns, params;
 	std::string name;
 	std::string tag;
 	int t;
@@ -85,7 +84,7 @@ bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
 	// parse return types
 	match_whitespace(line);
 	while ( parse_int(line, t) ) {
-		returns.push_back( get_canon( types, make_ptr<ConcType>( t ) ) );
+		returns.push_back( get_canon( types, t ) );
 		match_whitespace(line);
 	}
 	
@@ -104,7 +103,7 @@ bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
 	// parse parameters
 	match_whitespace(line);
 	while( parse_int(line, t) ) {
-		params.push_back( get_canon( types, make_ptr<ConcType>( t ) ) );
+		params.push_back( get_canon( types, t ) );
 		match_whitespace(line);
 	}
 	
@@ -123,15 +122,14 @@ bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
 
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
-bool parse_subexpr( char *&token, List<Expr, ByShared>& exprs, 
-                    SortedSet<ConcType>& types ) {
+bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types ) {
 	char *end = token;
 	
 	// Check for type expression
 	int t;
 	if ( parse_int(end, t) ) {
-		Brw<ConcType> ty = get_canon( types, make_ptr<ConcType>( t ) );
-		exprs.push_back( make_shared<VarExpr>( ty ) );
+		const ConcType* ty = get_canon( types, t );
+		exprs.push_back( new VarExpr( ty ) );
 		token = end;
 		return true;
 	}
@@ -143,7 +141,7 @@ bool parse_subexpr( char *&token, List<Expr, ByShared>& exprs,
 	if ( ! match_char(end, '(') ) return false;
 	
 	// Read function args
-	List<Expr, ByShared> args;
+	List<Expr> args;
 	match_whitespace(end);
 	while ( parse_subexpr(end, args, types) ) {
 		match_whitespace(end);
@@ -153,7 +151,7 @@ bool parse_subexpr( char *&token, List<Expr, ByShared>& exprs,
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
-	exprs.push_back( make_shared<FuncExpr>( name, move(args) ) );
+	exprs.push_back( new FuncExpr( name, move(args) ) );
 	token = end;
 	return true;
 }
@@ -161,13 +159,12 @@ bool parse_subexpr( char *&token, List<Expr, ByShared>& exprs,
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr( char *line, List<Expr, ByShared>& exprs, 
-                 SortedSet<ConcType>& types ) {
+bool parse_expr( char *line, List<Expr>& exprs, SortedSet<ConcType>& types ) {
 	match_whitespace(line);
 	return parse_subexpr(line, exprs, types) && is_empty(line);
 }
 
-bool parse_input( std::istream& in, FuncTable& funcs, List<Expr, ByShared>& exprs, 
+bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
                   SortedSet<ConcType>& types ) {
 	std::string line;
 	std::string delim = "%%";

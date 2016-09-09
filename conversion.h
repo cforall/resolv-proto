@@ -10,22 +10,23 @@
 #include <vector>
 
 #include "cost.h"
+#include "gc.h"
 #include "type.h"
-#include "utility.h"
 
 /// Graph of conversions
 class ConversionGraph {
+	friend GC& operator<< (const GC&, const ConversionGraph&);
 	friend std::ostream& operator<< (std::ostream&, const ConversionGraph&);
 public:
 	struct ConversionNode;
 	
 	/// Edge in the conversion graph representing a direct conversion
 	struct Conversion {
-		Brw<ConversionNode> to;  ///< Type converted to
+		const ConversionNode* to;  ///< Type converted to
 		Cost cost;               ///< Cost of this conversion
 		
 		Conversion() = default;
-		Conversion(Brw<ConversionNode> to, Cost cost) : to(to), cost(cost) {}
+		Conversion(const ConversionNode* to, Cost cost) : to(to), cost(cost) {}
 		
 		Conversion(const Conversion&) = default;
 		Conversion(Conversion&&) = default;
@@ -37,11 +38,11 @@ public:
 	
 	/// Node in the conversion graph representing one type
 	struct ConversionNode {
-		Brw<Type> type;              ///< Type to convert from
+		const Type* type;            ///< Type to convert from
 		ConversionList conversions;  ///< Types directly convertable from this one
 		
 		ConversionNode() = default;
-		ConversionNode(Brw<Type> type) : type(type), conversions() {}
+		ConversionNode(const Type* type) : type(type), conversions() {}
 		
 		ConversionNode(const ConversionNode&) = default;
 		ConversionNode(ConversionNode&&) = default;
@@ -60,10 +61,10 @@ private:
 	/// Dummy empty conversion list
 	static const ConversionList no_conversions;
 	/// Storage for underlying conversions
-	NodeMap< Brw<Type>, ConversionNode > nodes;
+	NodeMap< const Type*, ConversionNode > nodes;
 	
 	/// Returns the node for ty, creating one if none exists
-	ConversionNode& try_insert( Brw<Type> ty ) {
+	ConversionNode& try_insert( const Type* ty ) {
 		auto it = nodes.find( ty );
 		return ( it == nodes.end() ?
 			nodes.emplace_hint( it, ty, ConversionNode{ ty } ) :
@@ -71,17 +72,17 @@ private:
 	}
 public:
 	/// Returns a list of all the conversions for ty
-	const ConversionList& find( Brw<Type> ty ) const {
+	const ConversionList& find( const Type* ty ) const {
 		auto it = nodes.find( ty );
 		return it == nodes.end() ? no_conversions : it->second.conversions;
 	}
 	
 	/// Sets up a new conversion 
-	void insert( Brw<Type> from, Brw<Type> to, Cost cost ) {
+	void insert( const Type* from, const Type* to, Cost cost ) {
 		ConversionNode& fromNode = try_insert( from );
 		ConversionNode& toNode = try_insert( to );
 		
-		fromNode.conversions.emplace_back( brw(toNode), cost );
+		fromNode.conversions.emplace_back( &toNode, cost );
 	}
 };
 

@@ -2,10 +2,10 @@
 
 #include <iostream>
 
+#include "data.h"
 #include "expr.h"
 #include "func_table.h"
 #include "type.h"
-#include "utility.h"
 
 /// Parses input according to the following format:
 ///
@@ -35,5 +35,5 @@
 ///
 /// Returns true and sets funcs, exprs & types if appropriate, 
 /// prints errors otherwise.
-bool parse_input( std::istream& in, FuncTable& funcs, List<Expr, ByShared>& exprs, 
+bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
                   SortedSet<ConcType>& types );
