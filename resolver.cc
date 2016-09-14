@@ -128,11 +128,7 @@ struct interpretation_unambiguous {
 InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 	InterpretationList results;
 	
-	// TODO switch dynamic cast for virtual call (test performance)
-	if ( const TypedExpr* typedExpr = dynamic_cast<const TypedExpr*>( expr ) ) {
-		// do nothing for expressions which are already typed
-		results.push_back( new Interpretation(typedExpr) );
-	} else if ( const FuncExpr* funcExpr = dynamic_cast<const FuncExpr*>( expr ) ) {
+	if ( const FuncExpr* funcExpr = as_safe<FuncExpr>( expr ) ) {
 		// find candidates with this function name, skipping if none
 		auto withName = funcs.find( funcExpr->name() );
 		if ( withName == funcs.end() ) return results;
@@ -184,13 +180,16 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 								topLevel );
 			} break;
 		}
+	} else if ( const TypedExpr* typedExpr = as_derived<TypedExpr>( expr ) ) {
+		// do nothing for expressions which are already typed
+		results.push_back( new Interpretation(typedExpr) );
 	} else {
 		assert(false && "Unsupported expression type");
 	}
 	
 	// Expand results by applying user conversions (except at top level)
 	if ( ! topLevel ) {
-		expandConversions( results );
+		expandConversions( results, conversions );
 	}
 	
 	return results;

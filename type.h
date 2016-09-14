@@ -76,7 +76,7 @@ protected:
 	virtual void write(std::ostream& out) const { out << id_; }
 	
 	virtual bool equals(const Type& obj) const {
-		const ConcType* that = dynamic_cast<const ConcType*>(&obj);
+		const ConcType* that = as_safe<ConcType>(&obj);
 		return that && (*this == *that);
 	}
 	
@@ -106,7 +106,7 @@ protected:
 	virtual void write(std::ostream& out) const { out << "Void"; }
 	
 	virtual bool equals(const Type& obj) const {
-		return dynamic_cast<const VoidType*>(&obj) != nullptr;
+		return is<VoidType>(&obj);
 	}
 	
 	virtual std::size_t hash() const { return 0; }
@@ -141,7 +141,7 @@ protected:
 	}
 	
 	virtual bool equals(const Type& obj) const {
-		const TupleType* that = dynamic_cast<const TupleType*>(&obj);
+		const TupleType* that = as_safe<TupleType>(&obj);
 		if ( ! that ) return false;
 		
 		if ( types_.size() != that->types_.size() ) return false;

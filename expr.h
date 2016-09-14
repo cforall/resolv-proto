@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -146,36 +147,41 @@ protected:
 	}
 };
 
-/// A single element of the returned tuple from a function expression
+/// A single element of a tuple from an underlying expression
 class TupleElementExpr : public TypedExpr {
-	const CallExpr* call_;
+	const TypedExpr* of_;
 	unsigned ind_;
 public:
 	typedef Expr Base;
 	
-	TupleElementExpr( const CallExpr* call_, unsigned ind_ )
-		: call_( call_ ), ind_( ind_ ) {}
+	TupleElementExpr( const TypedExpr* of_, unsigned ind_ )
+		: of_( of_ ), ind_( ind_ ) { assert( is<TupleType>( of_->type() ) ); }
 	
-	virtual Expr* clone() const { return new TupleElementExpr( call_, ind_ ); }
+	virtual Expr* clone() const { return new TupleElementExpr( of_, ind_ ); }
 
 	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
-	const CallExpr* call() const { return call_; }
+	const TypedExpr* of() const { return of_; }
 	
 	unsigned ind() const { return ind_; }
 	
 	virtual const Type* type() const {
-		return static_cast<const TupleType*>( call_->type() )->types()[ ind_ ];
+		return as<TupleType>( of_->type() )->types()[ ind_ ];
 	}
 
 protected:
-	virtual void trace(const GC& gc) const { gc << call_; }
+	virtual void trace(const GC& gc) const { gc << of_; }
 
 	virtual void write(std::ostream& out) const {
 		if ( ind_ == 0 ) {
-			out << *call_ << "[0]";
+			out << *of_ << "[0]";
 		} else {
 			out << "[" << ind_ << "]";
 		}
 	}
+};
+
+/// A tuple constituted of a list of underlying expressions
+class TupleExpr : public TypedExpr {
+
 };

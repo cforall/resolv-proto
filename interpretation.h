@@ -51,9 +51,7 @@ struct Interpretation : public GC_Object {
 	
 	/// true iff the interpretation is ambiguous; 
 	/// interpretation must have a valid base
-	bool is_ambiguous() const {
-		return dynamic_cast<const AmbiguousExpr*>( expr ) != nullptr;
-	}
+	bool is_ambiguous() const { return is<AmbiguousExpr>( expr ); }
 	
 	/// true iff the interpretation is unambiguous and has a valid base
 	bool is_valid() const { return expr != nullptr && ! is_ambiguous(); }
