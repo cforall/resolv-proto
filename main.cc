@@ -43,10 +43,10 @@ int main(int argc, char **argv) {
 	Resolver resolve{ conversions, funcs, on_invalid, on_ambiguous };
 	for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
 		std::cout << "\n";
-		Interpretation i = resolve( *e );
-		if ( i.is_valid() ) {
+		const Interpretation *i = resolve( *e );
+		if ( i->is_valid() ) {
 			std::cout << i;
-			*e = i.expr;
+			*e = i->expr;
 		} 
 	}
 	collect();

@@ -1,4 +1,4 @@
-CXXFLAGS = -O0 -ggdb --std=c++11
+CXXFLAGS = -O0 -ggdb --std=c++14
 DEPFLAGS = -MMD -MP
 
 .PHONY: all clean distclean prebuild

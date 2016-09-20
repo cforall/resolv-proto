@@ -195,7 +195,7 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 	return results;
 }
 
-Interpretation Resolver::operator() ( const Expr* expr ) {
+const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	InterpretationList results = resolve( expr, true );
 	
 	// return invalid interpretation on empty results
@@ -227,13 +227,13 @@ Interpretation Resolver::operator() ( const Expr* expr ) {
 		}
 	}
 	
-	const Interpretation& candidate = *results.front();
+	const Interpretation* candidate = results.front();
 	
 	// handle ambiguous candidate from conversion expansion
-	if ( candidate.is_ambiguous() ) {
+	if ( candidate->is_ambiguous() ) {
 		on_ambiguous( expr, results.begin(), results.begin() + 1 );
 		return Interpretation::make_invalid();
 	}
 	
-	return move(candidate);
+	return candidate;
 }

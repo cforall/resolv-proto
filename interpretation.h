@@ -60,7 +60,15 @@ struct Interpretation : public GC_Object {
 	const Type* type() const { return expr->type(); }
 	
 	/// Returns a fresh invalid interpretation
-	static Interpretation make_invalid() { return Interpretation{}; }
+	static Interpretation* make_invalid() { return new Interpretation{}; }
+
+	/// Returns a fresh ambiguous interpretation
+	static Interpretation* make_ambiguous( const Type* t, const Cost& c ) {
+		return new Interpretation{ new AmbiguousExpr{ t }, copy(c) };
+	}
+	static Interpretation* make_ambiguous( const Type* t, Cost&& c ) {
+		return new Interpretation{ new AmbiguousExpr{ t }, move(c) };
+	}
 };
 
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {

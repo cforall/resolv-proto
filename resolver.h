@@ -43,5 +43,5 @@ public:
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 
 	/// resolution fails
-	Interpretation operator() ( const Expr* expr );
+	const Interpretation* operator() ( const Expr* expr );
 };
