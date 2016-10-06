@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "canonical_type_map.h"
 #include "conversion.h"
 #include "expr.h"
 #include "func_table.h"
@@ -27,7 +28,7 @@ void on_ambiguous( const Expr* e, InterpretationList::iterator i,
 int main(int argc, char **argv) {
 	FuncTable funcs;
 	List<Expr> exprs;
-	SortedSet<ConcType> types;
+	CanonicalTypeMap types;
 	
 	if ( ! parse_input( std::cin, funcs, exprs, types ) ) return 1;
 	

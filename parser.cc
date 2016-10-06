@@ -74,7 +74,7 @@ bool parse_name(char *&token, std::string& ret) {
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
-bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
+bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	List<Type> returns, params;
 	std::string name;
 	std::string tag;
@@ -122,7 +122,7 @@ bool parse_decl(char *line, FuncTable& funcs, SortedSet<ConcType>& types) {
 
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
-bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types ) {
+bool parse_subexpr( char *&token, List<Expr>& exprs, CanonicalTypeMap& types ) {
 	char *end = token;
 	
 	// Check for type expression
@@ -159,13 +159,13 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, SortedSet<ConcType>& types 
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr( char *line, List<Expr>& exprs, SortedSet<ConcType>& types ) {
+bool parse_expr( char *line, List<Expr>& exprs, CanonicalTypeMap& types ) {
 	match_whitespace(line);
 	return parse_subexpr(line, exprs, types) && is_empty(line);
 }
 
 bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
-                  SortedSet<ConcType>& types ) {
+                  CanonicalTypeMap& types ) {
 	std::string line;
 	std::string delim = "%%";
 	unsigned n = 0;

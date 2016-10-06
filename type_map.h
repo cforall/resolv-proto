@@ -166,6 +166,8 @@ public:
         Iter i;
     
         iterator( Iter&& i ) : i( move(i) ) {}
+        iterator( nullptr_t p ) : i( p ) {}
+        iterator( TypeMap<Value>* p ) : i( p ) {}
     public:
         iterator() = default;
 
@@ -192,6 +194,8 @@ public:
         Iter i;
     
         const_iterator( Iter&& i ) : i( move(i) ) {}
+        iterator( nullptr_t p ) : i( p ) {}
+        iterator( const TypeMap<Value>* p ) : i( const_cast<TypeMap<Value>*>(p) ) {}
     public:
         const_iterator() = default;
         const_iterator( const iterator& o ) : i(o.i) {}

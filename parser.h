@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "canonical_type_map.h"
 #include "data.h"
 #include "expr.h"
 #include "func_table.h"
@@ -36,4 +37,4 @@
 /// Returns true and sets funcs, exprs & types if appropriate, 
 /// prints errors otherwise.
 bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
-                  SortedSet<ConcType>& types );
+                  CanonicalTypeMap& types );

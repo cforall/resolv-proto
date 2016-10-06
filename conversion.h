@@ -1,22 +1,19 @@
 #pragma once
 
-#ifdef RP_SORTED
-#include <map>
-#else
-#include <unordered_map>
-#endif
-
 #include <ostream>
 #include <vector>
 
+#include "canonical_type_map.h"
 #include "cost.h"
 #include "gc.h"
 #include "type.h"
+#include "type_map.h"
 
 /// Graph of conversions
 class ConversionGraph {
 	friend GC& operator<< (const GC&, const ConversionGraph&);
 	friend std::ostream& operator<< (std::ostream&, const ConversionGraph&);
+	friend ConversionGraph make_conversions( CanonicalTypeMap& types );
 public:
 	struct ConversionNode;
 	
@@ -51,23 +48,16 @@ public:
 	};
 	
 private:
-#ifdef RP_SORTED
-	template<typename K, typename V>
-	using NodeMap = std::map<K, V>;
-#else
-	template<typename K, typename V>
-	using NodeMap = std::unordered_map<K, V>;
-#endif
 	/// Dummy empty conversion list
 	static const ConversionList no_conversions;
 	/// Storage for underlying conversions
-	NodeMap< const Type*, ConversionNode > nodes;
+	TypeMap< ConversionNode > nodes;
 	
 	/// Returns the node for ty, creating one if none exists
 	ConversionNode& try_insert( const Type* ty ) {
 		auto it = nodes.find( ty );
 		return ( it == nodes.end() ?
-			nodes.emplace_hint( it, ty, ConversionNode{ ty } ) :
+			nodes.insert( ty, ConversionNode{ ty } ).first :
 			it )->second;
 	}
 public:
@@ -89,4 +79,4 @@ public:
 typedef ConversionGraph::Conversion Conversion;
 
 /// Make a graph of conversions from an existing set of concrete types
-ConversionGraph make_conversions( SortedSet<ConcType>& types );
+ConversionGraph make_conversions( CanonicalTypeMap& types );
