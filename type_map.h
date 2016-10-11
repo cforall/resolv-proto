@@ -194,8 +194,8 @@ public:
         Iter i;
     
         const_iterator( Iter&& i ) : i( move(i) ) {}
-        iterator( nullptr_t p ) : i( p ) {}
-        iterator( const TypeMap<Value>* p ) : i( const_cast<TypeMap<Value>*>(p) ) {}
+        const_iterator( nullptr_t ) : i( nullptr ) {}
+        const_iterator( const TypeMap<Value>* p ) : i( const_cast<TypeMap<Value>*>(p) ) {}
     public:
         const_iterator() = default;
         const_iterator( const iterator& o ) : i(o.i) {}
@@ -204,19 +204,19 @@ public:
         const Type* key() { return i.key(); }
         const Value& get() { return i.get(); }
 
-        reference operator* () { return { i.key(), i.get() }; }
-        pointer operator-> () { return std::make_unique< const_value_type >( i.key(), i.get() ); }
+        const_reference operator* () { return { i.key(), i.get() }; }
+        const_pointer operator-> () { return std::make_unique< const_value_type >( i.key(), i.get() ); }
 
-        iterator& operator++ () { ++i; return *this; }
-        iterator& operator++ (int) { iterator tmp = *this; ++i; return tmp; }
+        const_iterator& operator++ () { ++i; return *this; }
+        const_iterator& operator++ (int) { const_iterator tmp = *this; ++i; return tmp; }
 
         bool operator== ( const const_iterator& o ) const { return i == o.i; }
         bool operator!= ( const const_iterator& o ) const { return !(*this == o); }
     };
 
-    iterator begin() { return iterator{ Iter{this} }; }
-    const_iterator begin() const { return const_iterator{ Iter{this} }; }
-    const_iterator cbegin() const { return const_iterator{ Iter{this} }; }
+    iterator begin() { return iterator{ this }; }
+    const_iterator begin() const { return const_iterator{ this }; }
+    const_iterator cbegin() const { return const_iterator{ this }; }
     iterator end() { return iterator{}; }
     const_iterator end() const { return const_iterator{}; }
     const_iterator cend() const { return const_iterator{}; }
@@ -421,15 +421,15 @@ public:
 
 private:
     Iter locate( const VoidType* ) const {
-        return leaf ? Iter{ this, BacktrackList{} } : Iter{};
+        return leaf ? Iter{ as_non_const(this), BacktrackList{} } : Iter{};
     }
 
     Iter locate( const ConcType* ty ) const {
-        auto it = nodes.find( ty->id() );
-        if ( it == nodes.end() ) return Iter{};
+        auto it = as_non_const(nodes).find( ty->id() );
+        if ( it == as_non_const(nodes).end() ) return Iter{};
 
         return it->second->leaf ?
-            Iter{ it->second.get(), BacktrackList{ Backtrack{ it, this } } } :
+            Iter{ it->second.get(), BacktrackList{ Backtrack{ it, as_non_const(this) } } } :
             Iter{};
     }
 
@@ -437,10 +437,10 @@ private:
         BacktrackList rpre;
 
         // scan down trie as far as it matches
-        TypeMap<Value>* tm = this;
+        TypeMap<Value>* tm = as_non_const(this);
         for ( unsigned i = 0; i < ty->size(); ++i ) {
             // ensure that TupleType only contains concrete types
-            ConcType* t = as_checked<ConcType>( ty->types()[i] );
+            const ConcType* t = as_checked<ConcType>( ty->types()[i] );
 
             auto it = tm->nodes.find( t->id() );
             if ( it == tm->nodes.end() ) return Iter{};

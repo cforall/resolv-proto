@@ -79,6 +79,13 @@ D* as_derived( B* p ) { return dynamic_cast<D*>(p); }
 template<typename D, typename B>
 const D* as_derived( const B* p ) { return dynamic_cast<const D*>(p); }
 
+/// Strips const off a reference type
+template<typename T>
+inline T& as_non_const( const T& r ) { return const_cast<T&>(r); }
+
+/// Strips const off a pointer type
+template<typename T>
+inline T* as_non_const( const T* p ) { return const_cast<T*>(p); }
 
 /// Hasher for underlying type of pointers
 template<typename T>

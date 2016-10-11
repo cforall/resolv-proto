@@ -11,10 +11,10 @@ inline const ConcType* get_canon(CanonicalTypeMap& m, Args&&... args) {
     ConcType* t = new ConcType( std::forward<Args>(args)... );
     CanonicalTypeMap* mm = m.get( t );
     if ( mm ) {
-        ConcType *tt = mm->get();
+        ConcType **tt = mm->get();
         if ( tt ) {
             delete t;
-            return tt;
+            return *tt;
         } else {
             mm->set( t );
             return t;
