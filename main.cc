@@ -1,5 +1,4 @@
-#include <iostream>
-
+#include "args.h"
 #include "canonical_type_map.h"
 #include "conversion.h"
 #include "expr.h"
@@ -9,44 +8,42 @@
 #include "resolver.h"
 #include "type.h"
 
-/// Effect for invalid expression
-void on_invalid( const Expr* e ) {
-	std::cout << "ERROR: no valid resolution for " << *e << std::endl;
-}
-
-/// Effect for ambiguous resolution
-void on_ambiguous( const Expr* e, InterpretationList::iterator i, 
-                   InterpretationList::iterator end ) {
-	std::cout << "ERROR: ambiguous resolution for " << *e << "\n"
-	          << "       candidates are:" << std::endl;
-	
-	for(; i != end; ++i) {
-		std::cout << "\n" << *i;
-	}
-}
-
 int main(int argc, char **argv) {
+	Args args(argc, argv);
 	FuncTable funcs;
 	List<Expr> exprs;
 	CanonicalTypeMap types;
 	
-	if ( ! parse_input( std::cin, funcs, exprs, types ) ) return 1;
+	if ( ! parse_input( args.in(), funcs, exprs, types ) ) return 1;
 	
-	std::cout << std::endl;
-	for ( auto&& func : funcs ) { std::cout << *func << std::endl; }
-	std::cout << "%%" << std::endl;
-	for ( auto&& expr : exprs ) { std::cout << *expr << std::endl; }
+	args.out() << std::endl;
+	for ( auto&& func : funcs ) { args.out() << *func << std::endl; }
+	args.out() << "%%" << std::endl;
+	for ( auto&& expr : exprs ) { args.out() << *expr << std::endl; }
 	
 	ConversionGraph conversions = make_conversions( types );
 	
-	std::cout << std::endl << conversions;
+	args.out() << std::endl << conversions;
 	
-	Resolver resolve{ conversions, funcs, on_invalid, on_ambiguous };
+	Resolver resolve{ conversions, funcs, 
+					  [&args]( const Expr* e ){
+						  args.out() << "ERROR: no valid resolution for " << *e << std::endl;
+					  }, 
+					  [&args]( const Expr* e, InterpretationList::iterator i, 
+                               InterpretationList::iterator end ) {
+						  std::cout << "ERROR: ambiguous resolution for " << *e << "\n"
+	                                << "       candidates are:" << std::endl;
+	
+	                      for(; i != end; ++i) {
+		                      std::cout << "\n" << *i;
+	                      }
+					  } };
+	
 	for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-		std::cout << "\n";
+		args.out() << "\n";
 		const Interpretation *i = resolve( *e );
 		if ( i->is_valid() ) {
-			std::cout << i;
+			args.out() << i;
 			*e = i->expr;
 		} 
 	}

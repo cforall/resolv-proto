@@ -24,9 +24,9 @@ class Resolver {
 	FuncTable& funcs;              ///< Known function declarations
 	
 	/// Effect to run on invalid interpretation
-	InvalidEffect& on_invalid;
+	InvalidEffect on_invalid;
 	/// Effect to run on ambiguous interpretation
-	AmbiguousEffect& on_ambiguous;
+	AmbiguousEffect on_ambiguous;
 	
 	/// Recursively resolve interpretations, expanding conversions if not at the 
 	/// top level.
