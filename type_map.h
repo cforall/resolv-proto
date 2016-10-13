@@ -222,7 +222,6 @@ public:
     const_iterator cend() const { return const_iterator{}; }
 
     bool empty() const { return (!leaf) && nodes.empty(); }
-    size_type size() const { return (leaf ? 1 : 0) + nodes.size(); }
 
     void clear() {
         leaf.reset();

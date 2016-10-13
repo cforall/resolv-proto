@@ -40,7 +40,7 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
             const Type* to = conv.to->type;
             Cost toCost = i->cost + conv.cost;
 
-            auto existing = expanded.get( ty );
+            auto existing = expanded.get( to );
             if ( ! existing ) {
                 expanded.insert( to, new Interpretation{ new CastExpr{ i->expr, &conv },
                                                          move(toCost) } );
@@ -57,12 +57,10 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
             }
         }
 #endif
-
     }
 
     // replace results with expanded results
     results.clear();
-    results.reserve( expanded.size() );
     for (auto it = expanded.begin(); it != expanded.end(); ++it) {
         results.push_back( it.get() );
     }

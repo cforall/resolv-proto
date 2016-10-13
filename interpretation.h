@@ -73,12 +73,11 @@ struct Interpretation : public GC_Object {
 
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	if ( i.expr == nullptr ) {
-		out << "<invalid interpretation>" << std::endl;
+		out << "<invalid interpretation>";
 		return out;
 	}
 	
-	out << i.cost << " as " << *i.type() << "\n"
-	    << "\t" << *i.expr << std::endl;
+	out << "[" << *i.type() << " @ " << i.cost << "] " << *i.expr;
 	return out;
 }
 
