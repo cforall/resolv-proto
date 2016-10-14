@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 		args.out() << "\n";
 		const Interpretation *i = resolve( *e );
 		if ( i->is_valid() ) {
-			args.out() << i << std::endl;
+			args.out() << *i << std::endl;
 			*e = i->expr;
 		} 
 	}
