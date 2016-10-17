@@ -14,8 +14,8 @@
 /// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* "\n"
 /// resolv_expr := <subexpr> "\n"
 /// subexpr := <type> | <name> " (" (" "<subexpr>)* " )"
-/// name := [a-z]+
-/// tag := [a-z]+
+/// name := [a-z][a-z0-9]*
+/// tag := <name>
 /// type := "-"?[0-9]+
 ///
 /// Semantically, types are given numeric identifiers, and also stand in for 

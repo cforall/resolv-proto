@@ -63,7 +63,8 @@ bool parse_name(char *&token, std::string& ret) {
 	if ( 'a' <= *end && *end <= 'z' ) ++end;
 	else return false;
 	
-	while ( 'a' <= *end && *end <= 'z' ) ++end;
+	while ( 'a' <= *end && *end <= 'z' 
+	        || '0' <= *end && *end <= '9' ) ++end;
 	
 	ret.assign( token, (end-token) );
 	

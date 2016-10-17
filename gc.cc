@@ -37,9 +37,9 @@ void GC::register_object(GC_Object* obj) {
 }
 
 void GC::unregister_object(GC_Object* obj) {
-	assert( !isCollecting || obj == collectingObject );
-	// auto removed_objs = std::remove( objects.begin(), objects.end(), obj );
-	// objects.erase( removed_objs, objects.end() );
+	assert( /*!isCollecting ||*/ obj == collectingObject );
+	//auto removed_objs = std::remove( objects.begin(), objects.end(), obj );
+	//objects.erase( removed_objs, objects.end() );
 }
 
 void GC::collect() {

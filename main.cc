@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	
 	ConversionGraph conversions = make_conversions( types );
 	
-	args.out() << std::endl << conversions;
+	//args.out() << std::endl << conversions;
 	
 	Resolver resolve{ conversions, funcs, 
 					  [&args]( const Expr* e ){

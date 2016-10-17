@@ -13,7 +13,7 @@ inline const ConcType* get_canon(CanonicalTypeMap& m, Args&&... args) {
     if ( mm ) {
         ConcType **tt = mm->get();
         if ( tt ) {
-            delete t;
+            t = nullptr; // Clear t for GC
             return *tt;
         } else {
             mm->set( t );
