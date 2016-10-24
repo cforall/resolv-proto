@@ -165,7 +165,7 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 					Cost,
 					interpretation_cost,
 					InterpretationList,
-					interpretation_unambiguous>( move(sub_results) );
+					interpretation_unambiguous>( sub_results );
 				
 				typedef std::pair<Cost, InterpretationList> merge_el; 
 				results = 
