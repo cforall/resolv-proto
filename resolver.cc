@@ -178,7 +178,7 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 									return e.first;
 								},
 								topLevel );
-			} break;
+		} break;
 		}
 	} else if ( const TypedExpr* typedExpr = as_derived<TypedExpr>( expr ) ) {
 		// do nothing for expressions which are already typed
