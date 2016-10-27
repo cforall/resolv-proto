@@ -183,5 +183,36 @@ protected:
 
 /// A tuple constituted of a list of underlying expressions
 class TupleExpr : public TypedExpr {
+	List<TypedExpr> els_;
+	const TupleType* ty_;
 
+	TupleExpr( const List<TypedExpr>& els_, const TupleType* ty_ ) : els_( els_ ), ty_( ty_ ) {}
+public:
+	typedef Expr Base;
+
+	TupleExpr( List<TypedExpr>&& els_ ) : els_( move(els_) ) {
+		List<Type> tys;
+		tys.reserve( els_.size() );
+		for ( const TypedExpr* el : els_ ) { tys.push_back( el->type() ); }
+		ty_ = new TupleType( move(tys) );
+	}
+
+	virtual Expr* clone() const { return new TupleExpr( els_, ty_ ); }
+
+	virtual void accept( Visitor& v ) const { return v.visit( this ); }
+
+	const List<TypedExpr>& els() const { return els_; }
+
+	const TupleType* ty() const { return ty_; }
+
+	virtual const Type* type() const { return ty_; }
+
+protected:
+	virtual void trace(const GC& gc) const { gc << els_ << ty_; }
+
+	virtual void write(std::ostream& out) const {
+		out << "[";
+		for ( const TypedExpr* el : els_ ) { out << " " << *el; }
+		out << " ]";
+	}
 };

@@ -160,12 +160,9 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 					sub_results.push_back( move(sresults) );
 				}
 				
+				interpretation_unambiguous valid;
 				auto merged = unsorted_eager_merge<
-					const Interpretation*,
-					Cost,
-					interpretation_cost,
-					InterpretationList,
-					interpretation_unambiguous>( sub_results );
+					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );
 				
 				typedef std::pair<Cost, InterpretationList> merge_el; 
 				results = 

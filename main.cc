@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 	                                << "       candidates are:" << std::endl;
 	
 	                      for(; i != end; ++i) {
-		                      std::cout << "\n" << *i;
+		                      std::cout << "\n" << **i;
 	                      }
 					  } };
 	

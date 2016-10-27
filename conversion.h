@@ -29,6 +29,9 @@ public:
 		Conversion(Conversion&&) = default;
 		Conversion& operator= (const Conversion&) = default;
 		Conversion& operator= (Conversion&&) = default;
+
+		bool operator== (const Conversion& o) { return to == o.to && cost == o.cost; }
+		bool operator!= (const Conversion& that) { return !(*this == that); }
 	};
 	
 	typedef std::vector<Conversion> ConversionList;
