@@ -174,6 +174,7 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 	// parse declarations
 	while ( std::getline(in, line) ) {
 		++n;
+		if ( line.empty() ) continue;
 		if ( line == delim ) break;
 		
 		bool ok = parse_decl(const_cast<char*>(line.data()), funcs, types);
@@ -186,6 +187,8 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 	// parse expressions
 	while ( std::getline(in, line) ) {
 		++n;
+		if ( line.empty() ) continue;
+		
 		bool ok = parse_expr(const_cast<char*>(line.data()), exprs, types);
 		if ( ! ok ) {
 			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;

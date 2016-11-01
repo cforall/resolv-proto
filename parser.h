@@ -10,9 +10,9 @@
 
 /// Parses input according to the following format:
 ///
-/// start := <function_decl>+ "%%\n" <resolv_expr>+
-/// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* "\n"
-/// resolv_expr := <subexpr> "\n"
+/// start := "\n"* <function_decl>+ "%%\n" <resolv_expr>+
+/// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* "\n"+
+/// resolv_expr := <subexpr> "\n"+
 /// subexpr := <type> | <name> " (" (" "<subexpr>)* " )"
 /// name := [a-z][a-z0-9]*
 /// tag := <name>
