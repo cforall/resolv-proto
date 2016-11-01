@@ -5,6 +5,7 @@
 
 #include "conversion.h"
 #include "cost.h"
+#include "data.h"
 #include "eager_merge.h"
 #include "interpretation.h"
 #include "type_map.h"
@@ -58,26 +59,62 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
                                                                     copy(toCost) }; } );
             }
         } else if ( typeof<TupleType>() == tid ) {
-/*            std::vector< const std::vector<Conversion>& > convs;
+            const TupleType* tty = as<TupleType>(ty);
+
+            /// list of conversions with default "self" non-conversion in each queue
+            typedef std::vector< defaulted_vector< Conversion, std::vector<Conversion> > >
+                    ConversionQueues;  
+            ConversionQueues convs;
             convs.reserve( ty->size() );
-            Conversion self;  // special marker for self-conversion
+            Conversion no_conv;  // special marker for self-conversion
             for ( unsigned i = 0; i < ty->size(); ++i ) {
-                convs.push_back( conversions.find( ty ) );
-                
-                // NOTE we need "no conversion" to be included in the list of options at each position; however, 
-                // it isn't included in the conversion map; this solution is simple, but does not maintain the  
-                // sorting order of the conversion list, nor is it thread-safe
-                convs.back().push_back( self );
+                convs.emplace_back( no_conv, conversions.find( ty ) );
             }
 
-            auto merged_convs = eager_merge<Conversion, Cost, 
-                                            []( Conversion& c ) { return c.cost; }, 
-                                            std::vector<Conversion>&>(convs);
+            struct conversion_cost {
+                const Cost& operator() ( const Conversion& c ) { return c.cost; }
+            };
 
-            for ( auto& conv : merged_convs ) {
+            bool first = true;
+            for_each_cost_combo<Conversion, Cost, conversion_cost>(
+                convs, 
+                [tty,i,&first,&expanded]( 
+                        const ConversionQueues& qs, const Indices& inds, const Cost& c ) {
+                    // skip self iteration (no conversions on any queue)
+                    if ( first ) { first = false; return; }
+                    
+                    List<Type> tys;  ///< underlying tuple types 
+                    tys.reserve( qs.size() );
+                    for ( unsigned j = 0; j < qs.size(); ++j ) {
+                        unsigned k = inds[j];
+                        const Conversion& conv = qs[j][k];
 
-            }
-*/        }
+                        tys.push_back( k == 0 ? tty->types()[j] : conv.to->type );
+                    }
+
+                    Cost toCost = i->cost + c;
+
+                    setOrUpdateInterpretation( expanded, new TupleType{ tys }, toCost, 
+                        [tty,i,&qs,&inds,&toCost]() -> Interpretation* {
+                            List<TypedExpr> els;
+                            els.reserve( qs.size() );
+                            for ( unsigned j = 0; j < qs.size(); ++j ) {
+                                unsigned k = inds[j];
+                                const Conversion& conv = qs[j][k];
+
+                                auto *el = new TupleElementExpr( i->expr, j );
+
+                                if ( k == 0 ) {
+                                    els.push_back( el );
+                                } else {
+                                    els.push_back( new CastExpr{ el, &conv } );
+                                }
+                            }
+
+                            return new Interpretation{ new TupleExpr( move(els) ), copy(toCost) };
+                        } );
+                } );
+        }
 #endif
     }
 

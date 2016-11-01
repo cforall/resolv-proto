@@ -55,7 +55,7 @@ template<typename T, typename K = T, typename Extract = identity<T>,
 		 typename Q, typename F, typename Valid>
 void for_each_cost_combo( const std::vector<Q>& qs, F f, Valid& valid ) {
 	cost_on_index_change<T, K, Extract, Q> cost;
-	auto f2 = [&f, &valid, &cost]( const std::vector<Q>& qs, const std::vector<unsigned>& inds ) {
+	auto f2 = [&f, &valid, &cost]( const std::vector<Q>& qs, const Indices& inds ) {
 		if ( valid( qs, inds ) ) { f( qs, inds, cost.k ); }
 	};
 
@@ -67,7 +67,7 @@ template<typename T, typename K = T, typename Extract = identity<T>,
 		 typename Q, typename F>
 inline void for_each_cost_combo( const std::vector<Q>& qs, F f ) {
 	always_valid<Q> valid;
-	return for_each_cost_combo<T, K, Extract>( qs, std::forward(f), valid );
+	return for_each_cost_combo<T, K, Extract>( qs, f, valid );
 }
 
 /// Eagerly applies an n-way merge to produce an unsorted output list.
@@ -78,7 +78,7 @@ auto unsorted_eager_merge( const std::vector<Q>& qs, Valid& valid )
 		-> std::vector< std::pair< K, std::vector<T> > > {
 	std::vector< std::pair< K, std::vector<T> > > v;  // output queue
 	
-	auto f = [&v]( const std::vector<Q>& qs, const std::vector<unsigned>& inds, const K& k ) {
+	auto f = [&v]( const std::vector<Q>& qs, const Indices& inds, const K& k ) {
 		// build combination
 		std::vector<T> ts;
 		ts.reserve( qs.size() );

@@ -17,6 +17,9 @@ struct default_on_index_change {
     void reset( const std::vector<Q>& qs, unsigned i, unsigned j ) {}
 };
 
+/// Type of index vector for combinations
+typedef std::vector<unsigned> Indices;
+
 /// Given a vector of random-access queues of `T`, for each combination of elements from the 
 /// input queues, call a function on the queue elements.
 ///
@@ -35,7 +38,7 @@ void for_each_combo( const std::vector<Q>& qs, F f, OnChange& on_change ) {
 	unsigned n = qs.size();  // number of queues to merge
 
     for ( auto& q : qs ) if ( q.empty() ) return;
-    std::vector<unsigned> inds( n, 0 );  // indices into merging queues
+    Indices inds( n, 0 );  // indices into merging queues
 
     on_change.init( qs );
 
@@ -71,3 +74,25 @@ inline void for_each_combo( const std::vector<Q>& qs, F f ) {
     default_on_index_change<Q> on_change;
     for_each_combo<T>( qs, std::forward(f), on_change );
 }
+
+/// Wraps a vector with an added default first element.
+/// Provided functions are sufficient for use in for_each_combo and friends.
+///
+/// @param T    Element type of the vector
+/// @param Q    Underlying vector type 
+template<typename T, typename Q = std::vector<T>>
+class defaulted_vector {
+    const T& head;
+    const Q& tail;
+
+public:
+    typedef typename Q::size_type size_type;
+
+    defaulted_vector( const T& head, const Q& tail ) : head(head), tail(tail) {}
+
+    const T& operator[] ( size_type i ) const { return ( i == 0 ) ? head : tail[i-1]; }
+
+    size_type size() const { return tail.size() + 1; }
+
+    bool empty() const { return false; }
+};
