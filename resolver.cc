@@ -20,7 +20,11 @@ InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
 	
 	// find functions with no parameters, skipping remaining checks if none
 	auto withNParams = funcs.find( 0 );
-	if ( withNParams == funcs.end() ) return results;
+	if ( withNParams == funcs.end() ) {
+		DBG( "  with<0>params: []" );
+		return results;
+	}
+	DBG( "  with<0>params: " << print_all_deref( withNParams() ) );
 	
 	// attempt to match functions to arguments
 	for ( auto&& func : withNParams() ) {
@@ -34,35 +38,72 @@ InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
 	return results;
 }
 
-/// Gets the number of elemental types represented by an interpretation
-unsigned argNParams( const Interpretation& arg ) { return arg.type()->size(); }
+/// Return an interpretation for all single-argument interpretations in funcs
+template<typename Funcs>
+InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args, 
+                               bool topLevel = false ) {
+	InterpretationList results;
 
-unsigned argNParams( const InterpretationList& args ) {
-	unsigned n_params = 0;
-	for ( const Interpretation* i : args ) {
-		n_params += i->type()->size();
+	for ( const Interpretation* arg : args ) {
+		DBG( "  arg: " << *arg );
+
+		// find function with appropriate number of parameters, skipping arg if none
+		auto n = arg->type()->size();
+		auto withNParams = funcs.find( n );
+		if ( withNParams == funcs.end() ) {
+			DBG( "    with<" << n << ">params: []" );
+			continue;
+		}
+		DBG( "    with<" << n << ">params: " << print_all_deref( withNParams() ) );
+
+		// attempt to match functions to arguments
+		for ( const auto& func : withNParams() ) {
+			// skip functions returning no values, unless at top level
+			if ( ! topLevel && func->returns()->size() == 0 ) continue;
+
+			// skip functions that don't match the parameter types
+			if ( n == 1 ) { // concrete type arg
+				if ( *arg->type() != *func->params()[0] ) continue;
+			} else {  // tuple type arg
+				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
+				for ( unsigned i = 0; i < n; ++i ) {
+					if ( *argTypes[i] != *func->params()[i] ) continue;
+				}
+			}
+
+			// create new interpretation for resolved call
+			results.push_back( new Interpretation(
+				new CallExpr( func, List<Expr>{ arg->expr } ),
+				copy(arg->cost)
+			) );
+		}
 	}
-	return n_params;
+
+	return results;
 }
 
-/// true iff type of arg matches params[0]; params should have a single element
-bool argsMatchParams( const Interpretation& arg, const List<Type>& params ) {
-	return *arg.type() == *params[0];
-} 
+/// List of argument combinations
+typedef std::vector< std::pair<Cost, InterpretationList> > ComboList;
 
-/// true iff types of args match parameter types; 
-/// args and params should have the same length 
-bool argsMatchParams( const InterpretationList& args, 
-                      const List<Type>& params ) {
-	for (unsigned i = 0; i < args.size(); ++i) {
-		if ( *args[i]->type() != *params[i] ) return false;
+/// Checks if a list of argument types match a list of parameter types.
+/// The argument types may contain tuple types, which should be flattened; the parameter 
+/// types will not. The two lists should be the same length after flattening.
+bool argsMatchParams( const InterpretationList& args, const List<Type>& params ) {
+	unsigned i = 0;
+	for ( unsigned j = 0; j < args.size(); ++j ) {
+		unsigned m = args[j]->type()->size();
+		if ( m == 1 ) {
+			if ( *args[j]->type() != *params[i] ) return false;
+			++i;
+		} else {
+			const List<Type>& argTypes = as<TupleType>( args[j]->type() )->types();
+			for ( unsigned k = 0; k < m; ++k ) {
+				if ( *argTypes[k] != *params[i] ) return false;
+				++i;
+			}
+		}
 	}
 	return true;
-}
-
-/// Create a list of argument expressions from a single interpretation
-List<Expr> argsFrom( const Interpretation& i ) {
-	return List<Expr>{ 1, i.expr };
 }
 
 /// Create a list of argument expressions from a list of interpretations
@@ -75,34 +116,38 @@ List<Expr> argsFrom( const InterpretationList& is ) {
 }
 
 /// Return an interpretation for all matches between functions in funcs and 
-/// argument packs in combos; args should return a reference to an Interpretation or 
-/// InterpretationList representing the argument pack, cost should return a Cost by 
-/// value.
-template<typename Funcs, typename Combos, typename GetArgs, typename GetCost>
-InterpretationList matchFuncs( const Funcs& funcs, Combos&& combos, 
-                               GetArgs&& args, GetCost&& cost, 
-                               bool topLevel = false ) {
+/// argument packs in combos
+template<typename Funcs>
+InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topLevel = false ) {
 	InterpretationList results;
 	
-	for ( auto&& combo : combos ) {
+	for ( const auto& combo : combos ) {
+		DBG( "  combo: " << print_all_deref( combo.second ) );
 		// find function with appropriate number of parameters, 
 		// skipping combo if none
-		auto withNParams = funcs.find( argNParams( args( combo ) ) );
-		if ( withNParams == funcs.end() ) continue;
+		auto n = 0;
+		for ( const Interpretation* arg : combo.second ) {
+			n += arg->type()->size();
+		}
+		auto withNParams = funcs.find( n );
+		if ( withNParams == funcs.end() ) {
+			DBG( "    with<" << n << ">Params: []" );
+			continue;
+		}
+		DBG( "    with<" << n << ">Params: " << print_all_deref( withNParams() ) );
 		
 		// attempt to match functions to arguments
 		for ( auto&& func : withNParams() ) {
 			// skip functions returning no values, unless at top level
 			if ( ! topLevel && func->returns()->size() == 0 ) continue;
 			
-			// skip functions that don't match the type
-			if ( ! argsMatchParams( args( combo ), func->params() ) )
-				continue;
+			// skip functions that don't match the parameter types
+			if ( ! argsMatchParams( combo.second, func->params() ) ) continue;
 			
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation( 
-				new CallExpr( func, argsFrom( args( combo ) ) ),
-				cost( combo )
+				new CallExpr( func, argsFrom( combo.second ) ),
+				copy( combo.first )
 			) );
 		}
 	}
@@ -132,8 +177,11 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 	if ( const FuncExpr* funcExpr = as_safe<FuncExpr>( expr ) ) {
 		// find candidates with this function name, skipping if none
 		auto withName = funcs.find( funcExpr->name() );
+		if ( withName == funcs.end() ) {
+			DBG( "withName: []" );
+			return results;
+		}
 		DBG( "withName: " << print_all_deref( withName() ) );
-		if ( withName == funcs.end() ) return results;
 		
 		// get interpretations for subexpressions (if any)
 		switch( funcExpr->args().size() ) {
@@ -141,16 +189,7 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 				results = matchFuncs( withName(), topLevel );
 			} break;
 			case 1: {
-				results = 
-					matchFuncs( withName(),
-				                resolve( funcExpr->args().front() ),
-								[](const Interpretation* i) -> const Interpretation& {
-									return *i;
-								},
-								[](const Interpretation* i) -> Cost {
-									return i->cost;
-								}, 
-								topLevel );
+				results = matchFuncs( withName(), resolve( funcExpr->args().front() ), topLevel );
 			} break;
 			default: {
 				std::vector<InterpretationList> sub_results;
@@ -166,18 +205,8 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 				auto merged = unsorted_eager_merge<
 					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );
 				
-				typedef std::pair<Cost, InterpretationList> merge_el; 
-				results = 
-					matchFuncs( withName(), 
-					            move(merged),
-								[](const merge_el& e) -> const InterpretationList& {
-									return e.second;
-								},
-								[](const merge_el& e) -> Cost {
-									return e.first;
-								},
-								topLevel );
-		} break;
+				results = matchFuncs( withName(), move(merged), topLevel );
+			} break;
 		}
 	} else if ( const TypedExpr* typedExpr = as_derived<TypedExpr>( expr ) ) {
 		// do nothing for expressions which are already typed
