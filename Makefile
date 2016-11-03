@@ -17,12 +17,17 @@ ifdef USER_CONVS
 CXXFLAGS += -DRP_USER_CONVS
 endif
 
-ifeq "${LAST_SORTED};${LAST_USER_CONVS}" "${SORTED};${USER_CONVS}"
+ifdef DEBUG
+CXXFLAGS += -DRP_DEBUG
+endif
+
+ifeq "${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG}" "${SORTED};${USER_CONVS};${DEBUG}"
 prebuild:
 else
 prebuild: clean
 	@echo "LAST_SORTED=${SORTED}" > .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
+	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
 endif
 
 # rewrite object generation to auto-determine dependencies, run prebuild

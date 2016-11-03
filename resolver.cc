@@ -5,6 +5,7 @@
 #include "resolver.h"
 
 #include "cost.h"
+#include "debug.h"
 #include "eager_merge.h"
 #include "expand_conversions.h"
 #include "expr.h"
@@ -131,6 +132,7 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 	if ( const FuncExpr* funcExpr = as_safe<FuncExpr>( expr ) ) {
 		// find candidates with this function name, skipping if none
 		auto withName = funcs.find( funcExpr->name() );
+		DBG( "withName: " << print_all_deref( withName() ) );
 		if ( withName == funcs.end() ) return results;
 		
 		// get interpretations for subexpressions (if any)
