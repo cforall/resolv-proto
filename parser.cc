@@ -54,9 +54,9 @@ bool parse_int(char *&token, int& ret) {
 	return true;
 }
 
-/// Parses a name (non-empty lowercase ASCII string), returning true, 
-/// storing result into ret, and incrementing token if so. 
-/// token must not be null.
+/// Parses a name (lowercase alphanumeric ASCII string starting with a 
+/// lowercase letter), returning true, storing result into ret, and  
+/// incrementing token if so. token must not be null.
 bool parse_name(char *&token, std::string& ret) {
 	char *end = token;
 	
@@ -72,6 +72,40 @@ bool parse_name(char *&token, std::string& ret) {
 	return true;
 }
 
+/// Parses a polymorphic type name (lowercase alphanumeric ASCII string 
+/// starting with an uppercase letter), returning true, storing result into 
+/// ret, and incrementing token if so. token must not be null.
+bool parse_poly_type(char *&token, std::string& ret) {
+	char *end = token;
+	
+	if ( 'A' <= *end && *end <= 'Z' ) ++end;
+	else return false;
+
+	while ( 'a' <= *end && *end <= 'z' 
+	        || '0' <= *end && *end <= '9' ) ++end;
+	
+	ret.assign( token, (end-token) );
+
+	token = end;
+	return true;
+}
+
+/// Parses a type name, returning true, appending the result into out, and 
+/// incrementing token if so. Concrete types will be canonicalized according 
+/// to types. token must not be null.  
+bool parse_type(char *&token, CanonicalTypeMap& types, List<Type>& out) {
+	int t;
+	std::string n;
+
+	if ( parse_int(token, t) ) {
+		out.push_back( get_canon( types, t ) );
+		return true;
+	} else if ( parse_poly_type(token, n) ) {
+		out.push_back( new PolyType{ n } );
+		return true;
+	} else return false;
+}
+
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
@@ -79,13 +113,11 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	List<Type> returns, params;
 	std::string name;
 	std::string tag;
-	int t;
 	bool saw_tag = false;
 	
 	// parse return types
 	match_whitespace(line);
-	while ( parse_int(line, t) ) {
-		returns.push_back( get_canon( types, t ) );
+	while ( parse_type(line, types, returns) ) {
 		match_whitespace(line);
 	}
 	
@@ -103,8 +135,7 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	
 	// parse parameters
 	match_whitespace(line);
-	while( parse_int(line, t) ) {
-		params.push_back( get_canon( types, t ) );
+	while( parse_type(line, types, params) ) {
 		match_whitespace(line);
 	}
 	

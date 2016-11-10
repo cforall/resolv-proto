@@ -5,6 +5,7 @@
 #include <memory>
 #include <ostream>
 #include <set>
+#include <string>
 
 #include "ast.h"
 #include "data.h"
@@ -90,6 +91,37 @@ namespace std {
 		result_type operator() (const argument_type& t) { return t.hash(); }
 	};
 }
+
+/// Represents a type variable
+class PolyType : public Type {
+	std::string name_;
+public:
+	typedef Type Base;
+
+	PolyType( const std::string& name_ ) : name_(name_) {}
+
+	virtual Type* clone() const { return new PolyType( name_ ); }
+
+	virtual void accept( Visitor& v ) const { v.visit( this ); }
+
+	bool operator== (const PolyType& that) const { return name_ == that.name_; }
+	bool operator!= (const PolyType& that) const { return !(*this == that); }
+	bool operator< (const PolyType& that) const { return name_ < that.name_; }
+
+	const std::string& name() const { return name_; }
+
+	virtual unsigned size() const { return 0; }
+
+protected:
+	virtual void write( std::ostream& out ) const { out << name_; }
+
+	virtual bool equals( const Type& obj ) const {
+		const PolyType* that = as_safe<PolyType>(&obj);
+		return that && (*this == *that);
+	}
+
+	virtual std::size_t hash() const { return std::hash<std::string>()( name_ ); }
+};
 
 /// Represents the lack of a return type
 class VoidType : public Type {

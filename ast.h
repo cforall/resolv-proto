@@ -22,6 +22,7 @@ class CallExpr;
 class TupleElementExpr;
 class TupleExpr;
 class ConcType;
+class PolyType;
 class VoidType;
 class TupleType;
 
@@ -38,6 +39,7 @@ public:
     virtual void visit( const TupleElementExpr* ) {}
     virtual void visit( const TupleExpr* ) {}
     virtual void visit( const ConcType* ) {}
+    virtual void visit( const PolyType* ) {}
     virtual void visit( const VoidType* ) {}
     virtual void visit( const TupleType* ) {}
 };
