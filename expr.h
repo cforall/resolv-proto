@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "ast.h"
+#include "binding.h"
 #include "conversion.h"
 #include "data.h"
 #include "decl.h"
@@ -116,13 +117,15 @@ protected:
 
 /// A typed function call expression
 class CallExpr : public TypedExpr {
-	const FuncDecl* func_;  ///< Function called
-	List<Expr> args_;       ///< Function arguments
+	const FuncDecl* func_;   ///< Function called
+	List<Expr> args_;        ///< Function arguments
+	TypeBinding polyTypes_;  ///< Binding of type variables to concrete types
 public:
 	typedef Expr Base;
 	
-	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{} )
-		: func_( func_ ), args_( move(args_) ) {}
+	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{}, 
+	          TypeBinding polyTypes_ = TypeBinding{} )
+		: func_( func_ ), args_( move(args_) ), polyTypes_( move(polyTypes_) ) {}
 	
 	virtual Expr* clone() const {
 		return new CallExpr( func_, copy(args_) );
@@ -132,6 +135,7 @@ public:
 	
 	const FuncDecl* func() const { return func_; }
 	const List<Expr>& args() const { return args_; }
+	const TypeBinding& polyTypes() const { return polyTypes_; };
 	
 	virtual const Type* type() const { return func_->returns(); }
 	

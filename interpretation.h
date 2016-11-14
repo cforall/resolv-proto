@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <ostream>
 #include <utility>
 
@@ -11,7 +12,7 @@
 
 /// An ambiguous interpretation with a given type
 class AmbiguousExpr : public TypedExpr {
-	const Type* type_;
+	const Type* type_;  ///< Type of ambiguous expression
 public:
 	typedef Expr Base;
 	
@@ -19,7 +20,7 @@ public:
 	
 	virtual Expr* clone() const { return new AmbiguousExpr( type_ ); }
 
-	virtual void accept( Visitor& ) const { /* do nothing; AmbiguousExpr isn't known by Visitor */ }
+	virtual void accept( Visitor& ) const { /* do nothing; not known by Visitor */ }
 	
 	virtual const Type* type() const { return type_; }
 
@@ -28,6 +29,41 @@ protected:
 
 	virtual void write(std::ostream& out) const {
 		out << "<ambiguous expression of type " << *type_ << ">";
+	}
+};
+
+/// Representation of a polymorphic return type from a function
+class PolyRetType : public Type {
+	std::string name_;     ///< Name of the polymorphic type variable
+	const CallExpr* src_;  ///< Function call this type belongs to
+public:
+	typedef Type Base;
+
+	PolyRetType( const std::string& name_, const CallExpr* src_ ) : name_(name_), src_(src_) {}
+
+	virtual Type* clone() const { return new PolyRetType( name_, src_ ); }
+
+	virtual void accept( Visitor& ) const { /* do nothing; not known by Visitor */ }
+
+	const std::string& name() const { return name_; }
+	const CallExpr* src() const { return src_; }
+
+	virtual unsigned size() const { return 1; }
+
+protected:
+	virtual void trace(const GC& gc) const { gc << src_; }
+
+	virtual void write(std::ostream& out) const {
+		out << name_ << "[" << src_->func()->name() << "]";
+	}
+
+	virtual bool equals(const Type& obj) const {
+		const PolyRetType* that = as_safe<PolyRetType>(&obj);
+		return that && (src_ == that->src_) && (name_ == that->name_); 
+	}
+
+	virtual std::size_t hash() const {
+		return (std::hash<std::string>()( name_ ) << 1) ^ std::hash<const CallExpr*>()( src_ );
 	}
 };
 

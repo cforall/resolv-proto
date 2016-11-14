@@ -94,7 +94,7 @@ namespace std {
 
 /// Represents a type variable
 class PolyType : public Type {
-	std::string name_;
+	std::string name_;  ///< Name of the polymorphic type variable
 public:
 	typedef Type Base;
 
@@ -110,7 +110,7 @@ public:
 
 	const std::string& name() const { return name_; }
 
-	virtual unsigned size() const { return 0; }
+	virtual unsigned size() const { return 1; }
 
 protected:
 	virtual void write( std::ostream& out ) const { out << name_; }
