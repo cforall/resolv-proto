@@ -32,6 +32,16 @@ public:
         }
     }
 
+    /// Clones, changing one existing binding
+    TypeBinding clone_and_rebind( const std::string& name, const Type* type ) const {
+        TypeBinding tb{ *this };
+        auto it = tb.bindings_.find( name );
+        assert( it != tb.bindings_.end() && "type not in binding map" );
+        assert( it->second && "no existing binding to overwrite" );
+        it->second = type;
+        return tb;
+    }
+
     const Map& bindings() const { return bindings_; }
     unsigned long unbound() const { return unbound_; }
 

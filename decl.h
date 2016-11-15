@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -27,10 +28,11 @@ inline std::ostream& operator<< (std::ostream& out, const Decl& d) {
 
 /// A function declaration
 class FuncDecl final : public Decl {
-	std::string name_;     ///< Name of function
-	std::string tag_;      ///< Disambiguating tag for function
-	List<Type> params_;    ///< Parameter types of function
-	const Type* returns_;  ///< Return types of function
+	std::string name_;                 ///< Name of function
+	std::string tag_;                  ///< Disambiguating tag for function
+	List<Type> params_;                ///< Parameter types of function
+	const Type* returns_;              ///< Return types of function
+	std::vector<std::string> tyVars_;  ///< Names of polymorphic type variables
 	
 	/// Generate appropriate return type from return list
 	static const Type* gen_returns(const List<Type>& rs) {
@@ -43,27 +45,56 @@ class FuncDecl final : public Decl {
 			return new TupleType( rs );
 		}
 	}
+
+	/// Generate appropriate list of type variables from parameter and return lists
+	static const std::vector<std::string> gen_tyVars( const List<Type>& ps, 
+	                                                  const List<Type>& rs ) {
+		std::vector<std::string> tvs;
+
+		// scan parameters
+		for ( const Type* t : ps ) {
+			if ( const PolyType* pt = as_safe<PolyType>(t) ) {
+				if ( std::find( tvs.begin(), tvs.end(), pt->name() ) == tvs.end() ) {
+					tvs.push_back( pt->name() );
+				}
+			}
+		}
+
+		// scan returns
+		for ( const Type* t : rs ) {
+			if ( const PolyType* pt = as_safe<PolyType>(t) ) {
+				if ( std::find( tvs.begin(), tvs.end(), pt->name() ) == tvs.end() ) {
+					tvs.push_back( pt->name() );
+				}
+			}
+		}
+
+		return tvs;
+	}
 	
 public:
 	typedef Decl Base;
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const List<Type>& params_, const Type* returns_)
+	         const List<Type>& params_, const Type* returns_, 
+			 const std::vector<std::string>& tyVars_ )
 		: name_(name_), tag_(tag_), params_(params_), 
-		  returns_( returns_ ) {}
+		  returns_( returns_ ), tyVars_(tyVars_) {}
 	
 	FuncDecl(const std::string& name_, const List<Type>& params_, 
 	         const List<Type>& returns_)
 		: name_(name_), tag_(), params_(params_), 
-		  returns_( gen_returns( returns_ ) ) {}
+		  returns_( gen_returns( returns_ ) ), 
+		  tyVars_( gen_tyVars( params_, returns_ ) ) {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
 	         const List<Type>& params_, const List<Type>& returns_)
 		: name_(name_), tag_(tag_), params_(params_), 
-		  returns_( gen_returns( returns_ ) ) {}
+		  returns_( gen_returns( returns_ ) ), 
+		  tyVars_( gen_tyVars( params_, returns_ ) ) {}
 	
 	virtual Decl* clone() const {
-		return new FuncDecl( name_, tag_, params_, returns_ );
+		return new FuncDecl( name_, tag_, params_, returns_, tyVars_ );
 	}
 
 	virtual void accept( Visitor& v ) const { v.visit( this ); }
@@ -77,6 +108,7 @@ public:
 	const std::string& tag() const { return tag_; }
 	const List<Type>& params() const { return params_; }
 	const Type* returns() const { return returns_; }
+	const std::vector<std::string>& tyVars() const { return tyVars_; }
 
 protected:
 	virtual void trace(const GC& gc) const {

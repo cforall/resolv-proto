@@ -4,6 +4,7 @@
 
 #include "resolver.h"
 
+#include "binding.h"
 #include "cost.h"
 #include "debug.h"
 #include "eager_merge.h"
@@ -12,6 +13,7 @@
 #include "func_table.h"
 #include "interpretation.h"
 #include "nway_merge.h"
+#include "unify.h"
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
@@ -47,7 +49,7 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 	for ( const Interpretation* arg : args ) {
 		DBG( "  arg: " << *arg );
 
-		// find function with appropriate number of parameters, skipping arg if none
+		// find function with appropriate number of parameters, skipping  *argTypes[k] != *params[i]arg if none
 		auto n = arg->type()->size();
 		auto withNParams = funcs.find( n );
 		if ( withNParams == funcs.end() ) {
@@ -61,22 +63,25 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 			// skip functions returning no values, unless at top level
 			if ( ! topLevel && func->returns()->size() == 0 ) continue;
 
+			// Environment for call bindings
+			TypeBinding callEnv( func->tyVars().begin(), func->tyVars().end() );
+
 			// skip functions that don't match the parameter types
 			if ( n == 1 ) { // concrete type arg
-				if ( *arg->type() != *func->params()[0] ) continue;
+				if ( ! unify( func->params()[0], arg->type(), callEnv ) ) continue;
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( *argTypes[i] != *func->params()[i] ) continue;
+					if ( ! unify( func->params()[i], argTypes[i], callEnv ) ) goto nextFunc;
 				}
 			}
 
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation(
-				new CallExpr( func, List<Expr>{ arg->expr } ),
+				new CallExpr( func, List<Expr>{ arg->expr }, move(callEnv) ),
 				copy(arg->cost)
 			) );
-		}
+		nextFunc:; }
 	}
 
 	return results;
@@ -88,17 +93,18 @@ typedef std::vector< std::pair<Cost, InterpretationList> > ComboList;
 /// Checks if a list of argument types match a list of parameter types.
 /// The argument types may contain tuple types, which should be flattened; the parameter 
 /// types will not. The two lists should be the same length after flattening.
-bool argsMatchParams( const InterpretationList& args, const List<Type>& params ) {
+bool argsMatchParams( const InterpretationList& args, const List<Type>& params, 
+                      TypeBinding& env ) {
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {
-			if ( *args[j]->type() != *params[i] ) return false;
+			if ( ! unify( params[i], args[j]->type(), env ) ) return false;
 			++i;
 		} else {
 			const List<Type>& argTypes = as<TupleType>( args[j]->type() )->types();
 			for ( unsigned k = 0; k < m; ++k ) {
-				if ( *argTypes[k] != *params[i] ) return false;
+				if ( ! unify( params[i], argTypes[k], env ) ) return false;
 				++i;
 			}
 		}
@@ -141,12 +147,15 @@ InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topL
 			// skip functions returning no values, unless at top level
 			if ( ! topLevel && func->returns()->size() == 0 ) continue;
 			
+			// Environment for call bindings
+			TypeBinding callEnv( func->tyVars().begin(), func->tyVars().end() );
+
 			// skip functions that don't match the parameter types
-			if ( ! argsMatchParams( combo.second, func->params() ) ) continue;
+			if ( ! argsMatchParams( combo.second, func->params(), callEnv ) ) continue;
 			
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation( 
-				new CallExpr( func, argsFrom( combo.second ) ),
+				new CallExpr( func, argsFrom( combo.second ), move(callEnv) ),
 				copy( combo.first )
 			) );
 		}

@@ -124,7 +124,7 @@ public:
 	typedef Expr Base;
 	
 	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{}, 
-	          TypeBinding polyTypes_ = TypeBinding{} )
+	          TypeBinding&& polyTypes_ = TypeBinding{} )
 		: func_( func_ ), args_( move(args_) ), polyTypes_( move(polyTypes_) ) {}
 	
 	virtual Expr* clone() const {
