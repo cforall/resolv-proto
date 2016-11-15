@@ -65,21 +65,23 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 
 			// Environment for call bindings
 			TypeBinding callEnv( func->tyVars().begin(), func->tyVars().end() );
+			Cost callCost;
 
 			// skip functions that don't match the parameter types
 			if ( n == 1 ) { // concrete type arg
-				if ( ! unify( func->params()[0], arg->type(), callEnv ) ) continue;
+				if ( ! unify( func->params()[0], arg->type(), callEnv, callCost ) ) continue;
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( ! unify( func->params()[i], argTypes[i], callEnv ) ) goto nextFunc;
+					if ( ! unify( func->params()[i], argTypes[i], callEnv, callCost ) ) 
+						goto nextFunc;
 				}
 			}
 
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation(
 				new CallExpr( func, List<Expr>{ arg->expr }, move(callEnv) ),
-				copy(arg->cost)
+				arg->cost + callCost
 			) );
 		nextFunc:; }
 	}
@@ -94,17 +96,17 @@ typedef std::vector< std::pair<Cost, InterpretationList> > ComboList;
 /// The argument types may contain tuple types, which should be flattened; the parameter 
 /// types will not. The two lists should be the same length after flattening.
 bool argsMatchParams( const InterpretationList& args, const List<Type>& params, 
-                      TypeBinding& env ) {
+                      TypeBinding& env, Cost& cost ) {
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {
-			if ( ! unify( params[i], args[j]->type(), env ) ) return false;
+			if ( ! unify( params[i], args[j]->type(), env, cost ) ) return false;
 			++i;
 		} else {
 			const List<Type>& argTypes = as<TupleType>( args[j]->type() )->types();
 			for ( unsigned k = 0; k < m; ++k ) {
-				if ( ! unify( params[i], argTypes[k], env ) ) return false;
+				if ( ! unify( params[i], argTypes[k], env, cost ) ) return false;
 				++i;
 			}
 		}
@@ -149,14 +151,15 @@ InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topL
 			
 			// Environment for call bindings
 			TypeBinding callEnv( func->tyVars().begin(), func->tyVars().end() );
+			Cost callCost;
 
 			// skip functions that don't match the parameter types
-			if ( ! argsMatchParams( combo.second, func->params(), callEnv ) ) continue;
+			if ( ! argsMatchParams( combo.second, func->params(), callEnv, callCost ) ) continue;
 			
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation( 
 				new CallExpr( func, argsFrom( combo.second ), move(callEnv) ),
-				copy( combo.first )
+				combo.first + callCost
 			) );
 		}
 	}
