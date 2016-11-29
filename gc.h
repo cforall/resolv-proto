@@ -3,25 +3,22 @@
 #include <algorithm>
 #include <vector>
 
+class GC_Traceable;
 class GC_Object;
 
 class GC {
 public:
 	static GC& get();
-	~GC();
 
-	const GC& operator<< (const GC_Object*) const;
+	const GC& operator<< (const GC_Traceable*) const;
 
 	void register_object(GC_Object*);
-	void unregister_object(GC_Object*);
 
 	void collect();
 private:
 	GC();
 
 	bool mark;
-	bool isCollecting;
-	class GC_Object* collectingObject;
 	std::vector<class GC_Object*> objects;
 //	size_t max_count;
 };
@@ -41,16 +38,19 @@ inline void collect(Args&... roots) {
 	gc.collect();
 }
 
-class GC_Object {
-public:
-	GC_Object();
-	virtual ~GC_Object();
-
-protected:
-	virtual void trace(const GC& gc) const {}
-
-private:
+class GC_Traceable {
 	friend class GC;
 
 	mutable bool mark;
+protected:
+	virtual void trace(const GC& gc) const {}
+};
+
+class GC_Object : public GC_Traceable {
+	friend class GC;
+
+protected:
+	virtual ~GC_Object() {}
+public:
+	GC_Object();
 };

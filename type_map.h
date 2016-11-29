@@ -263,14 +263,10 @@ public:
     TypeMap<Value>* get( const Type* ty ) {
         if ( ! ty ) return nullptr;
 
-        auto tyCode = typeof(ty);
-        if ( tyCode == typeof<ConcType>() ) {
-            return get( as<ConcType>(ty) );
-        } else if ( tyCode == typeof<TupleType>() ) {
-            return get( as<TupleType>(ty) );
-        } else if ( tyCode == typeof<VoidType>() ) {
-            return get( as<VoidType>(ty) );
-        }
+        auto tid = typeof(ty);
+        if ( tid == typeof<ConcType>() ) return get( as<ConcType>(ty) );
+        else if ( tid == typeof<TupleType>() ) return get( as<TupleType>(ty) );
+        else if ( tid == typeof<VoidType>() ) return get( as<VoidType>(ty) );
         
         assert(false);
         return nullptr;
@@ -349,14 +345,10 @@ public:
     std::pair<iterator, bool> insert( const Type* ty, V&& v ) {
         if ( ! ty ) return { end(), false };
 
-        auto tyCode = typeof(ty);
-        if ( tyCode == typeof<ConcType>() ) {
-            return insert( as<ConcType>(ty), forward<V>(v) );
-        } else if ( tyCode == typeof<TupleType>() ) {
-            return insert( as<TupleType>(ty), forward<V>(v) );
-        } else if ( tyCode == typeof<VoidType>() ) {
-            return insert( as<VoidType>(ty), forward<V>(v) );
-        }
+        auto tid = typeof(ty);
+        if ( tid == typeof<ConcType>() ) return insert( as<ConcType>(ty), forward<V>(v) );
+        else if ( tid == typeof<TupleType>() ) return insert( as<TupleType>(ty), forward<V>(v) );
+        else if ( tid == typeof<VoidType>() ) return insert( as<VoidType>(ty), forward<V>(v) );
         
         assert(false);
         return { end(), false };
@@ -405,14 +397,10 @@ public:
     size_type count( const Type* ty ) const {
         if ( ! ty ) return 0;
 
-        auto tyCode = typeof(ty);
-        if ( tyCode == typeof<ConcType>() ) {
-            return count( as<ConcType>(ty) );
-        } else if ( tyCode == typeof<TupleType>() ) {
-            return count( as<TupleType>(ty) );
-        } else if ( tyCode == typeof<VoidType>() ) {
-            return count( as<VoidType>(ty) );
-        }
+        auto tid = typeof(ty);
+        if ( tid == typeof<ConcType>() ) return count( as<ConcType>(ty) );
+        else if ( tid == typeof<TupleType>() ) return count( as<TupleType>(ty) );
+        else if ( tid == typeof<VoidType>() ) return count( as<VoidType>(ty) );
         
         assert(false);
         return 0;
@@ -467,14 +455,10 @@ public:
     iterator find( const Type* ty ) {
         if ( ! ty ) return end();
 
-        auto tyCode = typeof(ty);
-        if ( tyCode == typeof<ConcType>() ) {
-            return iterator{ locate( as<ConcType>(ty) ) };
-        } else if ( tyCode == typeof<TupleType>() ) {
-            return iterator{ locate( as<TupleType>(ty) ) };
-        } else if ( tyCode == typeof<VoidType>() ) {
-            return iterator{ locate( as<VoidType>(ty) ) };
-        }
+        auto tid = typeof(ty);
+        if ( tid == typeof<ConcType>() ) return iterator{ locate( as<ConcType>(ty) ) };
+        else if ( tid == typeof<TupleType>() ) return iterator{ locate( as<TupleType>(ty) ) };
+        else if ( tid == typeof<VoidType>() ) return iterator{ locate( as<VoidType>(ty) ) };
         
         assert(false);
         return end();
@@ -482,14 +466,10 @@ public:
     const_iterator find( const Type* ty ) const {
         if ( ! ty ) return end();
 
-        auto tyCode = typeof(ty);
-        if ( tyCode == typeof<ConcType>() ) {
-            return const_iterator{ locate( as<ConcType>(ty) ) };
-        } else if ( tyCode == typeof<TupleType>() ) {
-            return const_iterator{ locate( as<TupleType>(ty) ) };
-        } else if ( tyCode == typeof<VoidType>() ) {
-            return const_iterator{ locate( as<VoidType>(ty) ) };
-        }
+        auto tid = typeof(ty);
+        if ( tid == typeof<ConcType>() ) return const_iterator{ locate( as<ConcType>(ty) ) };
+        else if ( tid == typeof<TupleType>() ) return const_iterator{ locate( as<TupleType>(ty) ) };
+        else if ( tid == typeof<VoidType>() ) return const_iterator{ locate( as<VoidType>(ty) ) };
         
         assert(false);
         return end();

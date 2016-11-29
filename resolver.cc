@@ -6,8 +6,10 @@
 
 #include "binding.h"
 #include "cost.h"
+#include "cow.h"
 #include "debug.h"
 #include "eager_merge.h"
+#include "environment.h"
 #include "expand_conversions.h"
 #include "expr.h"
 #include "func_table.h"
@@ -34,7 +36,7 @@ InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
 		if ( ! topLevel && func->returns()->size() == 0 ) continue;
 			
 		// create new zero-cost interpretation for resolved call
-		results.push_back( new Interpretation(new CallExpr( func ), Cost{}) );
+		results.push_back( new Interpretation( new CallExpr( func ) ) );
 	}
 	
 	return results;
@@ -64,24 +66,26 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 			if ( ! topLevel && func->returns()->size() == 0 ) continue;
 
 			// Environment for call bindings
-			TypeBinding callEnv( func->tyVars().begin(), func->tyVars().end() );
-			Cost callCost;
+			Cost cost = arg->cost;
+			TypeBinding localEnv( func->name(), func->tyVars().begin(), func->tyVars().end() );
+			cow_ptr<Environment> env = arg->env;
 
-			// skip functions that don't match the parameter types
+			// skip functions thaCost& costt don't match the parameter types
 			if ( n == 1 ) { // concrete type arg
-				if ( ! unify( func->params()[0], arg->type(), callEnv, callCost ) ) continue;
+				if ( ! unify( func->params()[0], arg->type(), cost, localEnv, env ) ) continue;
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( ! unify( func->params()[i], argTypes[i], callEnv, callCost ) ) 
+					if ( ! unify( func->params()[i], argTypes[i], cost, localEnv, env ) ) 
 						goto nextFunc;
 				}
 			}
 
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation(
-				new CallExpr( func, List<Expr>{ arg->expr }, move(callEnv) ),
-				arg->cost + callCost
+				new CallExpr( func, List<Expr>{ arg->expr }, move(localEnv) ),
+				move(cost),
+				move(env)
 			) );
 		nextFunc:; }
 	}
@@ -96,17 +100,20 @@ typedef std::vector< std::pair<Cost, InterpretationList> > ComboList;
 /// The argument types may contain tuple types, which should be flattened; the parameter 
 /// types will not. The two lists should be the same length after flattening.
 bool argsMatchParams( const InterpretationList& args, const List<Type>& params, 
-                      TypeBinding& env, Cost& cost ) {
+                      Cost& cost, TypeBinding& localEnv, cow_ptr<Environment>& env ) {
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
+		// merge in argument environment
+		if ( ! merge( env, args[j]->env ) ) return false;
+		// test unification of parameters
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {
-			if ( ! unify( params[i], args[j]->type(), env, cost ) ) return false;
+			if ( ! unify( params[i], args[j]->type(), cost, localEnv, env ) ) return false;
 			++i;
 		} else {
 			const List<Type>& argTypes = as<TupleType>( args[j]->type() )->types();
 			for ( unsigned k = 0; k < m; ++k ) {
-				if ( ! unify( params[i], argTypes[k], env, cost ) ) return false;
+				if ( ! unify( params[i], argTypes[k], cost, localEnv, env ) ) return false;
 				++i;
 			}
 		}
@@ -150,16 +157,19 @@ InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topL
 			if ( ! topLevel && func->returns()->size() == 0 ) continue;
 			
 			// Environment for call bindings
-			TypeBinding callEnv( func->tyVars().begin(), func->tyVars().end() );
-			Cost callCost;
+			Cost cost = combo.first;
+			TypeBinding localEnv( func->name(), func->tyVars().begin(), func->tyVars().end() );
+			cow_ptr<Environment> env; // initialized by argsMatchParams()
 
 			// skip functions that don't match the parameter types
-			if ( ! argsMatchParams( combo.second, func->params(), callEnv, callCost ) ) continue;
+			if ( ! argsMatchParams( combo.second, func->params(), cost, localEnv, env ) ) 
+				continue;
 			
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation( 
-				new CallExpr( func, argsFrom( combo.second ), move(callEnv) ),
-				combo.first + callCost
+				new CallExpr( func, argsFrom( combo.second ), move(localEnv) ),
+				move(cost),
+				move(env)
 			) );
 		}
 	}
@@ -220,7 +230,7 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 				results = matchFuncs( withName(), move(merged), topLevel );
 			} break;
 		}
-	} else if ( const TypedExpr* typedExpr = as_derived<TypedExpr>( expr ) ) {
+	} else if ( const TypedExpr* typedExpr = as_derived_safe<TypedExpr>( expr ) ) {
 		// do nothing for expressions which are already typed
 		results.push_back( new Interpretation(typedExpr) );
 	} else {
@@ -274,6 +284,9 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		on_ambiguous( expr, results.begin(), results.begin() + 1 );
 		return Interpretation::make_invalid();
 	}
+
+	// apply interpretations to environment to individual calls
+	apply( candidate->env );
 	
 	return candidate;
 }

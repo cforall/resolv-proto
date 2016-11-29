@@ -13,13 +13,12 @@
 #include "data.h"
 #include "decl.h"
 #include "type.h"
+#include "type_mutator.h"
 
 /// A resolvable expression
 class Expr : public ASTNode {
 	friend std::ostream& operator<< (std::ostream&, const Expr&);
 public:
-	virtual ~Expr() = default;
-	
 	virtual Expr* clone() const = 0;
 protected:
 	virtual void write(std::ostream& out) const = 0;
@@ -119,25 +118,56 @@ protected:
 class CallExpr : public TypedExpr {
 	const FuncDecl* func_;   ///< Function called
 	List<Expr> args_;        ///< Function arguments
-	TypeBinding polyTypes_;  ///< Binding of type variables to concrete types
+	TypeBinding forall_;  ///< Binding of type variables to concrete types
+	const Type* retType_;    ///< Return type of call, after type substitution
+
+	/// Replaces polymorphic type variables in a return type by either their substitution 
+	/// or a branded polymorphic type variable.
+	class CallRetMutator : public TypeMutator {
+		const TypeBinding& binding;
+	public:
+		CallRetMutator( const TypeBinding& binding ) : binding(binding) {}
+
+		using TypeMutator::mutate;
+
+		const Type* mutate( const PolyType* orig ) override {
+			const Type* sub = binding[ orig->name() ];
+			if ( sub ) return sub;
+			else return orig->clone_bound( &binding );
+		}
+	};
 public:
 	typedef Expr Base;
 	
-	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{}, 
-	          TypeBinding&& polyTypes_ = TypeBinding{} )
-		: func_( func_ ), args_( move(args_) ), polyTypes_( move(polyTypes_) ) {}
+	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{} )
+		: func_( func_ ), args_( move(args_) ), forall_( func_->name() ) {
+		CallRetMutator m( forall_ );
+		retType_ = m.mutate( func_->returns() );
+	}
+
+	CallExpr( const FuncDecl* func_, List<Expr>&& args_, TypeBinding&& forall_ )
+		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ) {
+		CallRetMutator m( forall_ );
+		retType_ = m.mutate( func_->returns() );
+	}
 	
 	virtual Expr* clone() const {
-		return new CallExpr( func_, copy(args_) );
+		return new CallExpr( func_, copy(args_), copy(forall_) );
 	}
 
 	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	const FuncDecl* func() const { return func_; }
 	const List<Expr>& args() const { return args_; }
-	const TypeBinding& polyTypes() const { return polyTypes_; };
+	const TypeBinding& forall() const { return forall_; };
 	
-	virtual const Type* type() const { return func_->returns(); }
+	virtual const Type* type() const { return retType_; }
+
+	/// Refreshes return type based on new type bindings.
+	void reset_type() {
+		CallRetMutator m( forall_ );
+		retType_ = m.mutate( func_->returns() );
+	}
 	
 protected:
 	virtual void trace(const GC& gc) const { gc << func_ << args_; }
@@ -145,6 +175,7 @@ protected:
 	virtual void write(std::ostream& out) const {
 		out << func_->name();
 		if ( ! func_->tag().empty() ) { out << "-" << func_->tag(); }
+		if ( ! forall_.empty() ) { out << forall_; }
 		out << "(";
 		for (auto& arg : args_) { out << " " << *arg; }
 		out << " )"; 

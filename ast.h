@@ -2,13 +2,11 @@
 
 #include "gc.h"
 
-class Visitor;  ///< Forward declaration for AST visitor
+class Visitor;
 
 /// Base class for all AST objects
 class ASTNode : public GC_Object {
 public:
-    virtual ~ASTNode() = default;
-    
     /// Accept a visitor
     virtual void accept( Visitor &v ) const = 0;
 };

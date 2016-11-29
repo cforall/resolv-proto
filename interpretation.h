@@ -4,8 +4,11 @@
 #include <ostream>
 #include <utility>
 
+#include "binding.h"
 #include "cost.h"
+#include "cow.h"
 #include "data.h"
+#include "environment.h"
 #include "expr.h"
 #include "gc.h"
 #include "type.h"
@@ -32,57 +35,25 @@ protected:
 	}
 };
 
-/// Representation of a polymorphic return type from a function
-class PolyRetType : public Type {
-	std::string name_;     ///< Name of the polymorphic type variable
-	const CallExpr* src_;  ///< Function call this type belongs to
-public:
-	typedef Type Base;
-
-	PolyRetType( const std::string& name_, const CallExpr* src_ ) : name_(name_), src_(src_) {}
-
-	virtual Type* clone() const { return new PolyRetType( name_, src_ ); }
-
-	virtual void accept( Visitor& ) const { /* do nothing; not known by Visitor */ }
-
-	const std::string& name() const { return name_; }
-	const CallExpr* src() const { return src_; }
-
-	virtual unsigned size() const { return 1; }
-
-protected:
-	virtual void trace(const GC& gc) const { gc << src_; }
-
-	virtual void write(std::ostream& out) const {
-		out << name_ << "[" << src_->func()->name() << "]";
-	}
-
-	virtual bool equals(const Type& obj) const {
-		const PolyRetType* that = as_safe<PolyRetType>(&obj);
-		return that && (src_ == that->src_) && (name_ == that->name_); 
-	}
-
-	virtual std::size_t hash() const {
-		return (std::hash<std::string>()( name_ ) << 1) ^ std::hash<const CallExpr*>()( src_ );
-	}
-};
-
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {
-	const TypedExpr* expr;  /// Base expression for interpretation
-	Cost cost;              /// Cost of interpretation
+	const TypedExpr* expr;   ///< Base expression for interpretation
+	Cost cost;               ///< Cost of interpretation
+	/// Set of free polymorphic type variables bound; nullptr for none
+	cow_ptr<Environment> env;  
 	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0]
-	Interpretation( const TypedExpr* expr = nullptr, 
-	                Cost&& cost = Cost{} )
-		: expr( expr ), cost( move(cost) ) {}
+	Interpretation( const TypedExpr* expr = nullptr, Cost&& cost = Cost{}, 
+	                cow_ptr<Environment>&& env = nullptr )
+		: expr( expr ), cost( move(cost) ), env( move(env) ) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
 		using std::swap;
 
 		swap(a.expr, b.expr);
 		swap(a.cost, b.cost);
+		swap(a.env, b.env);
 	}
 	
 	/// true iff the interpretation is ambiguous; 
@@ -105,16 +76,19 @@ struct Interpretation : public GC_Object {
 	static Interpretation* make_ambiguous( const Type* t, Cost&& c ) {
 		return new Interpretation{ new AmbiguousExpr{ t }, move(c) };
 	}
+
+protected:
+	virtual void trace(const GC& gc) const {
+		gc << expr << env.get();
+    }
 };
 
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
-	if ( i.expr == nullptr ) {
-		out << "<invalid interpretation>";
-		return out;
-	}
+	if ( i.expr == nullptr ) return out << "<invalid interpretation>";
 	
-	out << "[" << *i.type() << " @ " << i.cost << "] " << *i.expr;
-	return out;
+	out << "[" << *i.type() << " / " << i.cost << "]";
+	if ( i.env ) { out << *i.env; }
+	return out << " " << *i.expr;
 }
 
 /// List of interpretations

@@ -69,15 +69,23 @@ const D* as_checked( const B* p ) {
     return as<D>(p);
 }
 
+/// Converts to a pointer to D without checking for safety.
+template<typename D, typename B>
+D* as_derived( B* p ) { return static_cast<D*>(p); }
+
+/// Converts to a pointer to const D without checking for safety.
+template<typename D, typename B>
+const D* as_derived( const B* p ) { return static_cast<const D*>(p); }
+
 /// Converts to a pointer to D, 
 /// nullptr if not a pointer to some type derived from D
 template<typename D, typename B>
-D* as_derived( B* p ) { return dynamic_cast<D*>(p); }
+D* as_derived_safe( B* p ) { return dynamic_cast<D*>(p); }
 
 /// Converts to a pointer to const D, 
 /// nullptr if not a pointer to some type derived from D
 template<typename D, typename B>
-const D* as_derived( const B* p ) { return dynamic_cast<const D*>(p); }
+const D* as_derived_safe( const B* p ) { return dynamic_cast<const D*>(p); }
 
 /// Strips const off a reference type
 template<typename T>

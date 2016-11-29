@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -8,6 +9,7 @@
 #include <string>
 
 #include "ast.h"
+#include "binding.h"
 #include "data.h"
 
 /// A type declaration
@@ -16,8 +18,6 @@ class Type : public ASTNode {
 	friend bool operator== (const Type&, const Type&);
 	friend std::hash<Type>;
 public:
-	virtual ~Type() = default;
-	
 	/// Create a fresh copy of this object with the same runtime type
 	virtual Type* clone() const = 0;
 	
@@ -92,35 +92,53 @@ namespace std {
 	};
 }
 
-/// Represents a type variable
+class TypeBinding;
+
+/// Representation of a polymorphic type
 class PolyType : public Type {
-	std::string name_;  ///< Name of the polymorphic type variable
+	std::string name_;        ///< Name of the polymorphic type variable
+	const TypeBinding* src_;  ///< Type binding this type belongs to
 public:
 	typedef Type Base;
 
-	PolyType( const std::string& name_ ) : name_(name_) {}
+	PolyType( const std::string& name_, const TypeBinding* src_ = nullptr )
+		: name_(name_), src_(src_) {}
 
-	virtual Type* clone() const { return new PolyType( name_ ); }
+	virtual Type* clone() const { return new PolyType( name_, src_ ); }
 
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
+	/// Clones bound to a new type binding
+	PolyType* clone_bound( const TypeBinding* new_src ) const {
+		return new PolyType( name_, new_src );
+	}
 
-	bool operator== (const PolyType& that) const { return name_ == that.name_; }
+	virtual void accept( Visitor& v ) const { v.visit(this); }
+
+	bool operator== (const PolyType& that) const {
+		return src_ == that.src_ && name_ == that.name_;
+	}
 	bool operator!= (const PolyType& that) const { return !(*this == that); }
-	bool operator< (const PolyType& that) const { return name_ < that.name_; }
-
+	
 	const std::string& name() const { return name_; }
+	const TypeBinding* src() const { return src_; }
 
 	virtual unsigned size() const { return 1; }
 
 protected:
-	virtual void write( std::ostream& out ) const { out << name_; }
+	virtual void trace(const GC& gc) const { gc << src_; }
 
-	virtual bool equals( const Type& obj ) const {
-		const PolyType* that = as_safe<PolyType>(&obj);
-		return that && (*this == *that);
+	virtual void write(std::ostream& out) const {
+		out << name_;
+		if ( src_ ) { out << "@" << src_->name; }
 	}
 
-	virtual std::size_t hash() const { return std::hash<std::string>()( name_ ); }
+	virtual bool equals(const Type& obj) const {
+		const PolyType* that = as_safe<PolyType>(&obj);
+		return that && *this == *that; 
+	}
+
+	virtual std::size_t hash() const {
+		return (std::hash<std::string>()( name_ ) << 1) ^ std::hash<const TypeBinding*>()( src_ );
+	}
 };
 
 /// Represents the lack of a return type

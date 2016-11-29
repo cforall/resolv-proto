@@ -15,8 +15,6 @@ class Decl : public ASTNode {
 	friend std::ostream& operator<< (std::ostream&, const Decl&);
 public:
 	virtual Decl* clone() const = 0;
-	
-	virtual ~Decl() = default;
 protected:
 	virtual void write(std::ostream& out) const = 0;
 };
