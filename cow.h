@@ -32,7 +32,7 @@ public:
     typedef typename std::add_lvalue_reference<const T>::type const_reference;
 
     /// get owned state
-    bool owned() const { return reinterpret_cast<uintptr_t>(p) & UINTMAX_C(1); }
+    bool owned() const { return !( reinterpret_cast<uintptr_t>(p) & UINTMAX_C(1) ); }
 
     /// Resets the stored pointer to an owned copy
     void reset( T* q ) {
