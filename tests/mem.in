@@ -1,0 +1,10 @@
+T new
+T cons T T
+%%
+cons( 1 1 )
+cons( 1 new() )
+cons( cons( 1 new() ) 1 )
+cons( cons( 1 new() ) new() )
+cons( cons( new() new() ) 1 ) 
+new()
+

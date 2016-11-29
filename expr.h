@@ -140,19 +140,26 @@ public:
 	typedef Expr Base;
 	
 	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{} )
-		: func_( func_ ), args_( move(args_) ), forall_( func_->name() ) {
+		: func_( func_ ), args_( move(args_) ), 
+		  forall_( func_->name(), func_->tyVars().begin(), func_->tyVars().end() ) {
 		CallRetMutator m( forall_ );
+		retType_ = m.mutate( func_->returns() );
+	}
+
+	CallExpr( const FuncDecl* func_, const List<Expr>& args_, const TypeBinding& forall_ )
+		: func_( func_ ), args_( args_ ), forall_( forall_ ) {
+		CallRetMutator m( this->forall_ );
 		retType_ = m.mutate( func_->returns() );
 	}
 
 	CallExpr( const FuncDecl* func_, List<Expr>&& args_, TypeBinding&& forall_ )
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ) {
-		CallRetMutator m( forall_ );
+		CallRetMutator m( this->forall_ );
 		retType_ = m.mutate( func_->returns() );
 	}
 	
 	virtual Expr* clone() const {
-		return new CallExpr( func_, copy(args_), copy(forall_) );
+		return new CallExpr( func_, args_, forall_ );
 	}
 
 	virtual void accept( Visitor& v ) const { v.visit( this ); }
