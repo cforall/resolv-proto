@@ -267,6 +267,7 @@ public:
         if ( tid == typeof<ConcType>() ) return get( as<ConcType>(ty) );
         else if ( tid == typeof<TupleType>() ) return get( as<TupleType>(ty) );
         else if ( tid == typeof<VoidType>() ) return get( as<VoidType>(ty) );
+        else if ( tid == typeof<PolyType>() ) return nullptr;
         
         assert(false);
         return nullptr;
@@ -349,6 +350,7 @@ public:
         if ( tid == typeof<ConcType>() ) return insert( as<ConcType>(ty), forward<V>(v) );
         else if ( tid == typeof<TupleType>() ) return insert( as<TupleType>(ty), forward<V>(v) );
         else if ( tid == typeof<VoidType>() ) return insert( as<VoidType>(ty), forward<V>(v) );
+        else if ( tid == typeof<PolyType>() ) return { end(), false };
         
         assert(false);
         return { end(), false };
@@ -401,6 +403,7 @@ public:
         if ( tid == typeof<ConcType>() ) return count( as<ConcType>(ty) );
         else if ( tid == typeof<TupleType>() ) return count( as<TupleType>(ty) );
         else if ( tid == typeof<VoidType>() ) return count( as<VoidType>(ty) );
+        else if ( tid == typeof<PolyType>() ) return 0;
         
         assert(false);
         return 0;
@@ -459,6 +462,7 @@ public:
         if ( tid == typeof<ConcType>() ) return iterator{ locate( as<ConcType>(ty) ) };
         else if ( tid == typeof<TupleType>() ) return iterator{ locate( as<TupleType>(ty) ) };
         else if ( tid == typeof<VoidType>() ) return iterator{ locate( as<VoidType>(ty) ) };
+        else if ( tid == typeof<PolyType>() ) return end();
         
         assert(false);
         return end();
@@ -470,6 +474,7 @@ public:
         if ( tid == typeof<ConcType>() ) return const_iterator{ locate( as<ConcType>(ty) ) };
         else if ( tid == typeof<TupleType>() ) return const_iterator{ locate( as<TupleType>(ty) ) };
         else if ( tid == typeof<VoidType>() ) return const_iterator{ locate( as<VoidType>(ty) ) };
+        else if ( tid == typeof<PolyType>() ) return end();
         
         assert(false);
         return end();
