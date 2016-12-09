@@ -116,10 +116,10 @@ protected:
 
 /// A typed function call expression
 class CallExpr : public TypedExpr {
-	const FuncDecl* func_;   ///< Function called
-	List<Expr> args_;        ///< Function arguments
-	TypeBinding forall_;  ///< Binding of type variables to concrete types
-	const Type* retType_;    ///< Return type of call, after type substitution
+	const FuncDecl* func_;            ///< Function called
+	List<Expr> args_;                 ///< Function arguments
+	unique_ptr<TypeBinding> forall_;  ///< Binding of type variables to concrete types
+	const Type* retType_;             ///< Return type of call, after type substitution
 
 	/// Replaces polymorphic type variables in a return type by either their substitution 
 	/// or a branded polymorphic type variable.
@@ -140,21 +140,22 @@ public:
 	typedef Expr Base;
 	
 	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{} )
-		: func_( func_ ), args_( move(args_) ), 
-		  forall_( func_->name(), func_->tyVars().begin(), func_->tyVars().end() ) {
-		CallRetMutator m( forall_ );
+		: func_( func_ ), args_( move(args_) ), forall_( make_binding( func_ ) ) {
+		CallRetMutator m( *forall_ );
 		retType_ = m.mutate( func_->returns() );
 	}
 
-	CallExpr( const FuncDecl* func_, const List<Expr>& args_, const TypeBinding& forall_ )
-		: func_( func_ ), args_( args_ ), forall_( forall_ ) {
-		CallRetMutator m( this->forall_ );
+	CallExpr( const FuncDecl* func_, const List<Expr>& args_, 
+	          const unique_ptr<TypeBinding>& forall_ )
+		: func_( func_ ), args_( args_ ), 
+		  forall_( new TypeBinding( *forall_ ) ) {
+		CallRetMutator m( *this->forall_ );
 		retType_ = m.mutate( func_->returns() );
 	}
 
-	CallExpr( const FuncDecl* func_, List<Expr>&& args_, TypeBinding&& forall_ )
+	CallExpr( const FuncDecl* func_, List<Expr>&& args_, unique_ptr<TypeBinding>&& forall_ )
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ) {
-		CallRetMutator m( this->forall_ );
+		CallRetMutator m( *this->forall_ );
 		retType_ = m.mutate( func_->returns() );
 	}
 	
@@ -166,23 +167,23 @@ public:
 	
 	const FuncDecl* func() const { return func_; }
 	const List<Expr>& args() const { return args_; }
-	const TypeBinding& forall() const { return forall_; };
+	const TypeBinding& forall() const { return *forall_; };
 	
 	virtual const Type* type() const { return retType_; }
 
 	/// Refreshes return type based on new type bindings.
 	void reset_type() {
-		CallRetMutator m( forall_ );
+		CallRetMutator m( *forall_ );
 		retType_ = m.mutate( func_->returns() );
 	}
 	
 protected:
-	virtual void trace(const GC& gc) const { gc << func_ << args_; }
+	virtual void trace(const GC& gc) const { gc << func_ << args_ << forall_.get() << retType_; }
 
 	virtual void write(std::ostream& out) const {
 		out << func_->name();
 		if ( ! func_->tag().empty() ) { out << "-" << func_->tag(); }
-		if ( ! forall_.empty() ) { out << forall_; }
+		if ( forall_ && ! forall_->empty() ) { out << *forall_; }
 		out << "(";
 		for (auto& arg : args_) { out << " " << *arg; }
 		out << " )"; 

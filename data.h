@@ -23,6 +23,10 @@ inline T copy(const T& x) { return x; }
 /// forward arguments
 using std::forward;
 
+/// use unique_ptr
+using std::unique_ptr;
+using std::make_unique;
+
 /// Gets the unique identifier for a type
 template<typename T>
 std::type_index typeof() { return std::type_index{ typeid(T) }; } 

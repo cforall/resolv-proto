@@ -2,9 +2,11 @@
 
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -30,19 +32,208 @@ public:
     typedef std::unique_ptr< const_value_type > const_pointer;
 
 private:
+    /// Variant key type for map
+    class Key {
+        /// Key type for ConcType
+        struct ConcKey {
+            int id;
+
+            ConcKey( int id ) : id(id) {}
+        };
+
+        /// Key type for PolyType
+        struct PolyKey {
+            std::string name;
+            const TypeBinding* src;
+
+            PolyKey( const std::string& name, const TypeBinding* src ) : name(name), src(src) {}
+        };
+
+        enum { Conc, Poly } key_type;  ///< Variant discriminator
+        union {
+            ConcKey conc;  ///< ConcType variant
+            PolyKey poly;  ///< PolyType variant
+        };
+
+        /// Initializes key from ConcType
+        void init( const ConcType* ct ) {
+            key_type = Conc;
+            new(&conc) ConcKey{ ct->id() };
+        }
+
+        /// Initializes key from PolyType
+        void init( const PolyType* pt ) {
+            key_type = Poly;
+            new(&poly) PolyKey{ pt->name(), pt->src() };
+        }
+
+        /// Initializes variant fields (but not key type) by copy
+        void init( const Key& o ) {
+            switch ( o.key_type ) {
+            case Conc:
+                new(&conc) ConcKey{ o.conc };
+                break;
+            case Poly:
+                new(&poly) PolyKey{ o.poly };
+                break;
+            }
+        }
+
+        /// Assigns variant fields (but not key type) by move
+        void init( Key&& o ) {
+            switch ( o.key_type ) {
+            case Conc:
+                new(&conc) ConcKey{ move(o.conc) };
+                break;
+            case Poly:
+                new(&poly) PolyKey{ move(o.poly) };
+                break;
+            }
+        }
+
+        /// Clears variant fields
+        void reset() {
+            switch ( key_type ) {
+            case Conc:
+                conc.~ConcKey();
+                break;
+            case Poly:
+                poly.~PolyKey();
+                break;
+            }
+        }
+
+    public:
+        /// Constructs key from type; type should be either ConcType or PolyType
+        Key( const Type* t ) {
+            auto tid = typeof(t);
+            if ( tid == typeof<ConcType>() ) {
+                init( as<ConcType>(t) );
+            } else if ( tid == typeof<PolyType>() ) {
+                init( as<PolyType>(t) );
+            } else assert(false && "Invalid key type");
+        }
+
+        Key( const ConcType* t ) { init( t ); }
+
+        Key( const PolyType* t ) { init( t ); }
+
+        // deliberately no nullptr_t implmentation; no meaningful value
+
+        Key( const Key& o ) : key_type( o.key_type ) { init( o ); }
+
+        Key( Key&& o ) : key_type( o.key_type ) { init( move(o) ); }
+
+        Key& operator= ( const Key& o ) {
+            if ( this == &o ) return *this;
+            if ( key_type == o.key_type ) {
+                switch( key_type ) {
+                case Conc:
+                    conc = o.conc;
+                    break;
+                case Poly:
+                    poly = o.poly;
+                    break;
+                }
+            } else {
+                reset();
+                key_type = o.key_type;
+                init( o );
+            }
+
+            return *this;
+        }
+
+        Key& operator= ( Key&& o ) {
+            if ( this == &o ) return *this;
+            if ( key_type == o.key_type ) {
+                switch( key_type ) {
+                case Conc:
+                    conc = move(o.conc);
+                    break;
+                case Poly:
+                    poly = move(o.poly);
+                    break;
+                }
+            } else {
+                reset();
+                key_type = o.key_type;
+                init( move(o) );
+            }
+
+            return *this;
+        }
+
+        ~Key() { reset(); }
+
+        /// Retrieves the underlying key
+        const Type* get() const {
+            switch ( key_type ) {
+            case Conc:
+                return new ConcType{ conc.id };
+            case Poly:
+                return new PolyType{ poly.name, poly.src };
+            default: assert(false && "Invalid key type"); return nullptr;
+            }
+        } 
+
+        bool operator== ( const Key& o ) const {
+            if ( key_type != o.key_type ) return false;
+            switch ( key_type ) {
+            case Conc:
+                return conc.id == o.conc.id;
+            case Poly:
+                return poly.src == o.poly.src && poly.name == o.poly.name;
+            default: assert(false && "Invalid key type"); return false;
+            }
+        }
+
+        bool operator< ( const Key& o ) const {
+            if ( key_type != o.key_type ) return (int)key_type < (int)o.key_type;
+            switch ( key_type ) {
+            case Conc:
+                return conc.id < o.conc.id;
+            case Poly:
+                return poly.name < o.poly.name 
+                    || poly.name == o.poly.name 
+                       && std::less<TypeBinding*>{}( poly.src, o.poly.src );
+            default: assert(false && "Invalid key type"); return false;
+            }
+        }
+
+        std::size_t hash() const {
+            std::size_t h;
+            switch ( key_type ) {
+            case Conc:
+                h = std::hash<int>{}( conc.id );
+                break;
+            case Poly:
+                h = (std::hash<std::string>{}( poly.name ) << 1) 
+                    ^ std::hash<const TypeBinding*>()( poly.src );
+                break;
+            default: assert(false && "Invalid key type");
+            }
+            return (h << 1) | (std::size_t)key_type;
+        }
+    };
+
+    struct KeyHash {
+        std::size_t operator() ( const Key& k ) const { return k.hash(); }
+    };
+
     /// Underlying map type
-    template<typename K, typename V>
-    using BaseMap =
+    template<typename V>
+    using KeyMap =
     #ifdef RP_SORTED
-         std::map<K, V>;
+         std::map<Key, V>;
     #else
-        std::unordered_map<K, V>;
+        std::unordered_map<Key, V, KeyHash>;
     #endif
 
     /// Optional leaf value for map
     typedef std::unique_ptr<Value> Leaf;
     /// Map type for concrete types
-    typedef BaseMap< int, std::unique_ptr<TypeMap<Value>> > ConcMap;
+    typedef KeyMap< std::unique_ptr<TypeMap<Value>> > ConcMap;
 
     // TODO build union representation
     Leaf leaf;      ///< Storage for leaf values
@@ -104,11 +295,11 @@ private:
             case 0:
                 return new VoidType();
             case 1:
-                return new ConcType( prefix.front().it->first );
+                return prefix.front().it->first.get();
             default: {
                 List<Type> types( prefix.size() );
                 for (unsigned i = 0; i < prefix.size(); ++i) {
-                    types[i] = new ConcType( prefix[i].it->first );
+                    types[i] = prefix[i].it->first.get();
                 }
                 return new TupleType( move(types) );
             }
@@ -195,7 +386,7 @@ public:
     
         const_iterator( Iter&& i ) : i( move(i) ) {}
         const_iterator( nullptr_t ) : i( nullptr ) {}
-        const_iterator( const TypeMap<Value>* p ) : i( const_cast<TypeMap<Value>*>(p) ) {}
+        const_iterator( const TypeMap<Value>* p ) : i( as_non_const(p) ) {}
     public:
         const_iterator() = default;
         const_iterator( const iterator& o ) : i(o.i) {}
@@ -240,11 +431,19 @@ public:
     const TypeMap<Value>* get( VoidType* ) const { return this; }
 
     TypeMap<Value>* get( const ConcType* ty ) {
-        auto it = nodes.find( ty->id() );
+        auto it = nodes.find( Key{ ty } );
         return it == nodes.end() ? nullptr : it->second.get();
     }
     const TypeMap<Value>* get( const ConcType* ty ) const {
-        return const_cast< TypeMap<Value>* const >(this)->get( ty );
+        return as_non_const(this)->get( ty );
+    }
+
+    TypeMap<Value>* get( const PolyType* ty ) {
+        auto it = nodes.find( Key{ ty } );
+        return it == nodes.end() ? nullptr : it->second.get();
+    }
+    const TypeMap<Value>* get( const PolyType* ty ) const {
+        return as_non_const(this)->get( ty );
     }
 
     TypeMap<Value>* get( const TupleType* ty ) {
@@ -257,7 +456,7 @@ public:
         return tm;
     }
     const TypeMap<Value>* get( TupleType* ty ) const {
-        return const_cast< TypeMap<Value>* const >(this)->get( ty );
+        return as_non_const(this)->get( ty );
     }
 
     TypeMap<Value>* get( const Type* ty ) {
@@ -267,13 +466,13 @@ public:
         if ( tid == typeof<ConcType>() ) return get( as<ConcType>(ty) );
         else if ( tid == typeof<TupleType>() ) return get( as<TupleType>(ty) );
         else if ( tid == typeof<VoidType>() ) return get( as<VoidType>(ty) );
-        else if ( tid == typeof<PolyType>() ) return nullptr;
+        else if ( tid == typeof<PolyType>() ) return get( as<PolyType>(ty) );
         
         assert(false);
         return nullptr;
     }
     const TypeMap<Value>* get( Type* ty ) const {
-        return const_cast< TypeMap<Value>* const >(this)->get( ty );
+        return as_non_const(this)->get( ty );
     }
 
     /// Stores v in the leaf pointer
@@ -299,9 +498,29 @@ public:
     std::pair<iterator, bool> insert( const ConcType* ty, V&& v ) {
         bool r = false;
 
-        auto it = nodes.find( ty->id() );
+        Key k = Key{ ty };
+        auto it = nodes.find( k );
         if ( it == nodes.end() ) {
-            it = nodes.emplace_hint( it, ty->id(), std::make_unique<TypeMap<Value>>() );
+            it = nodes.emplace_hint( it, k, std::make_unique<TypeMap<Value>>() );
+        }
+        if ( ! it->second->leaf ) {
+            it->second->set( forward<V>(v) );
+            r = true;
+        }
+
+        return { 
+            iterator{ Iter{ it->second.get(), BacktrackList{ Backtrack{ it, this } } } }, 
+            r };
+    }
+
+    template<typename V>
+    std::pair<iterator, bool> insert( const PolyType* ty, V&& v ) {
+        bool r = false;
+
+        Key k = Key{ ty };
+        auto it = nodes.find( k );
+        if ( it == nodes.end() ) {
+            it = nodes.emplace_hint( it, move(k), std::make_unique<TypeMap<Value>>() );
         }
         if ( ! it->second->leaf ) {
             it->second->set( forward<V>(v) );
@@ -321,13 +540,12 @@ public:
         // scan down trie as far as it matches
         TypeMap<Value>* tm = this;
         for ( unsigned i = 0; i < ty->size(); ++i ) {
-            // ensure that TupleType only contains concrete types
-            const ConcType* t = as_checked<ConcType>( ty->types()[i] );
-
-            auto it = tm->nodes.find( t->id() );
+            Key k{ ty->types()[i] };
+            
+            auto it = tm->nodes.find( k );
             if ( it == tm->nodes.end() ) {
                 // add new nodes as needed
-                it = tm->nodes.emplace_hint( it, t->id(), std::make_unique<TypeMap<Value>>() );
+                it = tm->nodes.emplace_hint( it, move(k), std::make_unique<TypeMap<Value>>() );
             }
 
             rpre.emplace_back( it, tm );
@@ -350,7 +568,7 @@ public:
         if ( tid == typeof<ConcType>() ) return insert( as<ConcType>(ty), forward<V>(v) );
         else if ( tid == typeof<TupleType>() ) return insert( as<TupleType>(ty), forward<V>(v) );
         else if ( tid == typeof<VoidType>() ) return insert( as<VoidType>(ty), forward<V>(v) );
-        else if ( tid == typeof<PolyType>() ) return { end(), false };
+        else if ( tid == typeof<PolyType>() ) return insert( as<PolyType>(ty), forward<V>(v) );
         
         assert(false);
         return { end(), false };
@@ -376,7 +594,13 @@ public:
     }
 
     size_type count( const ConcType* ty ) const {
-        auto it = nodes.find( ty->id() );
+        auto it = nodes.find( Key{ ty } );
+        if ( it == nodes.end() ) return 0;
+        return it.second->leaf ? 1 : 0;
+    }
+
+    size_type count( const PolyType* ty ) const {
+        auto it = nodes.find( Key{ ty } );
         if ( it == nodes.end() ) return 0;
         return it.second->leaf ? 1 : 0;
     }
@@ -385,10 +609,7 @@ public:
         // scan down trie as far as it matches
         TypeMap<Value>* tm = this;
         for ( unsigned i = 0; i < ty->size(); ++i ) {
-            // ensure that TupleType only contains concrete types
-            ConcType* t = as_checked<ConcType>( ty->types()[i] );
-
-            auto it = tm->nodes.find( t->id() );
+            auto it = tm->nodes.find( Key{ ty->types()[i] } );
             if ( it == tm->nodes.end() ) return 0;
 
             tm = it->second.get();
@@ -403,7 +624,7 @@ public:
         if ( tid == typeof<ConcType>() ) return count( as<ConcType>(ty) );
         else if ( tid == typeof<TupleType>() ) return count( as<TupleType>(ty) );
         else if ( tid == typeof<VoidType>() ) return count( as<VoidType>(ty) );
-        else if ( tid == typeof<PolyType>() ) return 0;
+        else if ( tid == typeof<PolyType>() ) return count( as<PolyType>(ty) );
         
         assert(false);
         return 0;
@@ -415,7 +636,16 @@ private:
     }
 
     Iter locate( const ConcType* ty ) const {
-        auto it = as_non_const(nodes).find( ty->id() );
+        auto it = as_non_const(nodes).find( Key{ ty } );
+        if ( it == as_non_const(nodes).end() ) return Iter{};
+
+        return it->second->leaf ?
+            Iter{ it->second.get(), BacktrackList{ Backtrack{ it, as_non_const(this) } } } :
+            Iter{};
+    }
+
+    Iter locate( const PolyType* ty ) const {
+        auto it = as_non_const(nodes).find( Key{ ty } );
         if ( it == as_non_const(nodes).end() ) return Iter{};
 
         return it->second->leaf ?
@@ -429,10 +659,7 @@ private:
         // scan down trie as far as it matches
         TypeMap<Value>* tm = as_non_const(this);
         for ( unsigned i = 0; i < ty->size(); ++i ) {
-            // ensure that TupleType only contains concrete types
-            const ConcType* t = as_checked<ConcType>( ty->types()[i] );
-
-            auto it = tm->nodes.find( t->id() );
+            auto it = tm->nodes.find( Key{ ty->types()[i] } );
             if ( it == tm->nodes.end() ) return Iter{};
 
             rpre.emplace_back( it, tm );
@@ -452,6 +679,9 @@ public:
     iterator find( const ConcType* ty ) { return iterator{ locate(ty) }; }
     const_iterator find( const ConcType* ty ) const { return const_iterator{ locate(ty) }; }
 
+    iterator find( const PolyType* ty ) { return iterator{ locate(ty) }; }
+    const_iterator find( const PolyType* ty ) const { return const_iterator{ locate(ty) }; }
+
     iterator find( const TupleType* ty ) { return iterator{ locate(ty) }; }
     const_iterator find( const TupleType* ty ) const { return const_iterator{ locate(ty) }; }
 
@@ -462,7 +692,7 @@ public:
         if ( tid == typeof<ConcType>() ) return iterator{ locate( as<ConcType>(ty) ) };
         else if ( tid == typeof<TupleType>() ) return iterator{ locate( as<TupleType>(ty) ) };
         else if ( tid == typeof<VoidType>() ) return iterator{ locate( as<VoidType>(ty) ) };
-        else if ( tid == typeof<PolyType>() ) return end();
+        else if ( tid == typeof<PolyType>() ) return iterator{ locate( as<PolyType>(ty) ) };
         
         assert(false);
         return end();
@@ -474,7 +704,7 @@ public:
         if ( tid == typeof<ConcType>() ) return const_iterator{ locate( as<ConcType>(ty) ) };
         else if ( tid == typeof<TupleType>() ) return const_iterator{ locate( as<TupleType>(ty) ) };
         else if ( tid == typeof<VoidType>() ) return const_iterator{ locate( as<VoidType>(ty) ) };
-        else if ( tid == typeof<PolyType>() ) return end();
+        else if ( tid == typeof<PolyType>() ) return const_iterator{ locate( as<PolyType>(ty) ) };
         
         assert(false);
         return end();

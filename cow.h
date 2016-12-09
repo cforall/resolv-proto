@@ -100,7 +100,7 @@ public:
 
     /// get writable copy of wrapped object; will clone underlying object if not owned
     reference mut() {
-        if ( ! owned() ) { p = new T(*p); }
+        if ( ! owned() ) { p = new T( *ptr() ); }
         return *p;
     }
 };

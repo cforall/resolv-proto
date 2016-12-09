@@ -52,6 +52,22 @@ class Environment : public GC_Traceable {
 
     Storage classes;          ///< Backing storage for type classes
     Map bindings;             ///< Bindings from a named type variable to another type
+
+    /// DEBUG checks whether environment is still valid
+    void validate() {
+        for ( Storage::size_type i = 0; i < classes.size(); ++i ) {
+            for ( const PolyType* v : classes[i].vars ) {
+                auto it = bindings.find( v );
+                assert( it != bindings.end() && "all vars in binding map" );
+                assert( it->second == i && "all vars located by binding map" );
+                assert( reinterpret_cast<uintptr_t>( v->src() ) < UINTMAX_C( 0x8000000 ) && "all type bindings on heap" );
+                assert( v->src()->contains( v->name() ) && "all vars have valid type bindings" );
+            }
+        }
+        for ( const auto& e : bindings ) {
+            assert( e.second < classes.size() && "all bindings have valid class" );
+        }
+    }
  
     /// Inserts a new typeclass, mapping `orig` to `sub`; 
     /// environment should be initialized and `orig` should not be present.
@@ -79,15 +95,18 @@ public:
     /// Constructs a brand new environment with a single binding
     Environment( const PolyType* orig, const Type* sub = nullptr ) : classes(), bindings() {
         insert( orig, sub );
+        validate();
     }
 
     /// Constructs a brand new environment with two poly types bound together
     Environment( const PolyType* orig, const PolyType* added ) : classes(), bindings() {
         insert( orig, added );
+        validate();
     }
 
     Environment( const PolyType* orig, nullptr_t ) : classes(), bindings() {
         insert( orig );
+        validate();
     }
     
     /// Finds a mapping in this environment, returns nullptr if none
@@ -104,6 +123,7 @@ public:
         } else {
             classes[ it->second ].bound = sub;
         }
+        validate();
     }
 
     /// Adds the second PolyType to the class of the first; the second PolyType should not 
@@ -114,7 +134,9 @@ public:
             insert( orig, added );
         } else {
             classes[ it->second ].vars.push_back( added );
+            bindings[ added ] = it->second;
         }
+        validate();
     }
 
     /// Merges the target environment with this one; returns false if fails, but does 
@@ -160,10 +182,11 @@ public:
                     }
                 }
                 classes.pop_back();
+                if ( cid == victim ) { cid = c2id; }
             }
 
             if ( cid == classes.size() ) {
-                // no bound variables, insert new class at clif ( ! env )asses.size() [== cid]
+                // no bound variables, insert new class at classes.size() [== cid]
                 classes.push_back( c );
             }
 
@@ -172,6 +195,7 @@ public:
                 bindings[ var ] = cid;
             }
         }
+        validate();
     }
 
     /// Applies the bindings in this environment to their local type bindings
@@ -204,7 +228,7 @@ private:
                 out << "[";
                 auto jt = it->vars.begin();
                 while (true) {
-                    out << *jt;
+                    out << **jt;
                     if ( ++jt == it->vars.end() ) break;
                     out << ", ";
                 }

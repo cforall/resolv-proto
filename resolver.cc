@@ -67,16 +67,16 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
-			TypeBinding localEnv( func->name(), func->tyVars().begin(), func->tyVars().end() );
+			unique_ptr<TypeBinding> localEnv{ make_binding( func ) };
 			cow_ptr<Environment> env = arg->env;
 
 			// skip functions thaCost& costt don't match the parameter types
 			if ( n == 1 ) { // concrete type arg
-				if ( ! unify( func->params()[0], arg->type(), cost, localEnv, env ) ) continue;
+				if ( ! unify( func->params()[0], arg->type(), cost, *localEnv, env ) ) continue;
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( ! unify( func->params()[i], argTypes[i], cost, localEnv, env ) ) 
+					if ( ! unify( func->params()[i], argTypes[i], cost, *localEnv, env ) ) 
 						goto nextFunc;
 				}
 			}
@@ -158,11 +158,11 @@ InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topL
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
-			TypeBinding localEnv( func->name(), func->tyVars().begin(), func->tyVars().end() );
+			unique_ptr<TypeBinding> localEnv{ make_binding( func ) };
 			cow_ptr<Environment> env; // initialized by argsMatchParams()
 
 			// skip functions that don't match the parameter types
-			if ( ! argsMatchParams( combo.second, func->params(), cost, localEnv, env ) ) 
+			if ( ! argsMatchParams( combo.second, func->params(), cost, *localEnv, env ) ) 
 				continue;
 			
 			// create new interpretation for resolved call

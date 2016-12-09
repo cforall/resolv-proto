@@ -94,7 +94,7 @@ bool unify(const Type* paramType, const Type* argType,
         if ( ! boundType ) {
             if ( const PolyType* polyArgType = as_safe<PolyType>(argType) ) {
                 // add local poly type to non-local group
-                bindClass( env, polyArgType, polyParamType );
+                bindClass( env, polyArgType, polyParamType->clone_bound( &localEnv ) );
             }
             return true;  // Unifies on successful binding.
         }

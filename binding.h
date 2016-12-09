@@ -12,6 +12,7 @@ class Type;
 class TypeBinding {
     friend std::ostream& operator<< (std::ostream&, const TypeBinding&);
     friend const GC& operator<< (const GC&, const TypeBinding*);
+
 public:
     /// Underlying map type
     typedef std::unordered_map< std::string, const Type* > Map;
@@ -43,6 +44,11 @@ public:
     /// true iff no bindings
     bool empty() const { return bindings_.empty(); }
 
+    /// true iff the map contains a binding with the given name
+    bool contains( const std::string& name ) const {
+        return bindings_.count( name ) > 0;
+    }
+
     /// Returns the type corresponding to the given name.
     /// Returns nullptr if the name has not yet been bound, fails if the key is not in the map.
     const Type* operator[] ( const std::string& name ) const {
@@ -65,3 +71,7 @@ public:
         return nullptr;
     }
 };
+
+class FuncDecl;
+/// Makes a new type binding for this FuncDecl (or nullptr if no type vars)
+TypeBinding* make_binding( const FuncDecl* );
