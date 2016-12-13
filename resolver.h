@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "binding.h"
 #include "conversion.h"
 #include "expr.h"
 #include "func_table.h"
@@ -15,8 +16,12 @@ typedef std::function<void(const Expr*)> InvalidEffect;
 /// could not be resolved and an iterator pair representing the first ambiguous 
 /// candidate and the iterator after the last (range is guaranteed to be non-empty)
 typedef std::function<void(const Expr*,
-                           InterpretationList::iterator, 
-	                       InterpretationList::iterator)> AmbiguousEffect;  
+                           List<TypedExpr>::const_iterator, 
+	                       List<TypedExpr>::const_iterator)> AmbiguousEffect;
+
+/// Effect to be run on unbound type variables; arguments are the expression which 
+/// has unbound type variables and its type binding
+typedef std::function<void(const Expr*, const TypeBinding&)> UnboundEffect;
 
 /// State-tracking class for resolving expressions
 class Resolver {
@@ -27,6 +32,8 @@ class Resolver {
 	InvalidEffect on_invalid;
 	/// Effect to run on ambiguous interpretation
 	AmbiguousEffect on_ambiguous;
+	/// Effect to run on unbound type variables
+	UnboundEffect on_unbound;
 	
 	/// Recursively resolve interpretations, expanding conversions if not at the 
 	/// top level.
@@ -36,9 +43,11 @@ class Resolver {
 	
 public:
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
-	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous )
+	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous,
+			  UnboundEffect on_unbound )
 		: conversions( conversions ), funcs( funcs ),
-		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ) {}
+		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ),
+		  on_unbound( on_unbound ) {}
 
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 

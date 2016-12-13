@@ -13,28 +13,6 @@
 #include "gc.h"
 #include "type.h"
 
-/// An ambiguous interpretation with a given type
-class AmbiguousExpr : public TypedExpr {
-	const Type* type_;  ///< Type of ambiguous expression
-public:
-	typedef Expr Base;
-	
-	AmbiguousExpr( const Type* type_ ) : type_( type_ ) {}
-	
-	virtual Expr* clone() const { return new AmbiguousExpr( type_ ); }
-
-	virtual void accept( Visitor& ) const { /* do nothing; not known by Visitor */ }
-	
-	virtual const Type* type() const { return type_; }
-
-protected:
-	virtual void trace(const GC& gc) const { gc << type_; }
-
-	virtual void write(std::ostream& out) const {
-		out << "<ambiguous expression of type " << *type_ << ">";
-	}
-};
-
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {
 	const TypedExpr* expr;   ///< Base expression for interpretation
@@ -69,13 +47,28 @@ struct Interpretation : public GC_Object {
 	/// Returns a fresh invalid interpretation
 	static Interpretation* make_invalid() { return new Interpretation{}; }
 
-	/// Returns a fresh ambiguous interpretation
-	static Interpretation* make_ambiguous( const Type* t, const Cost& c ) {
-		return new Interpretation{ new AmbiguousExpr{ t }, copy(c) };
-	}
-	static Interpretation* make_ambiguous( const Type* t, Cost&& c ) {
-		return new Interpretation{ new AmbiguousExpr{ t }, move(c) };
-	}
+	/// Merges two interpretations (must have same cost, type, and underlying 
+	/// expression) to produce a new ambiguous interpretation
+	static Interpretation* merge_ambiguous( const Interpretation* i, 
+	                                        const Interpretation* j ) {
+		List<TypedExpr> alts;
+		const Expr* expr;
+		if ( const AmbiguousExpr* ie = as_safe<AmbiguousExpr>( i->expr ) ) {
+			alts = ie->alts();
+			expr = ie->expr();
+		} else {
+			alts.push_back( i->expr );
+			expr = i->expr;
+		}
+		if ( const AmbiguousExpr* je = as_safe<AmbiguousExpr>( j->expr ) ) {
+			alts.insert( alts.end(), je->alts().begin(), je->alts().end() );
+		} else {
+			alts.push_back( j->expr );
+		}
+
+		return new Interpretation{ new AmbiguousExpr{ expr, i->type(), move(alts) }, 
+		                           copy(i->cost) };
+	} 
 
 protected:
 	virtual void trace(const GC& gc) const {

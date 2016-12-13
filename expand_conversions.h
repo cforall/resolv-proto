@@ -27,7 +27,7 @@ void setOrUpdateInterpretation( TypeMap< const Interpretation* >& expanded, cons
             existing->set( interpretation() );
         } else if ( c == (*j)->cost ) {
             // ... with equal cost
-            existing->set( Interpretation::make_ambiguous( ty, c ) );
+            existing->set( Interpretation::merge_ambiguous( *j, interpretation() ) );
         }   // ... ignore pre-existing interpretation with lower cost
     } else {
         // No value for type exists in map

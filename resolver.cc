@@ -15,6 +15,7 @@
 #include "func_table.h"
 #include "interpretation.h"
 #include "nway_merge.h"
+#include "typed_expr_visitor.h"
 #include "unify.h"
 
 /// Return an interpretation for all zero-arg functions in funcs
@@ -83,7 +84,7 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation(
-				new CallExpr( func, List<Expr>{ arg->expr }, move(localEnv) ),
+				new CallExpr( func, List<TypedExpr>{ arg->expr }, move(localEnv) ),
 				move(cost),
 				move(env)
 			) );
@@ -122,8 +123,8 @@ bool argsMatchParams( const InterpretationList& args, const List<Type>& params,
 }
 
 /// Create a list of argument expressions from a list of interpretations
-List<Expr> argsFrom( const InterpretationList& is ) {
-	List<Expr> args;
+List<TypedExpr> argsFrom( const InterpretationList& is ) {
+	List<TypedExpr> args;
 	for ( const Interpretation* i : is ) {
 		args.push_back( i->expr );
 	}
@@ -245,6 +246,31 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 	return results;
 }
 
+/// Ensures that resolved expressions have all are not ambiguous, 
+class ResolvedExprInvalid : public TypedExprVisitor<bool> {
+	AmbiguousEffect& on_ambiguous;
+	UnboundEffect& on_unbound;
+
+public:
+	ResolvedExprInvalid( AmbiguousEffect& on_ambiguous, UnboundEffect& on_unbound )
+		: on_ambiguous(on_ambiguous), on_unbound(on_unbound) {}
+
+	bool visit( const CallExpr* e, bool& invalid ) final {
+		if ( e->forall() && e->forall()->unbound() ) {
+			on_unbound( e, *e->forall() );
+			invalid = true;
+			return false;
+		}
+		return true;
+	}
+
+	bool visit( const AmbiguousExpr* e, bool& invalid ) final {
+		on_ambiguous( e->expr(), e->alts().begin(), e->alts().end() );
+		invalid = true;
+		return false;
+	}
+};
+
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	InterpretationList results = resolve( expr, true );
 	
@@ -272,21 +298,27 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 
 		// ambiguous if more than one min-cost interpretation
 		if ( min_pos != results.begin() ) {
-			on_ambiguous( expr, results.begin(), ++min_pos );
+			List<TypedExpr> options;
+			auto it = results.begin();
+			while (true) {
+				options.push_back( (*it)->expr );
+				if ( it == min_pos ) break;
+				++it;
+			}
+			on_ambiguous( expr, options.begin(), options.end() );
 			return Interpretation::make_invalid();
 		}
 	}
 	
 	const Interpretation* candidate = results.front();
-	
-	// handle ambiguous candidate from conversion expansion
-	if ( candidate->is_ambiguous() ) {
-		on_ambiguous( expr, results.begin(), results.begin() + 1 );
-		return Interpretation::make_invalid();
-	}
 
 	// apply interpretations to environment to individual calls
 	apply( candidate->env );
+	
+	// handle ambiguous candidate from conversion expansion
+	if ( ResolvedExprInvalid{ on_ambiguous, on_unbound }( candidate->expr ) ) {
+		return Interpretation::make_invalid();
+	}
 	
 	return candidate;
 }

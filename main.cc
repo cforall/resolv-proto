@@ -26,17 +26,23 @@ int main(int argc, char **argv) {
 	//args.out() << std::endl << conversions;
 	
 	Resolver resolve{ conversions, funcs, 
-					  [&args]( const Expr* e ){
+					  [&args]( const Expr* e ) {
 						  args.out() << "ERROR: no valid resolution for " << *e << std::endl;
 					  }, 
-					  [&args]( const Expr* e, InterpretationList::iterator i, 
-                               InterpretationList::iterator end ) {
-						  std::cout << "ERROR: ambiguous resolution for " << *e << "\n"
-	                                << "       candidates are:" << std::endl;
+					  [&args]( const Expr* e, List<TypedExpr>::const_iterator i, 
+                               List<TypedExpr>::const_iterator end ) {
+						  args.out() << "ERROR: ambiguous resolution for " << *e << "\n"
+	                                 << "       candidates are:\n";
 	
 	                      for(; i != end; ++i) {
-		                      std::cout << "\n" << **i;
+		                      args.out() << "\n" << **i;
 	                      }
+						  args.out() << std::endl;
+					  },
+					  [&args]( const Expr*, const TypeBinding& tb ) {
+						  args.out() << "ERROR: unbound type variable"
+						             << (tb.unbound() > 1 ? "s" : "") 
+									 << " on " << tb.name << tb << std::endl;
 					  } };
 	
 	for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {

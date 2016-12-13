@@ -117,7 +117,7 @@ protected:
 /// A typed function call expression
 class CallExpr : public TypedExpr {
 	const FuncDecl* func_;            ///< Function called
-	List<Expr> args_;                 ///< Function arguments
+	List<TypedExpr> args_;                 ///< Function arguments
 	unique_ptr<TypeBinding> forall_;  ///< Binding of type variables to concrete types
 	const Type* retType_;             ///< Return type of call, after type substitution
 
@@ -139,13 +139,13 @@ class CallExpr : public TypedExpr {
 public:
 	typedef Expr Base;
 	
-	CallExpr( const FuncDecl* func_, List<Expr>&& args_ = List<Expr>{} )
+	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_ = List<TypedExpr>{} )
 		: func_( func_ ), args_( move(args_) ), forall_( make_binding( func_ ) ) {
 		CallRetMutator m( *forall_ );
 		retType_ = m.mutate( func_->returns() );
 	}
 
-	CallExpr( const FuncDecl* func_, const List<Expr>& args_, 
+	CallExpr( const FuncDecl* func_, const List<TypedExpr>& args_, 
 	          const unique_ptr<TypeBinding>& forall_ )
 		: func_( func_ ), args_( args_ ), 
 		  forall_( new TypeBinding( *forall_ ) ) {
@@ -153,7 +153,7 @@ public:
 		retType_ = m.mutate( func_->returns() );
 	}
 
-	CallExpr( const FuncDecl* func_, List<Expr>&& args_, unique_ptr<TypeBinding>&& forall_ )
+	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, unique_ptr<TypeBinding>&& forall_ )
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ) {
 		CallRetMutator m( *this->forall_ );
 		retType_ = m.mutate( func_->returns() );
@@ -166,8 +166,8 @@ public:
 	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	const FuncDecl* func() const { return func_; }
-	const List<Expr>& args() const { return args_; }
-	const TypeBinding& forall() const { return *forall_; };
+	const List<TypedExpr>& args() const { return args_; }
+	const TypeBinding* forall() const { return forall_.get(); };
 	
 	virtual const Type* type() const { return retType_; }
 
@@ -242,7 +242,7 @@ public:
 
 	virtual Expr* clone() const { return new TupleExpr( els_, ty_ ); }
 
-	virtual void accept( Visitor& v ) const { return v.visit( this ); }
+	virtual void accept( Visitor& v ) const { v.visit( this ); }
 
 	const List<TypedExpr>& els() const { return els_; }
 
@@ -257,5 +257,34 @@ protected:
 		out << "[";
 		for ( const TypedExpr* el : els_ ) { out << " " << *el; }
 		out << " ]";
+	}
+};
+
+/// An ambiguous interpretation with a given type
+class AmbiguousExpr : public TypedExpr {
+	const Expr* expr_;      ///< Expression that is ambiguously resolved
+	const Type* type_;      ///< Type of ambiguous expression
+	List<TypedExpr> alts_;  ///< Equal-cost alternatives
+public:
+	typedef Expr Base;
+	
+	AmbiguousExpr( const Expr* expr_, const Type* type_, List<TypedExpr>&& alts_ = {} )
+		: expr_(expr_), type_( type_ ), alts_( move(alts_) ) {}
+	
+	virtual Expr* clone() const { return new AmbiguousExpr( expr_, type_, copy(alts_) ); }
+
+	virtual void accept( Visitor& v ) const { v.visit( this ); }
+
+	const Expr* expr() const { return expr_; }
+	
+	const List<TypedExpr>& alts() const { return alts_; }
+
+	virtual const Type* type() const { return type_; }
+
+protected:
+	virtual void trace(const GC& gc) const { gc << expr_ << type_ << alts_; }
+
+	virtual void write(std::ostream& out) const {
+		out << "<ambiguous resolution of type " << *type_ << " for " << *expr_ << ">";
 	}
 };
