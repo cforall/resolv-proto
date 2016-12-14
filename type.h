@@ -187,7 +187,7 @@ protected:
 	virtual void write(std::ostream& out) const {
 		auto it = types_.begin();
 		out << **it;
-		for(; it != types_.end(); ++it) { out << " " << **it; }
+		for(++it; it != types_.end(); ++it) { out << " " << **it; }
 	}
 	
 	virtual bool equals(const Type& obj) const {
