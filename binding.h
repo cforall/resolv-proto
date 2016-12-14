@@ -21,16 +21,17 @@ public:
 private:
     Map bindings_;            ///< Bindings from a named type variable to another type
     unsigned long unbound_;   ///< Count of unbound type variables
+    bool dirty_;              ///< Type binding has been changed since last check
 
 public:
     /// Name-only constructor
-    TypeBinding( const std::string& name ) : name(name), bindings_(), unbound_(0) {}
+    TypeBinding( const std::string& name ) : name(name), bindings_(), unbound_(0), dirty_(true) {}
 
     /// Constructor that takes a pair of iterators for a range of strings, the names 
     /// of the variables to be bound.
     template<typename It>
     TypeBinding( const std::string& name, It begin, It end ) 
-        : name(name), bindings_(), unbound_(0) {
+        : name(name), bindings_(), unbound_(0), dirty_(true) {
         while ( begin != end ) {
             bindings_.emplace( *begin, nullptr );
             ++unbound_;
@@ -65,10 +66,34 @@ public:
         assert( it != bindings_.end() && "type not in binding map" );
         // early return if name already bound 
         if ( it->second ) return it->second;
-        // break const-ness to perform mutating update
-        it->second = type;
-        --unbound_;
+        if ( type ) {
+            it->second = type;
+            --unbound_;
+            dirty_ = true;
+        }
         return nullptr;
+    }
+
+    /// Modifies the binding map to replace a mapping for `name` with `type`.
+    /// Returns previous binding for `name` (nullptr for none such). 
+    /// Can be used to unbind name by updating to nullptr.
+    const Type* update( const std::string& name, const Type* type ) {
+        Map::iterator it = bindings_.find( name );
+        assert( it != bindings_.end() && "type not in binding map" );
+        if ( it->second == type ) return type;
+        const Type* ret = it->second;
+        it->second = type;
+        if ( ! ret && type ) { --unbound_; } else if ( ret && ! type ) { ++unbound_; }
+        dirty_ = true;
+        return ret; 
+    }
+
+    /// Checks if the type binding is dirty; resets the dirty state to false regardless
+    bool dirty() {
+        if ( dirty_ ) {
+            dirty_ = false;
+            return true;
+        } else return false;
     }
 };
 

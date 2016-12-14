@@ -202,9 +202,8 @@ public:
     /// Warning: breaks constness on source bindings
     void apply() const {
         for ( const TypeClass& entry : classes ) {
-            if ( ! entry.bound ) continue;
             for ( const PolyType* ty : entry.vars ) {
-                as_non_const( ty->src() )->bind( ty->name(), entry.bound );
+                as_non_const( ty->src() )->update( ty->name(), entry.bound );
             }
         }
     }
