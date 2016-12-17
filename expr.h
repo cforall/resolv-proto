@@ -128,13 +128,20 @@ class CallExpr : public TypedExpr {
 	public:
 		CallRetMutator( const TypeBinding& binding ) : binding(binding) {}
 
-		using TypeMutator::mutate;
+/*		using TypeMutator::mutate;
 
 		const Type* mutate( const PolyType* orig ) override {
 			const Type* sub = binding[ orig->name() ];
 			if ( sub ) return sub;
 			if ( orig->src() == &binding ) return orig;
 			else return orig->clone_bound( &binding );
+		}
+*/
+		Visit visit( const PolyType* orig, const Type*& r ) override {
+			const Type* sub = binding[ orig->name() ];
+			if ( sub ) { r = sub; }
+			else if ( orig->src() != &binding ) { r = orig->clone_bound( &binding ); }
+			return Visit::CONT;
 		}
 	};
 

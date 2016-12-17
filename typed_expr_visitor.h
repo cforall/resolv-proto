@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility>
+#include <cstddef>
 
 #include "data.h"
 #include "expr.h"
@@ -20,6 +20,8 @@ public:
     virtual bool visit( const AmbiguousExpr*, T& ) { return true; }
 
 protected:
+    /// Visits an expression and all its typed subexpressions, returning bool indicating 
+    /// whether iteration should continue
     bool visitAll( nullptr_t, T& r ) { return visit( nullptr, r ); }
 
     bool visitAll( const VarExpr* e, T& r ) { return visit( e, r ); }
