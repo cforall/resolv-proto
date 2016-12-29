@@ -5,5 +5,3 @@ enum class Visit {
     CONT,  ///< Continue visiting
     SKIP   ///< Continue visiting, skipping this subtree
 };
-
-operator bool( const Visit& v ) { return v != Visit::DONE; }

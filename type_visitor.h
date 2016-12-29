@@ -21,13 +21,21 @@ public:
 protected:
     /// Visits a type and all subtypes, returning bool indicating whether iteration 
     /// should continue.
-    bool visitAll( nullptr_t, T& r ) { return visit( nullptr, r ); }
+    bool visitAll( nullptr_t, T& r ) {
+        return visit( nullptr, r ) != Visit::DONE;
+    }
 
-    bool visitAll( const ConcType* t, T& r ) { return visit( t, r ); }
+    bool visitAll( const ConcType* t, T& r ) {
+        return visit( t, r ) != Visit::DONE;
+    }
 
-    bool visitAll( const PolyType* t, T& r ) { return visit( t, r ); }
+    bool visitAll( const PolyType* t, T& r ) {
+        return visit( t, r ) != Visit::DONE;
+    }
 
-    bool visitAll( const VoidType* t, T& r ) { return visit( t, r ); }
+    bool visitAll( const VoidType* t, T& r ) {
+        return visit( t, r ) != Visit::DONE;
+    }
 
     bool visitAll( const TupleType* t, T& r ) {
         auto flag = visit( t, r );
