@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+#include "binding.h"
+#include "data.h"
 #include "decl.h"
 #include "expr.h"
 #include "func_table.h"
@@ -93,7 +95,7 @@ bool parse_poly_type(char *&token, std::string& ret) {
 /// Parses a type name, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
 /// to types. token must not be null.  
-bool parse_type(char *&token, CanonicalTypeMap& types, List<Type>& out) {
+bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& binding, List<Type>& out) {
 	int t;
 	std::string n;
 
@@ -101,7 +103,11 @@ bool parse_type(char *&token, CanonicalTypeMap& types, List<Type>& out) {
 		out.push_back( get_canon( types, t ) );
 		return true;
 	} else if ( parse_poly_type(token, n) ) {
-		out.push_back( new PolyType{ n } );
+		if ( ! binding ) {
+			binding.reset( new TypeBinding );
+		}
+		binding->add( n );
+		out.push_back( new PolyType{ n, binding.get() } );
 		return true;
 	} else return false;
 }
@@ -113,11 +119,12 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	List<Type> returns, params;
 	std::string name;
 	std::string tag;
+	unique_ptr<TypeBinding> binding;
 	bool saw_tag = false;
 	
 	// parse return types
 	match_whitespace(line);
-	while ( parse_type(line, types, returns) ) {
+	while ( parse_type(line, types, binding, returns) ) {
 		match_whitespace(line);
 	}
 	
@@ -135,18 +142,22 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	
 	// parse parameters
 	match_whitespace(line);
-	while( parse_type(line, types, params) ) {
+	while( parse_type(line, types, binding, params) ) {
 		match_whitespace(line);
 	}
 	
 	// check line consumed
 	if ( ! is_empty(line) ) return false;
+
+	if ( binding ) {
+		binding->set_name( name );
+	}
 	
 	// pass completed declaration into return list
 	if ( saw_tag ) {
-		funcs.insert( new FuncDecl{name, tag, params, returns} );
+		funcs.insert( new FuncDecl{name, tag, params, returns, move(binding)} );
 	} else {
-		funcs.insert( new FuncDecl{name, params, returns} );
+		funcs.insert( new FuncDecl{name, params, returns, move(binding)} );
 	}
 	
 	return true;

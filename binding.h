@@ -17,15 +17,17 @@ public:
     /// Underlying map type
     typedef std::unordered_map< std::string, const Type* > Map;
 
-    const std::string& name;  ///< Name for this type binding; not required to be unique
+    std::string name;         ///< Name for this type binding; not required to be unique
 private:
     Map bindings_;            ///< Bindings from a named type variable to another type
     unsigned long unbound_;   ///< Count of unbound type variables
     bool dirty_;              ///< Type binding has been changed since last check
 
 public:
+    TypeBinding() = default;
+
     /// Name-only constructor
-    TypeBinding( const std::string& name ) : name(name), bindings_(), unbound_(0), dirty_(true) {}
+    TypeBinding( const std::string& name ) : name(name), bindings_(), unbound_(0), dirty_(false) {}
 
     /// Constructor that takes a pair of iterators for a range of strings, the names 
     /// of the variables to be bound.
@@ -39,6 +41,8 @@ public:
             ++begin;
         }
     }
+
+    void set_name( const std::string& n ) { name = n; }
 
     unsigned long unbound() const { return unbound_; }
 
@@ -56,6 +60,14 @@ public:
         auto it = bindings_.find( name );
         assert( it != bindings_.end() && "type not in binding map" );
         return it->second;
+    }
+
+    /// Adds a name to the binding map; does nothing if name already present
+    void add( const std::string& name ) {
+        if ( contains( name ) ) return;
+        bindings_.emplace( name, nullptr );
+        ++unbound_;
+        dirty_ = true;
     }
 
     /// Will modify the binding map by replacing an unbound mapping for `name` with `type`. 
@@ -96,7 +108,3 @@ public:
         } else return false;
     }
 };
-
-class FuncDecl;
-/// Makes a new type binding for this FuncDecl (or nullptr if no type vars)
-TypeBinding* make_binding( const FuncDecl* );

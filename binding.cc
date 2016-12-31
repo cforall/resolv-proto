@@ -29,8 +29,3 @@ const GC& operator<< (const GC& gc, const TypeBinding* tb) {
 
     return gc;
 }
-
-TypeBinding* make_binding( const FuncDecl* func ) {
-    if ( func->tyVars().empty() ) return nullptr;
-    return new TypeBinding{ func->name(), func->tyVars().begin(), func->tyVars().end() };
-}

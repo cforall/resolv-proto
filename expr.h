@@ -132,7 +132,7 @@ public:
 	typedef Expr Base;
 	
 	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_ = List<TypedExpr>{} )
-		: func_( func_ ), args_( move(args_) ), forall_( make_binding( func_ ) ),
+		: func_( func_ ), args_( move(args_) ), forall_( copy(func_->tyVars()) ),
 		  retType_( func_->returns() ) {}
 
 	CallExpr( const FuncDecl* func_, const List<TypedExpr>& args_, 

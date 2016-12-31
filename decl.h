@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "ast.h"
+#include "binding.h"
+#include "binding_sub_mutator.h"
 #include "data.h"
 #include "type.h"
 
@@ -30,7 +32,7 @@ class FuncDecl final : public Decl {
 	std::string tag_;                  ///< Disambiguating tag for function
 	List<Type> params_;                ///< Parameter types of function
 	const Type* returns_;              ///< Return types of function
-	std::vector<std::string> tyVars_;  ///< Names of polymorphic type variables
+	unique_ptr<TypeBinding> tyVars_;   ///< Names of polymorphic type variables
 	
 	/// Generate appropriate return type from return list
 	static const Type* gen_returns(const List<Type>& rs) {
@@ -43,53 +45,35 @@ class FuncDecl final : public Decl {
 			return new TupleType( rs );
 		}
 	}
-
-	/// Generate appropriate list of type variables from parameter and return lists
-	static const std::vector<std::string> gen_tyVars( const List<Type>& ps, 
-	                                                  const List<Type>& rs ) {
-		std::vector<std::string> tvs;
-
-		// scan parameters
-		for ( const Type* t : ps ) {
-			if ( const PolyType* pt = as_safe<PolyType>(t) ) {
-				if ( std::find( tvs.begin(), tvs.end(), pt->name() ) == tvs.end() ) {
-					tvs.push_back( pt->name() );
-				}
-			}
-		}
-
-		// scan returns
-		for ( const Type* t : rs ) {
-			if ( const PolyType* pt = as_safe<PolyType>(t) ) {
-				if ( std::find( tvs.begin(), tvs.end(), pt->name() ) == tvs.end() ) {
-					tvs.push_back( pt->name() );
-				}
-			}
-		}
-
-		return tvs;
-	}
 	
 public:
 	typedef Decl Base;
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
 	         const List<Type>& params_, const Type* returns_, 
-			 const std::vector<std::string>& tyVars_ )
+			 const unique_ptr<TypeBinding>& tyVars_ )
 		: name_(name_), tag_(tag_), params_(params_), 
-		  returns_( returns_ ), tyVars_(tyVars_) {}
+		  returns_(returns_), tyVars_( copy(tyVars_) ) {
+		// Rebind the polymorphic types to the new binding instance
+		if ( ! this->tyVars_ ) return;
+		auto m = BindingSubMutator{ *this->tyVars_ };
+		for ( const Type*& param : this->params_ ) {
+			m.mutate( param );
+		}
+		m.mutate( this->returns_ );
+	}
 	
 	FuncDecl(const std::string& name_, const List<Type>& params_, 
-	         const List<Type>& returns_)
+	         const List<Type>& returns_, unique_ptr<TypeBinding>&& tyVars_ )
 		: name_(name_), tag_(), params_(params_), 
 		  returns_( gen_returns( returns_ ) ), 
-		  tyVars_( gen_tyVars( params_, returns_ ) ) {}
+		  tyVars_( move(tyVars_) ) {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const List<Type>& params_, const List<Type>& returns_)
+	         const List<Type>& params_, const List<Type>& returns_, unique_ptr<TypeBinding>&& tyVars_ )
 		: name_(name_), tag_(tag_), params_(params_), 
 		  returns_( gen_returns( returns_ ) ), 
-		  tyVars_( gen_tyVars( params_, returns_ ) ) {}
+		  tyVars_( move(tyVars_) ) {}
 	
 	virtual Decl* clone() const {
 		return new FuncDecl( name_, tag_, params_, returns_, tyVars_ );
@@ -106,7 +90,7 @@ public:
 	const std::string& tag() const { return tag_; }
 	const List<Type>& params() const { return params_; }
 	const Type* returns() const { return returns_; }
-	const std::vector<std::string>& tyVars() const { return tyVars_; }
+	const unique_ptr<TypeBinding>& tyVars() const { return tyVars_; }
 
 protected:
 	virtual void trace(const GC& gc) const {

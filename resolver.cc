@@ -7,6 +7,7 @@
 #include "binding.h"
 #include "cost.h"
 #include "cow.h"
+#include "data.h"
 #include "debug.h"
 #include "eager_merge.h"
 #include "environment.h"
@@ -68,7 +69,7 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
-			unique_ptr<TypeBinding> localEnv{ make_binding( func ) };
+			unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
 			cow_ptr<Environment> env = arg->env;
 
 			// skip functions thaCost& costt don't match the parameter types
@@ -159,7 +160,7 @@ InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topL
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
-			unique_ptr<TypeBinding> localEnv{ make_binding( func ) };
+			unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
 			cow_ptr<Environment> env; // initialized by argsMatchParams()
 
 			// skip functions that don't match the parameter types

@@ -13,6 +13,10 @@
 
 #include "gc.h"
 
+/// use unique_ptr
+using std::unique_ptr;
+using std::make_unique;
+
 /// Take ownership of a value
 using std::move;
 
@@ -20,12 +24,14 @@ using std::move;
 template<typename T>
 inline T copy(const T& x) { return x; }
 
+/// Copy an element through a unique pointer
+template<typename T>
+inline unique_ptr<T> copy(const unique_ptr<T>& p) {
+    return unique_ptr<T>{ p ? new T{*p} : nullptr };
+}
+
 /// forward arguments
 using std::forward;
-
-/// use unique_ptr
-using std::unique_ptr;
-using std::make_unique;
 
 /// Gets the unique identifier for a type
 template<typename T>
