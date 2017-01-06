@@ -10,12 +10,17 @@ std::ostream& operator<< (std::ostream& out, const TypeBinding& tb) {
     if ( tb.empty() ) return out << "{}";
 
     out << "{";
-    auto it = tb.bindings_.begin();
-    while (true) {
-        out << it->first << " => ";
-        if ( it->second ) { out << *it->second; } else { out << "???"; }
-        if ( ++it == tb.bindings_.end() ) break;
-        out << ", ";
+    if ( ! tb.bindings_.empty() ) {
+        auto it = tb.bindings_.begin();
+        while (true) {
+            out << it->first << " => ";
+            if ( it->second ) { out << *it->second; } else { out << "???"; }
+            if ( ++it == tb.bindings_.end() ) break;
+            out << ", ";
+        }
+    }
+    for ( auto asn : tb.assertions_ ) {
+        out << " | " << *asn;
     }
     return out << "}";
 }
@@ -25,6 +30,10 @@ const GC& operator<< (const GC& gc, const TypeBinding* tb) {
 
     for ( auto it = tb->bindings_.begin(); it != tb->bindings_.end(); ++it ) {
         gc << it->second;
+    }
+
+    for ( auto jt = tb->assertions_.begin(); jt != tb->assertions_.end(); ++jt ) {
+        gc << *jt;
     }
 
     return gc;

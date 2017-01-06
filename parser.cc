@@ -112,6 +112,41 @@ bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& 
 	} else return false;
 }
 
+/// Parses a type assertion, returning true and adding the assertion into 
+/// binding if so. Concrete types will be canonicalized according to types. 
+/// token must not be null.
+bool parse_assertion(char*&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& binding) {
+	char* end = token;
+
+	// look for type assertion
+	if ( ! match_char(end, '|') ) return false;
+	
+	List<Type> returns, params;
+	std::string name;
+
+	// parse return types
+	match_whitespace(end);
+	while ( parse_type(end, types, binding, returns) ) {
+		match_whitespace(end);
+	}
+
+	// parse name
+	if ( ! parse_name(end, name) ) return false;
+	
+	// parse parameters
+	match_whitespace(end);
+	while ( parse_type(end, types, binding, params) ) {
+		match_whitespace(end);
+	}
+
+	if ( ! binding ) {
+		binding.reset( new TypeBinding );
+	}
+	binding->add_assertion( new FuncDecl{ name, params, returns } );
+	token = end;
+	return true;
+}
+
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
@@ -142,9 +177,12 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	
 	// parse parameters
 	match_whitespace(line);
-	while( parse_type(line, types, binding, params) ) {
+	while ( parse_type(line, types, binding, params) ) {
 		match_whitespace(line);
 	}
+
+	// parse type assertions
+	while ( parse_assertion(line, types, binding) );
 	
 	// check line consumed
 	if ( ! is_empty(line) ) return false;

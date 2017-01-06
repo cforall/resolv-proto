@@ -11,7 +11,8 @@
 /// Parses input according to the following format:
 ///
 /// start := "\n"* <function_decl>* "%%\n" <resolv_expr>*
-/// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* "\n"+
+/// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* <type_assertion>* "\n"+
+/// type_assertion := "|" (<type>" ")* <name> (" "<type>)*
 /// resolv_expr := <subexpr> "\n"+
 /// subexpr := <conc_type> | <name> " (" (" "<subexpr>)* " )"
 /// name := [a-z][a-z0-9]*

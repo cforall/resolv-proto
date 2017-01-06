@@ -63,6 +63,11 @@ public:
 		m.mutate( this->returns_ );
 	}
 	
+	FuncDecl(const std::string& name_, const List<Type>& params_,
+	         const List<Type>& returns_)
+		: name_(name_), tag_(), params_(params_), 
+		  returns_( gen_returns( returns_ ) ), tyVars_() {}
+
 	FuncDecl(const std::string& name_, const List<Type>& params_, 
 	         const List<Type>& returns_, unique_ptr<TypeBinding>&& tyVars_ )
 		: name_(name_), tag_(), params_(params_), 
@@ -102,6 +107,10 @@ protected:
 		out << name_;
 		if ( ! tag_.empty() ) { out << "-" << tag_; }
 		for ( auto& t : params_ ) { out << " " << *t; }
+		if ( tyVars_ ) for ( auto asn : tyVars_->assertions() ) {
+			out << " | ";
+			asn->write( out );
+		}
 	}
 };
 

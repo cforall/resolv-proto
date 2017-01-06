@@ -5,7 +5,10 @@
 #include <string>
 #include <unordered_map>
 
-class GC;
+#include "data.h"
+#include "gc.h"
+
+class FuncDecl;
 class Type;
 
 /// Binding for parameter type variables in a call expression.
@@ -16,12 +19,15 @@ class TypeBinding {
 public:
     /// Underlying map type
     typedef std::unordered_map< std::string, const Type* > Map;
-
-    std::string name;         ///< Name for this type binding; not required to be unique
+    /// List of type assertions
+    typedef List<FuncDecl> AssertionList;
+    
+    std::string name;           ///< Name for this type binding; not required to be unique
 private:
-    Map bindings_;            ///< Bindings from a named type variable to another type
-    unsigned long unbound_;   ///< Count of unbound type variables
-    bool dirty_;              ///< Type binding has been changed since last check
+    Map bindings_;              ///< Bindings from a named type variable to another type
+    AssertionList assertions_;  ///< List of type assertions
+    unsigned long unbound_;     ///< Count of unbound type variables
+    bool dirty_;                ///< Type binding has been changed since last check
 
 public:
     TypeBinding() = default;
@@ -46,8 +52,10 @@ public:
 
     unsigned long unbound() const { return unbound_; }
 
-    /// true iff no bindings
-    bool empty() const { return bindings_.empty(); }
+    const AssertionList& assertions() const { return assertions_; }
+
+    /// true iff no bindings or assertions
+    bool empty() const { return bindings_.empty() && assertions_.empty(); }
 
     /// true iff the map contains a binding with the given name
     bool contains( const std::string& name ) const {
@@ -68,6 +76,11 @@ public:
         bindings_.emplace( name, nullptr );
         ++unbound_;
         dirty_ = true;
+    }
+
+    /// Adds an assertion to the assertion list
+    void add_assertion( const FuncDecl* decl ) {
+        assertions_.push_back( decl );
     }
 
     /// Will modify the binding map by replacing an unbound mapping for `name` with `type`. 
