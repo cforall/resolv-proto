@@ -39,8 +39,8 @@ bool assertionsUnresolvable( Resolver& resolver, const TypeBinding* bindings,
 			resolver.resolveWithType( asnFunc, asnDecl->returns(), env );
 		if ( ! satisfying ) return true;
 
-		// record resolution
-		bind_assertion( it, satisfying );
+		// record resolution TODO FIXME bindings needs to be non-const here
+		//bindings->bind_assertion( it, satisfying );
 		cost += satisfying->cost;
 	}
 	return false;
@@ -60,7 +60,9 @@ public:
 		invalid = assertionsUnresolvable( resolver, e->forall(), cost, env );
 		return invalid;
 	}
-}
+
+	// TODO needs to be a mutator to trim options with unsatisfied assertions from ambiguous
+};
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
@@ -79,16 +81,16 @@ InterpretationList matchFuncs( Resolver& resolver,
 	// attempt to match functions to arguments
 	for ( auto&& func : withNParams() ) {
 		// skip functions returning no values, unless at top level
-		if ( resolve_mode != TOP_LEVEL && func->returns()->size() == 0 ) continue;
+		if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
 		Cost cost; // initialized to zero
 		unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
 		cow_ptr<Environment> env; // initialized to nullptr
 		
-		CallExpr call = new CallExpr{ func, List<TypedExpr>{}, move(localEnv) };
+		CallExpr* call = new CallExpr{ func, List<TypedExpr>{}, move(localEnv) };
 
 		// check type assertions if at top level
-		if ( resolve_mode == TOP_LEVEL ) {
+		if ( resolve_mode == Resolver::TOP_LEVEL ) {
 			if ( assertionsUnresolvable( resolver, call->forall(), cost, env ) ) continue;
 		}
 		
@@ -121,7 +123,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 		// attempt to match functions to arguments
 		for ( const auto& func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( resolve_mode != TOP_LEVEL && func->returns()->size() == 0 ) continue;
+			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
@@ -139,15 +141,17 @@ InterpretationList matchFuncs( Resolver& resolver,
 				}
 			}
 
-			CallExpr* call = new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(localEnv) };
+			{ // extra scope so don't get goto errors for the labelled break simulation
+				CallExpr* call = new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(localEnv) };
 
-			// check type assertions if at top level
-			if ( resolve_mode == TOP_LEVEL ) {
-				if ( ExprAssertionsUnresolvable{ resolver, cost, env }( call ) ) continue;
+				// check type assertions if at top level
+				if ( resolve_mode == Resolver::TOP_LEVEL ) {
+					if ( ExprAssertionsUnresolvable{ resolver, cost, env }( call ) ) continue;
+				}
+
+				// create new interpretation for resolved call
+				results.push_back( new Interpretation{ call, move(cost), move(env) } );
 			}
-
-			// create new interpretation for resolved call
-			results.push_back( new Interpretation{ call, move(cost), move(env) } );
 		nextFunc:; }
 	}
 
@@ -217,7 +221,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 		// attempt to match functions to arguments
 		for ( auto&& func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( resolve_mode != TOP_LEVEL && func->returns()->size() == 0 ) continue;
+			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
@@ -231,7 +235,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 			CallExpr* call = new CallExpr{ func, argsFrom( combo.second ), move(localEnv) };
 
 			// check type assertions if at top level
-			if ( resolve_mode == TOP_LEVEL ) {
+			if ( resolve_mode == Resolver::TOP_LEVEL ) {
 				if ( ExprAssertionsUnresolvable{ resolver, cost, env }( call ) ) continue;
 			}
 			
@@ -311,7 +315,7 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 }
 
 const Interpretation* Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
-	                                             Cost& cost, cow_ptr<Environment>& env ) {
+	                                             cow_ptr<Environment>& env ) {
 	return convertTo( targetType, resolve( expr, NO_CONVERSIONS ), conversions, env );
 }
 

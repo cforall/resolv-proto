@@ -4,6 +4,7 @@
 
 #include "decl.h"
 #include "gc.h"
+#include "interpretation.h"
 #include "type.h"
 
 std::ostream& operator<< (std::ostream& out, const TypeBinding& tb) {
@@ -20,7 +21,8 @@ std::ostream& operator<< (std::ostream& out, const TypeBinding& tb) {
         }
     }
     for ( auto asn : tb.assertions_ ) {
-        out << " | " << *asn;
+        out << " | " << *asn.first << " => ";
+        if ( asn.second ) { out << *asn.second; } else { out << "???"; }
     }
     return out << "}";
 }

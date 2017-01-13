@@ -99,7 +99,7 @@ public:
 
 protected:
 	virtual void trace(const GC& gc) const {
-		gc << params_ << returns_;
+		gc << params_ << returns_ << tyVars_.get();
 	}
 
 	virtual void write(std::ostream& out) const {
@@ -109,7 +109,7 @@ protected:
 		for ( auto& t : params_ ) { out << " " << *t; }
 		if ( tyVars_ ) for ( auto asn : tyVars_->assertions() ) {
 			out << " | ";
-			asn->write( out );
+			asn.first->write( out );
 		}
 	}
 };

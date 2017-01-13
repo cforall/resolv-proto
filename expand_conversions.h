@@ -187,7 +187,7 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
         for ( unsigned j = 0; j < tty->size(); ++j ) {
             const TypedExpr* el = convertTo( ttarget->types()[j], 
                                              new TupleElementExpr{ expr, j }, 
-                                             newEnv, newCost );
+                                             conversions, newEnv, newCost );
             // fail on no element conversion
             if ( ! el ) return nullptr;
 
@@ -214,7 +214,7 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
 const Interpretation* convertTo( const Type* targetType, InterpretationList&& results, 
                                  ConversionGraph& conversions, cow_ptr<Environment>& env ) {
     // best interpretation as targetType, null for none such
-    Interpretation* best = nullptr;
+    const Interpretation* best = nullptr;
 
     // substitute target according to environment
     targetType = replace( env, targetType );
@@ -230,7 +230,7 @@ const Interpretation* convertTo( const Type* targetType, InterpretationList&& re
             const TypedExpr* newExpr = convertTo( targetType, i->expr, conversions, env, cost );
             if ( newExpr ) {
                 setOrUpdateInterpretation( best, cost, [newExpr,&cost]() {
-                    return new Interpretation{ newExpr, copy(cost) }
+                    return new Interpretation{ newExpr, copy(cost) };
                 } );
             }
         }
