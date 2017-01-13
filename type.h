@@ -169,9 +169,9 @@ public:
 	typedef Type Base;
 	
 	TupleType(const List<Type>& types_)
-		: types_(types_) { assert( types_.size() > 1 ); }
+		: types_(types_) { assert( this->types_.size() > 1 ); }
 	TupleType(List<Type>&& types_)
-		: types_( move(types_) ) { assert( types_.size() > 1 ); }
+		: types_( move(types_) ) { assert( this->types_.size() > 1 ); }
 	
 	virtual Type* clone() const { return new TupleType( types_ ); }
 

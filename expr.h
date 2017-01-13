@@ -213,8 +213,8 @@ public:
 
 	TupleExpr( List<TypedExpr>&& els_ ) : els_( move(els_) ) {
 		List<Type> tys;
-		tys.reserve( els_.size() );
-		for ( const TypedExpr* el : els_ ) { tys.push_back( el->type() ); }
+		tys.reserve( this->els_.size() );
+		for ( const TypedExpr* el : this->els_ ) { tys.push_back( el->type() ); }
 		ty_ = new TupleType( move(tys) );
 	}
 
