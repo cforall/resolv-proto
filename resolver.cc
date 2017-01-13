@@ -19,9 +19,53 @@
 #include "typed_expr_visitor.h"
 #include "unify.h"
 
+/// Checks the type assertions of a function call.
+bool assertionsUnresolvable( Resolver& resolver, const TypeBinding* bindings, 
+                             Cost& cost, cow_ptr<Environment>& env ) {
+	if ( ! bindings || bindings->assertions().empty() ) return false;
+
+	for ( auto it = bindings->assertions().begin(); it != bindings->assertions().end(); ++it ) {
+		// Generate FuncExpr for assertion
+		const FuncDecl* asnDecl = it->first;
+		List<Expr> asnArgs;
+		asnArgs.reserve( asnDecl->params().size() );
+		for ( const Type* pType : asnDecl->params() ) {
+			asnArgs.push_back( new VarExpr( pType ) );
+		}
+		const FuncExpr* asnFunc = new FuncExpr{ asnDecl->name(), move(asnArgs) };
+
+		// check if it can be resolved
+		const Interpretation* satisfying = 
+			resolver.resolveWithType( asnFunc, asnDecl->returns(), env );
+		if ( ! satisfying ) return true;
+
+		// record resolution
+		bind_assertion( it, satisfying );
+		cost += satisfying->cost;
+	}
+	return false;
+}
+
+/// Checks the validity of all the type assertions in a resolved expression
+class ExprAssertionsUnresolvable : public TypedExprVisitor<bool> {
+	Resolver& resolver;
+	Cost& cost;
+	cow_ptr<Environment>& env;
+
+public:
+	ExprAssertionsUnresolvable( Resolver& resolver, Cost& cost, cow_ptr<Environment>& env ) 
+		: resolver(resolver), cost(cost), env(env) {}
+
+	bool visit( const CallExpr* e, bool& invalid ) final {
+		invalid = assertionsUnresolvable( resolver, e->forall(), cost, env );
+		return invalid;
+	}
+}
+
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
-InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
+InterpretationList matchFuncs( Resolver& resolver, 
+                               const Funcs& funcs, Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	// find functions with no parameters, skipping remaining checks if none
@@ -35,10 +79,25 @@ InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
 	// attempt to match functions to arguments
 	for ( auto&& func : withNParams() ) {
 		// skip functions returning no values, unless at top level
-		if ( ! topLevel && func->returns()->size() == 0 ) continue;
-			
-		// create new zero-cost interpretation for resolved call
-		results.push_back( new Interpretation( new CallExpr( func ) ) );
+		if ( resolve_mode != TOP_LEVEL && func->returns()->size() == 0 ) continue;
+
+		if ( resolve_mode == TOP_LEVEL && func->tyVars() ) {
+			// check type assertions if at top level
+			Cost cost; // initialized to zero
+			unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
+			cow_ptr<Environment> env; // initialized to nullptr
+
+			if ( ! assertionsUnresolvable( resolver, localEnv.get(), cost, env ) ) {
+				results.push_back( new Interpretation{ 
+					new CallExpr{ func, List<TypedExpr>{}, move(localEnv) },
+					move(cost), 
+					move(env)
+				 } );
+			}
+		} else {
+			// create new zero-cost interpretation for resolved call
+			results.push_back( new Interpretation{ new CallExpr{ func } } );
+		}
 	}
 	
 	return results;
@@ -46,14 +105,15 @@ InterpretationList matchFuncs( const Funcs& funcs, bool topLevel = false ) {
 
 /// Return an interpretation for all single-argument interpretations in funcs
 template<typename Funcs>
-InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args, 
-                               bool topLevel = false ) {
+InterpretationList matchFuncs( Resolver& resolver, 
+                               const Funcs& funcs, InterpretationList&& args, 
+                               Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 
 	for ( const Interpretation* arg : args ) {
 		DBG( "  arg: " << *arg );
 
-		// find function with appropriate number of parameters, skipping  *argTypes[k] != *params[i]arg if none
+		// find function with appropriate number of parameters, skipping arg if none
 		auto n = arg->type()->size();
 		auto withNParams = funcs.find( n );
 		if ( withNParams == funcs.end() ) {
@@ -65,14 +125,14 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 		// attempt to match functions to arguments
 		for ( const auto& func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( ! topLevel && func->returns()->size() == 0 ) continue;
+			if ( resolve_mode != TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
 			unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
 			cow_ptr<Environment> env = arg->env;
 
-			// skip functions thaCost& costt don't match the parameter types
+			// skip functions that don't match the parameter types
 			if ( n == 1 ) { // concrete type arg
 				if ( ! unify( func->params()[0], arg->type(), cost, *localEnv, env ) ) continue;
 			} else {  // tuple type arg
@@ -83,12 +143,15 @@ InterpretationList matchFuncs( const Funcs& funcs, InterpretationList&& args,
 				}
 			}
 
+			CallExpr* call = new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(localEnv) };
+
+			// check type assertions if at top level
+			if ( resolve_mode == TOP_LEVEL ) {
+				if ( ExprAssertionsUnresolvable{ resolver, cost, env }( call ) ) continue;
+			}
+
 			// create new interpretation for resolved call
-			results.push_back( new Interpretation(
-				new CallExpr( func, List<TypedExpr>{ arg->expr }, move(localEnv) ),
-				move(cost),
-				move(env)
-			) );
+			results.push_back( new Interpretation{ call, move(cost), move(env) } );
 		nextFunc:; }
 	}
 
@@ -135,7 +198,9 @@ List<TypedExpr> argsFrom( const InterpretationList& is ) {
 /// Return an interpretation for all matches between functions in funcs and 
 /// argument packs in combos
 template<typename Funcs>
-InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topLevel = false ) {
+InterpretationList matchFuncs( Resolver& resolver, 
+                               const Funcs& funcs, ComboList&& combos, 
+                               Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	for ( const auto& combo : combos ) {
@@ -156,7 +221,7 @@ InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topL
 		// attempt to match functions to arguments
 		for ( auto&& func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( ! topLevel && func->returns()->size() == 0 ) continue;
+			if ( resolve_mode != TOP_LEVEL && func->returns()->size() == 0 ) continue;
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
@@ -167,12 +232,15 @@ InterpretationList matchFuncs( const Funcs& funcs, ComboList&& combos, bool topL
 			if ( ! argsMatchParams( combo.second, func->params(), cost, *localEnv, env ) ) 
 				continue;
 			
+			CallExpr* call = new CallExpr{ func, argsFrom( combo.second ), move(localEnv) };
+
+			// check type assertions if at top level
+			if ( resolve_mode == TOP_LEVEL ) {
+				if ( ExprAssertionsUnresolvable{ resolver, cost, env }( call ) ) continue;
+			}
+			
 			// create new interpretation for resolved call
-			results.push_back( new Interpretation( 
-				new CallExpr( func, argsFrom( combo.second ), move(localEnv) ),
-				move(cost),
-				move(env)
-			) );
+			results.push_back( new Interpretation{ call, move(cost), move(env) } );
 		}
 	}
 	
@@ -195,7 +263,7 @@ struct interpretation_unambiguous {
 	}
 };
 
-InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
+InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	if ( const FuncExpr* funcExpr = as_safe<FuncExpr>( expr ) ) {
@@ -210,10 +278,10 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 		// get interpretations for subexpressions (if any)
 		switch( funcExpr->args().size() ) {
 			case 0: {
-				results = matchFuncs( withName(), topLevel );
+				results = matchFuncs( *this, withName(), resolve_mode );
 			} break;
 			case 1: {
-				results = matchFuncs( withName(), resolve( funcExpr->args().front() ), topLevel );
+				results = matchFuncs( *this, withName(), resolve( funcExpr->args().front() ), resolve_mode );
 			} break;
 			default: {
 				std::vector<InterpretationList> sub_results;
@@ -229,7 +297,7 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 				auto merged = unsorted_eager_merge<
 					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );
 				
-				results = matchFuncs( withName(), move(merged), topLevel );
+				results = matchFuncs( *this, withName(), move(merged), resolve_mode );
 			} break;
 		}
 	} else if ( const TypedExpr* typedExpr = as_derived_safe<TypedExpr>( expr ) ) {
@@ -239,15 +307,20 @@ InterpretationList Resolver::resolve( const Expr* expr, bool topLevel ) {
 		assert(false && "Unsupported expression type");
 	}
 	
-	// Expand results by applying user conversions (except at top level)
-	if ( ! topLevel ) {
+	if ( resolve_mode == ALL_NON_VOID ) {
 		expandConversions( results, conversions );
 	}
 	
 	return results;
 }
 
-/// Ensures that resolved expressions have all are not ambiguous, 
+const Interpretation* Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
+	                                             Cost& cost, cow_ptr<Environment>& env ) {
+	return convertTo( targetType, resolve( expr, NO_CONVERSIONS ), conversions, env );
+}
+
+/// Ensures that resolved expressions have all their type variables bound and are not 
+/// ambiguous.
 class ResolvedExprInvalid : public TypedExprVisitor<bool> {
 	AmbiguousEffect& on_ambiguous;
 	UnboundEffect& on_unbound;
@@ -273,7 +346,7 @@ public:
 };
 
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
-	InterpretationList results = resolve( expr, true );
+	InterpretationList results = resolve( expr, Resolver::TOP_LEVEL );
 	
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {
@@ -313,7 +386,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	
 	const Interpretation* candidate = results.front();
 
-	// apply interpretations to environment to individual calls
+	// apply interpretations in environment to individual calls
 	apply( candidate->env );
 	
 	// handle ambiguous candidate from conversion expansion

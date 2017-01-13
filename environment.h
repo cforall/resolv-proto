@@ -14,6 +14,10 @@
 class Environment : public GC_Traceable {
     friend std::ostream& operator<< (std::ostream&, const Environment&);
 
+    // TODO investigate doing something union-find like with this; could just be a map 
+    // from PolyType -> Type, where the bound is the first non-PolyType found in a 
+    // repeated lookup of the map
+
     /// Class of equivalent type variables, along with optional concrete bound type
     struct TypeClass {
         List<PolyType> vars;  ///< Equivalent polymorphic types
@@ -246,9 +250,29 @@ private:
 };
 
 /// Returns nullptr for unbound type, contained type otherwise.
-/// Handles `env == null` correctly
+/// Handles null environment correctly.
 inline const Type* find( const cow_ptr<Environment>& env, const PolyType* orig ) {
     return env ? env->find( orig ) : nullptr;
+}
+
+/// Replaces type with bound value in the environment, if type is a PolyType with a 
+/// substitution in the environment. Handles null environment correctly.
+inline const Type* replace( const cow_ptr<Environment>& env, const Type* ty ) {
+    if ( ! env ) return ty;
+    if ( const PolyType* pty = as_safe<PolyType>(ty) ) {
+        const Type* sub = env->find( pty );
+        if ( sub ) return sub;
+    }
+    return ty;
+}
+
+/// Replaces type with bound value in environment, if substitution exists.
+/// Handles null environment correctly.
+inline const Type* replace( const cow_ptr<Environment>& env, const PolyType* pty ) {
+    if ( ! env ) return pty;
+    const Type* sub = env->find( pty );
+    if ( sub ) return sub;
+    return pty;
 }
 
 /// Adds the given substitution to this binding. `orig` should be currently unbound.
@@ -262,7 +286,7 @@ inline void bind( cow_ptr<Environment>& env, const PolyType* orig, const Type* s
 }
 
 /// Adds the second PolyType to the class of the first; the second PolyType should not 
-/// currently exist in the binding table. Creates new environment if `env == null`
+/// currently exist in the binding table. Creates new environment if null
 inline void bindClass( cow_ptr<Environment>& env, const PolyType* orig, const PolyType* added ) {
     if ( ! env ) {
         env.reset( new Environment( orig, added ) );

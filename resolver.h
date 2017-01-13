@@ -4,9 +4,13 @@
 
 #include "binding.h"
 #include "conversion.h"
+#include "cost.h"
+#include "cow.h"
+#include "environment.h"
 #include "expr.h"
 #include "func_table.h"
 #include "interpretation.h"
+#include "type.h"
 
 /// Effect to run on invalid interpretation; argument is the expression which 
 /// could not be resolved
@@ -35,12 +39,6 @@ class Resolver {
 	/// Effect to run on unbound type variables
 	UnboundEffect on_unbound;
 	
-	/// Recursively resolve interpretations, expanding conversions if not at the 
-	/// top level.
-	/// May return ambiguous interpretations, but otherwise will not return 
-	/// invalid interpretations.
-	InterpretationList resolve( const Expr* expr, bool topLevel = false );
-	
 public:
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
 	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous,
@@ -48,6 +46,24 @@ public:
 		: conversions( conversions ), funcs( funcs ),
 		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ),
 		  on_unbound( on_unbound ) {}
+	
+	/// Mode for type conversions
+	enum Mode {
+		NO_CONVERSIONS,  ///< Do not expand interpretations or allow void interpretations
+		TOP_LEVEL,       ///< Do not expand interpretations, but allow void interpretations
+		ALL_NON_VOID     ///< Expand interpretations to all non-void types
+	};
+
+	/// Recursively resolve interpretations, expanding conversions if not at the 
+	/// top level.
+	/// May return ambiguous interpretations, but otherwise will not return 
+	/// invalid interpretations.
+	InterpretationList resolve( const Expr* expr, Mode resolve_mode = ALL_NON_VOID );
+	
+	/// Resolves `expr` as `targetType`, subject to `env` (which may be modified).
+	/// Returns best interpretation (may be ambiguous) or nullptr for none such.
+	const Interpretation* resolveWithType( const Expr* expr, const Type* targetType, 
+	                                       cow_ptr<Environment>& env );
 
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 

@@ -33,7 +33,7 @@ const GC& operator<< (const GC& gc, const TypeBinding* tb) {
     }
 
     for ( auto jt = tb->assertions_.begin(); jt != tb->assertions_.end(); ++jt ) {
-        gc << *jt;
+        gc << jt->first << jt->second;
     }
 
     return gc;

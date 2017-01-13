@@ -39,17 +39,15 @@ public:
 
 /// A variable expression
 class VarExpr : public TypedExpr {
-	const ConcType* ty_;  ///< Type of variable expression
+	const Type* ty_;  ///< Type of variable expression
 public:
 	typedef Expr Base;
 	
-	VarExpr(const ConcType* ty_) : ty_( ty_ ) {}
+	VarExpr(const Type* ty_) : ty_( ty_ ) {}
 	
 	virtual Expr* clone() const { return new VarExpr( ty_ ); }
 
 	virtual void accept( Visitor& v ) const { v.visit( this ); }
-	
-	virtual const ConcType* ty() const { return ty_; }
 	
 	virtual const Type* type() const { return ty_; }
 

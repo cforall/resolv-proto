@@ -4,10 +4,13 @@
 #include <ostream>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "data.h"
 #include "gc.h"
 
+class Interpretation;
 class FuncDecl;
 class Type;
 
@@ -20,7 +23,7 @@ public:
     /// Underlying map type
     typedef std::unordered_map< std::string, const Type* > Map;
     /// List of type assertions
-    typedef List<FuncDecl> AssertionList;
+    typedef std::vector< std::pair<const FuncDecl*, const Interpretation*> > AssertionList;
     
     std::string name;           ///< Name for this type binding; not required to be unique
 private:
@@ -80,7 +83,7 @@ public:
 
     /// Adds an assertion to the assertion list
     void add_assertion( const FuncDecl* decl ) {
-        assertions_.push_back( decl );
+        assertions_.emplace_back( decl, nullptr );
     }
 
     /// Will modify the binding map by replacing an unbound mapping for `name` with `type`. 
@@ -97,6 +100,10 @@ public:
             dirty_ = true;
         }
         return nullptr;
+    }
+
+    void bind_assertion( AssertionList::const_iterator it, const Interpretation* i ) {
+        as_non_const(*it).second = i;
     }
 
     /// Modifies the binding map to replace a mapping for `name` with `type`.
