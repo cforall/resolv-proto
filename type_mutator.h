@@ -6,16 +6,18 @@
 #include "type_visitor.h"
 
 class TypeMutator : public TypeVisitor<const Type*> {
-    Visit visit( const TupleType* t, const Type*& r ) override {
+    using TypeVisitor<const Type*>::visit;
+    
+    bool visit( const TupleType* t, const Type*& r ) override {
         unsigned i;
         unsigned n = t->size();
         const Type* last = nullptr;
         for ( i = 0; i < n; ++i ) {
             const Type* ti = last = t->types()[i];
-            visitAll( ti, last );
+            if ( ! visit( ti, last ) ) return false;
             if ( last != ti ) goto modified;
         }
-        return Visit::SKIP;  // done with this subtree
+        return true;
 
         modified:
         List<Type> ts;  // new list
@@ -26,11 +28,11 @@ class TypeMutator : public TypeVisitor<const Type*> {
         ts.push_back( last );  // copy first mutated node in
         for ( ++i; i < n; ++i ) {
             const Type* ti = t->types()[i];
-            visitAll( ti, ti );
+            if ( ! visit( ti, ti ) ) return false;
             ts.push_back( ti );  // copy possibly-mutated suffix in
         }
         r = new TupleType( move(ts) );  // mutate return value
-        return Visit::SKIP;  // done with this subtree
+        return true;
     }
 
 public:
