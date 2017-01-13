@@ -81,23 +81,19 @@ InterpretationList matchFuncs( Resolver& resolver,
 		// skip functions returning no values, unless at top level
 		if ( resolve_mode != TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
-		if ( resolve_mode == TOP_LEVEL && func->tyVars() ) {
-			// check type assertions if at top level
-			Cost cost; // initialized to zero
-			unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
-			cow_ptr<Environment> env; // initialized to nullptr
+		Cost cost; // initialized to zero
+		unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
+		cow_ptr<Environment> env; // initialized to nullptr
+		
+		CallExpr call = new CallExpr{ func, List<TypedExpr>{}, move(localEnv) };
 
-			if ( ! assertionsUnresolvable( resolver, localEnv.get(), cost, env ) ) {
-				results.push_back( new Interpretation{ 
-					new CallExpr{ func, List<TypedExpr>{}, move(localEnv) },
-					move(cost), 
-					move(env)
-				 } );
-			}
-		} else {
-			// create new zero-cost interpretation for resolved call
-			results.push_back( new Interpretation{ new CallExpr{ func } } );
+		// check type assertions if at top level
+		if ( resolve_mode == TOP_LEVEL ) {
+			if ( assertionsUnresolvable( resolver, call->forall(), cost, env ) ) continue;
 		}
+		
+		// create new zero-cost interpretation for resolved call
+		results.push_back( new Interpretation{ call, move(cost), move(env) } );
 	}
 	
 	return results;
