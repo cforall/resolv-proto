@@ -9,7 +9,7 @@
 /// Uses curiously-recurring template pattern for static dispatch of visit overloads
 template<typename Self, typename T>
 class TypeVisitor {
-protected:
+public:
     /// Updates a possible value from the visit and returns flag indicating 
     /// whether iteration should continue
     bool visit( const Type* t, T& r ) {
@@ -37,7 +37,6 @@ protected:
         return true;
     }
 
-public:
     /// Default implmentation of visit
     bool visit( nullptr_t, T& ) { return true; }
     

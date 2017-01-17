@@ -2,6 +2,7 @@
 
 #include "data.h"
 #include "mutator.h"
+#include "option.h"
 #include "type.h"
 #include "type_visitor.h"
 
@@ -13,8 +14,11 @@ public:
     using TypeVisitor<Self, const Type*>::visit;
 
     bool visit( const TupleType* t, const Type*& r ) {
-        MUTATE_ALL( Type, t->types() );
-        r = new TupleType( move(ts) );  // mutate return value
+        option<List<Type>> newTypes;
+        if ( ! mutateAll( this, t->types(), newTypes ) ) return false;
+        if ( newTypes ) {
+            r = new TupleType{ *move(newTypes) };  // mutate return value
+        }
         return true;
     }
 
