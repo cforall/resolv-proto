@@ -5,11 +5,11 @@
 #include <type_traits>
 #include <utility>
 
+using std::move;
+
 /// A class that may or may not hold a value of type T
 template<typename T>
 class option {
-    using std::move;
-
     typename std::aligned_storage<sizeof(T), alignof(T)>::type storage;
     bool filled;
 
@@ -197,7 +197,7 @@ template<typename T>
 bool operator>= ( const T& x, const option<T>& b ) { return b <= x; }
 
 template<typename T, typename... Args>
-std::option<T> make_option( Args&&... args ) {
+option<T> make_option( Args&&... args ) {
     option<T> o;
     o.emplace( std::forward<Args>(args)... );
     return o;
