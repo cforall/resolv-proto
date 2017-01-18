@@ -17,7 +17,14 @@ public:
         option<List<Type>> newTypes;
         if ( ! mutateAll( this, t->types(), newTypes ) ) return false;
         if ( newTypes ) {
-            r = new TupleType{ *move(newTypes) };  // mutate return value
+            switch ( newTypes->size() ) {  // de-tuple if needed
+            case 0:
+                r = new VoidType; break;
+            case 1:
+                r = newTypes->front(); break;
+            default:
+                r = new TupleType{ *move(newTypes) }; break;  // mutate return value
+            }
         }
         return true;
     }

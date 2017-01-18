@@ -15,12 +15,15 @@
 #include "expr.h"
 #include "func_table.h"
 #include "interpretation.h"
+#include "mutator.h"
 #include "nway_merge.h"
+#include "option.h"
 #include "typed_expr_visitor.h"
+#include "typed_expr_mutator.h"
 #include "unify.h"
 
 /// Checks the type assertions of a function call.
-bool assertionsUnresolvable( Resolver& resolver, const TypeBinding* bindings, 
+bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings, 
                              Cost& cost, cow_ptr<Environment>& env ) {
 	if ( ! bindings || bindings->assertions().empty() ) return false;
 
@@ -39,15 +42,15 @@ bool assertionsUnresolvable( Resolver& resolver, const TypeBinding* bindings,
 			resolver.resolveWithType( asnFunc, asnDecl->returns(), env );
 		if ( ! satisfying ) return true;
 
-		// record resolution TODO FIXME bindings needs to be non-const here
-		//bindings->bind_assertion( it, satisfying );
+		// record resolution
+		bindings->bind_assertion( it, satisfying );
 		cost += satisfying->cost;
 	}
 	return false;
 }
 
 /// Checks the validity of all the type assertions in a resolved expression
-class ExprAssertionsUnresolvable : public TypedExprVisitor<bool> {
+class ExprAssertionsUnresolvable : public TypedExprMutator<ExprAssertionsUnresolvable> {
 	Resolver& resolver;
 	Cost& cost;
 	cow_ptr<Environment>& env;
@@ -55,13 +58,88 @@ class ExprAssertionsUnresolvable : public TypedExprVisitor<bool> {
 public:
 	ExprAssertionsUnresolvable( Resolver& resolver, Cost& cost, cow_ptr<Environment>& env ) 
 		: resolver(resolver), cost(cost), env(env) {}
+	
+	using TypedExprMutator<ExprAssertionsUnresolvable>::visit;
 
-	bool visit( const CallExpr* e, bool& invalid ) final {
-		invalid = assertionsUnresolvable( resolver, e->forall(), cost, env );
-		return invalid;
+	bool visit( const CallExpr* e, const TypedExpr*& r ) {
+		option<List<TypedExpr>> newArgs;
+		mutateAll( this, e->args(), newArgs );
+		if ( newArgs ) {
+			// trim expressions that lose any args
+			if ( newArgs->size() < e->args().size() ) {
+				r = nullptr;
+				return true;
+			}
+
+			// check assertions and generate new CallExpr if they match
+			TypeBinding* forall = e->forall() ? new TypeBinding{ *e->forall() } : nullptr;
+			if ( assertionsUnresolvable( resolver, forall, cost, env ) ) {
+				delete forall;
+				r = nullptr;
+				return true;
+			}
+			r = new CallExpr{ e->func(), *move(newArgs), unique_ptr<TypeBinding>{ forall } };
+		} else {
+			if ( assertionsUnresolvable( resolver, as_non_const(e->forall()), cost, env ) ) {
+				r = nullptr;
+			}
+		}
+		return true;
 	}
 
-	// TODO needs to be a mutator to trim options with unsatisfied assertions from ambiguous
+	bool visit( const AmbiguousExpr* e, const TypedExpr*& r ) {
+		Cost cost_bak = cost;
+		Cost cost_min = Cost::max();
+		unsigned n = e->alts().size();
+		bool unchanged = true;
+		
+		// find all min-cost resolvable alternatives
+		List<TypedExpr> min_alts;
+		for ( unsigned i = 0; i < n; ++i ) {
+			const TypedExpr* ti = e->alts()[i];
+
+			visit( ti, ti );
+			if ( ti != e->alts()[i] ) { unchanged = false; }
+
+			if ( ! ti ) {
+				// trim unresolvable alternatives
+				cost = cost_bak;
+				continue;
+			}
+
+			// keep min-cost alternatives
+			if ( cost < cost_min ) {
+				cost_min = cost;
+				min_alts.clear();
+				min_alts.push_back( ti );
+			} else if ( cost == cost_min ) {
+				min_alts.push_back( ti );
+			}
+
+			cost = cost_bak; // reset cost for next alternative
+		}
+
+		if ( min_alts.empty() ) {
+			// no matches
+			r = nullptr;
+			return true;
+		}
+
+		cost = cost_min;
+		
+		// make no change if no change needed
+		if ( unchanged ) return true;
+		
+		// unique min disambiguates expression
+		if ( min_alts.size() == 1 ) {
+			r = min_alts.front();
+			return true;
+		}
+
+		// otherwise new ambiguous expression
+		r = new AmbiguousExpr{ e->expr(), e->type(), move(min_alts) };
+		return true;
+	}
 };
 
 /// Return an interpretation for all zero-arg functions in funcs
@@ -91,7 +169,8 @@ InterpretationList matchFuncs( Resolver& resolver,
 
 		// check type assertions if at top level
 		if ( resolve_mode == Resolver::TOP_LEVEL ) {
-			if ( assertionsUnresolvable( resolver, call->forall(), cost, env ) ) continue;
+			if ( assertionsUnresolvable( resolver, as_non_const(call->forall()), cost, env ) ) 
+				continue;
 		}
 		
 		// create new zero-cost interpretation for resolved call
@@ -321,15 +400,17 @@ const Interpretation* Resolver::resolveWithType( const Expr* expr, const Type* t
 
 /// Ensures that resolved expressions have all their type variables bound and are not 
 /// ambiguous.
-class ResolvedExprInvalid : public TypedExprVisitor<bool> {
+class ResolvedExprInvalid : public TypedExprVisitor<ResolvedExprInvalid, bool> {
 	AmbiguousEffect& on_ambiguous;
 	UnboundEffect& on_unbound;
 
 public:
 	ResolvedExprInvalid( AmbiguousEffect& on_ambiguous, UnboundEffect& on_unbound )
 		: on_ambiguous(on_ambiguous), on_unbound(on_unbound) {}
+	
+	using TypedExprVisitor<ResolvedExprInvalid, bool>::visit;
 
-	bool visit( const CallExpr* e, bool& invalid ) final {
+	bool visit( const CallExpr* e, bool& invalid ) {
 		if ( e->forall() && e->forall()->unbound() ) {
 			on_unbound( e, *e->forall() );
 			invalid = true;
@@ -338,7 +419,7 @@ public:
 		return true;
 	}
 
-	bool visit( const AmbiguousExpr* e, bool& invalid ) final {
+	bool visit( const AmbiguousExpr* e, bool& invalid ) {
 		on_ambiguous( e->expr(), e->alts().begin(), e->alts().end() );
 		invalid = true;
 		return false;

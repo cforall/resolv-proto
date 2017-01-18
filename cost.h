@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <ostream>
 #include <utility>
 
@@ -12,6 +13,14 @@ struct Cost {
 	Cost() : unsafe(0), poly(0), safe(0) {}
 	Cost(unsigned unsafe, unsigned poly, unsigned safe)
 		: unsafe(unsafe), poly(poly), safe(safe) {}
+	
+	/// Maximum cost value
+	static const Cost& max() {
+		static auto inf = Cost{ std::numeric_limits<unsigned>::max(),
+		                        std::numeric_limits<unsigned>::max(),
+								std::numeric_limits<unsigned>::max() };
+		return inf;
+	}
 	
 	Cost(const Cost&) = default;
 	Cost(Cost&&) = default;
@@ -31,7 +40,7 @@ struct Cost {
 	/// is positive
 	static Cost from_diff(int diff) {
 		return diff < 0 ? Cost{ unsigned(-diff), 0, 0 } : Cost{ 0, 0, unsigned(diff) };
-	} 
+	}
 };
 
 inline Cost operator+ (const Cost& a, const Cost& b) {

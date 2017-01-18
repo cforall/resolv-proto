@@ -5,7 +5,8 @@
 
 /// Mutates all of the input list using the mutation functions of self. 
 /// If there are mutated elements and no short-circuit, will produce a 
-/// new List<T> in out. Returns last short-circuit code.
+/// new List<T> in out. Omits any null pointers from the list. 
+/// Returns last short-circuit code.
 template<typename Self, typename T>
 bool mutateAll( Self* self, const List<T>& in, option<List<T>>& out ) {
     unsigned i;
@@ -24,11 +25,11 @@ bool mutateAll( Self* self, const List<T>& in, option<List<T>>& out ) {
     for ( unsigned j = 0; j < i; ++j ) {
         ts.push_back( in[j] );
     }
-    ts.push_back( last );
+    if ( last ) ts.push_back( last );
     for ( ++i; i < n; ++i ) {
-        const Type* ti = in[i];
+        const T* ti = in[i];
         if ( ! self->visit( ti, ti ) ) return false;
-        ts.push_back( ti );
+        if ( ti ) ts.push_back( ti );
     }
     out = move(ts);
     return true;
