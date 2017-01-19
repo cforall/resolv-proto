@@ -140,6 +140,13 @@ public:
 		r = new AmbiguousExpr{ e->expr(), e->type(), move(min_alts) };
 		return true;
 	}
+
+	/// Nulls call expression and returns true if unresolvable; false otherwise
+	bool operator() ( CallExpr* e ) {
+		const TypedExpr* tp = e;
+		visit( e, tp );
+		return tp == nullptr;
+	}
 };
 
 /// Return an interpretation for all zero-arg functions in funcs
