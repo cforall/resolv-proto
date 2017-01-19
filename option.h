@@ -37,7 +37,7 @@ class option {
 
 public:
 
-    option() = default;
+    option() : filled(false) {}
     option( const T& x ) { init( x ); }
     option( T&& x ) { init( move(x) ); }
     option( const option<T>& o ) : filled(o.filled) { if ( filled ) init( o.get() ); }
