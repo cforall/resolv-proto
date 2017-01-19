@@ -43,7 +43,7 @@ class VarExpr : public TypedExpr {
 public:
 	typedef Expr Base;
 	
-	VarExpr(const Type* ty_) : ty_( ty_ ) {}
+	VarExpr(const Type* ty_) : ty_( ty_ ) { assert( ty_ ); }
 	
 	virtual Expr* clone() const { return new VarExpr( ty_ ); }
 

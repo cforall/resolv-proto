@@ -18,6 +18,7 @@
 #include "mutator.h"
 #include "nway_merge.h"
 #include "option.h"
+#include "replace_local.h"
 #include "typed_expr_visitor.h"
 #include "typed_expr_mutator.h"
 #include "unify.h"
@@ -33,13 +34,14 @@ bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings,
 		List<Expr> asnArgs;
 		asnArgs.reserve( asnDecl->params().size() );
 		for ( const Type* pType : asnDecl->params() ) {
-			asnArgs.push_back( new VarExpr( pType ) );
+			asnArgs.push_back( new VarExpr( ReplaceLocal{}( pType ) ) );
 		}
 		const FuncExpr* asnFunc = new FuncExpr{ asnDecl->name(), move(asnArgs) };
+		const Type* asnReturn = ReplaceLocal{}( asnDecl->returns() );
 
 		// check if it can be resolved
 		const Interpretation* satisfying = 
-			resolver.resolveWithType( asnFunc, asnDecl->returns(), env );
+			resolver.resolveWithType( asnFunc, asnReturn, env );
 		if ( ! satisfying ) return true;
 
 		// record resolution

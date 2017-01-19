@@ -29,6 +29,12 @@ public:
         return true;
     }
 
+    /// Mutates the provided type pointer.
+    const Type* operator() ( const Type* t ) {
+        visit( t, t );
+        return t;
+    }
+
     /// Replaces the provided type pointer by a mutated copy, returning the copy for convenience.
     const Type* mutate( const Type*& t ) {
         visit( t, t );
