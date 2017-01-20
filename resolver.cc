@@ -5,6 +5,7 @@
 #include "resolver.h"
 
 #include "binding.h"
+#include "binding_sub_mutator.h"
 #include "cost.h"
 #include "cow.h"
 #include "data.h"
@@ -18,7 +19,6 @@
 #include "mutator.h"
 #include "nway_merge.h"
 #include "option.h"
-#include "replace_local.h"
 #include "typed_expr_visitor.h"
 #include "typed_expr_mutator.h"
 #include "unify.h"
@@ -28,16 +28,17 @@ bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings,
                              Cost& cost, cow_ptr<Environment>& env ) {
 	if ( ! bindings || bindings->assertions().empty() ) return false;
 
+	BindingSubMutator replaceLocals{ *bindings };  // replaces poly types with bindings
 	for ( auto it = bindings->assertions().begin(); it != bindings->assertions().end(); ++it ) {
 		// Generate FuncExpr for assertion
 		const FuncDecl* asnDecl = it->first;
 		List<Expr> asnArgs;
 		asnArgs.reserve( asnDecl->params().size() );
 		for ( const Type* pType : asnDecl->params() ) {
-			asnArgs.push_back( new VarExpr( ReplaceLocal{}( pType ) ) );
+			asnArgs.push_back( new VarExpr( replaceLocals( pType ) ) );
 		}
 		const FuncExpr* asnFunc = new FuncExpr{ asnDecl->name(), move(asnArgs) };
-		const Type* asnReturn = ReplaceLocal{}( asnDecl->returns() );
+		const Type* asnReturn = replaceLocals( asnDecl->returns() );
 
 		// check if it can be resolved
 		const Interpretation* satisfying = 
