@@ -43,7 +43,7 @@ bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings,
 		// check if it can be resolved
 		const Interpretation* satisfying = 
 			resolver.resolveWithType( asnFunc, asnReturn, env );
-		if ( ! satisfying ) return true;
+		if ( ! satisfying || satisfying->is_ambiguous() ) return true;
 
 		// record resolution
 		bindings->bind_assertion( it, satisfying );
