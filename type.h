@@ -63,8 +63,6 @@ public:
 	
 	virtual Type* clone() const { return new ConcType( id_ ); }
 
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
-
 	bool operator== (const ConcType& that) const { return id_ == that.id_; }
 	bool operator!= (const ConcType& that) const { return !(*this == that); }
 	bool operator< (const ConcType& that) const { return id_ < that.id_; }
@@ -81,7 +79,7 @@ protected:
 		return that && (*this == *that);
 	}
 	
-	virtual std::size_t hash() const { return std::hash<int>()(id_); }
+	virtual std::size_t hash() const { return std::hash<int>{}( id_ ); }
 };
 
 namespace std {
@@ -91,6 +89,41 @@ namespace std {
 		result_type operator() (const argument_type& t) { return t.hash(); }
 	};
 }
+
+/// Represents a named concrete type
+class NamedType : public Type {
+	std::string name_;
+
+public:
+	typedef Type Base;
+
+	NamedType(const std::string& name_)	: name_(name_) {}
+
+	virtual Type* clone() const { return new NamedType( name_ ); }
+
+	bool operator== (const NamedType& that) const {
+		return name_ == that.name_;
+	}
+	bool operator!= (const NamedType& that) const { return !(*this == that); }
+
+	const std::string& name() const { return name_; }
+	
+	virtual unsigned size() const { return 1; }
+
+protected:
+	virtual void write(std::ostream& out) const {
+		out << "#" << name_;
+	}
+
+	virtual bool equals(const Type& obj) const {
+		const NamedType* that = as_safe<NamedType>(&obj);
+		return that && *this == *that;
+	}
+
+	virtual std::size_t hash() const {
+		return std::hash<std::string>{}( name_ );
+	}
+};
 
 class TypeBinding;
 
@@ -110,8 +143,6 @@ public:
 	PolyType* clone_bound( const TypeBinding* new_src ) const {
 		return new PolyType( name_, new_src );
 	}
-
-	virtual void accept( Visitor& v ) const { v.visit(this); }
 
 	bool operator== (const PolyType& that) const {
 		return src_ == that.src_ && name_ == that.name_;
@@ -137,7 +168,7 @@ protected:
 	}
 
 	virtual std::size_t hash() const {
-		return (std::hash<std::string>()( name_ ) << 1) ^ std::hash<const TypeBinding*>()( src_ );
+		return (std::hash<std::string>{}( name_ ) << 1) ^ std::hash<const TypeBinding*>{}( src_ );
 	}
 };
 
@@ -147,8 +178,6 @@ public:
 	typedef Type Base;
 	
 	virtual Type* clone() const { return new VoidType; }
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	virtual unsigned size() const { return 0; }
 	
@@ -174,8 +203,6 @@ public:
 		: types_( move(types_) ) { assert( this->types_.size() > 1 ); }
 	
 	virtual Type* clone() const { return new TupleType( types_ ); }
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	const List<Type>& types() const { return types_; }
 	

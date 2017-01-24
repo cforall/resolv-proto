@@ -46,8 +46,6 @@ public:
 	VarExpr(const Type* ty_) : ty_( ty_ ) { assert( ty_ ); }
 	
 	virtual Expr* clone() const { return new VarExpr( ty_ ); }
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	virtual const Type* type() const { return ty_; }
 
@@ -68,8 +66,6 @@ public:
 		: arg_( arg_ ), cast_( cast_ ) {}
 	
 	virtual Expr* clone() const { return new CastExpr( arg_, cast_ ); }
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	const Expr* arg() const { return arg_; }
 	const Conversion* cast() const { return cast_; }
@@ -97,8 +93,6 @@ public:
 	virtual Expr* clone() const {
 		return new FuncExpr( name_, copy( args_ ) );
 	}
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	const std::string& name() const { return name_; }
 	const List<Expr>& args() const { return args_; }
@@ -146,8 +140,6 @@ public:
 	virtual Expr* clone() const {
 		return new CallExpr( func_, args_, forall_ );
 	}
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	const FuncDecl* func() const { return func_; }
 	const List<TypedExpr>& args() const { return args_; }
@@ -179,8 +171,6 @@ public:
 		: of_( of_ ), ind_( ind_ ) { assert( is<TupleType>( of_->type() ) ); }
 	
 	virtual Expr* clone() const { return new TupleElementExpr( of_, ind_ ); }
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	const TypedExpr* of() const { return of_; }
 	
@@ -220,8 +210,6 @@ public:
 
 	virtual Expr* clone() const { return new TupleExpr( els_, ty_ ); }
 
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
-
 	const List<TypedExpr>& els() const { return els_; }
 
 	const TupleType* ty() const { return ty_; }
@@ -250,8 +238,6 @@ public:
 		: expr_(expr_), type_( type_ ), alts_( move(alts_) ) {}
 	
 	virtual Expr* clone() const { return new AmbiguousExpr( expr_, type_, copy(alts_) ); }
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 
 	const Expr* expr() const { return expr_; }
 	

@@ -83,8 +83,6 @@ public:
 	virtual Decl* clone() const {
 		return new FuncDecl( name_, tag_, params_, returns_, tyVars_ );
 	}
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	bool operator== (const FuncDecl& that) const { 
 		return name_ == that.name_ && tag_ == that.tag_;
@@ -123,8 +121,6 @@ public:
 	VarDecl(const ConcType* ty_) : ty_(ty_) {}
 	
 	virtual Decl* clone() const { return new VarDecl( ty_ ); }
-
-	virtual void accept( Visitor& v ) const { v.visit( this ); }
 	
 	bool operator== (const VarDecl& that) const { return ty_ == that.ty_; }
 	bool operator!= (const VarDecl& that) const { return !(*this == that); }

@@ -14,11 +14,12 @@
 /// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* <type_assertion>* "\n"+
 /// type_assertion := "|" (<type>" ")* <name> (" "<type>)*
 /// resolv_expr := <subexpr> "\n"+
-/// subexpr := <conc_type> | <name> " (" (" "<subexpr>)* " )"
+/// subexpr := <conc_type> | <named_type> | <name> " (" (" "<subexpr>)* " )"
 /// name := [a-z][a-z0-9]*
 /// tag := <name>
-/// type := <conc_type> | <poly_type>
+/// type := <conc_type> | <named_type> | <poly_type>
 /// conc_type := "-"?[0-9]+
+/// named_type := "#"[A-Za-z_][A-Za-z_0-9]*
 /// poly_type := [A-Z][a-z0-9]*
 ///
 /// Semantically, types are given numeric identifiers, and also stand in for 

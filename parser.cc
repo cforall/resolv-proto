@@ -74,6 +74,31 @@ bool parse_name(char *&token, std::string& ret) {
 	return true;
 }
 
+/// Parses a named type name (hash followed by ASCII alphanumeric string 
+/// starting with a letter or underscore), returning true, storing result 
+/// (not including hash) into ret, and incrementing token if so. 
+/// token must not be null
+bool parse_named_type(char *&token, std::string& ret) {
+	char *end = token;
+
+	if ( ! match_char(end, '#') ) return false;
+
+	if ( 'A' <= *end && *end <= 'Z'
+	     || 'a' <= *end && *end <= 'z'
+		 || '_' == *end ) ++end;
+	else return false;
+
+	while ( 'A' <= *end && *end <= 'Z'
+	        || 'a' <= *end && *end <= 'z'
+			|| '0' <= *end && *end <= '9'
+		    || '_' == *end ) ++end;
+	
+	ret.assign( token+1, (end-token-1) );
+
+	token = end;
+	return true;
+}
+
 /// Parses a polymorphic type name (lowercase alphanumeric ASCII string 
 /// starting with an uppercase letter), returning true, storing result into 
 /// ret, and incrementing token if so. token must not be null.
@@ -101,6 +126,9 @@ bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& 
 
 	if ( parse_int(token, t) ) {
 		out.push_back( get_canon( types, t ) );
+		return true;
+	} else if ( parse_named_type(token, n) ) {
+		out.push_back( get_canon( types, n ) );
 		return true;
 	} else if ( parse_poly_type(token, n) ) {
 		if ( ! binding ) {
@@ -206,7 +234,7 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 bool parse_subexpr( char *&token, List<Expr>& exprs, CanonicalTypeMap& types ) {
 	char *end = token;
 	
-	// Check for type expression
+	// Check for concrete type expression
 	int t;
 	if ( parse_int(end, t) ) {
 		const ConcType* ty = get_canon( types, t );
@@ -215,8 +243,16 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, CanonicalTypeMap& types ) {
 		return true;
 	}
 	
-	// Check for function call
 	std::string name;
+
+	// Check for named type expression
+	if ( parse_named_type(end, name) ) {
+		exprs.push_back( new VarExpr( get_canon( types, name ) ) );
+		token = end;
+		return true;
+	}
+	
+	// Check for function call
 	if ( ! parse_name(end, name) ) return false;
 	match_whitespace(end);
 	if ( ! match_char(end, '(') ) return false;
