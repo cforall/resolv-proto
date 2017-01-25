@@ -113,24 +113,6 @@ class TypeKey {
     template<typename K>
     K&& take() { return move(get<K>()); }
 
-    // /// Initializes key from ConcType
-    // void init( const ConcType* ct ) {
-    //     key_type = Conc;
-    //     new(&conc) ConcKey{ ct->id() };
-    // }
-
-    // /// Initializes key from NamedType
-    // void init( const NamedType* nt ) {
-    //     key_type = Named;
-    //     new(&named) NamedKey{ nt->name() };
-    // }
-
-    // /// Initializes key from PolyType
-    // void init( const PolyType* pt ) {
-    //     key_type = Poly;
-    //     new(&poly) PolyKey{ pt->name(), pt->src() };
-    // }
-    
     template<typename T, typename... Args>
     void init( Args&&... args ) {
         using KT = typename key_info<T>::type;
@@ -138,20 +120,6 @@ class TypeKey {
         new( &get<KT>() ) KT { forward<Args>(args)... };
     }
 
-    /// Initializes variant fields (but not key type) by copy
-    // void init( const TypeKey& o ) {
-    //     switch ( o.key_type ) {
-    //     case Conc:
-    //         new(&conc) ConcKey{ o.conc };
-    //         break;
-    //     case Named:
-    //         new(&named) NamedKey{ o.named };
-    //         break;
-    //     case Poly:
-    //         new(&poly) PolyKey{ o.poly };
-    //         break;
-    //     }
-    // }
     void init_from( const TypeKey& o ) {
         switch ( o.key_type ) {
         case Conc:
@@ -166,21 +134,6 @@ class TypeKey {
         }
     }
 
-    /// Assigns variant fields (but not key type) by move
-    // void init( TypeKey&& o ) {
-    //     switch ( o.key_type ) {
-    //     case Conc:
-    //         new(&conc) ConcKey{ move(o.conc) };
-    //         break;
-    //     case Named:
-    //         new(&named) NamedKey{ move(o.named) };
-    //         break;
-    //     case Poly:
-    //         new(&poly) PolyKey{ move(o.poly) };
-    //         break;
-    //     }
-    // }
-    
     void init_from( TypeKey&& o ) {
         switch ( o.key_type ) {
         case Conc:

@@ -1,0 +1,8 @@
+#foo f #foo
+#bar g #bar
+T h T | T f T
+%%
+f( #foo )
+g( #bar )
+h( #foo )
+b( #bar )

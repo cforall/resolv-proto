@@ -32,22 +32,15 @@ bool unify(const T*, const Type*, Cost&, cow_ptr<Environment>&);
 bool unify(const PolyType*, const Type*, Cost&, cow_ptr<Environment>&);
 
 bool unify(const Type*, const Type*, Cost&, cow_ptr<Environment>&);
-// bool unify(const ConcType*, const ConcType*, Cost&, cow_ptr<Environment>&);
-// bool unify(const ConcType*, const PolyType*, Cost&, cow_ptr<Environment>&);
-// bool unify(const ConcType*, const Type*, Cost&, cow_ptr<Environment>&);
-// bool unify(const PolyType*, const Type*, Cost&, cow_ptr<Environment>&);
-// bool unify(const Type*, const Type*, Cost&, cow_ptr<Environment>&);
 
 template<typename T, typename = is_conc_or_named_type<T>>
 bool unify( const T* concParamType, const T* concArgType, 
-// bool unify(const ConcType* concParamType, const ConcType* concArgType,
             Cost&, cow_ptr<Environment>&) {
     return *concParamType == *concArgType;
 }
 
 template<typename T, typename = is_conc_or_named_type<T>>
 bool unify(const T* concParamType, const PolyType* polyArgType, 
-//bool unify(const ConcType* concParamType, const PolyType* polyArgType, 
            Cost& cost, cow_ptr<Environment>& env) {
     // Attempts to make `concType` the representative for `polyType` in `env`; 
     // true iff no representative or `concType` unifies with the existing representative 
@@ -62,7 +55,6 @@ bool unify(const T* concParamType, const PolyType* polyArgType,
 
 template<typename T, typename = is_conc_or_named_type<T>>
 bool unify(const T* concParamType, const Type* argType,
-//bool unify(const ConcType* concParamType, const Type* argType,
            Cost& cost, cow_ptr<Environment>& env) {
     auto aid = typeof(argType);
     if ( aid == typeof<ConcType>() ) 
