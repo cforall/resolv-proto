@@ -2,6 +2,7 @@
 #include <ostream>
 
 #include "conversion.h"
+#include "data.h"
 #include "gc.h"
 
 const ConversionGraph::ConversionList ConversionGraph::no_conversions = {};
@@ -31,13 +32,15 @@ ConversionGraph make_conversions( CanonicalTypeMap& types ) {
 #else // ! RP_USER_CONVS
 	// loop over "from" types
 	for ( auto from = types.begin(); from != types.end(); ++from ) {
-		const ConcType* f = from->second;
+		const ConcType* f = as_safe<ConcType>(from->second);
+		if ( ! f ) continue;
 		ConversionGraph::ConversionNode& fromNode = g.try_insert( f );
 
 		// loop over "to" types
 		auto to = from;
 		for (++to; to != types.end(); ++to) {
-			const ConcType* t = to->second;
+			const ConcType* t = as_safe<ConcType>(to->second);
+			if ( ! t ) continue;
 			ConversionGraph::ConversionNode& toNode = g.try_insert( t );
 			
 			fromNode.conversions.emplace_back( &toNode, Cost::from_diff( t->id() - f->id() ) );

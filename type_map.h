@@ -7,12 +7,354 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "data.h"
 #include "type.h"
+
+/// Key type for ConcType
+struct ConcKey {
+    int id;
+
+    ConcKey( int id ) : id(id) {}
+    ConcKey( const ConcType* ct ) : id( ct->id() ) {}
+
+    const Type* value() const { return new ConcType{ id }; }
+
+    bool operator== (const ConcKey& o) const { return id == o.id; }
+    bool operator< (const ConcKey& o) const { return id < o.id; }
+
+    std::size_t hash() const { return std::hash<int>{}(id); }
+};
+
+/// Key type for NamedType
+struct NamedKey {
+    std::string name;
+    
+    NamedKey( const std::string& name ) : name(name) {}
+    NamedKey( const NamedType* nt ) : name( nt->name() ) {}
+
+    const Type* value() const { return new NamedType{ name }; }
+
+    bool operator== (const NamedKey& o) const { return name == o.name; }
+    bool operator< (const NamedKey& o) const { return name < o.name; }
+
+    std::size_t hash() const { return std::hash<std::string>{}(name); }
+};
+
+/// Key type for PolyType
+struct PolyKey {
+    std::string name;
+    const TypeBinding* src;
+
+    PolyKey( const std::string& name, const TypeBinding* src ) : name(name), src(src) {}
+    PolyKey( const PolyType* pt ) : name( pt->name() ), src( pt->src() ) {}
+
+    const Type* value() const { return new PolyType{ name, src }; }
+
+    bool operator== (const PolyKey& o) const { return src == o.src && name == o.name; }
+    bool operator< (const PolyKey& o) const {
+        int ccode = name.compare( o.name );
+        return ccode < 0 || ccode == 0 && std::less<const TypeBinding*>{}( src, o.src );
+    }
+
+    std::size_t hash() const {
+        return (std::hash<std::string>{}( name ) << 1) 
+                ^ std::hash<const TypeBinding*>{}( src );
+    }
+};
+
+/// Variants of a key
+enum KeyMode { Conc, Named, Poly };
+
+/// Associates key type and enum with node type
+template<typename Ty>
+struct key_info {};
+
+template<>
+struct key_info<ConcType> {
+    typedef ConcKey type;
+    static constexpr KeyMode key = Conc;
+};
+
+template<>
+struct key_info<NamedType> {
+    typedef NamedKey type;
+    static constexpr KeyMode key = Named;
+};
+
+template<>
+struct key_info<PolyType> {
+    typedef PolyKey type;
+    static constexpr KeyMode key = Poly;
+};
+
+/// Variant key type for map
+class TypeKey {
+    KeyMode key_type;  ///< Variant discriminator
+    //std::aligned_union_t<0, ConcKey, NamedKey, PolyKey> data;  ///< Variant storage
+    union data_t {
+        char def;
+        ConcKey conc;
+        NamedKey named;
+        PolyKey poly;
+
+        data_t() : def('\0') {}
+        ~data_t() {}
+    } data;
+
+    template<typename K>
+    K& get() { return reinterpret_cast<K&>(data); }
+    template<typename K>
+    const K& get() const { return reinterpret_cast<const K&>(data); }
+    template<typename K>
+    K&& take() { return move(get<K>()); }
+
+    // /// Initializes key from ConcType
+    // void init( const ConcType* ct ) {
+    //     key_type = Conc;
+    //     new(&conc) ConcKey{ ct->id() };
+    // }
+
+    // /// Initializes key from NamedType
+    // void init( const NamedType* nt ) {
+    //     key_type = Named;
+    //     new(&named) NamedKey{ nt->name() };
+    // }
+
+    // /// Initializes key from PolyType
+    // void init( const PolyType* pt ) {
+    //     key_type = Poly;
+    //     new(&poly) PolyKey{ pt->name(), pt->src() };
+    // }
+    
+    template<typename T, typename... Args>
+    void init( Args&&... args ) {
+        using KT = typename key_info<T>::type;
+        key_type = key_info<T>::key;
+        new( &get<KT>() ) KT { forward<Args>(args)... };
+    }
+
+    /// Initializes variant fields (but not key type) by copy
+    // void init( const TypeKey& o ) {
+    //     switch ( o.key_type ) {
+    //     case Conc:
+    //         new(&conc) ConcKey{ o.conc };
+    //         break;
+    //     case Named:
+    //         new(&named) NamedKey{ o.named };
+    //         break;
+    //     case Poly:
+    //         new(&poly) PolyKey{ o.poly };
+    //         break;
+    //     }
+    // }
+    void init_from( const TypeKey& o ) {
+        switch ( o.key_type ) {
+        case Conc:
+            init<ConcType>( o.get<ConcKey>() );
+            break;
+        case Named:
+            init<NamedType>( o.get<NamedKey>() );
+            break;
+        case Poly:
+            init<PolyType>( o.get<PolyKey>() );
+            break;
+        }
+    }
+
+    /// Assigns variant fields (but not key type) by move
+    // void init( TypeKey&& o ) {
+    //     switch ( o.key_type ) {
+    //     case Conc:
+    //         new(&conc) ConcKey{ move(o.conc) };
+    //         break;
+    //     case Named:
+    //         new(&named) NamedKey{ move(o.named) };
+    //         break;
+    //     case Poly:
+    //         new(&poly) PolyKey{ move(o.poly) };
+    //         break;
+    //     }
+    // }
+    
+    void init_from( TypeKey&& o ) {
+        switch ( o.key_type ) {
+        case Conc:
+            init<ConcType>( o.take<ConcKey>() );
+            break;
+        case Named:
+            init<NamedType>( o.take<NamedKey>() );
+            break;
+        case Poly:
+            init<PolyType>( o.take<PolyKey>() );
+            break;
+        }
+    }
+
+    /// Clears variant fields
+    void reset() {
+        switch ( key_type ) {
+        case Conc:
+            get<ConcKey>().~ConcKey();
+            break;
+        case Named:
+            get<NamedKey>().~NamedKey();
+            break;
+        case Poly:
+            get<PolyKey>().~PolyKey();
+            break;
+        }
+    }
+
+    /// Default constructor only for internal use
+    TypeKey() {}
+
+public:
+    /// Constructs key from type; type should be ConcType, NamedType or PolyType
+    TypeKey( const Type* t ) {
+        auto tid = typeof(t);
+        if ( tid == typeof<ConcType>() ) {
+            init<ConcType>( as<ConcType>(t) );
+        } else if ( tid == typeof<NamedType>() ) {
+            init<NamedType>( as<NamedType>(t) );
+        } else if ( tid == typeof<PolyType>() ) {
+            init<PolyType>( as<PolyType>(t) );
+        } else assert(false && "Invalid key type");
+    }
+
+    TypeKey( const ConcType* t ) { init<ConcType>( t ); }
+
+    TypeKey( const NamedType* t ) { init<NamedType>( t ); }
+
+    TypeKey( const PolyType* t ) { init<PolyType>( t ); }
+
+    // deliberately no nullptr_t implmentation; no meaningful value
+
+    TypeKey( const TypeKey& o ) { init_from( o ); }
+
+    TypeKey( TypeKey&& o ) { init_from( move(o) ); }
+
+    template<typename T, typename... Args>
+    TypeKey( Args&&... args ) { init<T>( forward<Args>(args)... ); }
+
+    /// makes a key for a Type T
+    template<typename T, typename... Args>
+    static TypeKey make( Args&&... args ) {
+        TypeKey k;
+        k.init<T>( forward<Args>(args)... );
+        return k;
+    }
+
+    TypeKey& operator= ( const TypeKey& o ) {
+        if ( this == &o ) return *this;
+        if ( key_type == o.key_type ) {
+            switch( key_type ) {
+            case Conc:
+                get<ConcKey>() = o.get<ConcKey>();
+                break;
+            case Named:
+                get<NamedKey>() = o.get<NamedKey>();
+                break;
+            case Poly:
+                get<PolyKey>() = o.get<PolyKey>();
+                break;
+            }
+        } else {
+            reset();
+            init_from( o );
+        }
+
+        return *this;
+    }
+
+    TypeKey& operator= ( TypeKey&& o ) {
+        if ( this == &o ) return *this;
+        if ( key_type == o.key_type ) {
+            switch( key_type ) {
+            case Conc:
+                get<ConcKey>() = o.take<ConcKey>();
+                break;
+            case Named:
+                get<NamedKey>() = o.take<NamedKey>();
+                break;
+            case Poly:
+                get<PolyKey>() = o.take<PolyKey>();
+                break;
+            }
+        } else {
+            reset();
+            init_from( move(o) );
+        }
+
+        return *this;
+    }
+
+    ~TypeKey() { reset(); }
+
+    /// Retrieves the underlying key
+    const Type* get() const {
+        switch ( key_type ) {
+        case Conc:
+            return get<ConcKey>().value();
+        case Named:
+            return get<NamedKey>().value();
+        case Poly:
+            return get<PolyKey>().value();
+        default: assert(false && "Invalid key type"); return nullptr;
+        }
+    } 
+
+    bool operator== ( const TypeKey& o ) const {
+        if ( key_type != o.key_type ) return false;
+        switch ( key_type ) {
+        case Conc:
+            return get<ConcKey>() == o.get<ConcKey>();
+        case Named:
+            return get<NamedKey>() == o.get<NamedKey>();
+        case Poly:
+            return get<PolyKey>() == o.get<PolyKey>();
+        default: assert(false && "Invalid key type"); return false;
+        }
+    }
+
+    bool operator< ( const TypeKey& o ) const {
+        if ( key_type != o.key_type ) return (int)key_type < (int)o.key_type;
+        switch ( key_type ) {
+        case Conc:
+            return get<ConcKey>() < o.get<ConcKey>();
+        case Named:
+            return get<NamedKey>() < o.get<NamedKey>();
+        case Poly:
+            return get<PolyKey>() < o.get<PolyKey>();
+        default: assert(false && "Invalid key type"); return false;
+        }
+    }
+
+    std::size_t hash() const {
+        std::size_t h;
+        switch ( key_type ) {
+        case Conc:
+            h = get<ConcKey>().hash();
+            break;
+        case Named:
+            h = get<NamedKey>().hash();
+            break;
+        case Poly:
+            h = get<PolyKey>().hash();
+            break;
+        default: assert(false && "Invalid key type");
+        }
+        return (h << 2) | (std::size_t)key_type;
+    }
+};
+
+struct KeyHash {
+    std::size_t operator() ( const TypeKey& k ) const { return k.hash(); }
+};
 
 /// A map from types to some value; lookup is done by structural 
 /// decomposition on types.
@@ -32,247 +374,13 @@ public:
     typedef std::unique_ptr< const_value_type > const_pointer;
 
 private:
-    /// Variant key type for map
-    class Key {
-        /// Key type for ConcType
-        struct ConcKey {
-            int id;
-
-            ConcKey( int id ) : id(id) {}
-            ConcKey( const ConcType* ct ) : id( ct->id() ) {}
-        };
-
-        /// Key type for NamedType
-        struct NamedKey {
-            std::string name;
-            
-            NamedKey( const std::string& name ) : name(name) {}
-            NamedKey( const NamedType* nt ) : name( nt->name() ) {}
-        };
-
-        /// Key type for PolyType
-        struct PolyKey {
-            std::string name;
-            const TypeBinding* src;
-
-            PolyKey( const std::string& name, const TypeBinding* src ) : name(name), src(src) {}
-            PolyKey( const PolyType* pt ) : name( pt->name() ), src( pt->src() ) {}
-        };
-
-        enum { Conc, Named, Poly } key_type;  ///< Variant discriminator
-        union {
-            ConcKey conc;    ///< ConcType variant
-            NamedKey named;  ///< NamedType variant
-            PolyKey poly;    ///< PolyType variant
-        };
-
-        /// Initializes key from ConcType
-        void init( const ConcType* ct ) {
-            key_type = Conc;
-            new(&conc) ConcKey{ ct->id() };
-        }
-
-        /// Initializes key from NamedType
-        void init( const NamedType* nt ) {
-            key_type = Named;
-            new(&named) NamedKey{ nt->name() };
-        }
-
-        /// Initializes key from PolyType
-        void init( const PolyType* pt ) {
-            key_type = Poly;
-            new(&poly) PolyKey{ pt->name(), pt->src() };
-        }
-
-        /// Initializes variant fields (but not key type) by copy
-        void init( const Key& o ) {
-            switch ( o.key_type ) {
-            case Conc:
-                new(&conc) ConcKey{ o.conc };
-                break;
-            case Named:
-                new(&named) NamedKey{ o.named };
-                break;
-            case Poly:
-                new(&poly) PolyKey{ o.poly };
-                break;
-            }
-        }
-
-        /// Assigns variant fields (but not key type) by move
-        void init( Key&& o ) {
-            switch ( o.key_type ) {
-            case Conc:
-                new(&conc) ConcKey{ move(o.conc) };
-                break;
-            case Named:
-                new(&named) NamedKey{ move(o.named) };
-                break;
-            case Poly:
-                new(&poly) PolyKey{ move(o.poly) };
-                break;
-            }
-        }
-
-        /// Clears variant fields
-        void reset() {
-            switch ( key_type ) {
-            case Conc:
-                conc.~ConcKey();
-                break;
-            case Named:
-                named.~NamedKey();
-                break;
-            case Poly:
-                poly.~PolyKey();
-                break;
-            }
-        }
-
-    public:
-        /// Constructs key from type; type should be ConcType, NamedType or PolyType
-        Key( const Type* t ) {
-            auto tid = typeof(t);
-            if ( tid == typeof<ConcType>() ) {
-                init( as<ConcType>(t) );
-            } else if ( tid == typeof<NamedType>() ) {
-                init( as<NamedType>(t) );
-            } else if ( tid == typeof<PolyType>() ) {
-                init( as<PolyType>(t) );
-            } else assert(false && "Invalid key type");
-        }
-
-        Key( const ConcType* t ) { init( t ); }
-
-        Key( const NamedType* t ) { init( t ); }
-
-        Key( const PolyType* t ) { init( t ); }
-
-        // deliberately no nullptr_t implmentation; no meaningful value
-
-        Key( const Key& o ) : key_type( o.key_type ) { init( o ); }
-
-        Key( Key&& o ) : key_type( o.key_type ) { init( move(o) ); }
-
-        Key& operator= ( const Key& o ) {
-            if ( this == &o ) return *this;
-            if ( key_type == o.key_type ) {
-                switch( key_type ) {
-                case Conc:
-                    conc = o.conc;
-                    break;
-                case Named:
-                    named = o.named;
-                    break;
-                case Poly:
-                    poly = o.poly;
-                    break;
-                }
-            } else {
-                reset();
-                key_type = o.key_type;
-                init( o );
-            }
-
-            return *this;
-        }
-
-        Key& operator= ( Key&& o ) {
-            if ( this == &o ) return *this;
-            if ( key_type == o.key_type ) {
-                switch( key_type ) {
-                case Conc:
-                    conc = move(o.conc);
-                    break;
-                case Named:
-                    named = move(o.named);
-                    break;
-                case Poly:
-                    poly = move(o.poly);
-                    break;
-                }
-            } else {
-                reset();
-                key_type = o.key_type;
-                init( move(o) );
-            }
-
-            return *this;
-        }
-
-        ~Key() { reset(); }
-
-        /// Retrieves the underlying key
-        const Type* get() const {
-            switch ( key_type ) {
-            case Conc:
-                return new ConcType{ conc.id };
-            case Named:
-                return new NamedType{ named.name };
-            case Poly:
-                return new PolyType{ poly.name, poly.src };
-            default: assert(false && "Invalid key type"); return nullptr;
-            }
-        } 
-
-        bool operator== ( const Key& o ) const {
-            if ( key_type != o.key_type ) return false;
-            switch ( key_type ) {
-            case Conc:
-                return conc.id == o.conc.id;
-            case Named:
-                return named.name == o.named.name;
-            case Poly:
-                return poly.src == o.poly.src && poly.name == o.poly.name;
-            default: assert(false && "Invalid key type"); return false;
-            }
-        }
-
-        bool operator< ( const Key& o ) const {
-            if ( key_type != o.key_type ) return (int)key_type < (int)o.key_type;
-            switch ( key_type ) {
-            case Conc:
-                return conc.id < o.conc.id;
-            case Named:
-                return named.name < o.named.name;
-            case Poly:
-                return poly.name < o.poly.name 
-                    || poly.name == o.poly.name 
-                       && std::less<TypeBinding*>{}( poly.src, o.poly.src );
-            default: assert(false && "Invalid key type"); return false;
-            }
-        }
-
-        std::size_t hash() const {
-            std::size_t h;
-            switch ( key_type ) {
-            case Conc:
-                h = std::hash<int>{}( conc.id );
-                break;
-            case Named:
-                h = std::hash<std::string>{}( named.name );
-                break;
-            case Poly:
-                h = (std::hash<std::string>{}( poly.name ) << 1) 
-                    ^ std::hash<const TypeBinding*>()( poly.src );
-                break;
-            default: assert(false && "Invalid key type");
-            }
-            return (h << 2) | (std::size_t)key_type;
-        }
-    };
-
-    struct KeyHash {
-        std::size_t operator() ( const Key& k ) const { return k.hash(); }
-    };
-
     /// Underlying map type
     template<typename V>
     using KeyMap =
     #ifdef RP_SORTED
-         std::map<Key, V>;
+         std::map<TypeKey, V>;
     #else
-        std::unordered_map<Key, V, KeyHash>;
+        std::unordered_map<TypeKey, V, KeyHash>;
     #endif
 
     /// Optional leaf value for map
@@ -476,7 +584,7 @@ public:
     const TypeMap<Value>* get( VoidType* ) const { return this; }
 
     TypeMap<Value>* get( const ConcType* ty ) {
-        auto it = nodes.find( Key{ ty } );
+        auto it = nodes.find( TypeKey{ ty } );
         return it == nodes.end() ? nullptr : it->second.get();
     }
     const TypeMap<Value>* get( const ConcType* ty ) const {
@@ -484,7 +592,7 @@ public:
     }
 
     TypeMap<Value>* get( const NamedType* ty ) {
-        auto it = nodes.find( Key{ ty } );
+        auto it = nodes.find( TypeKey{ ty } );
         return it == nodes.end() ? nullptr : it->second.get();
     }
     const TypeMap<Value>* get( const NamedType* ty ) const {
@@ -492,7 +600,7 @@ public:
     }
 
     TypeMap<Value>* get( const PolyType* ty ) {
-        auto it = nodes.find( Key{ ty } );
+        auto it = nodes.find( TypeKey{ ty } );
         return it == nodes.end() ? nullptr : it->second.get();
     }
     const TypeMap<Value>* get( const PolyType* ty ) const {
@@ -529,6 +637,17 @@ public:
         return as_non_const(this)->get( ty );
     }
 
+    /// Gets the value for the key for type T constructed from the given arguments
+    template<typename T, typename... Args>
+    TypeMap<Value>* get_as( Args&&... args ) {
+        auto it = nodes.find( TypeKey::make<T>( forward<Args>(args)... ) );
+        return it == nodes.end() ? nullptr : it->second.get();
+    }
+    template<typename T, typename... Args>
+    const TypeMap<Value>* get_as( Args&&... args ) const {
+        return as_non_const(this)->get( forward<Args>(args)... );
+    }
+
     /// Stores v in the leaf pointer
     template<typename V>
     void set( V&& v ) { leaf = make_unique<Value>( forward<V>(v) ); }
@@ -552,7 +671,7 @@ public:
     std::pair<iterator, bool> insert( const ConcType* ty, V&& v ) {
         bool r = false;
 
-        Key k = Key{ ty };
+        TypeKey k = TypeKey{ ty };
         auto it = nodes.find( k );
         if ( it == nodes.end() ) {
             it = nodes.emplace_hint( it, k, make_unique<TypeMap<Value>>() );
@@ -571,7 +690,7 @@ public:
     std::pair<iterator, bool> insert( const NamedType* ty, V&& v ) {
         bool r = false;
 
-        Key k = Key{ ty };
+        TypeKey k = TypeKey{ ty };
         auto it = nodes.find( k );
         if ( it == nodes.end() ) {
             it = nodes.emplace_hint( it, k, make_unique<TypeMap<Value>>() );
@@ -590,7 +709,7 @@ public:
     std::pair<iterator, bool> insert( const PolyType* ty, V&& v ) {
         bool r = false;
 
-        Key k = Key{ ty };
+        TypeKey k = TypeKey{ ty };
         auto it = nodes.find( k );
         if ( it == nodes.end() ) {
             it = nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
@@ -613,7 +732,7 @@ public:
         // scan down trie as far as it matches
         TypeMap<Value>* tm = this;
         for ( unsigned i = 0; i < ty->size(); ++i ) {
-            Key k{ ty->types()[i] };
+            TypeKey k{ ty->types()[i] };
             
             auto it = tm->nodes.find( k );
             if ( it == tm->nodes.end() ) {
@@ -668,19 +787,19 @@ public:
     }
 
     size_type count( const ConcType* ty ) const {
-        auto it = nodes.find( Key{ ty } );
+        auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
         return it.second->leaf ? 1 : 0;
     }
 
     size_type count( const NamedType* ty ) const {
-        auto it = nodes.find( Key{ ty } );
+        auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
         return it.second->leaf ? 1 : 0;
     }
 
     size_type count( const PolyType* ty ) const {
-        auto it = nodes.find( Key{ ty } );
+        auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
         return it.second->leaf ? 1 : 0;
     }
@@ -689,7 +808,7 @@ public:
         // scan down trie as far as it matches
         TypeMap<Value>* tm = this;
         for ( unsigned i = 0; i < ty->size(); ++i ) {
-            auto it = tm->nodes.find( Key{ ty->types()[i] } );
+            auto it = tm->nodes.find( TypeKey{ ty->types()[i] } );
             if ( it == tm->nodes.end() ) return 0;
 
             tm = it->second.get();
@@ -717,7 +836,7 @@ private:
     }
 
     Iter locate( const ConcType* ty ) const {
-        auto it = as_non_const(nodes).find( Key{ ty } );
+        auto it = as_non_const(nodes).find( TypeKey{ ty } );
         if ( it == as_non_const(nodes).end() ) return Iter{};
 
         return it->second->leaf ?
@@ -726,7 +845,7 @@ private:
     }
 
     Iter locate( const NamedType* ty ) const {
-        auto it = as_non_const(nodes).find( Key{ ty } );
+        auto it = as_non_const(nodes).find( TypeKey{ ty } );
         if ( it == as_non_const(nodes).end() ) return Iter{};
 
         return it->second->leaf ?
@@ -735,7 +854,7 @@ private:
     }
 
     Iter locate( const PolyType* ty ) const {
-        auto it = as_non_const(nodes).find( Key{ ty } );
+        auto it = as_non_const(nodes).find( TypeKey{ ty } );
         if ( it == as_non_const(nodes).end() ) return Iter{};
 
         return it->second->leaf ?
@@ -749,7 +868,7 @@ private:
         // scan down trie as far as it matches
         TypeMap<Value>* tm = as_non_const(this);
         for ( unsigned i = 0; i < ty->size(); ++i ) {
-            auto it = tm->nodes.find( Key{ ty->types()[i] } );
+            auto it = tm->nodes.find( TypeKey{ ty->types()[i] } );
             if ( it == tm->nodes.end() ) return Iter{};
 
             rpre.emplace_back( it, tm );

@@ -125,10 +125,10 @@ bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& 
 	std::string n;
 
 	if ( parse_int(token, t) ) {
-		out.push_back( get_canon( types, t ) );
+		out.push_back( get_canon<ConcType>( types, t ) );
 		return true;
 	} else if ( parse_named_type(token, n) ) {
-		out.push_back( get_canon( types, n ) );
+		out.push_back( get_canon<NamedType>( types, n ) );
 		return true;
 	} else if ( parse_poly_type(token, n) ) {
 		if ( ! binding ) {
@@ -237,7 +237,7 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, CanonicalTypeMap& types ) {
 	// Check for concrete type expression
 	int t;
 	if ( parse_int(end, t) ) {
-		const ConcType* ty = get_canon( types, t );
+		const ConcType* ty = get_canon<ConcType>( types, t );
 		exprs.push_back( new VarExpr( ty ) );
 		token = end;
 		return true;
@@ -247,7 +247,7 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, CanonicalTypeMap& types ) {
 
 	// Check for named type expression
 	if ( parse_named_type(end, name) ) {
-		exprs.push_back( new VarExpr( get_canon( types, name ) ) );
+		exprs.push_back( new VarExpr( get_canon<NamedType>( types, name ) ) );
 		token = end;
 		return true;
 	}
