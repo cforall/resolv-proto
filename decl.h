@@ -111,23 +111,3 @@ protected:
 		}
 	}
 };
-
-/// A "variable" declaration
-class VarDecl final : public Decl {
-	const ConcType* ty_;  ///< Type of variable
-public:
-	typedef Decl Base;
-	
-	VarDecl(const ConcType* ty_) : ty_(ty_) {}
-	
-	virtual Decl* clone() const { return new VarDecl( ty_ ); }
-	
-	bool operator== (const VarDecl& that) const { return ty_ == that.ty_; }
-	bool operator!= (const VarDecl& that) const { return !(*this == that); }
-	
-	const ConcType* ty() const { return ty_; }
-protected:
-	virtual void trace(const GC& gc) const { gc << ty_; }
-
-	virtual void write(std::ostream& out) const { out << *ty_; }
-};

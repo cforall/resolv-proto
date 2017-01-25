@@ -18,6 +18,8 @@ public:
         auto tid = typeof(t);
         if ( tid == typeof<ConcType>() )
             return as<Self>(this)->visit( as<ConcType>(t), r );
+        else if ( tid == typeof<NamedType>() )
+            return as<Self>(this)->visit( as<NamedType>(t), r );
         else if ( tid == typeof<PolyType>() )
             return as<Self>(this)->visit( as<PolyType>(t), r );
         else if ( tid == typeof<VoidType>() )
@@ -42,6 +44,9 @@ public:
     
     /// Default implmentation of visit
     bool visit( const ConcType*, T& ) { return true; }
+
+    /// Default implementation of visit
+    bool visit( const NamedType*, T& ) { return true; }
     
     /// Default implmentation of visit
     bool visit( const PolyType*, T& ) { return true; }

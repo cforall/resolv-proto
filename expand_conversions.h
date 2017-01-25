@@ -64,7 +64,7 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
         #error User conversion expansion not yet implemented
 #else // ! RP_USER_CONVS
         auto tid = typeof( ty );
-        if ( typeof<ConcType>() == tid )  {
+        if ( typeof<ConcType>() == tid || typeof<NamedType>() == tid ) {
             for ( const Conversion& conv : conversions.find( ty ) ) {
                 const Type* to = conv.to->type;
                 Cost toCost = i->cost + conv.cost;
@@ -161,7 +161,7 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
         tid = typeof( ty );
     }
 
-    if ( typeof<ConcType>() == tid )  {
+    if ( typeof<ConcType>() == tid || typeof<NamedType>() == tid )  {
         // scan conversion list for matching type
         for ( const Conversion& conv : conversions.find( ty ) ) {
             if ( *conv.to->type == *targetType ) {
