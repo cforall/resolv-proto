@@ -1,0 +1,12 @@
+
+[1 / (0,2,0)] cons{T => 1}( 1 1 )
+
+[1 / (0,3,0)]{T@new => 1} cons{T => 1}( 1 new{T => 1}( ) )
+
+[1 / (0,5,0)]{T@new => 1} cons{T => 1}( cons{T => 1}( 1 new{T => 1}( ) ) 1 )
+
+[1 / (0,6,0)]{T@new => 1, T@new => 1} cons{T => 1}( cons{T => 1}( 1 new{T => 1}( ) ) new{T => 1}( ) )
+
+[1 / (0,6,0)]{[T@new, T@cons, T@new, T@cons] => 1} cons{T => 1}( cons{T => 1}( new{T => 1}( ) new{T => 1}( ) ) 1 )
+
+ERROR: unbound type variable on new{T => ???}

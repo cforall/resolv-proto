@@ -7,11 +7,22 @@
 class Args {
     std::ifstream* in_;
     std::ofstream* out_;
+    bool verbose_;
+
+    bool is_flag( char* arg, char flag ) {
+        return arg[0] == '-' && arg[1] == flag && arg[2] == '\0';
+    }
 
 public:
-    Args( int argc, char** argv ) {
-        in_ = nullptr;
-        out_ = nullptr;
+    Args( int argc, char** argv )
+        : in_(nullptr),
+          out_(nullptr),
+          verbose_(false)
+    {
+        if ( argc > 1 && is_flag( argv[1], 'v' ) ) {
+            verbose_ = true;
+            --argc; ++argv;
+        }
 
         switch ( argc ) {
         case 3:
@@ -26,7 +37,7 @@ public:
             return;
         }
 
-        std::cerr << "Usage: " << argv[0] << " [ infile [ outfile ] ]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << "[-v] [ infile [ outfile ] ]" << std::endl;
         std::exit(1);
     }
 
@@ -35,6 +46,7 @@ public:
         if ( out_ ) { delete out_; }
     }
 
-    std::istream& in() { return in_ ? *in_ : std::cin; }
-    std::ostream& out() { return out_ ? *out_ : std::cout; }
+    std::istream& in() const { return in_ ? *in_ : std::cin; }
+    std::ostream& out() const { return out_ ? *out_ : std::cout; }
+    bool verbose() const { return verbose_; }
 };

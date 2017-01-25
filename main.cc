@@ -16,10 +16,12 @@ int main(int argc, char **argv) {
 	
 	if ( ! parse_input( args.in(), funcs, exprs, types ) ) return 1;
 	
-	args.out() << std::endl;
-	for ( auto&& func : funcs ) { args.out() << *func << std::endl; }
-	args.out() << "%%" << std::endl;
-	for ( auto&& expr : exprs ) { args.out() << *expr << std::endl; }
+	if ( args.verbose() ) {
+		args.out() << std::endl;
+		for ( auto&& func : funcs ) { args.out() << *func << std::endl; }
+		args.out() << "%%" << std::endl;
+		for ( auto&& expr : exprs ) { args.out() << *expr << std::endl; }
+	}
 	
 	ConversionGraph conversions = make_conversions( types );
 	
