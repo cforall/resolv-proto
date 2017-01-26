@@ -1,7 +1,7 @@
 CXXFLAGS = -O0 -ggdb --std=c++14
 DEPFLAGS = -MMD -MP
 
-.PHONY: all clean distclean prebuild
+.PHONY: all clean distclean prebuild tests
 
 # set default target to rp
 all: rp
@@ -55,6 +55,9 @@ clean:
 distclean: clean
 	-rm $(OBJS:.o=.d)
 	-rm .lastmakeflags
+
+tests: rp
+	@tests/run.sh
 
 # so make doesn't fail without dependency files
 %.d: ;
