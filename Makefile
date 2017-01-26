@@ -1,7 +1,11 @@
+# Uncomment following two lines for debugging
+#OLD_SHELL := $(SHELL)
+#SHELL = $(warning [$@ ($^) ($?)])$(OLD_SHELL)
+
 CXXFLAGS = -O0 -ggdb --std=c++14
 DEPFLAGS = -MMD -MP
 
-.PHONY: all clean distclean prebuild tests
+.PHONY: all clean distclean tests
 
 # set default target to rp
 all: rp
@@ -22,9 +26,10 @@ CXXFLAGS += -DRP_DEBUG
 endif
 
 ifeq "${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG}" "${SORTED};${USER_CONVS};${DEBUG}"
-prebuild:
+.lastmakeflags:
+	@touch .lastmakeflags
 else
-prebuild: clean
+.lastmakeflags: clean
 	@echo "LAST_SORTED=${SORTED}" > .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
 	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
@@ -35,17 +40,17 @@ COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
 COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
 
 %.o : %.c
-%.o : %.c %d prebuild
+%.o : %.c %.d .lastmakeflags
 	$(COMPILE.c) $(OUTPUT_OPTION) -c %<
 
 %.o : %.cc
-%.o : %.cc %.d prebuild
+%.o : %.cc %.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # system objects
 OBJS = binding.o conversion.o gc.o parser.o resolver.o
 
-rp: main.cc rp.d prebuild $(OBJS)
+rp: main.cc rp.d $(OBJS) .lastmakeflags
 	$(COMPILE.cc) -o rp main.cc $(OBJS) $(LDFLAGS)
 
 clean:
@@ -63,7 +68,8 @@ tests: rp
 %.d: ;
 
 # so make won't delete dependency files
-.PRECIOUS: %.d
+.PRECIOUS: .lastmakeflags %.d
 
 # include dependency files
 -include: $(OBJS:.o=.d)
+-include rp.d
