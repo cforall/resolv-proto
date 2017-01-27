@@ -2,3 +2,4 @@ rp
 *.o
 *.d
 .lastmakeflags
+bench/
