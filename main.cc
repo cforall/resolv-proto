@@ -27,10 +27,12 @@ int main(int argc, char **argv) {
 	
 	Resolver resolve{ conversions, funcs, 
 					  [&args]( const Expr* e ) {
+						  if ( args.quiet() ) return;
 						  args.out() << "ERROR: no valid resolution for " << *e << std::endl;
 					  }, 
 					  [&args]( const Expr* e, List<TypedExpr>::const_iterator i, 
                                List<TypedExpr>::const_iterator end ) {
+						  if ( args.quiet() ) return;
 						  args.out() << "ERROR: ambiguous resolution for " << *e << "\n"
 	                                 << "       candidates are:\n";
 	
@@ -40,16 +42,17 @@ int main(int argc, char **argv) {
 						  args.out() << std::endl;
 					  },
 					  [&args]( const Expr*, const TypeBinding& tb ) {
+						  if ( args.quiet() ) return;
 						  args.out() << "ERROR: unbound type variable"
 						             << (tb.unbound() > 1 ? "s" : "") 
 									 << " on " << tb.name << tb << std::endl;
 					  } };
 	
 	for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-		args.out() << "\n";
+		if ( ! args.quiet() ) args.out() << "\n";
 		const Interpretation *i = resolve( *e );
 		if ( i->is_valid() ) {
-			args.out() << *i << std::endl;
+			if ( ! args.quiet() ) args.out() << *i << std::endl;
 			*e = i->expr;
 		} 
 	}
