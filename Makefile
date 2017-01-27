@@ -31,7 +31,8 @@ else
 	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
 endif
 
-# build into specific build directory
+# set up source and build directories
+VPATH = src
 BUILDDIR = build
 
 # rewrite object generation to auto-determine dependencies, run prebuild
@@ -50,7 +51,7 @@ $(BUILDDIR)/%.o : %.cc %.d .lastmakeflags
 OBJS = $(addprefix $(BUILDDIR)/, binding.o conversion.o gc.o parser.o resolver.o)
 
 rp: main.cc rp.d $(OBJS) .lastmakeflags
-	$(COMPILE.cc) -o rp main.cc $(OBJS) $(LDFLAGS)
+	$(COMPILE.cc) -o rp $< $(OBJS) $(LDFLAGS)
 
 clean:
 	-rm $(OBJS)
