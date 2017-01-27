@@ -7,7 +7,7 @@
 #include "cow.h"
 #include "data.h"
 #include "environment.h"
-#include "type.h"
+#include "ast/type.h"
 
 template<typename T>
 using is_conc_or_named_type = typename std::enable_if< std::is_same<T, ConcType>::value 

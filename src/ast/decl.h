@@ -7,10 +7,11 @@
 #include <vector>
 
 #include "ast.h"
-#include "binding.h"
-#include "binding_sub_mutator.h"
-#include "data.h"
 #include "type.h"
+
+#include "../binding.h"
+#include "../binding_sub_mutator.h"
+#include "../data.h"
 
 /// A resolver declaration
 class Decl : public ASTNode {

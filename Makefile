@@ -32,7 +32,7 @@ else
 endif
 
 # set up source and build directories
-VPATH = src
+VPATH = src $(addprefix src/, ast parser)
 BUILDDIR = build
 
 # rewrite object generation to auto-determine dependencies, run prebuild

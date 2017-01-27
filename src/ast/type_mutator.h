@@ -1,10 +1,11 @@
 #pragma once
 
-#include "data.h"
 #include "mutator.h"
-#include "option.h"
 #include "type.h"
 #include "type_visitor.h"
+
+#include "../data.h"
+#include "../option.h"
 
 /// Produces a mutated copy of a type, where any un-mutated subtypes are shared with the 
 /// original.

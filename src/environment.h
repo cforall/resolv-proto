@@ -8,7 +8,7 @@
 #include "cow.h"
 #include "data.h"
 #include "gc.h"
-#include "type.h"
+#include "ast/type.h"
 
 /// Binding for otherwise-unbound return type variables in an interpretation
 class Environment : public GC_Traceable {

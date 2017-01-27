@@ -8,13 +8,13 @@
 #include <vector>
 
 #include "ast.h"
-#include "binding.h"
-#include "binding_sub_mutator.h"
-#include "conversion.h"
-#include "data.h"
 #include "decl.h"
 #include "type.h"
-#include "type_mutator.h"
+
+#include "../binding.h"
+#include "../binding_sub_mutator.h"
+#include "../conversion.h"
+#include "../data.h"
 
 /// A resolvable expression
 class Expr : public ASTNode {

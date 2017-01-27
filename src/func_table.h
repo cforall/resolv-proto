@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "decl.h"
+#include "ast/decl.h"
 #include "flat_map.h"
 #include "gc.h"
 

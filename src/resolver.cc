@@ -13,15 +13,16 @@
 #include "eager_merge.h"
 #include "environment.h"
 #include "expand_conversions.h"
-#include "expr.h"
 #include "func_table.h"
 #include "interpretation.h"
-#include "mutator.h"
 #include "nway_merge.h"
 #include "option.h"
-#include "typed_expr_visitor.h"
-#include "typed_expr_mutator.h"
 #include "unify.h"
+
+#include "ast/expr.h"
+#include "ast/mutator.h"
+#include "ast/typed_expr_visitor.h"
+#include "ast/typed_expr_mutator.h"
 
 /// Checks the type assertions of a function call.
 bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings, 

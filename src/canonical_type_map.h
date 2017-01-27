@@ -2,7 +2,7 @@
 
 #include "data.h"
 #include "gc.h"
-#include "type.h"
+#include "ast/type.h"
 #include "type_map.h"
 
 typedef TypeMap< const Type* > CanonicalTypeMap;

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "binding.h"
-#include "type.h"
-#include "type_mutator.h"
+
+#include "ast/type.h"
+#include "ast/type_mutator.h"
 
 /// Replaces polymorphic type variables in a return type by either their substitution 
 /// or a branded polymorphic type variable.

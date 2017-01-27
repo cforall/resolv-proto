@@ -7,10 +7,10 @@
 #include "cost.h"
 #include "cow.h"
 #include "environment.h"
-#include "expr.h"
+#include "ast/expr.h"
+#include "ast/type.h"
 #include "func_table.h"
 #include "interpretation.h"
-#include "type.h"
 
 /// Effect to run on invalid interpretation; argument is the expression which 
 /// could not be resolved

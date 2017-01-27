@@ -9,9 +9,9 @@
 #include "cow.h"
 #include "data.h"
 #include "environment.h"
-#include "expr.h"
+#include "ast/expr.h"
+#include "ast/type.h"
 #include "gc.h"
-#include "type.h"
 
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {

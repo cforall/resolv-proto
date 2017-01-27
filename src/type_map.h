@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "data.h"
-#include "type.h"
+#include "ast/type.h"
 
 /// Key type for ConcType
 struct ConcKey {

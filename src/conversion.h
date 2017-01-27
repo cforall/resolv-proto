@@ -6,7 +6,7 @@
 #include "canonical_type_map.h"
 #include "cost.h"
 #include "gc.h"
-#include "type.h"
+#include "ast/type.h"
 #include "type_map.h"
 
 /// Graph of conversions
