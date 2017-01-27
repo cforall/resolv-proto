@@ -1,7 +1,3 @@
-# Uncomment following two lines for debugging
-#OLD_SHELL := $(SHELL)
-#SHELL = $(warning [$@ ($^) ($?)])$(OLD_SHELL)
-
 CXXFLAGS = -O0 -ggdb --std=c++14
 DEPFLAGS = -MMD -MP
 
@@ -35,20 +31,23 @@ else
 	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
 endif
 
+# build into specific build directory
+BUILDDIR = build
+
 # rewrite object generation to auto-determine dependencies, run prebuild
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
 COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
 
-%.o : %.c
-%.o : %.c %.d .lastmakeflags
+$(BUILDDIR)/%.o : %.c
+$(BUILDDIR)/%.o : %.c %.d .lastmakeflags
 	$(COMPILE.c) $(OUTPUT_OPTION) -c %<
 
-%.o : %.cc
-%.o : %.cc %.d .lastmakeflags
+$(BUILDDIR)/%.o : %.cc
+$(BUILDDIR)/%.o : %.cc %.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # system objects
-OBJS = binding.o conversion.o gc.o parser.o resolver.o
+OBJS = $(addprefix $(BUILDDIR)/, binding.o conversion.o gc.o parser.o resolver.o)
 
 rp: main.cc rp.d $(OBJS) .lastmakeflags
 	$(COMPILE.cc) -o rp main.cc $(OBJS) $(LDFLAGS)
@@ -59,6 +58,7 @@ clean:
 
 distclean: clean
 	-rm $(OBJS:.o=.d)
+	-rm rp.d
 	-rm .lastmakeflags
 
 test: rp
