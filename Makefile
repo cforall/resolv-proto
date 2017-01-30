@@ -32,12 +32,14 @@ else
 endif
 
 # set up source and build directories
-VPATH = src $(addprefix src/, ast parser)
+SRCDIR = src
+VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast driver)
+IFLAGS = -I$(SRCDIR)
 BUILDDIR = build
 
 # rewrite object generation to auto-determine dependencies, run prebuild
-COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
-COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(IFLAGS) $(TARGET_ARCH)
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(IFLAGS) $(TARGET_ARCH)
 
 $(BUILDDIR)/%.o : %.c
 $(BUILDDIR)/%.o : %.c %.d .lastmakeflags
@@ -50,7 +52,7 @@ $(BUILDDIR)/%.o : %.cc %.d .lastmakeflags
 # system objects
 OBJS = $(addprefix $(BUILDDIR)/, binding.o conversion.o gc.o parser.o resolver.o)
 
-rp: main.cc rp.d $(OBJS) .lastmakeflags
+rp: rp.cc rp.d $(OBJS) .lastmakeflags
 	$(COMPILE.cc) -o rp $< $(OBJS) $(LDFLAGS)
 
 clean:

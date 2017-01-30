@@ -10,8 +10,8 @@
 
 #include "ast.h"
 
-#include "../binding.h"
-#include "../data.h"
+#include "binding.h"
+#include "data.h"
 
 /// A type declaration
 class Type : public ASTNode {

@@ -6,7 +6,7 @@
 #include "mutator.h"
 #include "typed_expr_visitor.h"
 
-#include "../data.h"
+#include "data.h"
 
 /// Produces a mutated copy of a typed expression, where any un-mutated subexpressions are 
 /// shared with the original.

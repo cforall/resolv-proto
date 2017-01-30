@@ -4,7 +4,7 @@
 
 #include "type.h"
 
-#include "../data.h"
+#include "data.h"
 
 /// Visitor for types.
 /// Uses curiously-recurring template pattern for static dispatch of visit overloads

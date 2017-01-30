@@ -4,7 +4,7 @@
 
 #include "expr.h"
 
-#include "../data.h"
+#include "data.h"
 
 /// Visitor for typed expressions. 
 template<typename Self, typename T>
