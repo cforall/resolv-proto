@@ -14,7 +14,9 @@
 #include "binding.h"
 #include "binding_sub_mutator.h"
 #include "conversion.h"
-#include "data.h"
+#include "data/cast.h"
+#include "data/list.h"
+#include "data/mem.h"
 
 /// A resolvable expression
 class Expr : public ASTNode {

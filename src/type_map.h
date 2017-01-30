@@ -12,8 +12,11 @@
 #include <utility>
 #include <vector>
 
-#include "data.h"
 #include "ast/type.h"
+#include "data/cast.h"
+#include "data/collections.h"
+#include "data/list.h"
+#include "data/mem.h"
 
 /// Key type for ConcType
 struct ConcKey {

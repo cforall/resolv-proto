@@ -4,7 +4,8 @@
 #include "type.h"
 #include "type_visitor.h"
 
-#include "data.h"
+#include "data/list.h"
+#include "data/mem.h"
 #include "data/option.h"
 
 /// Produces a mutated copy of a type, where any un-mutated subtypes are shared with the 

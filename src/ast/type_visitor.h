@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 
 #include "type.h"
 
-#include "data.h"
+#include "data/cast.h"
 
 /// Visitor for types.
 /// Uses curiously-recurring template pattern for static dispatch of visit overloads

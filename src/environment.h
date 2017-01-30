@@ -6,9 +6,11 @@
 #include <vector>
 
 #include "ast/type.h"
+#include "data/cast.h"
 #include "data/cow.h"
 #include "data/gc.h"
-#include "data.h"
+#include "data/list.h"
+#include "data/mem.h"
 
 /// Binding for otherwise-unbound return type variables in an interpretation
 class Environment : public GC_Traceable {
@@ -99,18 +101,18 @@ public:
     /// Constructs a brand new environment with a single binding
     Environment( const PolyType* orig, const Type* sub = nullptr ) : classes(), bindings() {
         insert( orig, sub );
-        validate();
+        // validate();
     }
 
     /// Constructs a brand new environment with two poly types bound together
     Environment( const PolyType* orig, const PolyType* added ) : classes(), bindings() {
         insert( orig, added );
-        validate();
+        // validate();
     }
 
     Environment( const PolyType* orig, nullptr_t ) : classes(), bindings() {
         insert( orig );
-        validate();
+        // validate();
     }
     
     /// Finds a mapping in this environment, returns nullptr if none
@@ -127,7 +129,7 @@ public:
         } else {
             classes[ it->second ].bound = sub;
         }
-        validate();
+        // validate();
     }
 
     /// Adds the second PolyType to the class of the first; the second PolyType should not 
@@ -140,7 +142,7 @@ public:
             classes[ it->second ].vars.push_back( added );
             bindings[ added ] = it->second;
         }
-        validate();
+        // validate();
     }
 
     /// Merges the target environment with this one; returns false if fails, but does 
@@ -199,7 +201,7 @@ public:
                 bindings[ var ] = cid;
             }
         }
-        validate();
+        // validate();
     }
 
     /// Applies the bindings in this environment to their local type bindings

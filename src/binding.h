@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "data.h"
+#include "data/cast.h"
 #include "data/gc.h"
 
 class Interpretation;

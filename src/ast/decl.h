@@ -11,7 +11,8 @@
 
 #include "binding.h"
 #include "binding_sub_mutator.h"
-#include "data.h"
+#include "data/list.h"
+#include "data/mem.h"
 
 /// A resolver declaration
 class Decl : public ASTNode {

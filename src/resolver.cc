@@ -7,7 +7,6 @@
 #include "binding.h"
 #include "binding_sub_mutator.h"
 #include "cost.h"
-#include "data.h"
 #include "debug.h"
 #include "eager_merge.h"
 #include "environment.h"
@@ -21,7 +20,10 @@
 #include "ast/mutator.h"
 #include "ast/typed_expr_visitor.h"
 #include "ast/typed_expr_mutator.h"
+#include "data/cast.h"
 #include "data/cow.h"
+#include "data/list.h"
+#include "data/mem.h"
 #include "data/option.h"
 
 /// Checks the type assertions of a function call.

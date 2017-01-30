@@ -1,7 +1,7 @@
 #pragma once
 
-#include "data.h"
 #include "ast/type.h"
+#include "data/cast.h"
 #include "data/gc.h"
 #include "type_map.h"
 

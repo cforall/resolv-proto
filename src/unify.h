@@ -4,9 +4,9 @@
 
 #include "binding.h"
 #include "cost.h"
-#include "data.h"
 #include "environment.h"
 #include "ast/type.h"
+#include "data/cast.h"
 #include "data/cow.h"
 
 template<typename T>

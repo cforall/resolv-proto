@@ -11,7 +11,9 @@
 #include "ast.h"
 
 #include "binding.h"
-#include "data.h"
+#include "data/cast.h"
+#include "data/list.h"
+#include "data/mem.h"
 
 /// A type declaration
 class Type : public ASTNode {
@@ -125,8 +127,6 @@ protected:
 		return std::hash<std::string>{}( name_ );
 	}
 };
-
-class TypeBinding;
 
 /// Representation of a polymorphic type
 class PolyType : public Type {

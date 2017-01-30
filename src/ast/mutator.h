@@ -1,6 +1,7 @@
 #pragma once
 
-#include "data.h"
+#include "data/list.h"
+#include "data/mem.h"
 #include "data/option.h"
 
 /// Mutates all of the input list using the mutation functions of self. 

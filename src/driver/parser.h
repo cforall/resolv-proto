@@ -3,10 +3,10 @@
 #include <iostream>
 
 #include "canonical_type_map.h"
-#include "data.h"
+#include "func_table.h"
 #include "ast/expr.h"
 #include "ast/type.h"
-#include "func_table.h"
+#include "data/list.h"
 
 /// Parses input according to the following format:
 ///
