@@ -2,10 +2,11 @@
 
 #include "binding.h"
 
+#include "interpretation.h"
+
 #include "ast/decl.h"
 #include "ast/type.h"
 #include "data/gc.h"
-#include "interpretation.h"
 
 std::ostream& operator<< (std::ostream& out, const TypeBinding& tb) {
     if ( tb.empty() ) return out << "{}";

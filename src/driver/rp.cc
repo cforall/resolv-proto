@@ -1,13 +1,13 @@
 #include "args.h"
 #include "parser.h"
 
-#include "canonical_type_map.h"
-#include "conversion.h"
-#include "func_table.h"
-#include "interpretation.h"
-#include "resolver.h"
 #include "ast/expr.h"
 #include "ast/type.h"
+#include "resolver/canonical_type_map.h"
+#include "resolver/conversion.h"
+#include "resolver/func_table.h"
+#include "resolver/interpretation.h"
+#include "resolver/resolver.h"
 
 int main(int argc, char **argv) {
 	Args args(argc, argv);

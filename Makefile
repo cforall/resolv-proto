@@ -33,7 +33,7 @@ endif
 
 # set up source and build directories
 SRCDIR = src
-VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver merge)
+VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver merge resolver)
 IFLAGS = -I$(SRCDIR)
 BUILDDIR = build
 

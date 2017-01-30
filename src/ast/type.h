@@ -10,10 +10,10 @@
 
 #include "ast.h"
 
-#include "binding.h"
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "resolver/binding.h"
 
 /// A type declaration
 class Type : public ASTNode {

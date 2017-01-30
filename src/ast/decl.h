@@ -9,10 +9,10 @@
 #include "ast.h"
 #include "type.h"
 
-#include "binding.h"
-#include "binding_sub_mutator.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "resolver/binding.h"
+#include "resolver/binding_sub_mutator.h"
 
 /// A resolver declaration
 class Decl : public ASTNode {

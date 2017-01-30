@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#include "canonical_type_map.h"
-#include "func_table.h"
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/list.h"
+#include "resolver/canonical_type_map.h"
+#include "resolver/func_table.h"
 
 /// Parses input according to the following format:
 ///

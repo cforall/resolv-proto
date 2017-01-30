@@ -11,12 +11,12 @@
 #include "decl.h"
 #include "type.h"
 
-#include "binding.h"
-#include "binding_sub_mutator.h"
-#include "conversion.h"
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "resolver/binding.h"
+#include "resolver/binding_sub_mutator.h"
+#include "resolver/conversion.h"
 
 /// A resolvable expression
 class Expr : public ASTNode {

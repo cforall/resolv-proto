@@ -7,6 +7,7 @@
 #include "binding.h"
 #include "cost.h"
 #include "environment.h"
+
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/cast.h"

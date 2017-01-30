@@ -5,9 +5,10 @@
 
 #include "canonical_type_map.h"
 #include "cost.h"
+#include "type_map.h"
+
 #include "ast/type.h"
 #include "data/gc.h"
-#include "type_map.h"
 
 /// Graph of conversions
 class ConversionGraph {

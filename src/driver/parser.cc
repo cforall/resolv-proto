@@ -4,13 +4,13 @@
 #include <iostream>
 #include <string>
 
-#include "binding.h"
-#include "func_table.h"
 #include "ast/decl.h"
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "resolver/binding.h"
+#include "resolver/func_table.h"
 
 /// Skips all whitespace at token; mutates parameter and returns true if any change.
 /// token must not be null.
