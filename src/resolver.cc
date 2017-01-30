@@ -8,12 +8,10 @@
 #include "binding_sub_mutator.h"
 #include "cost.h"
 #include "debug.h"
-#include "eager_merge.h"
 #include "environment.h"
 #include "expand_conversions.h"
 #include "func_table.h"
 #include "interpretation.h"
-#include "nway_merge.h"
 #include "unify.h"
 
 #include "ast/expr.h"
@@ -25,6 +23,7 @@
 #include "data/list.h"
 #include "data/mem.h"
 #include "data/option.h"
+#include "merge/eager_merge.h"
 
 /// Checks the type assertions of a function call.
 bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings, 
