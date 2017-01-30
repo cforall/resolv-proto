@@ -6,12 +6,12 @@
 
 #include "binding.h"
 #include "cost.h"
-#include "cow.h"
 #include "data.h"
 #include "environment.h"
 #include "ast/expr.h"
 #include "ast/type.h"
-#include "gc.h"
+#include "data/cow.h"
+#include "data/gc.h"
 
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {

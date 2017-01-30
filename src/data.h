@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "gc.h"
+#include "data/gc.h"
 
 /// use unique_ptr
 using std::unique_ptr;

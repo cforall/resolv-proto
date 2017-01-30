@@ -5,7 +5,7 @@
 #include "type_visitor.h"
 
 #include "data.h"
-#include "option.h"
+#include "data/option.h"
 
 /// Produces a mutated copy of a type, where any un-mutated subtypes are shared with the 
 /// original.

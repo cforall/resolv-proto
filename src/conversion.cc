@@ -3,7 +3,7 @@
 
 #include "conversion.h"
 #include "data.h"
-#include "gc.h"
+#include "data/gc.h"
 
 const ConversionGraph::ConversionList ConversionGraph::no_conversions = {};
 

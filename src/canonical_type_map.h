@@ -1,8 +1,8 @@
 #pragma once
 
 #include "data.h"
-#include "gc.h"
 #include "ast/type.h"
+#include "data/gc.h"
 #include "type_map.h"
 
 typedef TypeMap< const Type* > CanonicalTypeMap;

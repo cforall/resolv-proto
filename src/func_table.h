@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "ast/decl.h"
-#include "flat_map.h"
-#include "gc.h"
+#include "data/flat_map.h"
+#include "data/gc.h"
 
 /// Functor to extract the number of parameters from a function declaration
 struct ExtractNParams {

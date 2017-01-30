@@ -4,7 +4,7 @@
 
 #include "ast/decl.h"
 #include "ast/type.h"
-#include "gc.h"
+#include "data/gc.h"
 #include "interpretation.h"
 
 std::ostream& operator<< (std::ostream& out, const TypeBinding& tb) {

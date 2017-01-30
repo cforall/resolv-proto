@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "data.h"
-#include "gc.h"
+#include "data/gc.h"
 
 class Interpretation;
 class FuncDecl;

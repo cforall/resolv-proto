@@ -33,7 +33,7 @@ endif
 
 # set up source and build directories
 SRCDIR = src
-VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast driver)
+VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver)
 IFLAGS = -I$(SRCDIR)
 BUILDDIR = build
 

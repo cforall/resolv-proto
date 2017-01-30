@@ -5,10 +5,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "cow.h"
-#include "data.h"
-#include "gc.h"
 #include "ast/type.h"
+#include "data/cow.h"
+#include "data/gc.h"
+#include "data.h"
 
 /// Binding for otherwise-unbound return type variables in an interpretation
 class Environment : public GC_Traceable {

@@ -5,12 +5,13 @@
 #include "binding.h"
 #include "conversion.h"
 #include "cost.h"
-#include "cow.h"
 #include "environment.h"
-#include "ast/expr.h"
-#include "ast/type.h"
 #include "func_table.h"
 #include "interpretation.h"
+
+#include "ast/expr.h"
+#include "ast/type.h"
+#include "data/cow.h"
 
 /// Effect to run on invalid interpretation; argument is the expression which 
 /// could not be resolved
