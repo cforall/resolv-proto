@@ -10,10 +10,10 @@
 
 /// Parses input according to the following format:
 ///
-/// start := "\n"* <function_decl>* "%%\n" <resolv_expr>*
-/// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* <type_assertion>* "\n"+
+/// start := NL* <function_decl>* "%%\n" <resolv_expr>*
+/// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* <type_assertion>* NL+
 /// type_assertion := "|" (<type>" ")* <name> (" "<type>)*
-/// resolv_expr := <subexpr> "\n"+
+/// resolv_expr := <subexpr> NL+
 /// subexpr := <conc_type> | <named_type> | <name> " (" (" "<subexpr>)* " )"
 /// name := [a-z][a-z0-9]*
 /// tag := <name>
@@ -21,6 +21,7 @@
 /// conc_type := "-"?[0-9]+
 /// named_type := "#"[A-Za-z_][A-Za-z_0-9]*
 /// poly_type := [A-Z][a-z0-9]*
+/// NL := "\n" | "//" . ~ "\n" 
 ///
 /// Semantically, types are given numeric identifiers, and also stand in for 
 /// variables of that type; the conversion cost from x => y is |x-y|; this is 

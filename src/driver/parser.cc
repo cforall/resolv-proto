@@ -33,8 +33,11 @@ bool match_char(char *&token, char c) {
 	return false;
 }
 
-/// Checks if a C string is empty
-bool is_empty(char *token) { return *token == '\0'; }
+/// Checks if a line is empty (includes ends with a comment)
+bool is_empty(const char *token) {
+	return *token == '\0' || (token[0] == '/' && token[1] == '/');
+}
+bool is_empty(const std::string& line) { return is_empty( line.data() ); }
 
 /// Parses an integer, returning true, storing result into ret, 
 /// and incrementing token if so. token must not be null. 
@@ -291,7 +294,7 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 	// parse declarations
 	while ( std::getline(in, line) ) {
 		++n;
-		if ( line.empty() ) continue;
+		if ( is_empty(line) ) continue;
 		if ( line == delim ) break;
 		
 		bool ok = parse_decl(const_cast<char*>(line.data()), funcs, types);
@@ -304,7 +307,7 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 	// parse expressions
 	while ( std::getline(in, line) ) {
 		++n;
-		if ( line.empty() ) continue;
+		if ( is_empty(line) ) continue;
 		
 		bool ok = parse_expr(const_cast<char*>(line.data()), exprs, types);
 		if ( ! ok ) {
