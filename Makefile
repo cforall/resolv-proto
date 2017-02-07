@@ -4,7 +4,7 @@ DEPFLAGS = -MMD -MP
 .PHONY: all clean distclean test bench
 
 # set default target to rp
-all: rp
+all: rp bench_gen
 
 # handle make flags
 -include .lastmakeflags
@@ -33,7 +33,7 @@ endif
 
 # set up source and build directories
 SRCDIR = src
-VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver merge resolver)
+VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver merge resolver bench_gen)
 IFLAGS = -I$(SRCDIR)
 BUILDDIR = build
 
@@ -54,6 +54,9 @@ OBJS = $(addprefix $(BUILDDIR)/, binding.o conversion.o gc.o parser.o resolver.o
 
 rp: rp.cc rp.d $(OBJS) .lastmakeflags
 	$(COMPILE.cc) -o rp $< $(OBJS) $(LDFLAGS)
+
+bench_gen: bench_gen.cc bench_gen.d
+	$(COMPILE.cc) -o bench_gen $< $(LDFLAGS)
 
 clean:
 	-rm $(OBJS)
@@ -79,3 +82,4 @@ bench: rp
 # include dependency files
 -include: $(OBJS:.o=.d)
 -include rp.d
+-include bench_gen.d

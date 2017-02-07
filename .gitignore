@@ -1,5 +1,6 @@
-rp
+/rp
+/bench_gen
 *.o
 *.d
 .lastmakeflags
-bench/
+/bench/
