@@ -28,4 +28,8 @@ public:
     result_type operator() () { return g(e); }
 };
 
+/// Wrapper for std::geometric_distribution<unsigned>
 using GeometricRandomGenerator = RandomGenerator<std::geometric_distribution<unsigned>>;
+
+/// Wrapper for std::uniform_int_distribution
+using UniformRandomGenerator = RandomGenerator<std::uniform_int_distribution<unsigned>>;
