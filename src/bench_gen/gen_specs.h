@@ -1,124 +1,48 @@
 #pragma once
 
-#include <algorithm>
-#include <vector>
+#include "rand.h"
+#include "range.h"
 
 #include "data/mem.h"
-#include "data/vector_map.h"
+#include "data/option.h"
 
-/// Abstracts a (possibly randomly-generated) range of values
-class Range {
-protected:
-    unsigned n;  ///< Number of values in the range
+/// Arguments to benchmark generator
+struct Args {
+    unsigned n;
+    unsigned m;
+    unsigned high;
+    option<unsigned> seed;
 
-    Range(unsigned n) : n(n) {}
-
-public:
-    virtual ~Range() = default;
-
-    /// Number of elements in the range
-    unsigned size() const { return n; }
-
-    /// Value at index i (must be < n)
-    virtual unsigned at(unsigned i) const = 0;
-
-    /// Maximum value in range
-    virtual unsigned max() const = 0;
-};
-
-/// Produces the same value repeatedly
-class ConstantRange : public Range {
-    unsigned c;   ///< Actual value generated
-
-public:
-    ConstantRange(unsigned n, unsigned c) : Range(n), c(c) {}
-
-    unsigned at(unsigned) const final { return c; }
-
-    unsigned max() const final { return c; }
-};
-
-/// Produces a range of values following the histogram for a given random distribution
-/// Dist's operator() should return a new unsigned
-template<typename Dist>
-class HistRange : public Range {
-    VectorMap<unsigned> hist;  ///< Actual values generated
-
-public:
-    template<typename... Args>
-    HistRange(unsigned n, Args&&... args) : Range(n), hist() {
-        Dist r{ forward<Args>(args)... };  // distribution generator
-        // Generate histogram
-        for ( unsigned i = 0; i < n; ++i ) {
-            ++hist.at( r() );
-        }
-        // Replace histogram with prefix sum
-        unsigned sum = 0;
-        for ( auto& entry : hist ) {
-            entry.second += sum;
-            sum = entry.second;
+    Args(int argc, char** argv) 
+    : n(1500), m(750), high(120), seed() {
+        switch (argc) {
+        case 5:
+            seed = std::atoi(argv[4]);
+        case 4:
+            high = std::atoi(argv[3]);
+        case 3:
+            m = std::atoi(argv[2]);
+        case 2:
+            n = std::atoi(argv[1]);
+        case 1:
+            break;
         }
     }
-
-    unsigned at(unsigned i) const final {
-        using entry = VectorMap<unsigned>::const_value_type;
-        // get element in range
-        auto it = std::lower_bound( hist.begin(), hist.end(), i, 
-            []( const entry& a, const unsigned& b ) {
-                return a.second < b;
-            } );
-        // return difference from start
-        return it - hist.begin();
-    }
-
-    unsigned max() const final { return hist.size() - 1; }
 };
 
-/// Produces a range of values with partition sizes drawn from a given random distribution
-/// Dist's operator() should return a new unsigned
-template<typename Dist>
-class PartitionRange : public Range {
-    std::vector<unsigned> hist;
-
-public:
-    template<typename... Args>
-    PartitionRange(unsigned n, Args&&... args) : Range(n), hist() {
-        Dist r{ forward<Args>(args)... };  // partition generator
-        // Generate upper bounds of partitions
-        unsigned sum;
-        for ( sum = r(); sum < n; sum += r() ) {
-            hist.push_back( sum );
-        }
-        n = sum;  // reset range upper bound
-    }
-
-    unsigned at(unsigned i) const final {
-        auto it = std::lower_bound( hist.begin(), hist.end(), i );
-        return it - hist.begin();
-    }
-
-    unsigned max() const final { return hist.size() - 1; }
-};
-
-/// First set of `m` values are drawn from range R, remainder are a one-to-one function
-template<typename R>
-class LongTailRange : public Range {
-    R head;      ///< Underlying range
-
-public:
-    /// Builds a range of size `n` from the underlying range of size `m` (with other args Args),
-    /// remainder c
-    template<typename... Args>
-    LongTailRange(unsigned n, unsigned m, Args&&... args)
-        : Range(n), head(m, forward<Args>(args)...) {}
-    
-    unsigned at(unsigned i) const final {
-        return i < head.size() ? head.at(i) : i - head.size() + head.max();
-    }
-
-    unsigned max() const final { return n - head.size() + head.max() + 1; }
-};
-
+/// Parameters to generate from
 struct GenSpecs {
+    def_random_engine random_engine;
     unique_ptr<Range> decl_names;
+    unique_ptr<Generator<unsigned>> n_parms;
+    unique_ptr<Generator<unsigned>> n_rets;
+
+    GenSpecs(Args&& args) 
+    : random_engine( args.seed ? new_random_engine( *args.seed ) : new_random_engine() ) {
+        decl_names = make_unique<DeclNameRange>( args.n, args.m, args.high, random_engine );
+        auto parm_dists = { 0.05, 0.35, 0.55, 0.03, 0.01, 0.01 };
+        n_parms = make_unique<DiscreteRandomGenerator>( random_engine, move(parm_dists) );
+        auto ret_dists = { 0.15, 0.85 };
+        n_rets = make_unique<DiscreteRandomGenerator>( random_engine, move(ret_dists) );
+    }
 };
