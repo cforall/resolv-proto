@@ -10,34 +10,35 @@
 
 int main(int argc, char** argv) {
     GenSpecs specs{ Args{ argc, argv } };
-    
-    unsigned over_ind = 0;
-    unsigned last = 0;
-    for (unsigned i = 0; i < specs.decl_names->size(); ++i) {
-        unsigned crnt = specs.decl_names->at( i );
-        if ( crnt != last ) {
-            over_ind = 0;
+
+    unsigned n_decls = 0;
+    unsigned i_name = 0;
+    while ( n_decls < specs.n_decls ) {
+        // generate overloads with a given name
+        unsigned n_with_name = (*specs.n_overloads)();
+        std::string name = NameGen::get( i_name++ );
+        for (unsigned i_with_name = 0; i_with_name < n_with_name; ++i_with_name ) {
+            unsigned n_rets = (*specs.n_rets)();
+            unsigned n_parms = (*specs.n_parms)();
+
+            // print parameters
+            for (unsigned ret = 0; ret < n_rets; ++ret) {
+                std::cout << "1 ";
+            }
+
+            // print name+tag
+            std::cout << name;
+            if ( n_with_name > 1 ) { std::cout << "-o" << i_with_name; }
+
+            // print returns
+            for (unsigned parm = 0; parm < n_parms; ++parm) {
+                std::cout << " 1";
+            }
+
+            std::cout << std::endl;
+
+            // break if out of declarations
+            if ( ++n_decls == specs.n_decls ) break;
         }
-
-        unsigned n_rets = (*specs.n_rets)();
-        unsigned n_parms = (*specs.n_parms)();
-
-        // print parameters
-        for (unsigned ret = 0; ret < n_rets; ++ret) {
-            std::cout << "1 ";
-        }
-
-        // print name+tag
-        std::cout << NameGen::get( last ) << "-o" << over_ind;
-
-        // print returns
-        for (unsigned parm = 0; parm < n_parms; ++parm) {
-            std::cout << " 1";
-        }
-
-        std::cout << std::endl;
-        
-        ++over_ind;
-        last = crnt;
     }
 }
