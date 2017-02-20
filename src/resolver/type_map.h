@@ -357,7 +357,8 @@ private:
             Base* base;   ///< TypeMap containing concrete map
 
             Backtrack() = default;
-            Backtrack( ConcIter& i, Base* b ) : it( i ), base( b ) {}
+            Backtrack( const ConcIter& i, Base* b ) : it( i ), base( b ) {}
+            Backtrack( ConcIter&& i, Base* b ) : it( move(i) ), base( b ) {}
 
             bool operator== ( const Backtrack& o ) const { return it == o.it && base == o.base; }
             bool operator!= ( const Backtrack& that ) const { return !( *this == that ); }
@@ -368,9 +369,8 @@ private:
         BacktrackList prefix;  ///< Prefix of tuple types
 
         inline void push_prefix() {
-            auto next = base->nodes.begin();
-            prefix.emplace_back( next, base );
-            base = next->second.get();
+            prefix.emplace_back( base->nodes.begin(), base );
+            base = prefix.back().it->second.get();
         }
 
         /// Default constructor; use for end-of-map iterator
