@@ -2,34 +2,10 @@
 
 #include <vector>
 
+#include "gen_args.h"
 #include "rand.h"
 
 #include "data/mem.h"
-#include "data/option.h"
-
-/// Arguments to benchmark generator
-struct Args {
-    unsigned n;
-    unsigned m;
-    unsigned high;
-    option<unsigned> seed;
-
-    Args(int argc, char** argv) 
-    : n(1500), m(750), high(120), seed() {
-        switch (argc) {
-        case 5:
-            seed = std::atoi(argv[4]);
-        case 4:
-            high = std::atoi(argv[3]);
-        case 3:
-            m = std::atoi(argv[2]);
-        case 2:
-            n = std::atoi(argv[1]);
-        case 1:
-            break;
-        }
-    }
-};
 
 /// Parameters to generate from
 struct GenSpecs {

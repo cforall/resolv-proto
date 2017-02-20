@@ -1,6 +1,6 @@
 #include "parser.h"
+#include "parser_common.h"
 
-#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -11,54 +11,6 @@
 #include "data/mem.h"
 #include "resolver/binding.h"
 #include "resolver/func_table.h"
-
-/// Skips all whitespace at token; mutates parameter and returns true if any change.
-/// token must not be null.
-bool match_whitespace(char *&token) {
-	if ( ' ' == *token || '\t' == *token ) ++token;
-	else return false;
-	
-	while ( ' ' == *token || '\t' == *token ) ++token;
-	
-	return true;
-}
-
-/// Matches c at token, returning true and advancing token if found.
-/// token must not be null.
-bool match_char(char *&token, char c) {
-	if ( *token == c ) {
-		++token;
-		return true;
-	}
-	return false;
-}
-
-/// Checks if a line is empty (includes ends with a comment)
-bool is_empty(const char *token) {
-	return *token == '\0' || (token[0] == '/' && token[1] == '/');
-}
-bool is_empty(const std::string& line) { return is_empty( line.data() ); }
-
-/// Parses an integer, returning true, storing result into ret, 
-/// and incrementing token if so. token must not be null. 
-bool parse_int(char *&token, int& ret) {
-	char *end = token;
-	
-	if ( '-' == *end ) ++end;
-	
-	if ( '0' <= *end && *end <= '9' ) ++end;
-	else return false;
-	
-	while ( '0' <= *end && *end <= '9' ) ++end;
-	
-	char tmp = *end;
-	*end = '\0';
-	ret = std::atoi(token);
-	*end = tmp;
-	
-	token = end;
-	return true;
-}
 
 /// Parses a name (lowercase alphanumeric ASCII string starting with a 
 /// lowercase letter), returning true, storing result into ret, and  
