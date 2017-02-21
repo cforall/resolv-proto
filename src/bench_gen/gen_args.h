@@ -4,9 +4,11 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "rand.h"
 
+#include "data/cast.h"
 #include "data/mem.h"
 #include "data/option.h"
 #include "driver/parser_common.h"
@@ -68,9 +70,9 @@ private:
         return std::strcmp( flag, name ) == 0;
     }
 
-    /// Assigns the unsigned from `line` into `val` if present, prints an error otherwise
-    static void read_unsigned( char* name, char* line, option<unsigned>& val, 
-                               bool do_override = true ) {
+    /// Assigns the unsigned from `line` into `val` if present, prints an error otherwise.
+    /// Will not overwrite val.
+    static void read_unsigned( char* name, char* line, option<unsigned>& val ) {
         char* orig = line;
         unsigned ret;
         if ( parse_unsigned( line, ret ) 
@@ -83,12 +85,102 @@ private:
         }
     }
 
+    /// Parses a generator, returning true, storing the result into `val`, and incrementing 
+    /// `token` if so. `token` must not be null.
+    bool parse_generator( char*& token, unique_ptr<Generator>& val ) {
+        char *end = token;
+        
+        if ( match_string( end, "constant" ) ) {
+            unsigned c;
+
+            match_whitespace( end );
+            if ( ! parse_unsigned( end, c ) ) return false;
+
+            val = make_unique<ConstantGenerator>( c );
+        } else if ( match_string( end, "uniform" ) ) {
+            unsigned a, b;
+
+            match_whitespace( end );
+            if ( ! parse_unsigned( end, a ) ) return false;
+            match_whitespace( end );
+            if ( ! parse_unsigned( end, b ) ) return false;
+
+            val = make_unique<UniformRandomGenerator>( engine(), a, b );
+        } else if ( match_string( end, "discrete" ) ) {
+            std::vector<double> ws;
+
+            double w;
+            match_whitespace( end );
+            while ( parse_float( end, w ) ) {
+                ws.push_back( w );
+                match_whitespace( end );
+            }
+            if ( ws.empty() ) return false;
+            
+            val = make_unique<DiscreteRandomGenerator>( engine(), ws.begin(), ws.end() );
+        } else if ( match_string( end, "geometric" ) ) {
+            double p;
+
+            match_whitespace( end );
+            if ( ! parse_float( end, p ) ) return false;
+
+            val = make_unique<GeometricRandomGenerator>( engine(), p );
+        } else if ( match_string( end, "stepwise" ) ) {
+            std::vector<double> ws;
+            GeneratorList gs;
+            double w;
+            unique_ptr<Generator> g;
+
+            do {
+                match_whitespace( end );
+                if ( ! parse_float( end, w ) ) return false;
+                match_whitespace( end );
+                if ( ! parse_generator( end, g ) ) return false;
+
+                ws.push_back( w );
+                gs.push_back( move(g) );
+
+                match_whitespace( end );
+                if ( *end != ',' ) break;
+                ++end;
+            } while ( true );
+            if ( ws.size() < 2 ) return false;
+
+            val = make_unique<StepwiseGenerator>( engine(), ws.begin(), ws.end(), move(gs) );
+        } else return false;
+
+        token = end;
+        return true;
+    }
+
+    /// Assigns the generator described by `line` into `val` if present, prints an error 
+    /// otherwise. Will not overwrite val.
+    void read_generator( char* name, char* line, unique_ptr<Generator>& val ) {
+        char* orig = line;
+        unique_ptr<Generator> ret;
+        if ( parse_generator( line, ret )
+                && ( match_whitespace( line ) || true )
+                && is_empty( line ) ) {
+            if ( ! val ) val = move(ret);
+        } else {
+            std::cerr << "ERROR: Expected generator for " << name << ", got `" 
+                      << orig << "'" << std::endl;
+        }
+        
+    }
+
     /// Parses the given name and flag into the argument set
     void parse_flag(char* name, char* line) {
         if ( is_flag( "n_decls", name ) ) {
             read_unsigned( name, line, _n_decls );
         } else if ( is_flag( "seed", name ) ) {
             read_unsigned( name, line, _seed );
+        } else if ( is_flag( "n_overloads", name ) ) {
+            read_generator( name, line, _n_overloads );
+        } else if ( is_flag( "n_parms", name ) ) {
+            read_generator( name, line, _n_parms );
+        } else if ( is_flag( "n_rets", name ) ) {
+            read_generator( name, line, _n_rets );
         } else {
             std::cerr << "ERROR: Unknown argument `" << name << "'" << std::endl;
         }
@@ -165,3 +257,70 @@ public:
         }
     }
 };
+
+namespace {
+    template<typename T>
+    struct ArgTraits {};
+
+    template<>
+    struct ArgTraits<unsigned> {
+        static void print(std::ostream& out, unsigned x ) { out << x; }
+    };
+
+    template<>
+    struct ArgTraits<Generator> {
+        static void print(std::ostream& out, const Generator& g ) {
+            auto gid = typeof( &g );
+
+            if ( gid == typeof<ConstantGenerator>() ) {
+                const auto& cg = *as<ConstantGenerator>( &g );
+                out << "constant " << cg.x;
+            } else if ( gid == typeof<UniformRandomGenerator>() ) {
+                const auto& ug = *as<UniformRandomGenerator>( &g );
+                out << "uniform " << ug.dist().a() << " " << ug.dist().b();
+            } else if ( gid == typeof<DiscreteRandomGenerator>() ) {
+                const auto& dg = *as<DiscreteRandomGenerator>( &g );
+                out << "discrete";
+                for ( double w : dg.dist().probabilities() ) {
+                    out << " " << w;
+                }
+            } else if ( gid == typeof<GeometricRandomGenerator>() ) {
+                const auto& dg = *as<GeometricRandomGenerator>( &g );
+                out << "geometric " << dg.dist().p();
+            } else if ( gid == typeof<StepwiseGenerator>() ) {
+                const auto& sg = *as<StepwiseGenerator>( &g );
+                out << "stepwise ";
+
+                auto ws = sg.probabilities();
+                const auto& gs = sg.generators();
+                out << ws[0] << " ";
+                print( out, *gs[0] );
+                for (unsigned i = 1; i < gs.size(); ++i) {
+                    out << ", " << ws[i] << " ";
+                    print( out, *gs[i] );
+                }
+            } else {
+                assert(false && "unknown generator type");
+            }
+        }
+    };
+
+    template<typename T>
+    struct ArgPrint {
+        const char* name;
+        const T& x;
+
+        ArgPrint( const char* name, const T& x ) : name(name), x(x) {}
+    };
+}
+
+template<typename T>
+ArgPrint<T> arg_print( const char* name, const T& x ) { return ArgPrint<T>{ name, x }; }
+
+template<typename T>
+std::ostream& operator<< ( std::ostream& out, ArgPrint<T>&& p ) {
+    out << p.name << ": ";
+    ArgTraits<T>::print( out, p.x );
+    return out;
+}
+

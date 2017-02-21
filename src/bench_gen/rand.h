@@ -29,9 +29,9 @@ public:
 using GeneratorList = std::vector<unique_ptr<Generator>>;
 
 /// Constant function; always returns copy of its constructor parameter
-class ConstantGenerator : public Generator {
-    unsigned x;  ///< Result to return
-public:
+struct ConstantGenerator : public Generator {
+    const unsigned x;  ///< Result to return
+
     ConstantGenerator( unsigned x ) : x(x) {}
     
     unsigned operator() () final { return x; }
@@ -53,16 +53,18 @@ public:
     RandomGenerator( Engine& e, Args&&... args ) : e(e), g(forward<Args>(args)...) {}
 
     unsigned operator() () final { return g(e); }
-};
 
-/// Wrapper for std::geometric_distribution
-using GeometricRandomGenerator = RandomGenerator<std::geometric_distribution>;
+    const Dist<unsigned>& dist() const { return g; }
+};
 
 /// Wrapper for std::uniform_int_distribution
 using UniformRandomGenerator = RandomGenerator<std::uniform_int_distribution>;
 
 /// Wrapper for std::discrete_distribution
 using DiscreteRandomGenerator = RandomGenerator<std::discrete_distribution>;
+
+/// Wrapper for std::geometric_distribution
+using GeometricRandomGenerator = RandomGenerator<std::geometric_distribution>;
 
 /// Generates random values from multiple random distributions, choosing between them according 
 /// to a discrete distribution
@@ -73,14 +75,19 @@ class StepwiseGenerator : public Generator {
 public:
     StepwiseGenerator( DiscreteRandomGenerator::engine_type& e, std::initializer_list<double> ws,
                        GeneratorList&& gs ) : steps(e, ws), gs( move(gs) ) {
+        assert(ws.size() > 1 && "Should be at least 2 steps");
         assert(this->gs.size() == ws.size() && "Should be same number of weights as generators");
     }
 
     template<typename WIter>
     StepwiseGenerator( DiscreteRandomGenerator::engine_type& e, WIter wbegin, WIter wend,
                        GeneratorList&& gs ) : steps(e, wbegin, wend), gs( move(gs) ) {
+        assert(wend - wbegin > 1 && "Should be at least 2 steps");
         assert(this->gs.size() == wend - wbegin && "Should be same number of weights as generators");
     }
 
     unsigned operator() () final { return (*gs[ steps() ])(); }
+
+    decltype( steps.dist().probabilities() ) probabilities() const { return steps.dist().probabilities(); }
+    const GeneratorList& generators() const { return gs; }
 };

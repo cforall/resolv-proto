@@ -7,11 +7,19 @@
 
 #include "data/option.h"
 
+template<typename T>
+void comment_print( const char* name, const T& x ) {
+    std::cout << "// " << arg_print( name, x ) << std::endl;
+}
+
 int main(int argc, char** argv) {
     Args a{ argc, argv };
 
-    std::cout << "// n_decls: " << a.n_decls() << std::endl;
-    if ( a.seed() ) std::cout << "// seed: " << *a.seed() << std::endl;
+    comment_print( "n_decls", a.n_decls() );
+    if ( a.seed() ) comment_print( "seed", *a.seed() );
+    comment_print( "n_overloads", a.n_overloads() );
+    comment_print( "n_rets", a.n_rets() );
+    comment_print( "n_parms", a.n_parms() );
 
     unsigned n_decls = 0;
     unsigned i_name = 0;
