@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstring>
+#include <fstream>
 #include <iostream>
+#include <string>
 
 #include "rand.h"
 
@@ -62,7 +64,9 @@ public:
 
 private:
     /// Checks if `name` matches the provided flag
-    static bool is_flag( const char* flag, char* name ) { return strcmp( flag, name ) == 0; }
+    static bool is_flag( const char* flag, char* name ) {
+        return std::strcmp( flag, name ) == 0;
+    }
 
     /// Assigns the unsigned from `line` into `val` if present, prints an error otherwise
     static void read_unsigned( char* name, char* line, option<unsigned>& val, 
@@ -90,6 +94,16 @@ private:
         }
     }
 
+    /// Skips over all lowercase-ASCII + '_' chars at token
+    bool match_name(char*& token) {
+        if ( 'a' <= *token && *token <= 'z' || '_' == *token ) ++token;
+        else return false;
+
+        while ( 'a' <= *token && *token <= 'z' || '_' == *token ) ++token;
+
+        return true;
+    }
+
 public:
     Args(int argc, char** argv) {
         int i;
@@ -103,7 +117,51 @@ public:
         }
 
         if ( i < argc ) {
-            // TODO parse input file
+            // parse input file
+            std::ifstream file{ argv[i] };
+            if ( ! file ) {
+                std::cerr << "ERROR: Cannot open input file `" << argv[i] << "'" << std::endl;
+                return;
+            }
+
+            std::string orig_line;
+            while ( std::getline( file, orig_line ) ) {
+                unique_ptr<char[]> line = make_unique<char[]>( orig_line.size() + 1 );
+                std::strcpy( line.get(), orig_line.c_str() );
+                char* s = line.get();
+                
+                // skip empty lines
+                match_whitespace( s );
+                if ( is_empty( s ) ) continue;
+
+                // find name
+                char *name = s;
+                if ( ! match_name( s ) ) goto err;
+
+                // find ':' delimiter (with optional preceding whitespace)
+                switch ( *s ) {
+                case ' ': case '\t':
+                    *s = '\0';
+                    ++s;
+                    match_whitespace( s );
+                    if ( ':' != *s ) goto err;
+                    break;
+                case ':':
+                    *s = '\0';
+                    break;
+                default:
+                    goto err;
+                }
+
+                // skip leading whitespace on line
+                ++s;
+                match_whitespace( s );
+
+                parse_flag( name, s );
+                
+                continue;
+                err: std::cerr << "ERROR: Cannot parse `" << orig_line << "'" << std::endl;
+            }
         }
     }
 };
