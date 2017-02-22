@@ -49,14 +49,16 @@ $(BUILDDIR)/%.o : %.cc
 $(BUILDDIR)/%.o : %.cc %.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
-# system objects
+# rp objects
 OBJS = $(addprefix $(BUILDDIR)/, binding.o conversion.o gc.o parser.o resolver.o)
+
+BENCH_OBJS = $(addprefix $(BUILDDIR)/, binding.o gc.o random_partitioner.o)
 
 rp: rp.cc rp.d $(OBJS) .lastmakeflags
 	$(COMPILE.cc) -o rp $< $(OBJS) $(LDFLAGS)
 
-bench_gen: bench_gen.cc bench_gen.d
-	$(COMPILE.cc) -o bench_gen $< $(LDFLAGS)
+bench_gen: bench_gen.cc bench_gen.d $(BENCH_OBJS)
+	$(COMPILE.cc) -o bench_gen $< $(BENCH_OBJS) $(LDFLAGS)
 
 clean:
 	-rm $(OBJS)

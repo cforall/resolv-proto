@@ -15,13 +15,15 @@
 
 /// Arguments to benchmark generator
 class Args {
-    option<def_random_engine> _engine;   ///< Underlying random engine, empty if uninitialized
-    option<unsigned> _seed;              ///< Random seed engine is built off
-    option<unsigned> _n_decls;           ///< Number of declarations to generate
-    unique_ptr<Generator> _n_overloads;  ///< Number of overloads to generate for each function
-    unique_ptr<Generator> _n_parms;      ///< Number of function parameters
-    unique_ptr<Generator> _n_rets;       ///< Number of function return types
+    option<def_random_engine> _engine;    ///< Underlying random engine, empty if uninitialized
+    option<unsigned> _seed;               ///< Random seed engine is built off
+    option<unsigned> _n_decls;            ///< Number of declarations to generate
+    unique_ptr<Generator> _n_overloads;   ///< Number of overloads to generate for each function
+    unique_ptr<Generator> _n_parms;       ///< Number of function parameters
+    unique_ptr<Generator> _n_rets;        ///< Number of function return types
+    unique_ptr<Generator> _n_poly_types;  ///< Number of polymorphic type parameters
 
+public:
     /// Gets random engine, initializing from seed if needed.
     /// First use will fix a single engine
     def_random_engine& engine() {
@@ -31,7 +33,6 @@ class Args {
         return *_engine;
     }
 
-public:
     const option<unsigned>& seed() { return _seed; }
 
     unsigned n_decls() { return _n_decls.value_or( 1500 ); }
@@ -62,6 +63,14 @@ public:
             _n_rets = make_unique<DiscreteRandomGenerator>( engine(), ret_dists );
         }
         return *_n_rets;
+    }
+
+    Generator& n_poly_types() {
+        if ( ! _n_poly_types ) {
+            auto poly_dists = { 0.9, 0.1 };
+            _n_poly_types = make_unique<DiscreteRandomGenerator>( engine(), poly_dists );
+        }
+        return *_n_poly_types;
     }
 
 private:
@@ -181,6 +190,8 @@ private:
             read_generator( name, line, _n_parms );
         } else if ( is_flag( "n_rets", name ) ) {
             read_generator( name, line, _n_rets );
+        } else if ( is_flag( "n_poly_types", name ) ) {
+            read_generator( name, line, _n_poly_types );
         } else {
             std::cerr << "ERROR: Unknown argument `" << name << "'" << std::endl;
         }

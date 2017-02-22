@@ -9,11 +9,14 @@ namespace NameGen {
 
     static const char vowels[] = { 'a', 'i', 'o', 'u' };
 
+    static const char caps[] = { 'T', 'R', 'S', 'U', 'V', 'W', 'Q', 'X', 'Y', 'Z' };
+
     template<typename T, std::size_t N>
     static constexpr std::size_t len(T (&)[N]) { return N; }
 
     static const unsigned digit_len = len(consonants) * len(vowels);
 
+    /// Gets the i'th name generated
     static std::string get(unsigned i) {
         // special case for single-consonant names
         if ( i < len(consonants) ) return std::string( 1, consonants[i] );
@@ -47,6 +50,12 @@ namespace NameGen {
 
         }
         
+        return name;
+    }
+
+    /// Gets the i'th capital name available
+    static std::string get_cap(unsigned i) {
+        std::string name( i / len(caps) + 1, caps[i % len(caps)] );
         return name;
     }
 };
