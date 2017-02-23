@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <cstddef>
 #include <iostream>
@@ -16,16 +17,36 @@ void comment_print( const char* name, const T& x ) {
     std::cout << "// " << arg_print( name, x ) << std::endl;
 }
 
+template<std::size_t k>
+void print_part( std::array<unsigned, k>&& ps ) {
+    unsigned last = 0;
+    for (unsigned i = 0; i < k; ++i) {
+        while ( last < ps[i] ) {
+            std::cout << " " << (i + 1);
+            ++last;
+        }
+    }
+    std::cout << std::endl;
+}
+
+template<std::size_t k>
+void print_parts( RandomPartitioner& rp, unsigned n ) {
+    for (unsigned i = 0; i < n; ++i) {
+        print_part( rp.get<k>( n ) );
+    }
+    std::cout << std::endl;
+}
+
 int main(int argc, char** argv) {
     using std::min;
     using std::max;
     using std::shuffle;
 
-/*    Args a{ argc, argv };
+    Args a{ argc, argv };
 
     comment_print( "n_decls", a.n_decls() );
     if ( a.seed() ) comment_print( "seed", *a.seed() );
-    comment_print( "n_overloads", a.n_overloads() );
+/*    comment_print( "n_overloads", a.n_overloads() );
     comment_print( "n_rets", a.n_rets() );
     comment_print( "n_parms", a.n_parms() );
     comment_print( "n_poly_types", a.n_poly_types() );
@@ -78,11 +99,8 @@ int main(int argc, char** argv) {
 
     collect();
 */
-    for (unsigned n = 0; n <= 10; ++n) {
-        std::cerr << "[" << n << "]";
-        for (unsigned k = 0; k <= n; ++k) {
-            std::cerr << " " << RandomPartitioner::C(n, k);
-        }
-        std::cerr << std::endl;
-    }
+    RandomPartitioner rp( a.engine() );
+    print_parts<2>( rp, a.n_decls() );
+    print_parts<3>( rp, a.n_decls() );
+    print_parts<4>( rp, a.n_decls() );
 }

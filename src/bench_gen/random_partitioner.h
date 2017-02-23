@@ -1,11 +1,23 @@
 #pragma once
 
+#include <array>
+#include <cassert>
+#include <cstddef>
+#include <map>
 #include <vector>
+#include <utility>
+
+#include "rand.h"
 
 class RandomPartitioner {
 	/// C_memo[k - 2][n - 2k] is n choose k, if it has already been computed
 	/// Memo table is shared across all instances of RandomParitioner
 	static std::vector< std::vector<double> > C_memo;
+
+	/// Random engine
+	def_random_engine& e;
+	/// Cached partitioners for (n, k)
+	std::map< std::pair<unsigned, unsigned>, DiscreteRandomGenerator > gs;
 
 	/// Fills the memo row ki out to nend (inclusive). Assumes row exists.
 	static void fill_memo_at(unsigned ki, unsigned nend) {
@@ -43,7 +55,6 @@ class RandomPartitioner {
 		}
 	}
 
-public:
 	/// C(n, k) produces n choose k, caching all non-trivial subresults
 	static double C(unsigned n, unsigned k) {
 		if ( k == 1 ) return (double)n;
@@ -68,5 +79,44 @@ public:
 		}
 
 		return k_memo[ni];
+	}
+
+	/// Gets the generator for (n, k), creating it if necessary
+	DiscreteRandomGenerator& g( unsigned n, unsigned k ) {
+		auto key = std::make_pair(n, k);
+		auto it = gs.find( key );
+		if ( it == gs.end() ) {
+			std::vector<double> ws;
+			ws.reserve( n-k+1 );
+			ws.push_back( 0.0 );  // never a 0-size partition
+			for (unsigned i = 1; i <= n-k; ++i) {
+				// weight other partitions by number of combinations they leave
+				ws.push_back( C(n-i-1, k-1) );
+			}
+
+			auto gen = DiscreteRandomGenerator{ e, ws.begin(), ws.end() };
+			it = gs.emplace_hint( it, key, std::move(gen) );
+		}
+		return it->second;
+	}
+
+public:
+	RandomPartitioner( def_random_engine& engine ) : e(engine), gs() {}
+
+	/// Produces a random parition of n elements into k partitions.
+	/// Returns the (exclusive) end index of each partition
+	template<std::size_t k>
+	std::array<unsigned, k> get ( unsigned n ) {
+		assert( n >= k );
+		
+		std::array<unsigned, k> parts;
+		unsigned last = 0;
+		for (unsigned i = 0; i < k-1; ++i) {
+			// increase partition by random amount weighted by number of remaining combos
+			parts[i] = last += g( n-last, k-(i+1) )();
+		}
+		parts[k-1] = n;
+
+		return parts;
 	}
 };
