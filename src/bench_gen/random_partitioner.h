@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <initializer_list>
 #include <map>
 #include <vector>
 #include <utility>
@@ -103,20 +104,30 @@ class RandomPartitioner {
 public:
 	RandomPartitioner( def_random_engine& engine ) : e(engine), gs() {}
 
-	/// Produces a random parition of n elements into k partitions.
-	/// Returns the (exclusive) end index of each partition
-	template<std::size_t k>
-	std::array<unsigned, k> get ( unsigned n ) {
+	/// Produces a random parition of n elements into k non-empty partitions.
+	/// Places the (exclusive) end indices of the partitions in parts
+	void get_nonempty( unsigned n, std::initializer_list<unsigned*> parts ) {
+		unsigned k = parts.size();
 		assert( n >= k );
 		
-		std::array<unsigned, k> parts;
+		auto it = parts.begin();
 		unsigned last = 0;
 		for (unsigned i = 0; i < k-1; ++i) {
 			// increase partition by random amount weighted by number of remaining combos
-			parts[i] = last += g( n-last, k-(i+1) )();
+			**(it++) = last += g( n-last, k-1-i )();
 		}
-		parts[k-1] = n;
+		**it = n;
+	}
 
-		return parts;
+	/// Produces a random parition of n elements into k possibly-empty partitions.
+	/// Places the (exclusive) end indices of the partitions in parts
+	void get( unsigned n, std::initializer_list<unsigned*> parts ) {
+		unsigned k = parts.size();
+		get_nonempty( n + k, parts );
+
+		unsigned i = 1;
+		for (auto it = parts.begin(); it != parts.end(); ++it) {
+			**it -= i++;
+		}
 	}
 };
