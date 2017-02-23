@@ -5,18 +5,25 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <type_traits>
 
 #include "gen_args.h"
 #include "name_gen.h"
 #include "random_partitioner.h"
+#include "weighted_partition.h"
 
 #include "ast/type.h"
-#include "data/list.h"
 #include "data/option.h"
 
 template<typename T>
 void comment_print( const char* name, const T& x ) {
     std::cout << "// " << arg_print( name, x ) << std::endl;
+}
+
+template<>
+void comment_print<Generator>( const char* name, const Generator& x ) {
+    std::cout << "// " << arg_print( name, x ) 
+        << " [" << x.min() << "," << x.max() << "]" << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -38,9 +45,39 @@ int main(int argc, char** argv) {
     unsigned n_decls = 0;
     unsigned i_name = 0;
     while ( n_decls < a.n_decls() ) {
-        // generate overloads with a given name
-        unsigned n_with_name = a.n_overloads()();
+        // generate number of overloads with a given name
+        unsigned n_with_name = min( a.n_overloads()(), a.n_decls() - n_decls );
         std::string name = NameGen::get( i_name++ );
+
+        unsigned i_with_name = 0;
+        for ( auto parm_overloads 
+                : weighted_partition( a.n_parms(), n_with_name ) ) {
+            unsigned n_parms = parm_overloads.first;
+            
+            for ( auto ret_overloads 
+                    : weighted_partition( a.n_rets(), parm_overloads.second ) ) {
+                unsigned n_rets = ret_overloads.first;
+
+                for ( auto poly_overloads
+                        : weighted_partition( a.n_poly_types(), ret_overloads.second ) ) {
+                    unsigned n_poly = poly_overloads.first;
+                    unsigned n_same_arity = poly_overloads.second;
+
+                    std::cout << name;
+                    if ( n_with_name > 1 ) {
+                        std::cout << "-o" << i_with_name;
+                    }
+
+                    std::cout << " " << n_same_arity << "x " 
+                        << n_parms << " parms, " << n_rets << " rets, "
+                        << n_poly << " poly types" << std::endl;
+
+                    ++n_decls;
+                    ++i_with_name;
+                }
+            }
+        }
+/*
         for (unsigned i_with_name = 0; i_with_name < n_with_name; ++i_with_name ) {
             unsigned n_poly_types = a.n_poly_types()();
             unsigned n_rets = a.n_rets()();
@@ -107,7 +144,7 @@ int main(int argc, char** argv) {
             // break if out of declarations
             if ( ++n_decls == a.n_decls() ) break;
         }
-    }
+*/    }
 
     collect();
 }

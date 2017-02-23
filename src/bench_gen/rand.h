@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <initializer_list>
 #include <random>
@@ -23,6 +24,12 @@ public:
 
     /// Gets the next value from the generator
     virtual unsigned operator() () = 0;
+
+    /// Gets the minimum value produced by this generator
+    virtual unsigned min() const = 0;
+
+    /// Gets the maximum value produced by this generator
+    virtual unsigned max() const = 0;
 };
 
 /// List of generators
@@ -35,6 +42,10 @@ struct ConstantGenerator : public Generator {
     ConstantGenerator( unsigned x ) : x(x) {}
     
     unsigned operator() () final { return x; }
+
+    unsigned min() const final { return x; }
+
+    unsigned max() const final { return x; }
 };
 
 /// Generates random values from the given engine [default def_random_engine]
@@ -54,6 +65,10 @@ public:
 
     unsigned operator() () final { return g(e); }
 
+    unsigned min() const final { return g.min(); }
+
+    unsigned max() const final { return g.max(); }
+
     const Dist<unsigned>& dist() const { return g; }
 };
 
@@ -71,7 +86,7 @@ using GeometricRandomGenerator = RandomGenerator<std::geometric_distribution>;
 class StepwiseGenerator : public Generator {
     DiscreteRandomGenerator steps;  ///< Probabilities of each step
     GeneratorList gs;               ///< Step generators
-
+    
 public:
     StepwiseGenerator( DiscreteRandomGenerator::engine_type& e, std::initializer_list<double> ws,
                        GeneratorList&& gs ) : steps(e, ws), gs( move(gs) ) {
@@ -87,6 +102,22 @@ public:
     }
 
     unsigned operator() () final { return (*gs[ steps() ])(); }
+
+    unsigned min() const final {
+        unsigned m = gs[0]->min();
+        for (unsigned i = 1; i < gs.size(); ++i) {
+            m = std::min( m, gs[i]->min() );
+        }
+        return m;
+    }
+
+    unsigned max() const final {
+        unsigned m = gs[0]->max();
+        for (unsigned i = 1; i < gs.size(); ++i) {
+            m = std::max( m, gs[i]->max() );
+        }
+        return m;
+    }
 
     decltype( steps.dist().probabilities() ) probabilities() const { return steps.dist().probabilities(); }
     const GeneratorList& generators() const { return gs; }
