@@ -111,6 +111,9 @@ int main(int argc, char** argv) {
     comment_print( "n_rets", a.n_rets() );
     comment_print( "n_parms", a.n_parms() );
     comment_print( "n_poly_types", a.n_poly_types() );
+    comment_print( "is_new_type", a.is_new_type() );
+    comment_print( "get_basic", a.get_basic() );
+    comment_print( "get_struct", a.get_struct() );
 
     RandomPartitioner partition( a.engine() );
 
