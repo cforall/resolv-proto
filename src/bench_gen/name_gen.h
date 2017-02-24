@@ -53,9 +53,15 @@ namespace NameGen {
         return name;
     }
 
-    /// Gets the i'th capital name available
+    /// Gets the i'th name available by repeating a single capital character
     static std::string get_cap(unsigned i) {
         std::string name( i / len(caps) + 1, caps[i % len(caps)] );
+        return name;
+    }
+
+    /// Gets the i'th name available by repeating a single lowercase consonant
+    static std::string get_lower(unsigned i) {
+        std::string name( i / len(consonants) + 1, consonants[i % len(consonants)] );
         return name;
     }
 };

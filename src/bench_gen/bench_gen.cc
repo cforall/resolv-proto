@@ -52,7 +52,7 @@ struct TypeGen {
         switch (kind) {
         case None: return nullptr;
         case Conc: return new ConcType{ (int)i };
-        case Named: return new NamedType{ NameGen::get( i ) };
+        case Named: return new NamedType{ NameGen::get_lower( i ) };
         case Poly: return new PolyType{ NameGen::get_cap( i ) };
         }
     }
