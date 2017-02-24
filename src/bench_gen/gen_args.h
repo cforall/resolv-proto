@@ -22,6 +22,9 @@ class Args {
     unique_ptr<Generator> _n_parms;       ///< Number of function parameters
     unique_ptr<Generator> _n_rets;        ///< Number of function return types
     unique_ptr<Generator> _n_poly_types;  ///< Number of polymorphic type parameters
+    unique_ptr<Generator> _is_new_type;   ///< Returns a bool testing whether a type should be new
+    unique_ptr<Generator> _get_basic;     ///< Generates an index for a basic type
+    unique_ptr<Generator> _get_struct;    ///< Generates an index for a struct type
 
 public:
     /// Gets random engine, initializing from seed if needed.
@@ -71,6 +74,33 @@ public:
             _n_poly_types = make_unique<DiscreteRandomGenerator>( engine(), poly_dists );
         }
         return *_n_poly_types;
+    }
+
+    Generator& is_new_type() {
+        if ( ! _is_new_type ) {
+            _is_new_type = make_unique<UniformRandomGenerator>( engine(), 0, 1 );
+        }
+        return *_is_new_type;
+    }
+
+    Generator& get_basic() {
+        if ( ! _get_basic ) {
+            auto basic_dists = { 0.375, 0.25, 0.375 };
+            GeneratorList basic_gens(3);
+            basic_gens[0] = make_unique<UniformRandomGenerator>( engine(), 0, 2 );
+            basic_gens[1] = make_unique<ConstantGenerator>( 3 );
+            basic_gens[2] = make_unique<UniformRandomGenerator>( engine(), 4, 7 );
+            _get_basic =
+                make_unique<StepwiseGenerator>( engine(), basic_dists, move(basic_gens) );
+        }
+        return *_get_basic;
+    }
+
+    Generator& get_struct() {
+        if ( ! _get_struct ) {
+            _get_struct = make_unique<UniformRandomGenerator>( engine(), 0, 25 );
+        }
+        return *_get_struct;
     }
 
 private:
@@ -192,6 +222,12 @@ private:
             read_generator( name, line, _n_rets );
         } else if ( is_flag( "n_poly_types", name ) ) {
             read_generator( name, line, _n_poly_types );
+        } else if ( is_flag( "is_new_type", name ) ) {
+            read_generator( name, line, _is_new_type );
+        } else if ( is_flag( "get_basic", name ) ) {
+            read_generator( name, line, _get_basic );
+        } else if ( is_flag( "get_struct", name ) ) {
+            read_generator( name, line, _get_struct );
         } else {
             std::cerr << "ERROR: Unknown argument `" << name << "'" << std::endl;
         }

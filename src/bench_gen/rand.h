@@ -122,3 +122,13 @@ public:
     decltype( steps.dist().probabilities() ) probabilities() const { return steps.dist().probabilities(); }
     const GeneratorList& generators() const { return gs; }
 };
+
+/// Generates a random number from a uniform distribution over [a,b]
+template<typename Engine>
+static unsigned random( Engine& e, unsigned a, unsigned b ) {
+    return std::uniform_int_distribution<unsigned>{ a, b }( e );
+}
+
+/// Generates a random number from a uniform distribution over [0, b]
+template<typename Engine>
+static unsigned random( Engine& e, unsigned b ) { return random( e, 0, b ); }
