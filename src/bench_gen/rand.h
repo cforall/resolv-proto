@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <initializer_list>
+#include <limits>
 #include <random>
 #include <vector>
 
@@ -83,19 +84,19 @@ using GeometricRandomGenerator = RandomGenerator<std::geometric_distribution>;
 
 /// Generates random values from multiple random distributions, choosing between them according 
 /// to a discrete distribution
-class StepwiseGenerator : public Generator {
+class WeightedGenerator : public Generator {
     DiscreteRandomGenerator steps;  ///< Probabilities of each step
     GeneratorList gs;               ///< Step generators
     
 public:
-    StepwiseGenerator( DiscreteRandomGenerator::engine_type& e, std::initializer_list<double> ws,
+    WeightedGenerator( DiscreteRandomGenerator::engine_type& e, std::initializer_list<double> ws,
                        GeneratorList&& gs ) : steps(e, ws), gs( move(gs) ) {
         assert(ws.size() > 1 && "Should be at least 2 steps");
         assert(this->gs.size() == ws.size() && "Should be same number of weights as generators");
     }
 
     template<typename WIter>
-    StepwiseGenerator( DiscreteRandomGenerator::engine_type& e, WIter wbegin, WIter wend,
+    WeightedGenerator( DiscreteRandomGenerator::engine_type& e, WIter wbegin, WIter wend,
                        GeneratorList&& gs ) : steps(e, wbegin, wend), gs( move(gs) ) {
         assert(wend - wbegin > 1 && "Should be at least 2 steps");
         assert(this->gs.size() == wend - wbegin && "Should be same number of weights as generators");
@@ -132,3 +133,15 @@ static unsigned random( Engine& e, unsigned a, unsigned b ) {
 /// Generates a random number from a uniform distribution over [0, b]
 template<typename Engine>
 static unsigned random( Engine& e, unsigned b ) { return random( e, 0, b ); }
+
+/// Gets a random element from a vector
+template<typename Engine, typename C>
+static auto random_in( Engine& e, const C& c ) -> decltype( c[0] ) {
+    return c[ random( e, c.size()-1 ) ];
+}
+
+/// Generates a bool according to a coin-flip with probability `p` [default 0.5] of returning true
+template<typename Engine>
+static bool coin_flip( Engine& e, double p = 0.5 ) {
+    return std::generate_canonical<double, std::numeric_limits<double>::digits>( e ) < p;
+}

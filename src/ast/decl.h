@@ -69,6 +69,11 @@ public:
 	         const List<Type>& returns_)
 		: name_(name_), tag_(), params_(params_), 
 		  returns_( gen_returns( returns_ ) ), tyVars_() {}
+	
+	FuncDecl(const std::string& name_, const std::string& tag_,
+	         const List<Type>& params_, const List<Type>& returns_)
+		: name_(name_), tag_(tag_), params_(params_),
+		  returns_( gen_returns( returns_ ) ), tyVars_() {}
 
 	FuncDecl(const std::string& name_, const List<Type>& params_, 
 	         const List<Type>& returns_, unique_ptr<TypeBinding>&& tyVars_ )

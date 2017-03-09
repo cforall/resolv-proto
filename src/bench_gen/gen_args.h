@@ -18,13 +18,18 @@ class Args {
     option<def_random_engine> _engine;    ///< Underlying random engine, empty if uninitialized
     option<unsigned> _seed;               ///< Random seed engine is built off
     option<unsigned> _n_decls;            ///< Number of declarations to generate
+    option<unsigned> _n_exprs;            ///< Number of top-level expressions to generate
     unique_ptr<Generator> _n_overloads;   ///< Number of overloads to generate for each function
     unique_ptr<Generator> _n_parms;       ///< Number of function parameters
     unique_ptr<Generator> _n_rets;        ///< Number of function return types
     unique_ptr<Generator> _n_poly_types;  ///< Number of polymorphic type parameters
-    unique_ptr<Generator> _is_new_type;   ///< Returns a bool testing whether a type should be new
+    option<double> _p_new_type;           ///< Probability of a parameter/return type being new
     unique_ptr<Generator> _get_basic;     ///< Generates an index for a basic type
     unique_ptr<Generator> _get_struct;    ///< Generates an index for a struct type
+    option<double> _p_nested_at_root;     ///< Probability that a parameter of a root-level expression will be nested
+    option<double> _p_nested_deeper;      ///< Probability that a parameter of a nested expression will be more deeply nested
+    option<double> _p_unsafe_offset;      ///< Probability that a basic type will match unsafely.
+    unique_ptr<Generator> _basic_offset;  ///< Magnitude of basic type offset.
 
 public:
     /// Gets random engine, initializing from seed if needed.
@@ -40,6 +45,8 @@ public:
 
     unsigned n_decls() { return _n_decls.value_or( 1500 ); }
 
+    unsigned n_exprs() { return _n_exprs.value_or( 750 ); }
+
     Generator& n_overloads() {
         if ( ! _n_overloads ) {
             auto over_dists = { 0.5, 0.5 };
@@ -47,7 +54,7 @@ public:
             over_gens[0] = make_unique<UniformRandomGenerator>( engine(), 2, 120 );
             over_gens[1] = make_unique<ConstantGenerator>( 1 );
             _n_overloads = 
-                make_unique<StepwiseGenerator>( engine(), over_dists, move(over_gens) );
+                make_unique<WeightedGenerator>( engine(), over_dists, move(over_gens) );
         }
         return *_n_overloads;
     }
@@ -76,12 +83,7 @@ public:
         return *_n_poly_types;
     }
 
-    Generator& is_new_type() {
-        if ( ! _is_new_type ) {
-            _is_new_type = make_unique<UniformRandomGenerator>( engine(), 0, 1 );
-        }
-        return *_is_new_type;
-    }
+    double p_new_type() { return _p_new_type.value_or( 0.5 ); }
 
     Generator& get_basic() {
         if ( ! _get_basic ) {
@@ -91,7 +93,7 @@ public:
             basic_gens[1] = make_unique<ConstantGenerator>( 3 );
             basic_gens[2] = make_unique<UniformRandomGenerator>( engine(), 4, 7 );
             _get_basic =
-                make_unique<StepwiseGenerator>( engine(), basic_dists, move(basic_gens) );
+                make_unique<WeightedGenerator>( engine(), basic_dists, move(basic_gens) );
         }
         return *_get_basic;
     }
@@ -101,6 +103,19 @@ public:
             _get_struct = make_unique<UniformRandomGenerator>( engine(), 0, 25 );
         }
         return *_get_struct;
+    }
+
+    double p_nested_at_root() { return _p_nested_at_root.value_or( 0.06 ); }
+
+    double p_nested_deeper() { return _p_nested_deeper.value_or( 0.3 ); }
+
+    double p_unsafe_offset() { return _p_unsafe_offset.value_or( 0.25 ); }
+
+    Generator& basic_offset() {
+        if ( ! _basic_offset ) {
+            _basic_offset = make_unique<GeometricRandomGenerator>( engine(), 0.25 );
+        }
+        return *_basic_offset;
     }
 
 private:
@@ -120,6 +135,21 @@ private:
             if ( ! val ) val = ret;
         } else {
             std::cerr << "ERROR: Expected unsigned int for " << name << ", got `" 
+                      << orig << "'" << std::endl;
+        }
+    }
+
+    /// Assigns the unsigned from `line` into `val` if present, prints an error otherwise.
+    /// Will not overwrite val.
+    static void read_float( char* name, char* line, option<double>& val ) {
+        char* orig = line;
+        double ret;
+        if ( parse_float( line, ret ) 
+                && ( match_whitespace( line ) || true ) 
+                && is_empty( line ) ) {
+            if ( ! val ) val = ret;
+        } else {
+            std::cerr << "ERROR: Expected floating point for " << name << ", got `" 
                       << orig << "'" << std::endl;
         }
     }
@@ -164,7 +194,7 @@ private:
             if ( ! parse_float( end, p ) ) return false;
 
             val = make_unique<GeometricRandomGenerator>( engine(), p );
-        } else if ( match_string( end, "stepwise" ) ) {
+        } else if ( match_string( end, "weighted" ) ) {
             std::vector<double> ws;
             GeneratorList gs;
             double w;
@@ -185,7 +215,7 @@ private:
             } while ( true );
             if ( ws.size() < 2 ) return false;
 
-            val = make_unique<StepwiseGenerator>( engine(), ws.begin(), ws.end(), move(gs) );
+            val = make_unique<WeightedGenerator>( engine(), ws.begin(), ws.end(), move(gs) );
         } else return false;
 
         token = end;
@@ -212,6 +242,8 @@ private:
     void parse_flag(char* name, char* line) {
         if ( is_flag( "n_decls", name ) ) {
             read_unsigned( name, line, _n_decls );
+        } else if ( is_flag( "n_exprs", name ) ) {
+            read_unsigned( name, line, _n_exprs );
         } else if ( is_flag( "seed", name ) ) {
             read_unsigned( name, line, _seed );
         } else if ( is_flag( "n_overloads", name ) ) {
@@ -222,12 +254,20 @@ private:
             read_generator( name, line, _n_rets );
         } else if ( is_flag( "n_poly_types", name ) ) {
             read_generator( name, line, _n_poly_types );
-        } else if ( is_flag( "is_new_type", name ) ) {
-            read_generator( name, line, _is_new_type );
+        } else if ( is_flag( "p_new_type", name ) ) {
+            read_float( name, line, _p_new_type );
         } else if ( is_flag( "get_basic", name ) ) {
             read_generator( name, line, _get_basic );
         } else if ( is_flag( "get_struct", name ) ) {
             read_generator( name, line, _get_struct );
+        } else if ( is_flag( "p_nested_at_root", name ) ) {
+            read_float( name, line, _p_nested_at_root );
+        } else if ( is_flag( "p_nested_deeper", name ) ) {
+            read_float( name, line, _p_nested_deeper );
+        } else if ( is_flag( "p_unsafe_offset", name ) ) {
+            read_float( name, line, _p_unsafe_offset );
+        } else if ( is_flag( "basic_offset", name ) ) {
+            read_generator( name, line, _basic_offset );
         } else {
             std::cerr << "ERROR: Unknown argument `" << name << "'" << std::endl;
         }
@@ -315,6 +355,11 @@ namespace {
     };
 
     template<>
+    struct ArgTraits<double> {
+        static void print(std::ostream& out, double p ) { out << p; }
+    };
+
+    template<>
     struct ArgTraits<Generator> {
         static void print(std::ostream& out, const Generator& g ) {
             auto gid = typeof( &g );
@@ -334,9 +379,9 @@ namespace {
             } else if ( gid == typeof<GeometricRandomGenerator>() ) {
                 const auto& dg = *as<GeometricRandomGenerator>( &g );
                 out << "geometric " << dg.dist().p();
-            } else if ( gid == typeof<StepwiseGenerator>() ) {
-                const auto& sg = *as<StepwiseGenerator>( &g );
-                out << "stepwise ";
+            } else if ( gid == typeof<WeightedGenerator>() ) {
+                const auto& sg = *as<WeightedGenerator>( &g );
+                out << "weighted ";
 
                 auto ws = sg.probabilities();
                 const auto& gs = sg.generators();
