@@ -15,21 +15,22 @@
 
 /// Arguments to benchmark generator
 class Args {
-    option<def_random_engine> _engine;    ///< Underlying random engine, empty if uninitialized
-    option<unsigned> _seed;               ///< Random seed engine is built off
-    option<unsigned> _n_decls;            ///< Number of declarations to generate
-    option<unsigned> _n_exprs;            ///< Number of top-level expressions to generate
-    unique_ptr<Generator> _n_overloads;   ///< Number of overloads to generate for each function
-    unique_ptr<Generator> _n_parms;       ///< Number of function parameters
-    unique_ptr<Generator> _n_rets;        ///< Number of function return types
-    unique_ptr<Generator> _n_poly_types;  ///< Number of polymorphic type parameters
-    option<double> _p_new_type;           ///< Probability of a parameter/return type being new
-    unique_ptr<Generator> _get_basic;     ///< Generates an index for a basic type
-    unique_ptr<Generator> _get_struct;    ///< Generates an index for a struct type
-    option<double> _p_nested_at_root;     ///< Probability that a parameter of a root-level expression will be nested
-    option<double> _p_nested_deeper;      ///< Probability that a parameter of a nested expression will be more deeply nested
-    option<double> _p_unsafe_offset;      ///< Probability that a basic type will match unsafely.
-    unique_ptr<Generator> _basic_offset;  ///< Magnitude of basic type offset.
+    option<def_random_engine> _engine;       ///< Underlying random engine, empty if uninitialized
+    option<unsigned> _seed;                  ///< Random seed engine is built off
+    option<unsigned> _n_decls;               ///< Number of declarations to generate
+    option<unsigned> _n_exprs;               ///< Number of top-level expressions to generate
+    unique_ptr<Generator> _n_overloads;      ///< Number of overloads to generate for each function
+    unique_ptr<Generator> _n_parms;          ///< Number of function parameters
+    unique_ptr<Generator> _n_rets;           ///< Number of function return types
+    unique_ptr<Generator> _n_poly_types;     ///< Number of polymorphic type parameters
+    option<unsigned> _max_tries_for_unique;  ///< Maximum number of tries for unique parameter list
+    option<double> _p_new_type;              ///< Probability of a parameter/return type being new
+    unique_ptr<Generator> _get_basic;        ///< Generates an index for a basic type
+    unique_ptr<Generator> _get_struct;       ///< Generates an index for a struct type
+    option<double> _p_nested_at_root;        ///< Probability that a parameter of a root-level expression will be nested
+    option<double> _p_nested_deeper;         ///< Probability that a parameter of a nested expression will be more deeply nested
+    option<double> _p_unsafe_offset;         ///< Probability that a basic type will match unsafely.
+    unique_ptr<Generator> _basic_offset;     ///< Magnitude of basic type offset.
 
 public:
     /// Gets random engine, initializing from seed if needed.
@@ -82,6 +83,8 @@ public:
         }
         return *_n_poly_types;
     }
+
+    unsigned max_tries_for_unique() { return _max_tries_for_unique.value_or( 20 ); }
 
     double p_new_type() { return _p_new_type.value_or( 0.5 ); }
 
@@ -254,6 +257,8 @@ private:
             read_generator( name, line, _n_rets );
         } else if ( is_flag( "n_poly_types", name ) ) {
             read_generator( name, line, _n_poly_types );
+        } else if ( is_flag( "max_tries_for_unique", name ) ) {
+            read_unsigned( name, line, _max_tries_for_unique );
         } else if ( is_flag( "p_new_type", name ) ) {
             read_float( name, line, _p_new_type );
         } else if ( is_flag( "get_basic", name ) ) {

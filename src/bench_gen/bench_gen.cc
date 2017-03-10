@@ -135,6 +135,7 @@ class BenchGenerator {
         comment_print( "n_rets", a.n_rets() );
         comment_print( "n_parms", a.n_parms() );
         comment_print( "n_poly_types", a.n_poly_types() );
+        comment_print( "max_tries_for_unique", a.max_tries_for_unique() );
         comment_print( "p_new_type", a.p_new_type() );
         comment_print( "get_basic", a.get_basic() );
         comment_print( "get_struct", a.get_struct() );
@@ -274,11 +275,15 @@ class BenchGenerator {
                         parms_and_rets.reserve( n_parms + n_rets );
 
                         for (unsigned i_same_kind = 0; i_same_kind < n_same_kind; ++i_same_kind) {
-                            // retry if a duplicate
-                            do {
-                                parms_and_rets.clear();
+                            unsigned tries;
+                            for (tries = 1; tries <= a.max_tries_for_unique(); ++tries) {
                                 generate_parms_and_rets( parms_and_rets, n_parms, n_rets, n_poly );
-                            } while ( ! with_same_arity.insert( parms_and_rets ).second );
+                                // done if found a unique decl with this arity
+                                if ( with_same_arity.insert( parms_and_rets ).second ) break;
+                                parms_and_rets.clear();
+                            }
+                            // quit if too many tries
+                            if ( tries > a.max_tries_for_unique() ) goto done_arity;
 
                             // generate list of parameters and returns
                             List<Type> parms( n_parms );
@@ -316,6 +321,7 @@ class BenchGenerator {
                             ++i_with_name;
                         }
                     }
+                    done_arity:;
                 }
             }
         }
@@ -433,7 +439,7 @@ public:
     void operator() () {
         print_args();
         generate_decls();
-        std::cout << "%%" << std::endl;
+        std::cout << "\n%%\n" << std::endl;
         generate_exprs();
         collect();
     }
