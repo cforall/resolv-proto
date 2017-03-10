@@ -335,7 +335,13 @@ class BenchGenerator {
         } else {
             auto tid = typeof(ty);
             if ( tid == typeof<ConcType>() ) {
-                unsigned i = random( basic_funcs.size() + poly_funcs.size() );
+                unsigned n_funcs = basic_funcs.size() + poly_funcs.size();
+                if ( n_funcs == 0 ) {  // leaf expression if nothing with compatible type
+                    std::cout << *ty;
+                    return ty;
+                }
+
+                unsigned i = random( n_funcs );
                 if ( i < basic_funcs.size() ) { 
                     decl = basic_funcs[ i ];
                 } else {
@@ -344,7 +350,13 @@ class BenchGenerator {
                 }
             } else if ( tid == typeof<NamedType>() ) {
                 const auto& s_funcs = struct_funcs[ as<NamedType>(ty)->name() ];
-                unsigned i = random( s_funcs.size() + poly_funcs.size() );
+                unsigned n_funcs = s_funcs.size() + poly_funcs.size();
+                if ( n_funcs == 0 ) {  // leaf expression if nothing with compatible type
+                    std::cout << *ty;
+                    return ty;
+                }
+
+                unsigned i = random( n_funcs );
                 if ( i < s_funcs.size() ) {
                     decl = s_funcs[ i ];
                 } else {
@@ -356,17 +368,11 @@ class BenchGenerator {
 
         // print call expr
         std::cout << decl->name() << "(";
-        bool first = true;
         for (const Type* pty : decl->params()) {
             // replace parameter type according to environment
             pty = replace( env, pty );
             
-            if ( first ) {
-                first = false;
-            } else {
-                std::cout << ", ";
-            }
-
+            std::cout << " ";
             if ( coin_flip( ty == toplevel ? a.p_nested_at_root() : a.p_nested_deeper() ) ) {
                 // nested call
                 if ( const PolyType* ppty = as_safe<PolyType>(pty) ) {
@@ -405,7 +411,7 @@ class BenchGenerator {
             }
 
         }
-        std::cout << ")";
+        std::cout << " )";
 
         // substitute return type by environment prior to return
         return replace( env, decl->returns() );
