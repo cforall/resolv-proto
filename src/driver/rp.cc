@@ -14,48 +14,91 @@ int main(int argc, char **argv) {
 	FuncTable funcs;
 	List<Expr> exprs;
 	CanonicalTypeMap types;
+	std::ostream& out = args.out();
 	
 	if ( ! parse_input( args.in(), funcs, exprs, types ) ) return 1;
 	
+	if ( args.verbose() || args.filter() != Args::Filter::None ) {
+		out << std::endl;
+		for ( auto&& func : funcs ) { out << *func << std::endl; }
+		out << "\n%%\n" << std::endl;
+	}
+		
 	if ( args.verbose() ) {
-		args.out() << std::endl;
-		for ( auto&& func : funcs ) { args.out() << *func << std::endl; }
-		args.out() << "%%" << std::endl;
-		for ( auto&& expr : exprs ) { args.out() << *expr << std::endl; }
+		for ( auto&& expr : exprs ) { out << *expr << std::endl; }
 	}
 	
 	ConversionGraph conversions = make_conversions( types );
 	
-	Resolver resolve{ conversions, funcs, 
-					  [&args]( const Expr* e ) {
-						  if ( args.quiet() ) return;
-						  args.out() << "ERROR: no valid resolution for " << *e << std::endl;
-					  }, 
-					  [&args]( const Expr* e, List<TypedExpr>::const_iterator i, 
-                               List<TypedExpr>::const_iterator end ) {
-						  if ( args.quiet() ) return;
-						  args.out() << "ERROR: ambiguous resolution for " << *e << "\n"
-	                                 << "       candidates are:\n";
-	
-	                      for(; i != end; ++i) {
-		                      args.out() << "\n" << **i;
-	                      }
-						  args.out() << std::endl;
-					  },
-					  [&args]( const Expr*, const TypeBinding& tb ) {
-						  if ( args.quiet() ) return;
-						  args.out() << "ERROR: unbound type variable"
-						             << (tb.unbound() > 1 ? "s" : "") 
-									 << " on " << tb.name << tb << std::endl;
-					  } };
-	
-	for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-		if ( ! args.quiet() ) args.out() << "\n";
-		const Interpretation *i = resolve( *e );
-		if ( i->is_valid() ) {
-			if ( ! args.quiet() ) args.out() << *i << std::endl;
-			*e = i->expr;
-		} 
+	InvalidEffect on_invalid = []( const Expr* e ) {};
+	AmbiguousEffect on_ambiguous = 
+		[]( const Expr* e, List<TypedExpr>::const_iterator i, List<TypedExpr>::const_iterator end ) {};
+	UnboundEffect on_unbound = []( const Expr* e, const TypeBinding& tb ) {};
+
+	switch ( args.filter() ) {
+	case Args::Filter::None:
+		if ( args.quiet() ) break;
+
+		on_invalid = [&out]( const Expr* e ) {
+			out << "ERROR: no valid resolution for " << *e << std::endl;
+		};
+
+		on_ambiguous = [&out]( const Expr* e, List<TypedExpr>::const_iterator i, 
+				List<TypedExpr>::const_iterator end ) {
+			out << "ERROR: ambiguous resolution for " << *e << "\n"
+				<< "       candidates are:\n";
+
+			for(; i != end; ++i) {
+				out << "\n" << **i;
+			}
+			out << std::endl;
+		};
+
+		on_unbound = [&out]( const Expr* e, const TypeBinding& tb ) {
+			out << "ERROR: unbound type variable" << (tb.unbound() > 1 ? "s" : "") 
+					<< " on " << tb.name << tb << std::endl;
+		};
+		break;
+	case Args::Filter::Invalid:
+		break;
+	case Args::Filter::Unambiguous:
+		on_ambiguous = [&out]( const Expr* e, List<TypedExpr>::const_iterator i, 
+				List<TypedExpr>::const_iterator end ) {
+			out << *e << std::endl;
+		};
+		break;
+	case Args::Filter::Resolvable:
+		on_invalid = [&out]( const Expr* e ) {
+			out << *e << std::endl;
+		};
+
+		on_unbound = [&out]( const Expr* e, const TypeBinding& tb ) {
+			out << *e << std::endl;
+		};
+		break;
 	}
+
+	Resolver resolve{ conversions, funcs, on_invalid, on_ambiguous, on_unbound };
+
+	if ( args.quiet() || args.filter() != Args::Filter::None ) {
+		// loop only printing un-filtered 
+		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
+			const Interpretation *i = resolve( *e );
+			if ( args.filter() == Args::Filter::Invalid && i->is_valid() ) {
+				out << *i->expr << std::endl;
+			}
+		}
+	} else {
+		// loop printing all interpretations
+		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
+			out << "\n";
+			const Interpretation *i = resolve( *e );
+			if ( i->is_valid() ) {
+				out << *i << std::endl;
+				*e = i->expr;
+			}
+		}
+	}
+	
 	collect();
 }
