@@ -16,17 +16,7 @@ int main(int argc, char **argv) {
 	CanonicalTypeMap types;
 	std::ostream& out = args.out();
 	
-	if ( ! parse_input( args.in(), funcs, exprs, types ) ) return 1;
-	
-	if ( args.verbose() || args.filter() != Args::Filter::None ) {
-		out << std::endl;
-		for ( auto&& func : funcs ) { out << *func << std::endl; }
-		out << "\n%%\n" << std::endl;
-	}
-		
-	if ( args.verbose() ) {
-		for ( auto&& expr : exprs ) { out << *expr << std::endl; }
-	}
+	if ( ! parse_input( args.in(), funcs, exprs, types, args ) ) return 1;
 	
 	ConversionGraph conversions = make_conversions( types );
 	

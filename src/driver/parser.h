@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "args.h"
+
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/list.h"
@@ -49,4 +51,4 @@
 /// Returns true and sets funcs, exprs & types if appropriate, 
 /// prints errors otherwise.
 bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
-                  CanonicalTypeMap& types );
+                  CanonicalTypeMap& types, Args& args );

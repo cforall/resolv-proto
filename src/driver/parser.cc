@@ -1,8 +1,10 @@
 #include "parser.h"
-#include "parser_common.h"
 
 #include <iostream>
 #include <string>
+
+#include "args.h"
+#include "parser_common.h"
 
 #include "ast/decl.h"
 #include "ast/expr.h"
@@ -238,7 +240,7 @@ bool parse_expr( char *line, List<Expr>& exprs, CanonicalTypeMap& types ) {
 }
 
 bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
-                  CanonicalTypeMap& types ) {
+                  CanonicalTypeMap& types, Args& args ) {
 	std::string line;
 	std::string delim = "%%";
 	unsigned n = 0;
@@ -246,25 +248,52 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 	// parse declarations
 	while ( std::getline(in, line) ) {
 		++n;
-		if ( is_empty(line) ) continue;
-		if ( line == delim ) break;
+		if ( is_empty(line) ) {
+			if ( args.verbosity() == Args::Verbosity::Filtered 
+					|| args.verbosity() == Args::Verbosity::Verbose ) {
+				args.out() << line << std::endl;
+			}
+			continue;
+		}
+		if ( line == delim ) {
+			if ( args.verbosity() == Args::Verbosity::Filtered 
+					|| args.verbosity() == Args::Verbosity::Verbose ) {
+				args.out() << line << std::endl;
+			}
+			break;
+		}
 		
 		bool ok = parse_decl(const_cast<char*>(line.data()), funcs, types);
 		if ( ! ok ) {
 			std::cerr << "Invalid declaration [" << n << "]: \"" << line << "\"" << std::endl;
 			return false;
 		}
+
+		if ( args.verbosity() == Args::Verbosity::Filtered 
+				|| args.verbosity() == Args::Verbosity::Verbose ) {
+			args.out() << line << std::endl;
+		}
 	}
 	
 	// parse expressions
 	while ( std::getline(in, line) ) {
 		++n;
-		if ( is_empty(line) ) continue;
+		if ( is_empty(line) ) {
+			if ( args.verbosity() == Args::Verbosity::Filtered 
+					|| args.verbosity() == Args::Verbosity::Verbose ) {
+				args.out() << line << std::endl;
+			}
+			continue;
+		}
 		
 		bool ok = parse_expr(const_cast<char*>(line.data()), exprs, types);
 		if ( ! ok ) {
 			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;
 			return false;
+		}
+
+		if ( args.verbosity() == Args::Verbosity::Verbose ) {
+			args.out() << line << std::endl;
 		}
 	}
 	

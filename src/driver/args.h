@@ -6,11 +6,17 @@
 #include <fstream>
 
 class Args {
+public:
+    /// Possible verbosity levels
+    enum class Verbosity { Quiet, Filtered, Default, Verbose };
+    /// Possible filter types
+    enum class Filter { None, Invalid, Unambiguous, Resolvable };
+
+private:
     std::ifstream* in_;
     std::ofstream* out_;
-    enum class Verbosity { Quiet, Filtered, Default, Verbose } verbosity_;
-public:
-    enum class Filter { None, Invalid, Unambiguous, Resolvable } filter_;
+    Verbosity verbosity_;
+    Filter filter_;
 
 private:
     /// Gets the next single-char flag and returns it; returns '\0' if no flag
@@ -100,6 +106,7 @@ public:
 
     std::istream& in() const { return in_ ? *in_ : std::cin; }
     std::ostream& out() const { return out_ ? *out_ : std::cout; }
+    Verbosity verbosity() const { return verbosity_; }
     bool verbose() const { return verbosity_ == Verbosity::Verbose; }
     bool quiet() const { return verbosity_ == Verbosity::Quiet; }
     Filter filter() const { return filter_; }
