@@ -17,7 +17,6 @@
 
 /// A type declaration
 class Type : public ASTNode {
-	friend std::ostream& operator<< (std::ostream&, const Type&);
 	friend bool operator== (const Type&, const Type&);
 	friend std::hash<Type>;
 public:
@@ -27,18 +26,11 @@ public:
 	/// How many elemental types are represented by this type
 	virtual unsigned size() const = 0;
 protected:
-	/// Print this object to the output stream
-	virtual void write(std::ostream &) const = 0;
 	/// Check this type for equality with other types
 	virtual bool equals(const Type&) const = 0; 
 	/// Hash this type
 	virtual std::size_t hash() const = 0;
 };
-
-inline std::ostream& operator<< (std::ostream& out, const Type& t) {
-	t.write(out);
-	return out;
-}
 
 inline bool operator== (const Type& a, const Type& b) {
 	return a.equals(b);
@@ -64,7 +56,7 @@ public:
 	
 	ConcType(int id_) : id_(id_) {}
 	
-	virtual Type* clone() const { return new ConcType( id_ ); }
+	Type* clone() const override { return new ConcType( id_ ); }
 
 	bool operator== (const ConcType& that) const { return id_ == that.id_; }
 	bool operator!= (const ConcType& that) const { return !(*this == that); }
@@ -72,17 +64,17 @@ public:
 	
 	int id() const { return id_; }
 	
-	virtual unsigned size() const { return 1; }
+	unsigned size() const override { return 1; }
+
+	void write(std::ostream& out, ASTNode::Print) const override { out << id_; }
 	
 protected:
-	virtual void write(std::ostream& out) const { out << id_; }
-	
-	virtual bool equals(const Type& obj) const {
+	bool equals(const Type& obj) const override {
 		const ConcType* that = as_safe<ConcType>(&obj);
 		return that && (*this == *that);
 	}
 	
-	virtual std::size_t hash() const { return std::hash<int>{}( id_ ); }
+	std::size_t hash() const override { return std::hash<int>{}( id_ ); }
 };
 
 namespace std {
@@ -102,7 +94,7 @@ public:
 
 	NamedType(const std::string& name_)	: name_(name_) {}
 
-	virtual Type* clone() const { return new NamedType( name_ ); }
+	Type* clone() const override { return new NamedType( name_ ); }
 
 	bool operator== (const NamedType& that) const {
 		return name_ == that.name_;
@@ -111,19 +103,17 @@ public:
 
 	const std::string& name() const { return name_; }
 	
-	virtual unsigned size() const { return 1; }
+	unsigned size() const override { return 1; }
+
+	void write(std::ostream& out, ASTNode::Print) const override { out << "#" << name_; }
 
 protected:
-	virtual void write(std::ostream& out) const {
-		out << "#" << name_;
-	}
-
-	virtual bool equals(const Type& obj) const {
+	bool equals(const Type& obj) const override {
 		const NamedType* that = as_safe<NamedType>(&obj);
 		return that && *this == *that;
 	}
 
-	virtual std::size_t hash() const {
+	std::size_t hash() const override {
 		return std::hash<std::string>{}( name_ );
 	}
 };
@@ -138,7 +128,7 @@ public:
 	PolyType( const std::string& name_, const TypeBinding* src_ = nullptr )
 		: name_(name_), src_(src_) {}
 
-	virtual Type* clone() const { return new PolyType( name_, src_ ); }
+	Type* clone() const override { return new PolyType( name_, src_ ); }
 
 	/// Clones bound to a new type binding
 	PolyType* clone_bound( const TypeBinding* new_src ) const {
@@ -153,22 +143,22 @@ public:
 	const std::string& name() const { return name_; }
 	const TypeBinding* src() const { return src_; }
 
-	virtual unsigned size() const { return 1; }
+	unsigned size() const override { return 1; }
 
-protected:
-	virtual void trace(const GC& gc) const { gc << src_; }
-
-	virtual void write(std::ostream& out) const {
+	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << name_;
-		if ( src_ ) { out << "@" << src_->name; }
+		if ( src_ && style != ASTNode::Print::InputStyle ) { out << "@" << src_->name; }
 	}
 
-	virtual bool equals(const Type& obj) const {
+protected:
+	void trace(const GC& gc) const override { gc << src_; }
+
+	bool equals(const Type& obj) const override {
 		const PolyType* that = as_safe<PolyType>(&obj);
 		return that && *this == *that; 
 	}
 
-	virtual std::size_t hash() const {
+	std::size_t hash() const override {
 		return (std::hash<std::string>{}( name_ ) << 1) ^ std::hash<const TypeBinding*>{}( src_ );
 	}
 };
@@ -178,18 +168,23 @@ class VoidType : public Type {
 public:
 	typedef Type Base;
 	
-	virtual Type* clone() const { return new VoidType; }
+	Type* clone() const override { return new VoidType; }
 	
-	virtual unsigned size() const { return 0; }
+	unsigned size() const override { return 0; }
 	
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		switch ( style ) {
+		case ASTNode::Print::InputStyle: return;
+		default: out << "Void"; return;
+		}
+	}
+
 protected:
-	virtual void write(std::ostream& out) const { out << "Void"; }
-	
-	virtual bool equals(const Type& obj) const {
+	bool equals(const Type& obj) const override {
 		return is<VoidType>(&obj);
 	}
 	
-	virtual std::size_t hash() const { return 0; }
+	std::size_t hash() const override { return 0; }
 };
 
 /// Represents multiple return types; must be more than one
@@ -203,22 +198,25 @@ public:
 	TupleType(List<Type>&& types_)
 		: types_( move(types_) ) { assert( this->types_.size() > 1 ); }
 	
-	virtual Type* clone() const { return new TupleType( types_ ); }
+	Type* clone() const override { return new TupleType( types_ ); }
 	
 	const List<Type>& types() const { return types_; }
 	
-	virtual unsigned size() const { return types_.size(); }
-	
-protected:
-	virtual void trace(const GC& gc) const { gc << types_; }
+	unsigned size() const override { return types_.size(); }
 
-	virtual void write(std::ostream& out) const {
+	void write(std::ostream& out, ASTNode::Print style) const override {
 		auto it = types_.begin();
-		out << **it;
-		for(++it; it != types_.end(); ++it) { out << " " << **it; }
+		(*it)->write( out, style );
+		for(++it; it != types_.end(); ++it) {
+			out << " ";
+			(*it)->write( out, style );
+		}
 	}
 	
-	virtual bool equals(const Type& obj) const {
+protected:
+	void trace(const GC& gc) const override { gc << types_; }
+	
+	bool equals(const Type& obj) const override {
 		const TupleType* that = as_safe<TupleType>(&obj);
 		if ( ! that ) return false;
 		
@@ -229,7 +227,7 @@ protected:
 		return true;
 	}
 	
-	virtual std::size_t hash() const {
+	std::size_t hash() const override {
 		std::size_t r = types_.size();
 		for (const auto& ty : types_) {
 			r <<= 1;

@@ -56,10 +56,10 @@ public:
         char* name = argv[0];
 
         while ( char f = get_flag(argc, argv) ) {
-            if ( f == 'v' || f == '-' && flag_eq(argv[1], "verbose") ) {
+            if ( f == 'v' || (f == '-' && flag_eq(argv[1], "verbose")) ) {
                 verbosity_ = Verbosity::Verbose;
                 filter_ = Filter::None;
-            } else if ( f == 'q' || f == '-' && flag_eq(argv[1], "quiet") ) {
+            } else if ( f == 'q' || (f == '-' && flag_eq(argv[1], "quiet")) ) {
                 verbosity_ = Verbosity::Quiet;
                 filter_ = Filter::None;
             } else if ( f == '-' ) {

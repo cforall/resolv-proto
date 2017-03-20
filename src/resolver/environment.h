@@ -34,7 +34,7 @@ class Environment : public GC_Traceable {
         TypeClass( const PolyType* orig, const PolyType* added )
             : vars{ orig, added }, bound(nullptr) {}
         
-        TypeClass( const PolyType* orig, nullptr_t )
+        TypeClass( const PolyType* orig, std::nullptr_t )
             : vars{ orig }, bound(nullptr) {}
         
         /// Sets bound to o.bound if bound is unset.
@@ -48,6 +48,7 @@ class Environment : public GC_Traceable {
                     bound = o.bound;
                 }
             }
+            return true;
         }
     };
 
@@ -110,7 +111,7 @@ public:
         // validate();
     }
 
-    Environment( const PolyType* orig, nullptr_t ) : classes(), bindings() {
+    Environment( const PolyType* orig, std::nullptr_t ) : classes(), bindings() {
         insert( orig );
         // validate();
     }
@@ -202,6 +203,7 @@ public:
             }
         }
         // validate();
+        return true;
     }
 
     /// Applies the bindings in this environment to their local type bindings

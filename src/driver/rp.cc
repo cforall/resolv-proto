@@ -54,16 +54,19 @@ int main(int argc, char **argv) {
 	case Args::Filter::Unambiguous:
 		on_ambiguous = [&out]( const Expr* e, List<TypedExpr>::const_iterator i, 
 				List<TypedExpr>::const_iterator end ) {
-			out << *e << std::endl;
+			e->write( out, ASTNode::Print::InputStyle );
+			out << std::endl;
 		};
 		break;
 	case Args::Filter::Resolvable:
 		on_invalid = [&out]( const Expr* e ) {
-			out << *e << std::endl;
+			e->write( out, ASTNode::Print::InputStyle );
+			out << std::endl;
 		};
 
 		on_unbound = [&out]( const Expr* e, const TypeBinding& tb ) {
-			out << *e << std::endl;
+			e->write( out, ASTNode::Print::InputStyle );
+			out << std::endl;
 		};
 		break;
 	}
@@ -75,7 +78,8 @@ int main(int argc, char **argv) {
 		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
 			const Interpretation *i = resolve( *e );
 			if ( args.filter() == Args::Filter::Invalid && i->is_valid() ) {
-				out << *i->expr << std::endl;
+				(*e)->write( out, ASTNode::Print::InputStyle );
+				out << std::endl;
 			}
 		}
 	} else {

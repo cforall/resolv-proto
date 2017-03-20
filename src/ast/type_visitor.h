@@ -42,7 +42,7 @@ public:
     }
 
     /// Default implmentation of visit
-    bool visit( nullptr_t, T& ) { return true; }
+    bool visit( std::nullptr_t, T& ) { return true; }
     
     /// Default implmentation of visit
     bool visit( const ConcType*, T& ) { return true; }

@@ -23,8 +23,8 @@ bool parse_name(char *&token, std::string& ret) {
 	if ( 'a' <= *end && *end <= 'z' ) ++end;
 	else return false;
 	
-	while ( 'a' <= *end && *end <= 'z' 
-	        || '0' <= *end && *end <= '9' ) ++end;
+	while ( ('a' <= *end && *end <= 'z') 
+	        || ('0' <= *end && *end <= '9') ) ++end;
 	
 	ret.assign( token, (end-token) );
 	
@@ -41,14 +41,14 @@ bool parse_named_type(char *&token, std::string& ret) {
 
 	if ( ! match_char(end, '#') ) return false;
 
-	if ( 'A' <= *end && *end <= 'Z'
-	     || 'a' <= *end && *end <= 'z'
+	if ( ('A' <= *end && *end <= 'Z')
+	     || ('a' <= *end && *end <= 'z')
 		 || '_' == *end ) ++end;
 	else return false;
 
-	while ( 'A' <= *end && *end <= 'Z'
-	        || 'a' <= *end && *end <= 'z'
-			|| '0' <= *end && *end <= '9'
+	while ( ('A' <= *end && *end <= 'Z')
+	        || ('a' <= *end && *end <= 'z')
+			|| ('0' <= *end && *end <= '9')
 		    || '_' == *end ) ++end;
 	
 	ret.assign( token+1, (end-token-1) );
@@ -66,8 +66,8 @@ bool parse_poly_type(char *&token, std::string& ret) {
 	if ( 'A' <= *end && *end <= 'Z' ) ++end;
 	else return false;
 
-	while ( 'a' <= *end && *end <= 'z' 
-	        || '0' <= *end && *end <= '9' ) ++end;
+	while ( ('a' <= *end && *end <= 'z') 
+	        || ('0' <= *end && *end <= '9') ) ++end;
 	
 	ret.assign( token, (end-token) );
 
@@ -279,8 +279,7 @@ bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs,
 	while ( std::getline(in, line) ) {
 		++n;
 		if ( is_empty(line) ) {
-			if ( args.verbosity() == Args::Verbosity::Filtered 
-					|| args.verbosity() == Args::Verbosity::Verbose ) {
+			if ( args.verbosity() == Args::Verbosity::Verbose ) {
 				args.out() << line << std::endl;
 			}
 			continue;

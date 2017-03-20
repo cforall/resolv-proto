@@ -16,17 +16,9 @@
 
 /// A resolver declaration
 class Decl : public ASTNode {
-	friend std::ostream& operator<< (std::ostream&, const Decl&);
 public:
 	virtual Decl* clone() const = 0;
-protected:
-	virtual void write(std::ostream& out) const = 0;
 };
-
-inline std::ostream& operator<< (std::ostream& out, const Decl& d) {
-	d.write(out);
-	return out;
-}
 
 /// A function declaration
 class FuncDecl final : public Decl {
@@ -87,7 +79,7 @@ public:
 		  returns_( gen_returns( returns_ ) ), 
 		  tyVars_( move(tyVars_) ) {}
 	
-	virtual Decl* clone() const {
+	Decl* clone() const override {
 		return new FuncDecl( name_, tag_, params_, returns_, tyVars_ );
 	}
 	
@@ -102,19 +94,22 @@ public:
 	const Type* returns() const { return returns_; }
 	const unique_ptr<TypeBinding>& tyVars() const { return tyVars_; }
 
-protected:
-	virtual void trace(const GC& gc) const {
-		gc << params_ << returns_ << tyVars_.get();
-	}
-
-	virtual void write(std::ostream& out) const {
-		out << *returns_ << " ";
-		out << name_;
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		returns_->write( out, style );
+		out << " " << name_;
 		if ( ! tag_.empty() ) { out << "-" << tag_; }
-		for ( auto& t : params_ ) { out << " " << *t; }
+		for ( auto& t : params_ ) {
+			out << " ";
+			t->write( out, style );
+		}
 		if ( tyVars_ ) for ( auto asn : tyVars_->assertions() ) {
 			out << " | ";
-			asn.first->write( out );
+			asn.first->write( out, style );
 		}
+	}
+
+protected:
+	void trace(const GC& gc) const override {
+		gc << params_ << returns_ << tyVars_.get();
 	}
 };

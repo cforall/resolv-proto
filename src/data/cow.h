@@ -52,7 +52,7 @@ public:
         p = as_unowned(q);
     }
 
-    void reset( nullptr_t ) {
+    void reset( std::nullptr_t ) {
         if ( owned() ) delete p;
         p = nullptr;
     }
@@ -61,7 +61,7 @@ public:
 
     cow_ptr( T* p = nullptr ) : p(p) {}
     cow_ptr( const T* p ) : p( as_unowned(p) ) {}
-    cow_ptr( nullptr_t ) : p(nullptr) {}
+    cow_ptr( std::nullptr_t ) : p(nullptr) {}
 
     cow_ptr( const cow_ptr<T>& o ) : p( as_unowned(o.p) ) {}
     cow_ptr( cow_ptr<T>&& o ) : p( o.p ) { o.p = nullptr; }

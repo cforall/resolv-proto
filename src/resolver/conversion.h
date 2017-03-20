@@ -12,7 +12,7 @@
 
 /// Graph of conversions
 class ConversionGraph {
-	friend GC& operator<< (const GC&, const ConversionGraph&);
+	friend const GC& operator<< (const GC&, const ConversionGraph&);
 	friend std::ostream& operator<< (std::ostream&, const ConversionGraph&);
 	friend ConversionGraph make_conversions( CanonicalTypeMap& types );
 public:

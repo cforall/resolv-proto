@@ -67,7 +67,7 @@ public:
         return true;
     }
 
-    bool visit( nullptr_t, T& ) { return true; }
+    bool visit( std::nullptr_t, T& ) { return true; }
     
     bool visit( const VarExpr*, T& ) { return true; }
     

@@ -61,7 +61,7 @@ struct PolyKey {
     bool operator== (const PolyKey& o) const { return src == o.src && name == o.name; }
     bool operator< (const PolyKey& o) const {
         int ccode = name.compare( o.name );
-        return ccode < 0 || ccode == 0 && std::less<const TypeBinding*>{}( src, o.src );
+        return ccode < 0 || (ccode == 0 && std::less<const TypeBinding*>{}( src, o.src ));
     }
 
     std::size_t hash() const {
@@ -466,7 +466,7 @@ public:
         Iter i;
     
         iterator( Iter&& i ) : i( move(i) ) {}
-        iterator( nullptr_t p ) : i( p ) {}
+        iterator( std::nullptr_t p ) : i( p ) {}
         iterator( TypeMap<Value>* p ) : i( p ) {}
     public:
         iterator() = default;
@@ -494,7 +494,7 @@ public:
         Iter i;
     
         const_iterator( Iter&& i ) : i( move(i) ) {}
-        const_iterator( nullptr_t ) : i( nullptr ) {}
+        const_iterator( std::nullptr_t ) : i( nullptr ) {}
         const_iterator( const TypeMap<Value>* p ) : i( as_non_const(p) ) {}
     public:
         const_iterator() = default;
@@ -533,8 +533,8 @@ public:
     const Value* get() const { return leaf.get(); }
 
     /// Gets the TypeMap for types starting with this type, or nullptr for none such.
-    TypeMap<Value>* get( nullptr_t ) { return nullptr; }
-    const TypeMap<Value>* get( nullptr_t ) const { return nullptr; }
+    TypeMap<Value>* get( std::nullptr_t ) { return nullptr; }
+    const TypeMap<Value>* get( std::nullptr_t ) const { return nullptr; }
 
     TypeMap<Value>* get( const VoidType* ) { return this; }
     const TypeMap<Value>* get( VoidType* ) const { return this; }
@@ -609,7 +609,7 @@ public:
     void set( V&& v ) { leaf = make_unique<Value>( forward<V>(v) ); }
 
     template<typename V>
-    std::pair<iterator, bool> insert( nullptr_t, V&& ) { return { end(), false }; }
+    std::pair<iterator, bool> insert( std::nullptr_t, V&& ) { return { end(), false }; }
 
     template<typename V>
     std::pair<iterator, bool> insert( const VoidType* ty, V&& v ) {
@@ -736,7 +736,7 @@ public:
         return insert( v.first, v.second ).first;
     }
 
-    size_type count( nullptr_t ) const { return 0; }
+    size_type count( std::nullptr_t ) const { return 0; }
 
     size_type count( const VoidType* ) const {
         return leaf ? 1 : 0;
@@ -835,8 +835,8 @@ private:
     }
 
 public:
-    iterator find( nullptr_t ) { return end(); }
-    const_iterator find( nullptr_t ) const { return end(); }
+    iterator find( std::nullptr_t ) { return end(); }
+    const_iterator find( std::nullptr_t ) const { return end(); }
 
     iterator find( const VoidType* ty ) { return iterator{ locate(ty) }; }
     const_iterator find( const VoidType* ty ) const { return const_iterator{ locate(ty) }; }

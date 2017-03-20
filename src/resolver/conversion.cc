@@ -8,10 +8,11 @@
 
 const ConversionGraph::ConversionList ConversionGraph::no_conversions = {};
 
-GC& operator<< (const GC& gc, const ConversionGraph& g) {
+const GC& operator<< (const GC& gc, const ConversionGraph& g) {
 	for ( const auto& v : g.nodes ) {
 		gc << v.first << v.second.type;
 	}
+	return gc;
 }
 
 std::ostream& operator<< ( std::ostream& out, const ConversionGraph& g ) {

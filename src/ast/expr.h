@@ -20,16 +20,8 @@
 
 /// A resolvable expression
 class Expr : public ASTNode {
-	friend std::ostream& operator<< (std::ostream&, const Expr&);
 public:
 	virtual Expr* clone() const = 0;
-protected:
-	virtual void write(std::ostream& out) const = 0;
-};
-
-inline std::ostream& operator<< (std::ostream& out, const Expr& e) {
-	e.write(out);
-	return out;
 };
 
 /// An expression that is already typed
@@ -47,14 +39,16 @@ public:
 	
 	VarExpr(const Type* ty_) : ty_( ty_ ) { assert( ty_ ); }
 	
-	virtual Expr* clone() const { return new VarExpr( ty_ ); }
+	Expr* clone() const override { return new VarExpr( ty_ ); }
 	
-	virtual const Type* type() const { return ty_; }
+	const Type* type() const override { return ty_; }
+
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		ty_->write( out, style );
+	}
 
 protected:
-	virtual void trace(const GC& gc) const { gc << ty_; }
-
-	virtual void write(std::ostream& out) const { out << *ty_; }
+	void trace(const GC& gc) const override { gc << ty_; }
 };
 
 /// A cast expression
@@ -67,19 +61,21 @@ public:
 	CastExpr(const Expr* arg_, const Conversion* cast_)
 		: arg_( arg_ ), cast_( cast_ ) {}
 	
-	virtual Expr* clone() const { return new CastExpr( arg_, cast_ ); }
+	Expr* clone() const override { return new CastExpr( arg_, cast_ ); }
 	
 	const Expr* arg() const { return arg_; }
 	const Conversion* cast() const { return cast_; }
 	
-	virtual const Type* type() const { return cast_->to->type; }
+	const Type* type() const override { return cast_->to->type; }
 	
-protected:
-	virtual void trace(const GC& gc) const { gc << arg_; }
-
-	virtual void write(std::ostream& out) const {
-		out << *arg_ << " => " << *type();
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		arg_->write( out, style );
+		out << " => "; 
+		type()->write( out, style );
 	}
+
+protected:
+	void trace(const GC& gc) const override { gc << arg_; }
 };
 
 /// An untyped function call expression
@@ -92,21 +88,24 @@ public:
 	FuncExpr(const std::string& name_, List<Expr>&& args_)
 		: name_( name_ ), args_( move(args_) ) {}
 	
-	virtual Expr* clone() const {
+	Expr* clone() const override {
 		return new FuncExpr( name_, copy( args_ ) );
 	}
 	
 	const std::string& name() const { return name_; }
 	const List<Expr>& args() const { return args_; }
 
-protected:
-	virtual void trace(const GC& gc) const { gc << args_; }
-
-	virtual void write(std::ostream& out) const {
+	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << name_ << "(";
-		for (auto& arg : args_) { out << " " << *arg; } 
+		for (auto& arg : args_) {
+			out << " ";
+			arg->write( out, style );
+		} 
 		out << " )";
 	}
+
+protected:
+	void trace(const GC& gc) const override { gc << args_; }
 };
 
 /// A typed function call expression
@@ -139,7 +138,7 @@ public:
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ), 
 		  retType_( func_->returns() ) {}
 	
-	virtual Expr* clone() const {
+	Expr* clone() const override {
 		return new CallExpr( func_, args_, forall_ );
 	}
 	
@@ -147,19 +146,24 @@ public:
 	const List<TypedExpr>& args() const { return args_; }
 	const TypeBinding* forall() const { return forall_.get(); };
 	
-	virtual const Type* type() const { return retType(); }
-	
-protected:
-	virtual void trace(const GC& gc) const { gc << func_ << args_ << forall_.get() << retType_; }
+	const Type* type() const override { return retType(); }
 
-	virtual void write(std::ostream& out) const {
+	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << func_->name();
-		if ( ! func_->tag().empty() ) { out << "-" << func_->tag(); }
-		if ( forall_ && ! forall_->empty() ) { out << *forall_; }
+		if ( style != ASTNode::Print::InputStyle ) {
+			if ( ! func_->tag().empty() ) { out << "-" << func_->tag(); }
+			if ( forall_ && ! forall_->empty() ) { out << *forall_; }
+		}
 		out << "(";
-		for (auto& arg : args_) { out << " " << *arg; }
+		for (auto& arg : args_) {
+			out << " "; 
+			arg->write( out, style );
+		}
 		out << " )"; 
 	}
+	
+protected:
+	void trace(const GC& gc) const override { gc << func_ << args_ << forall_.get() << retType_; }
 };
 
 /// A single element of a tuple from an underlying expression
@@ -172,26 +176,27 @@ public:
 	TupleElementExpr( const TypedExpr* of_, unsigned ind_ )
 		: of_( of_ ), ind_( ind_ ) { assert( is<TupleType>( of_->type() ) ); }
 	
-	virtual Expr* clone() const { return new TupleElementExpr( of_, ind_ ); }
+	Expr* clone() const override { return new TupleElementExpr( of_, ind_ ); }
 	
 	const TypedExpr* of() const { return of_; }
 	
 	unsigned ind() const { return ind_; }
 	
-	virtual const Type* type() const {
+	const Type* type() const override {
 		return as<TupleType>( of_->type() )->types()[ ind_ ];
 	}
 
-protected:
-	virtual void trace(const GC& gc) const { gc << of_; }
-
-	virtual void write(std::ostream& out) const {
+	void write(std::ostream& out, ASTNode::Print style) const override {
 		if ( ind_ == 0 ) {
-			out << *of_ << "[0]";
+			of_->write( out, style );
+			if ( style != ASTNode::Print::InputStyle ) out << "[0]";
 		} else {
-			out << "[" << ind_ << "]";
+			if ( style != ASTNode::Print::InputStyle ) out << "[" << ind_ << "]";
 		}
 	}
+
+protected:
+	void trace(const GC& gc) const override { gc << of_; }
 };
 
 /// A tuple constituted of a list of underlying expressions
@@ -210,22 +215,25 @@ public:
 		ty_ = new TupleType( move(tys) );
 	}
 
-	virtual Expr* clone() const { return new TupleExpr( els_, ty_ ); }
+	Expr* clone() const override { return new TupleExpr( els_, ty_ ); }
 
 	const List<TypedExpr>& els() const { return els_; }
 
 	const TupleType* ty() const { return ty_; }
 
-	virtual const Type* type() const { return ty_; }
+	const Type* type() const override { return ty_; }
 
-protected:
-	virtual void trace(const GC& gc) const { gc << els_ << ty_; }
-
-	virtual void write(std::ostream& out) const {
+	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << "[";
-		for ( const TypedExpr* el : els_ ) { out << " " << *el; }
+		for ( const TypedExpr* el : els_ ) {
+			out << " ";
+			el->write( out, style );
+		}
 		out << " ]";
 	}
+
+protected:
+	void trace(const GC& gc) const override { gc << els_ << ty_; }
 };
 
 /// An ambiguous interpretation with a given type
@@ -239,18 +247,20 @@ public:
 	AmbiguousExpr( const Expr* expr_, const Type* type_, List<TypedExpr>&& alts_ = {} )
 		: expr_(expr_), type_( type_ ), alts_( move(alts_) ) {}
 	
-	virtual Expr* clone() const { return new AmbiguousExpr( expr_, type_, copy(alts_) ); }
+	Expr* clone() const override { return new AmbiguousExpr( expr_, type_, copy(alts_) ); }
 
 	const Expr* expr() const { return expr_; }
 	
 	const List<TypedExpr>& alts() const { return alts_; }
 
-	virtual const Type* type() const { return type_; }
+	const Type* type() const override { return type_; }
+
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		out << "<ambiguous resolution of type " << *type_ << " for ";
+		expr_->write( out, style );
+		out << ">";
+	}
 
 protected:
-	virtual void trace(const GC& gc) const { gc << expr_ << type_ << alts_; }
-
-	virtual void write(std::ostream& out) const {
-		out << "<ambiguous resolution of type " << *type_ << " for " << *expr_ << ">";
-	}
+	void trace(const GC& gc) const override { gc << expr_ << type_ << alts_; }
 };
