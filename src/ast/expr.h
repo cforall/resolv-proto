@@ -70,8 +70,10 @@ public:
 	
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		arg_->write( out, style );
-		out << " => "; 
-		type()->write( out, style );
+		if ( style != ASTNode::Print::InputStyle ) {
+			out << " => ";
+			type()->write( out, style );
+		}
 	}
 
 protected:

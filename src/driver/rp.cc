@@ -1,3 +1,5 @@
+#include <ctime>
+
 #include "args.h"
 #include "parser.h"
 
@@ -8,6 +10,8 @@
 #include "resolver/func_table.h"
 #include "resolver/interpretation.h"
 #include "resolver/resolver.h"
+
+long ms_between(std::clock_t start, std::clock_t end) { return (end - start) / (CLOCKS_PER_SEC / 1000); }
 
 int main(int argc, char **argv) {
 	Args args(argc, argv);
@@ -73,7 +77,17 @@ int main(int argc, char **argv) {
 
 	Resolver resolve{ conversions, funcs, on_invalid, on_ambiguous, on_unbound };
 
-	if ( args.quiet() || args.filter() != Args::Filter::None ) {
+	volatile std::clock_t start, end;
+
+	if ( args.quiet() ) {
+		start = std::clock();
+		// loop without printing
+		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
+			const Interpretation *i = resolve( *e );
+		}
+		end = std::clock();
+	} else if ( args.filter() != Args::Filter::None ) {
+		start = std::clock();
 		// loop only printing un-filtered 
 		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
 			const Interpretation *i = resolve( *e );
@@ -82,7 +96,9 @@ int main(int argc, char **argv) {
 				out << std::endl;
 			}
 		}
+		end = std::clock();
 	} else {
+		start = std::clock();
 		// loop printing all interpretations
 		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
 			out << "\n";
@@ -92,6 +108,12 @@ int main(int argc, char **argv) {
 				*e = i->expr;
 			}
 		}
+		end = std::clock();
+	}
+
+	if ( args.bench() ) {
+		// num_decls,num_exprs,runtime(ms)
+		out << funcs.size() << "," << exprs.size() << "," << ms_between(start, end) << std::endl;
 	}
 	
 	collect();
