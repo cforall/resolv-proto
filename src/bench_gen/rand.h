@@ -13,10 +13,10 @@
 using def_random_engine = std::mt19937;
 
 /// Constructs a new random engine seeded from the system random device
-def_random_engine new_random_engine() { return def_random_engine{ std::random_device{}() }; }
+static inline def_random_engine new_random_engine() { return def_random_engine{ std::random_device{}() }; }
 
 /// Constructs a new random engine from the given seed
-def_random_engine new_random_engine( unsigned seed ) { return def_random_engine{ seed }; }
+static inline def_random_engine new_random_engine( unsigned seed ) { return def_random_engine{ seed }; }
 
 /// Superclass for types generating an unsigned int from their operator()
 class Generator {

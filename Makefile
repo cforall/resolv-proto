@@ -1,4 +1,5 @@
-CXXFLAGS = -O0 -ggdb --std=c++14
+OPT ?= -O2
+CXXFLAGS ?= $(OPT) -ggdb --std=c++14
 DEPFLAGS = -MMD -MP
 
 .PHONY: all clean distclean test bench
@@ -21,12 +22,13 @@ ifdef DEBUG
 CXXFLAGS += -DRP_DEBUG
 endif
 
-ifeq "${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG}" "${SORTED};${USER_CONVS};${DEBUG}"
+ifeq "${LAST_OPT};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG}" "${OPT};${SORTED};${USER_CONVS};${DEBUG}"
 .lastmakeflags:
 	@touch .lastmakeflags
 else
 .lastmakeflags: clean
-	@echo "LAST_SORTED=${SORTED}" > .lastmakeflags
+	@echo "LAST_OPT=${OPT}" > .lastmakeflags
+	@echo "LAST_SORTED=${SORTED}" >> .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
 	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
 endif
@@ -43,7 +45,7 @@ COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(IFLAGS) $(TARGET_ARCH)
 
 $(BUILDDIR)/%.o : %.c
 $(BUILDDIR)/%.o : %.c %.d .lastmakeflags
-	$(COMPILE.c) $(OUTPUT_OPTION) -c %<
+	$(COMPILE.c) $(OUTPUT_OPTION) -c $<
 
 $(BUILDDIR)/%.o : %.cc
 $(BUILDDIR)/%.o : %.cc %.d .lastmakeflags

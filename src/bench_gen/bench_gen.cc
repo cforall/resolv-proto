@@ -347,7 +347,7 @@ class BenchGenerator {
                     return ty;
                 }
 
-                unsigned i = random( n_funcs );
+                unsigned i = random( n_funcs - 1 );
                 if ( i < basic_funcs.size() ) { 
                     decl = basic_funcs[ i ];
                 } else {
@@ -362,7 +362,7 @@ class BenchGenerator {
                     return ty;
                 }
 
-                unsigned i = random( n_funcs );
+                unsigned i = random( n_funcs - 1 );
                 if ( i < s_funcs.size() ) {
                     decl = s_funcs[ i ];
                 } else {
