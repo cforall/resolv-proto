@@ -217,6 +217,8 @@ private:
 	}
 	
 public:
+	FlatMap() : m(), n(0) {}
+
 	iterator begin() { return iterator{ m.begin(), m.end() }; }
 	const_iterator begin() const { return const_iterator{ m.begin(), m.end() }; }
 	const_iterator cbegin() const { return const_iterator{ m.cbegin(), m.cend() }; }
