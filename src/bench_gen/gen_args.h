@@ -280,10 +280,10 @@ private:
 
     /// Skips over all lowercase-ASCII + '_' chars at token
     bool match_name(char*& token) {
-        if ( 'a' <= *token && *token <= 'z' || '_' == *token ) ++token;
+        if ( ( 'a' <= *token && *token <= 'z' ) || '_' == *token ) ++token;
         else return false;
 
-        while ( 'a' <= *token && *token <= 'z' || '_' == *token ) ++token;
+        while ( ( 'a' <= *token && *token <= 'z' ) || '_' == *token ) ++token;
 
         return true;
     }

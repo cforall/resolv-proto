@@ -99,7 +99,7 @@ public:
     WeightedGenerator( DiscreteRandomGenerator::engine_type& e, WIter wbegin, WIter wend,
                        GeneratorList&& gs ) : steps(e, wbegin, wend), gs( move(gs) ) {
         assert(wend - wbegin > 1 && "Should be at least 2 steps");
-        assert(this->gs.size() == wend - wbegin && "Should be same number of weights as generators");
+        assert(this->gs.size() == (size_t)(wend - wbegin) && "Should be same number of weights as generators");
     }
 
     unsigned operator() () final { return (*gs[ steps() ])(); }

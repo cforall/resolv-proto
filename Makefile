@@ -3,7 +3,15 @@ CXXFLAGS ?= $(OPT) -ggdb --std=c++14 -Wall -Wno-unused-function
 DEPFLAGS = -MMD -MP
 MAKEFILE_NAME = ${firstword ${MAKEFILE_LIST}}
 
+# set up source and build directories
+SRCDIR = src
+VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver merge resolver bench_gen)
+IFLAGS = -I$(SRCDIR)
+BUILDDIR = build
+
 .PHONY : all clean test bench
+
+.PRECIOUS : %.d
 
 all : rp bench_gen
 
@@ -33,12 +41,6 @@ else
 	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
 endif
 
-# set up source and build directories
-SRCDIR = src
-VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver merge resolver bench_gen)
-IFLAGS = -I$(SRCDIR)
-BUILDDIR = build
-
 # rewrite object generation to auto-determine dependencies, run prebuild
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(IFLAGS) $(TARGET_ARCH)
 COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(IFLAGS) $(TARGET_ARCH)
@@ -63,7 +65,7 @@ rp : $(OBJS)
 	$(COMPILE.cc) -o rp $^ $(LDFLAGS)
 
 bench_gen : $(BENCH_OBJS)
-	$(COMPILE.cc) -o bench_gen $< $(BENCH_OBJS) $(LDFLAGS)
+	$(COMPILE.cc) -o bench_gen $^ $(LDFLAGS)
 
 clean :
 	-rm $(OBJS) $(OBJS:.o=.d) rp
