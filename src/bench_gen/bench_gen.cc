@@ -58,6 +58,7 @@ struct TypeGen {
         case Conc: return new ConcType{ (int)i };
         case Named: return new NamedType{ NameGen::get_lower( i ) };
         case Poly: return new PolyType{ NameGen::get_cap( i ) };
+        default: assert(false); return nullptr;
         }
     }
 
@@ -294,6 +295,7 @@ class BenchGenerator {
                             for (unsigned i = 0; i < n_rets; ++i) {
                                 rets[i] = parms_and_rets[n_parms + i].get();
                             }
+                            parms_and_rets.clear();
 
                             std::string tag;
                             if ( n_with_name > 1 ) {
