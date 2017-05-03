@@ -33,10 +33,11 @@ private:
     bool dirty_;                ///< Type binding has been changed since last check
 
 public:
-    TypeBinding() = default;
+    TypeBinding() : name(), bindings_(), assertions_(), unbound_(0), dirty_(false) {}
 
     /// Name-only constructor
-    TypeBinding( const std::string& name ) : name(name), bindings_(), unbound_(0), dirty_(false) {}
+    TypeBinding( const std::string& name ) 
+        : name(name), bindings_(), assertions_(), unbound_(0), dirty_(false) {}
 
     /// Constructor that takes a pair of iterators for a range of strings, the names 
     /// of the variables to be bound.

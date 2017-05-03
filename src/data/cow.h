@@ -16,45 +16,58 @@ template<typename T>
 class cow_ptr {
     static_assert( alignof(T) >= 2, "cow_ptr requires alignment >= 2" );
 
+    union flagged_ptr {
+        flagged_ptr( T* p ) : ptr(p) {}
+        flagged_ptr( uintptr_t f ) : flag(f) {}
+
+        T* ptr;          ///< Underlying pointer
+        uintptr_t flag;  ///< Low-order bit 0 if owned, 1 otherwise
+    } p;
+
     /// Gets a copy of this pointer with the owned flag set false
     static constexpr T* as_unowned( T* p ) {
-        return reinterpret_cast<T*>( reinterpret_cast<uintptr_t>(p) | UINTMAX_C(1) );
+        flagged_ptr fp{ p };
+        fp.flag |= UINTMAX_C(1);
+        return fp.ptr;
+        //return reinterpret_cast<T*>( reinterpret_cast<uintptr_t>(p) | UINTMAX_C(1) );
     }
-
-    T* p;  ///< Underlying pointer; low-order bit 0 if owned, 1 otherwise
 
     /// get pointer
     T* ptr() const {
-        return reinterpret_cast<T*>( reinterpret_cast<uintptr_t>(p) & ~UINTMAX_C(1) );
+        flagged_ptr fp{ p.flag & ~UINTMAX_C(1) };
+        return fp.ptr;
+        //return reinterpret_cast<T*>( reinterpret_cast<uintptr_t>(p) & ~UINTMAX_C(1) );
+
     }
 public:
     typedef typename std::add_lvalue_reference<T>::type reference;
     typedef typename std::add_lvalue_reference<const T>::type const_reference;
 
     /// get owned state
-    bool owned() const { return !( reinterpret_cast<uintptr_t>(p) & UINTMAX_C(1) ); }
+    bool owned() const { return !( p.flag & UINTMAX_C(1) ); }
+    //bool owned() const { return !( reinterpret_cast<uintptr_t>(p) & UINTMAX_C(1) ); }
 
     /// Resets the stored pointer to an owned copy
     void reset( T* q ) {
         if ( owned() ) {
-            if ( p == q ) return;
-            else delete p;
+            if ( p.ptr == q ) return;
+            else delete p.ptr;
         }
-        p = q;
+        p.ptr = q;
     }
 
     /// Resets the stored pointer to an unowned copy
     void reset( const T* q ) {
         if ( owned() ) {
-            if ( p == q ) return;
-            else delete p;
+            if ( p.ptr == q ) return;
+            else delete p.ptr;
         }
-        p = as_unowned(q);
+        p.ptr = as_unowned(q);
     }
 
     void reset( std::nullptr_t ) {
-        if ( owned() ) delete p;
-        p = nullptr;
+        if ( owned() ) delete p.ptr;
+        p.ptr = nullptr;
     }
 
     void reset() { reset(nullptr); }
@@ -63,31 +76,34 @@ public:
     cow_ptr( const T* p ) : p( as_unowned(p) ) {}
     cow_ptr( std::nullptr_t ) : p(nullptr) {}
 
-    cow_ptr( const cow_ptr<T>& o ) : p( as_unowned(o.p) ) {}
-    cow_ptr( cow_ptr<T>&& o ) : p( o.p ) { o.p = nullptr; }
+    cow_ptr( const cow_ptr<T>& o ) : p( as_unowned(o.p.ptr) ) {}
+    cow_ptr( cow_ptr<T>&& o ) : p( o.p.ptr ) { o.p.ptr = nullptr; }
     cow_ptr<T>& operator= ( const cow_ptr<T>& o ) {
         if ( owned() ) {
-            if ( p == o.ptr() ) return *this;  // no ownership leak
-            else delete p;
+            if ( p.ptr == o.ptr() ) return *this;  // no ownership leak
+            else delete p.ptr;
         }
-        p = as_unowned( o.p );
+        p.ptr = as_unowned( o.p.ptr );
         return *this;
     }
     cow_ptr<T>& operator= ( cow_ptr<T>&& o ) {
         if ( owned() ) {
-            if ( p == o.ptr() ) return *this;  // no ownership leak; assume only one owner
-            else delete p; 
+            if ( p.ptr == o.ptr() ) return *this;  // no ownership leak; assume only one owner
+            else delete p.ptr; 
         }
-        p = o.p;
-        o.p = nullptr;  // necessary in case of ownership transfer
+        p.ptr = o.p.ptr;
+        o.p.ptr = nullptr;  // necessary in case of ownership transfer
         return *this;
     }
-    ~cow_ptr() { if ( owned() ) delete p; }
+    ~cow_ptr() { if ( owned() ) delete p.ptr; }
 
     void swap( cow_ptr<T>& o ) {
-        uintptr_t tmp = reinterpret_cast<uintptr_t>(p);
-        reinterpret_cast<uintptr_t&>(p) = reinterpret_cast<uintptr_t>(o.p);
-        reinterpret_cast<uintptr_t&>(o.p) = tmp;
+        uintptr_t tmp = p.flag;
+        p.flag = o.p.flag;
+        o.p.flag = tmp;
+        // uintptr_t tmp = reinterpret_cast<uintptr_t>(p);
+        // reinterpret_cast<uintptr_t&>(p) = reinterpret_cast<uintptr_t>(o.p);
+        // reinterpret_cast<uintptr_t&>(o.p) = tmp;
     }
 
     /// true iff the wrapped pointer is not null
@@ -100,8 +116,8 @@ public:
 
     /// get writable copy of wrapped object; will clone underlying object if not owned
     reference mut() {
-        if ( ! owned() ) { p = new T( *ptr() ); }
-        return *p;
+        if ( ! owned() ) { p.ptr = new T( *ptr() ); }
+        return *p.ptr;
     }
 };
 

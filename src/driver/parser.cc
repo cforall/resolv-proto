@@ -90,7 +90,7 @@ bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& 
 		return true;
 	} else if ( parse_poly_type(token, n) ) {
 		if ( ! binding ) {
-			binding.reset( new TypeBinding );
+			binding.reset( new TypeBinding{} );
 		}
 		binding->add( n );
 		out.push_back( new PolyType{ n, binding.get() } );

@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 		start = std::clock();
 		// loop without printing
 		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-			const Interpretation *i = resolve( *e );
+			resolve( *e );
 		}
 		end = std::clock();
 	} else if ( args.filter() != Args::Filter::None ) {

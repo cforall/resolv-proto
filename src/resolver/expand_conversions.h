@@ -147,7 +147,7 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr, 
                             ConversionGraph& conversions, cow_ptr<Environment>& env, Cost& cost ) {
     // substitute target according to environment TODO count poly-cost
-    const Type* ntarget = replace( env, targetType );
+    targetType = replace( env, targetType );
     
     const Type* ty = expr->type();
     

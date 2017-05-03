@@ -13,7 +13,7 @@
 #include "data/mem.h"
 
 /// Binding for otherwise-unbound return type variables in an interpretation
-class Environment : public GC_Traceable {
+class Environment final : public GC_Traceable {
     friend std::ostream& operator<< (std::ostream&, const Environment&);
 
     // TODO investigate doing something union-find like with this; could just be a map 

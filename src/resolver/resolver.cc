@@ -483,7 +483,8 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	apply( candidate->env );
 	
 	// handle ambiguous candidate from conversion expansion
-	if ( ResolvedExprInvalid{ on_ambiguous, on_unbound }( candidate->expr ) ) {
+	ResolvedExprInvalid is_invalid{ on_ambiguous, on_unbound };
+	if ( is_invalid( candidate->expr ) ) {
 		return Interpretation::make_invalid();
 	}
 	
