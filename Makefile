@@ -1,11 +1,11 @@
 OPT ?= -O2
-CXXFLAGS ?= $(OPT) -ggdb --std=c++14
+CXXFLAGS ?= $(OPT) -ggdb --std=c++14 -Wall -Wno-unused-function
 DEPFLAGS = -MMD -MP
+MAKEFILE_NAME = ${firstword ${MAKEFILE_LIST}}
 
-.PHONY: all clean distclean test bench
+.PHONY : all clean test bench
 
-# set default target to rp
-all: rp bench_gen
+all : rp bench_gen
 
 # handle make flags
 -include .lastmakeflags
@@ -44,46 +44,40 @@ COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(IFLAGS) $(TARGET_ARCH)
 COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(IFLAGS) $(TARGET_ARCH)
 
 $(BUILDDIR)/%.o : %.c
-$(BUILDDIR)/%.o : %.c %.d .lastmakeflags
+$(BUILDDIR)/%.o : %.c $(BUILDDIR)/%.d .lastmakeflags
 	$(COMPILE.c) $(OUTPUT_OPTION) -c $<
 
 $(BUILDDIR)/%.o : %.cc
-$(BUILDDIR)/%.o : %.cc %.d .lastmakeflags
+$(BUILDDIR)/%.o : %.cc $(BUILDDIR)/%.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # rp objects
-OBJS = $(addprefix $(BUILDDIR)/, binding.o conversion.o gc.o parser.o resolver.o)
+OBJS = $(addprefix $(BUILDDIR)/, binding.o conversion.o gc.o parser.o resolver.o rp.o)
 
-BENCH_OBJS = $(addprefix $(BUILDDIR)/, binding.o gc.o random_partitioner.o)
+# bench_gen objects
+BENCH_OBJS = $(addprefix $(BUILDDIR)/, binding.o gc.o random_partitioner.o bench_gen.o)
 
-rp: rp.cc rp.d $(OBJS) .lastmakeflags
-	$(COMPILE.cc) -o rp $< $(OBJS) $(LDFLAGS)
+${OBJS} ${BENCH_OBJS} : ${MAKEFILE_NAME}
 
-bench_gen: bench_gen.cc bench_gen.d $(BENCH_OBJS)
+rp : $(OBJS)
+	$(COMPILE.cc) -o rp $^ $(LDFLAGS)
+
+bench_gen : $(BENCH_OBJS)
 	$(COMPILE.cc) -o bench_gen $< $(BENCH_OBJS) $(LDFLAGS)
 
-clean:
-	-rm $(OBJS)
-	-rm rp
-
-distclean: clean
-	-rm $(OBJS:.o=.d)
-	-rm rp.d
+clean :
+	-rm $(OBJS) $(OBJS:.o=.d) rp
+	-rm $(BENCH_OBJS) $(BENCH_OBJS:.o=.d) bench_gen
 	-rm .lastmakeflags
 
-test: rp
+test : rp
 	@tests/run.sh
 
-bench: rp
+bench : rp
 	@tests/bench.sh
 
 # so make doesn't fail without dependency files
-%.d: ;
-
-# so make won't delete dependency files
-.PRECIOUS: .lastmakeflags %.d
+%.d : ;
 
 # include dependency files
--include: $(OBJS:.o=.d)
--include rp.d
--include bench_gen.d
+-include $(OBJS:.o=.d)
