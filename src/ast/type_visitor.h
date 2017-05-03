@@ -61,7 +61,7 @@ public:
 
     /// Returns the result of visiting a default-constructed T
     T operator() ( const Type* t ) {
-        T r;
+        T r{};
         visit( t, r );
         return r;
     }

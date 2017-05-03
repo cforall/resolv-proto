@@ -84,7 +84,7 @@ public:
 public:
     /// Returns a (default-constructed) value from the visit
     T operator() ( const TypedExpr* e ) {
-        T r;
+        T r{};
         visit( e, r );
         return r;
     }
