@@ -428,7 +428,7 @@ public:
 			invalid = true;
 			return false;
 		}
-		return true;
+		return visitChildren( e, invalid );
 	}
 
 	bool visit( const AmbiguousExpr* e, bool& invalid ) {
