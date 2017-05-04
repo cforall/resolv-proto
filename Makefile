@@ -68,9 +68,9 @@ bench_gen : $(BENCH_OBJS)
 	$(COMPILE.cc) -o bench_gen $^ $(LDFLAGS)
 
 clean :
-	-rm $(OBJS) $(OBJS:.o=.d) rp
-	-rm $(BENCH_OBJS) $(BENCH_OBJS:.o=.d) bench_gen
-	-rm .lastmakeflags
+	-rm -f $(OBJS) $(OBJS:.o=.d) rp
+	-rm -f $(BENCH_OBJS) $(BENCH_OBJS:.o=.d) bench_gen
+	-rm -f .lastmakeflags
 
 test : rp
 	@tests/run.sh
