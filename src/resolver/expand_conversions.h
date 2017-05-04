@@ -165,6 +165,13 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
     }
 
     if ( typeof<ConcType>() == tid || typeof<NamedType>() == tid )  {
+        // check for and bind unbound polymorphic target (bound poly target replaced above)
+        if ( const PolyType* ptarget = as_safe<PolyType>(targetType) ) {
+            ++cost.poly;
+            bind( env, ptarget, ty );
+            return expr;
+        }
+
         // scan conversion list for matching type
         for ( const Conversion& conv : conversions.find( ty ) ) {
             if ( *conv.to->type == *targetType ) {
