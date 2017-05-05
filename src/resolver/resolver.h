@@ -62,9 +62,9 @@ public:
 	InterpretationList resolve( const Expr* expr, Mode resolve_mode = ALL_NON_VOID );
 	
 	/// Resolves `expr` as `targetType`, subject to `env` (which may be modified).
-	/// Returns best interpretation (may be ambiguous) or nullptr for none such.
-	const Interpretation* resolveWithType( const Expr* expr, const Type* targetType, 
-	                                       cow_ptr<Environment>& env );
+	/// Returns all interpretations (possibly ambiguous).
+	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, 
+	                                    cow_ptr<Environment>& env );
 
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 

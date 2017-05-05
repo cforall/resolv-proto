@@ -25,13 +25,16 @@
 #include "data/option.h"
 #include "merge/eager_merge.h"
 
-/// Checks the type assertions of a function call.
+/// Recursively checks the type assertions of a function call, branching on changes to the 
+/// environment
 bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings, 
-                             Cost& cost, cow_ptr<Environment>& env ) {
-	if ( ! bindings || bindings->assertions().empty() ) return false;
+                             TypeBinding::AssertionList::const_iterator it, 
+                             TypeBinding::AssertionList::const_iterator end, 
+							 Cost& cost, cow_ptr<Environment>& env, InterpretationList& out ) {
+	BindingEnvSubMutator replaceLocals{ *bindings, env };  // replace poly types with bindings
+	cow_ptr<Environment> env_bak = env;  // back up environment in case of failure
 
-	BindingSubMutator replaceLocals{ *bindings };  // replaces poly types with bindings
-	for ( auto it = bindings->assertions().begin(); it != bindings->assertions().end(); ++it ) {
+	do {
 		// Generate FuncExpr for assertion
 		const FuncDecl* asnDecl = it->first;
 		List<Expr> asnArgs;
@@ -42,15 +45,77 @@ bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings,
 		const FuncExpr* asnFunc = new FuncExpr{ asnDecl->name(), move(asnArgs) };
 		const Type* asnReturn = replaceLocals( asnDecl->returns() );
 
-		// check if it can be resolved
-		const Interpretation* satisfying = 
-			resolver.resolveWithType( asnFunc, asnReturn, env );
-		if ( ! satisfying || satisfying->is_ambiguous() ) return true;
+		// back up environment and check if resolution works
+		InterpretationList satisfying = resolver.resolveWithType( asnFunc, asnReturn, env );
+		if ( satisfying.empty() ) {
+			env = move(env_bak);  // reset environment to previous state
+			return true;
+		}
+		
+		if ( satisfying.size() > 1 ) {
+			// look for unique min-cost interpretation of the rest of the assertions
+			const Interpretation* mini = nullptr;
+			Cost minCost = Cost::max();
+			InterpretationList minOut;
+			++it;
 
+			for ( const Interpretation* i : satisfying ) {
+				Cost icost = i->cost;
+				InterpretationList iout;
+				// skip interpretations that don't lead to valid bindings
+				if ( it != end && 
+						assertionsUnresolvable( resolver, bindings, it, end, icost, i->env, iout ) )
+					continue;
+				
+				// skip interpretations that are more expensive than those already seen
+				if ( icost > minCost ) continue;
+
+				if ( icost < minCost ) {
+					mini = i;
+					minCost = move(icost);
+					minOut = move(iout);
+				} else if ( icost == minCost ) {
+					// TODO report ambiguity
+					mini = nullptr;
+					minCost = Cost::max();
+					minOut.clear();
+				}
+			}
+
+			if ( ! mini ) return true;
+
+			// record min-cost matching
+			out.reserve( out.size() + 1 + minOut.size() );
+			out.push_back( mini );
+			out.insert( out.end(), minOut.begin(), minOut.end() );
+			env = mini->env;
+			cost += minCost;
+		}
+		
 		// record resolution
-		bindings->bind_assertion( it, satisfying );
-		cost += satisfying->cost;
-	}
+		const Interpretation* i = satisfying.front();
+		out.push_back( i );
+		env = i->env;
+		cost += i->cost;
+	} while ( ++it != end );
+
+	return false;
+}
+
+/// Checks the type assertions of a function call.
+bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings, 
+                             Cost& cost, cow_ptr<Environment>& env ) {
+	if ( ! bindings || bindings->assertions().empty() ) return false;
+
+	// check assertions
+	InterpretationList out;
+	TypeBinding::AssertionList::const_iterator it = bindings->assertions().begin();
+	if ( assertionsUnresolvable( resolver, bindings, it, bindings->assertions().end(), 
+			cost, env, out ) ) return true;
+	
+	// record matching bindings
+	for ( const Interpretation* i : out ) { bindings->bind_assertion( it++, i ); }
+
 	return false;
 }
 
@@ -405,8 +470,8 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 	return results;
 }
 
-const Interpretation* Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
-	                                             cow_ptr<Environment>& env ) {
+InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
+	                                          cow_ptr<Environment>& env ) {
 	return convertTo( targetType, resolve( expr, NO_CONVERSIONS ), conversions, env );
 }
 

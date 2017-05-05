@@ -220,31 +220,34 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
     return nullptr;
 }
 
-/// Replaces `results` with the best interpretation (possibly conversion-expanded) as `targetType`
-const Interpretation* convertTo( const Type* targetType, InterpretationList&& results, 
-                                 ConversionGraph& conversions, cow_ptr<Environment>& env ) {
-    // best interpretation as targetType, null for none such
-    const Interpretation* best = nullptr;
-
+/// Replaces `results` with the best interpretation (possibly conversion-expanded) as `targetType`.
+/// If `targetType` is polymorphic, may result in multiple best interpretations.
+InterpretationList convertTo( const Type* targetType, InterpretationList&& results, 
+                              ConversionGraph& conversions, const cow_ptr<Environment>& env ) {
     // substitute target according to environment
     targetType = replace( env, targetType );
+
+    // best interpretation as targetType, null for none such
+    TypeMap<const Interpretation*> best;
 
     for ( const Interpretation* i : results ) {
         const Type* ty = i->expr->type();
     
         if ( *ty == *targetType ) {
             // set interpretation if type matches
-            setOrUpdateInterpretation( best, i->cost, [i]() { return i; } );
+            setOrUpdateInterpretation( best, ty, i->cost, [i]() { return i; } );
         } else {
             Cost cost = i->cost;
-            const TypedExpr* newExpr = convertTo( targetType, i->expr, conversions, env, cost );
+            cow_ptr<Environment> newEnv = env;
+            const TypedExpr* newExpr = convertTo( targetType, i->expr, conversions, newEnv, cost );
             if ( newExpr ) {
-                setOrUpdateInterpretation( best, cost, [newExpr,&cost]() {
-                    return new Interpretation{ newExpr, copy(cost) };
-                } );
+                setOrUpdateInterpretation( best, newExpr->type(), cost, 
+                    [newExpr,&cost,e = move(newEnv)]() {
+                        return new Interpretation{ newExpr, copy(cost), move(as_non_const(e)) };
+                    } );
             }
         }
     }
 
-    return best;
+    return InterpretationList( best.begin(), best.end() );
 }

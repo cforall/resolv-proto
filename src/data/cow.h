@@ -29,15 +29,12 @@ class cow_ptr {
         flagged_ptr fp{ p };
         fp.flag |= UINTMAX_C(1);
         return fp.ptr;
-        //return reinterpret_cast<T*>( reinterpret_cast<uintptr_t>(p) | UINTMAX_C(1) );
     }
 
     /// get pointer
     T* ptr() const {
         flagged_ptr fp{ p.flag & ~UINTMAX_C(1) };
         return fp.ptr;
-        //return reinterpret_cast<T*>( reinterpret_cast<uintptr_t>(p) & ~UINTMAX_C(1) );
-
     }
 public:
     typedef typename std::add_lvalue_reference<T>::type reference;
@@ -45,7 +42,6 @@ public:
 
     /// get owned state
     bool owned() const { return !( p.flag & UINTMAX_C(1) ); }
-    //bool owned() const { return !( reinterpret_cast<uintptr_t>(p) & UINTMAX_C(1) ); }
 
     /// Resets the stored pointer to an owned copy
     void reset( T* q ) {
@@ -101,9 +97,6 @@ public:
         uintptr_t tmp = p.flag;
         p.flag = o.p.flag;
         o.p.flag = tmp;
-        // uintptr_t tmp = reinterpret_cast<uintptr_t>(p);
-        // reinterpret_cast<uintptr_t&>(p) = reinterpret_cast<uintptr_t>(o.p);
-        // reinterpret_cast<uintptr_t&>(o.p) = tmp;
     }
 
     /// true iff the wrapped pointer is not null
