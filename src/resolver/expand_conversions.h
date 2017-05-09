@@ -249,5 +249,7 @@ InterpretationList convertTo( const Type* targetType, InterpretationList&& resul
         }
     }
 
-    return InterpretationList( best.begin(), best.end() );
+    InterpretationList bests;
+    for ( const auto& b : best ) { bests.push_back( b.second ); }
+    return bests;
 }

@@ -1,0 +1,5 @@
+A baz A | B foo A | A bar B
+#b foo #a
+#a bar #b
+%%
+baz( #a )

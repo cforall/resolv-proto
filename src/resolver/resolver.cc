@@ -56,15 +56,17 @@ bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings,
 			// look for unique min-cost interpretation of the rest of the assertions
 			const Interpretation* mini = nullptr;
 			Cost minCost = Cost::max();
+			cow_ptr<Environment> minEnv;
 			InterpretationList minOut;
 			++it;
 
 			for ( const Interpretation* i : satisfying ) {
 				Cost icost = i->cost;
+				cow_ptr<Environment> ienv = i->env;
 				InterpretationList iout;
 				// skip interpretations that don't lead to valid bindings
 				if ( it != end && 
-						assertionsUnresolvable( resolver, bindings, it, end, icost, i->env, iout ) )
+						assertionsUnresolvable( resolver, bindings, it, end, icost, ienv, iout ) )
 					continue;
 				
 				// skip interpretations that are more expensive than those already seen
@@ -73,11 +75,13 @@ bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings,
 				if ( icost < minCost ) {
 					mini = i;
 					minCost = move(icost);
+					minEnv = move(ienv);
 					minOut = move(iout);
 				} else if ( icost == minCost ) {
 					// TODO report ambiguity
 					mini = nullptr;
 					minCost = Cost::max();
+					minEnv = nullptr;
 					minOut.clear();
 				}
 			}
@@ -88,7 +92,7 @@ bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings,
 			out.reserve( out.size() + 1 + minOut.size() );
 			out.push_back( mini );
 			out.insert( out.end(), minOut.begin(), minOut.end() );
-			env = mini->env;
+			env = minEnv;
 			cost += minCost;
 		}
 		
