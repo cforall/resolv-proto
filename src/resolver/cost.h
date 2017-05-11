@@ -15,11 +15,10 @@ struct Cost {
 		: unsafe(unsafe), poly(poly), safe(safe) {}
 	
 	/// Maximum cost value
-	static const Cost& max() {
-		static auto inf = Cost{ std::numeric_limits<unsigned>::max(),
-		                        std::numeric_limits<unsigned>::max(),
-								std::numeric_limits<unsigned>::max() };
-		return inf;
+	static constexpr Cost max() {
+		return Cost{ std::numeric_limits<unsigned>::max(),
+		             std::numeric_limits<unsigned>::max(),
+					 std::numeric_limits<unsigned>::max() };
 	}
 	
 	Cost(const Cost&) = default;
@@ -42,6 +41,16 @@ struct Cost {
 		return diff < 0 ? Cost{ unsigned(-diff), 0, 0 } : Cost{ 0, 0, unsigned(diff) };
 	}
 };
+
+namespace std {
+	/// Overload of std::numeric_limits for Cost.
+	/// NOTE: Only specializes lowest(), max(), and min()
+	template<> struct numeric_limits<Cost> {
+		static constexpr Cost lowest() { return Cost{}; }
+		static constexpr Cost max() { return Cost::max(); }
+		static constexpr Cost min() { return Cost{}; }
+	};
+}
 
 inline Cost operator+ (const Cost& a, const Cost& b) {
 	return Cost{ a.unsafe + b.unsafe, a.poly + b.poly, a.safe + b.safe };

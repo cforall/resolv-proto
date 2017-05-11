@@ -61,10 +61,10 @@ public:
 	/// invalid interpretations.
 	InterpretationList resolve( const Expr* expr, Mode resolve_mode = ALL_NON_VOID );
 	
-	/// Resolves `expr` as `targetType`, subject to `env` (which may be modified).
+	/// Resolves `expr` as `targetType`, subject to `env`. 
 	/// Returns all interpretations (possibly ambiguous).
 	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, 
-	                                    cow_ptr<Environment>& env );
+	                                    const cow_ptr<Environment>& env );
 
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 

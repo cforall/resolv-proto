@@ -1,5 +1,11 @@
 A baz A | B foo A | A bar B
 #b foo #a
 #a bar #b
+
+A f A | B g A | A h B
+#c g #a
+#b g #a
+#a h #b
 %%
 baz( #a )
+f( #a )

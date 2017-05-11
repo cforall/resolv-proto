@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 
+#include "merge.h"
+
 /// Default (do nothing) "on index change" behaviour for `for_each_combo`
 template<typename Q>
 struct default_on_index_change {
@@ -16,9 +18,6 @@ struct default_on_index_change {
     /// Called before resetting the counter for queue `i` of `qs` (currently valued `j`) to zero.
     void reset( const std::vector<Q>& qs, unsigned i, unsigned j ) {}
 };
-
-/// Type of index vector for combinations
-typedef std::vector<unsigned> Indices;
 
 /// Given a vector of random-access queues of `T`, for each combination of elements from the 
 /// input queues, call a function on the queue elements.

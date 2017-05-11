@@ -11,6 +11,7 @@
 #include "expand_conversions.h"
 #include "func_table.h"
 #include "interpretation.h"
+#include "resolve_assertions.h"
 #include "unify.h"
 
 #include "ast/expr.h"
@@ -18,210 +19,13 @@
 #include "ast/typed_expr_visitor.h"
 #include "ast/typed_expr_mutator.h"
 #include "data/cast.h"
+#include "data/collections.h"
 #include "data/cow.h"
 #include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "data/option.h"
 #include "merge/eager_merge.h"
-
-/// Recursively checks the type assertions of a function call, branching on changes to the 
-/// environment
-bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings, 
-                             TypeBinding::AssertionList::const_iterator it, 
-                             TypeBinding::AssertionList::const_iterator end, 
-							 Cost& cost, cow_ptr<Environment>& env, InterpretationList& out ) {
-	BindingEnvSubMutator replaceLocals{ *bindings, env };  // replace poly types with bindings
-	cow_ptr<Environment> env_bak = env;  // back up environment in case of failure
-
-	do {
-		// Generate FuncExpr for assertion
-		const FuncDecl* asnDecl = it->first;
-		List<Expr> asnArgs;
-		asnArgs.reserve( asnDecl->params().size() );
-		for ( const Type* pType : asnDecl->params() ) {
-			asnArgs.push_back( new VarExpr( replaceLocals( pType ) ) );
-		}
-		const FuncExpr* asnFunc = new FuncExpr{ asnDecl->name(), move(asnArgs) };
-		const Type* asnReturn = replaceLocals( asnDecl->returns() );
-
-		// back up environment and check if resolution works
-		InterpretationList satisfying = resolver.resolveWithType( asnFunc, asnReturn, env );
-		if ( satisfying.empty() ) {
-			env = move(env_bak);  // reset environment to previous state
-			return true;
-		}
-		
-		if ( satisfying.size() > 1 ) {
-			// look for unique min-cost interpretation of the rest of the assertions
-			const Interpretation* mini = nullptr;
-			Cost minCost = Cost::max();
-			cow_ptr<Environment> minEnv;
-			InterpretationList minOut;
-			++it;
-
-			for ( const Interpretation* i : satisfying ) {
-				Cost icost = i->cost;
-				cow_ptr<Environment> ienv = i->env;
-				InterpretationList iout;
-				// skip interpretations that don't lead to valid bindings
-				if ( it != end && 
-						assertionsUnresolvable( resolver, bindings, it, end, icost, ienv, iout ) )
-					continue;
-				
-				// skip interpretations that are more expensive than those already seen
-				if ( icost > minCost ) continue;
-
-				if ( icost < minCost ) {
-					mini = i;
-					minCost = move(icost);
-					minEnv = move(ienv);
-					minOut = move(iout);
-				} else if ( icost == minCost ) {
-					// TODO report ambiguity
-					mini = nullptr;
-					minCost = Cost::max();
-					minEnv = nullptr;
-					minOut.clear();
-				}
-			}
-
-			if ( ! mini ) return true;
-
-			// record min-cost matching
-			out.reserve( out.size() + 1 + minOut.size() );
-			out.push_back( mini );
-			out.insert( out.end(), minOut.begin(), minOut.end() );
-			env = minEnv;
-			cost += minCost;
-		}
-		
-		// record resolution
-		const Interpretation* i = satisfying.front();
-		out.push_back( i );
-		env = i->env;
-		cost += i->cost;
-	} while ( ++it != end );
-
-	return false;
-}
-
-/// Checks the type assertions of a function call.
-bool assertionsUnresolvable( Resolver& resolver, TypeBinding* bindings, 
-                             Cost& cost, cow_ptr<Environment>& env ) {
-	if ( ! bindings || bindings->assertions().empty() ) return false;
-
-	// check assertions
-	InterpretationList out;
-	TypeBinding::AssertionList::const_iterator it = bindings->assertions().begin();
-	if ( assertionsUnresolvable( resolver, bindings, it, bindings->assertions().end(), 
-			cost, env, out ) ) return true;
-	
-	// record matching bindings
-	for ( const Interpretation* i : out ) { bindings->bind_assertion( it++, i ); }
-
-	return false;
-}
-
-/// Checks the validity of all the type assertions in a resolved expression
-class ExprAssertionsUnresolvable : public TypedExprMutator<ExprAssertionsUnresolvable> {
-	Resolver& resolver;
-	Cost& cost;
-	cow_ptr<Environment>& env;
-
-public:
-	ExprAssertionsUnresolvable( Resolver& resolver, Cost& cost, cow_ptr<Environment>& env ) 
-		: resolver(resolver), cost(cost), env(env) {}
-	
-	using TypedExprMutator<ExprAssertionsUnresolvable>::visit;
-
-	bool visit( const CallExpr* e, const TypedExpr*& r ) {
-		option<List<TypedExpr>> newArgs;
-		mutateAll( this, e->args(), newArgs );
-		if ( newArgs ) {
-			// trim expressions that lose any args
-			if ( newArgs->size() < e->args().size() ) {
-				r = nullptr;
-				return true;
-			}
-
-			// check assertions and generate new CallExpr if they match
-			TypeBinding* forall = e->forall() ? new TypeBinding{ *e->forall() } : nullptr;
-			if ( assertionsUnresolvable( resolver, forall, cost, env ) ) {
-				delete forall;
-				r = nullptr;
-				return true;
-			}
-			r = new CallExpr{ e->func(), *move(newArgs), unique_ptr<TypeBinding>{ forall } };
-		} else {
-			if ( assertionsUnresolvable( resolver, as_non_const(e->forall()), cost, env ) ) {
-				r = nullptr;
-			}
-		}
-		return true;
-	}
-
-	bool visit( const AmbiguousExpr* e, const TypedExpr*& r ) {
-		Cost cost_bak = cost;
-		Cost cost_min = Cost::max();
-		unsigned n = e->alts().size();
-		bool unchanged = true;
-		
-		// find all min-cost resolvable alternatives
-		List<TypedExpr> min_alts;
-		for ( unsigned i = 0; i < n; ++i ) {
-			const TypedExpr* ti = e->alts()[i];
-
-			visit( ti, ti );
-			if ( ti != e->alts()[i] ) { unchanged = false; }
-
-			if ( ! ti ) {
-				// trim unresolvable alternatives
-				cost = cost_bak;
-				continue;
-			}
-
-			// keep min-cost alternatives
-			if ( cost < cost_min ) {
-				cost_min = cost;
-				min_alts.clear();
-				min_alts.push_back( ti );
-			} else if ( cost == cost_min ) {
-				min_alts.push_back( ti );
-			}
-
-			cost = cost_bak; // reset cost for next alternative
-		}
-
-		if ( min_alts.empty() ) {
-			// no matches
-			r = nullptr;
-			return true;
-		}
-
-		cost = cost_min;
-		
-		// make no change if no change needed
-		if ( unchanged ) return true;
-		
-		// unique min disambiguates expression
-		if ( min_alts.size() == 1 ) {
-			r = min_alts.front();
-			return true;
-		}
-
-		// otherwise new ambiguous expression
-		r = new AmbiguousExpr{ e->expr(), e->type(), move(min_alts) };
-		return true;
-	}
-
-	/// Nulls call expression and returns true if unresolvable; false otherwise
-	bool operator() ( CallExpr* e ) {
-		const TypedExpr* tp = e;
-		visit( e, tp );
-		return tp == nullptr;
-	}
-};
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
@@ -407,11 +211,6 @@ InterpretationList matchFuncs( Resolver& resolver,
 	return results;
 }
 
-/// Extracts the cost from an interpretation
-struct interpretation_cost {
-	const Cost& operator() ( const Interpretation* i ) { return i->cost; }	
-};
-
 /// Combination validator that fails on ambiguous interpretations in combinations
 struct interpretation_unambiguous {
 	bool operator() ( const std::vector< InterpretationList >& queues,
@@ -475,7 +274,7 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 }
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
-	                                          cow_ptr<Environment>& env ) {
+	                                          const cow_ptr<Environment>& env ) {
 	return convertTo( targetType, resolve( expr, NO_CONVERSIONS ), conversions, env );
 }
 
@@ -518,20 +317,9 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 
 	if ( results.size() > 1 ) {
 		// sort min-cost results to beginning
-		InterpretationList::iterator min_pos = results.begin();
-		for ( InterpretationList::iterator i = results.begin() + 1;
-		      i != results.end(); ++i ) {
-			if ( (*i)->cost == (*min_pos)->cost ) {
-				// duplicate minimum cost; swap into next minimum position
-				++min_pos;
-				std::iter_swap( min_pos, i );
-			} else if ( (*i)->cost < (*min_pos)->cost ) {
-				// new minimum cost; swap into first position
-				min_pos = results.begin();
-				std::iter_swap( min_pos, i );
-			}
-		}
-
+		InterpretationList::iterator min_pos = 
+			sort_mins( results.begin(), results.end(), ByValueCompare<Interpretation>{} );
+		
 		// ambiguous if more than one min-cost interpretation
 		if ( min_pos != results.begin() ) {
 			List<TypedExpr> options;

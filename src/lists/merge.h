@@ -2,6 +2,9 @@
 
 /// Common code for merge functions.
 
+/// Type of index vector for combinations
+typedef std::vector<unsigned> Indices;
+
 /// Identity functor for T
 template<typename T>
 struct identity {

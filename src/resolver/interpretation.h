@@ -24,7 +24,7 @@ struct Interpretation : public GC_Object {
 	cow_ptr<Environment> env;  
 	
 	/// Make an interpretation for an expression [default null]; 
-	/// may provide cost [default 0]
+	/// may provide cost [default 0] and environment [default empty]
 	Interpretation( const TypedExpr* expr = nullptr, Cost&& cost = Cost{}, 
 	                cow_ptr<Environment>&& env = nullptr )
 		: expr( expr ), cost( move(cost) ), env( move(env) ) {}
@@ -71,7 +71,10 @@ struct Interpretation : public GC_Object {
 
 		return new Interpretation{ new AmbiguousExpr{ expr, i->type(), move(alts) }, 
 		                           copy(i->cost) };
-	} 
+	}
+
+	/// Orders two interpretations by cost.
+	bool operator< (const Interpretation& o) const { return cost < o.cost; }
 
 protected:
 	virtual void trace(const GC& gc) const {
@@ -89,3 +92,8 @@ inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 
 /// List of interpretations
 typedef List<Interpretation> InterpretationList;
+
+/// Functor to extract the cost from an interpretation
+struct interpretation_cost {
+	const Cost& operator() ( const Interpretation* i ) { return i->cost; }	
+};
