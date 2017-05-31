@@ -10,8 +10,8 @@ struct Cost {
 	unsigned poly;    ///< Polymorphic binding conversion cost.
 	unsigned safe;    ///< Safe conversion cost
 	
-	Cost() : unsafe(0), poly(0), safe(0) {}
-	Cost(unsigned unsafe, unsigned poly, unsigned safe)
+	constexpr Cost() : unsafe(0), poly(0), safe(0) {}
+	constexpr Cost(unsigned unsafe, unsigned poly, unsigned safe)
 		: unsafe(unsafe), poly(poly), safe(safe) {}
 	
 	/// Maximum cost value

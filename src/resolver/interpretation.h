@@ -6,7 +6,7 @@
 
 #include "binding.h"
 #include "cost.h"
-#include "environment.h"
+#include "env.h"
 
 #include "ast/expr.h"
 #include "ast/type.h"
@@ -21,12 +21,12 @@ struct Interpretation : public GC_Object {
 	const TypedExpr* expr;   ///< Base expression for interpretation
 	Cost cost;               ///< Cost of interpretation
 	/// Set of free polymorphic type variables bound; nullptr for none
-	cow_ptr<Environment> env;  
+	cow_ptr<Env> env;  
 	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0] and environment [default empty]
 	Interpretation( const TypedExpr* expr = nullptr, Cost&& cost = Cost{}, 
-	                cow_ptr<Environment>&& env = nullptr )
+	                cow_ptr<Env>&& env = nullptr )
 		: expr( expr ), cost( move(cost) ), env( move(env) ) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -14,9 +13,9 @@
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
-#include "resolver/binding.h"
-#include "resolver/binding_sub_mutator.h"
 #include "resolver/conversion.h"
+#include "resolver/forall.h"
+#include "resolver/forall_substitutor.h"
 
 /// A resolvable expression
 class Expr : public ASTNode {
@@ -112,49 +111,46 @@ protected:
 
 /// A typed function call expression
 class CallExpr : public TypedExpr {
-	const FuncDecl* func_;            ///< Function called
-	List<TypedExpr> args_;            ///< Function arguments
-	unique_ptr<TypeBinding> forall_;  ///< Binding of type variables to concrete types
-	mutable const Type* retType_;     ///< Return type of call, after type substitution
+	const FuncDecl* func_;       ///< Function called
+	List<TypedExpr> args_;       ///< Function arguments
+	unique_ptr<Forall> forall_;  ///< Type variables owned by this call.
+	const Type* retType_;        ///< Return type of call, after type substitution
 
-	const Type* retType() const {
-		if ( forall_ && forall_->dirty() ) {
-			BindingSubMutator{ *forall_ }.mutate( retType_ );
-		}
-		return retType_;
+	void fixRetType( const Forall* oldForall ) {
+		if ( forall_ ) { ForallSubstitutor{ oldForall, forall_.get() }.mutate( retType_ ); }
 	}
 public:
 	typedef Expr Base;
 	
 	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_ = List<TypedExpr>{} )
-		: func_( func_ ), args_( move(args_) ), forall_( copy(func_->tyVars()) ),
-		  retType_( func_->returns() ) {}
+			: func_( func_ ), args_( move(args_) ), 
+			  forall_( func_->forall() ? new Forall{ *func_->forall() } : nullptr ),
+			  retType_( func_->returns() ) { fixRetType( func_->forall() ); }
 
 	CallExpr( const FuncDecl* func_, const List<TypedExpr>& args_, 
-	          const unique_ptr<TypeBinding>& forall_ )
-		: func_( func_ ), args_( args_ ), 
-		  forall_( forall_ ? new TypeBinding( *forall_ ) : nullptr ),
-		  retType_( func_->returns() ) {}
+	          const unique_ptr<Forall>& forall_ )
+			: func_( func_ ), args_( args_ ), 
+		 	  forall_( forall_ ? new Forall{ *forall_ } : nullptr ),
+			  retType_( func_->returns() ) { fixRetType( forall_.get() ); }
 
-	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, unique_ptr<TypeBinding>&& forall_ )
+	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, 
+	          unique_ptr<Forall>&& forall_ )
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ), 
 		  retType_( func_->returns() ) {}
 	
-	Expr* clone() const override {
-		return new CallExpr( func_, args_, forall_ );
-	}
+	Expr* clone() const override { return new CallExpr( func_, args_, forall_ ); }
 	
 	const FuncDecl* func() const { return func_; }
 	const List<TypedExpr>& args() const { return args_; }
-	const TypeBinding* forall() const { return forall_.get(); };
+	const Forall* forall() const { return forall_.get(); }
 	
-	const Type* type() const override { return retType(); }
+	const Type* type() const override { return retType_; }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << func_->name();
 		if ( style != ASTNode::Print::InputStyle ) {
 			if ( ! func_->tag().empty() ) { out << "-" << func_->tag(); }
-			if ( forall_ && ! forall_->empty() ) { out << *forall_; }
+			if ( forall_ ) { out << *forall_; }
 		}
 		out << "(";
 		for (auto& arg : args_) {

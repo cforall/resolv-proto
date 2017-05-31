@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -9,10 +8,11 @@
 #include "ast.h"
 #include "type.h"
 
+#include "data/cow.h"
 #include "data/list.h"
 #include "data/mem.h"
-#include "resolver/binding.h"
-#include "resolver/binding_sub_mutator.h"
+#include "resolver/forall.h"
+#include "resolver/forall_substitutor.h"
 
 /// A resolver declaration
 class Decl : public ASTNode {
@@ -22,11 +22,11 @@ public:
 
 /// A function declaration
 class FuncDecl final : public Decl {
-	std::string name_;                 ///< Name of function
-	std::string tag_;                  ///< Disambiguating tag for function
-	List<Type> params_;                ///< Parameter types of function
-	const Type* returns_;              ///< Return types of function
-	unique_ptr<TypeBinding> tyVars_;   ///< Names of polymorphic type variables
+	std::string name_;        ///< Name of function
+	std::string tag_;         ///< Disambiguating tag for function
+	List<Type> params_;       ///< Parameter types of function
+	const Type* returns_;     ///< Return types of function
+	unique_ptr<Forall> forall_;  ///< Names of polymorphic type variables
 	
 	/// Generate appropriate return type from return list
 	static const Type* gen_returns(const List<Type>& rs) {
@@ -43,44 +43,35 @@ class FuncDecl final : public Decl {
 public:
 	typedef Decl Base;
 	
-	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const List<Type>& params_, const Type* returns_, 
-			 const unique_ptr<TypeBinding>& tyVars_ )
-		: name_(name_), tag_(tag_), params_(params_), 
-		  returns_(returns_), tyVars_( copy(tyVars_) ) {
-		// Rebind the polymorphic types to the new binding instance
-		if ( ! this->tyVars_ ) return;
-		auto m = BindingSubMutator{ *this->tyVars_ };
-		for ( const Type*& param : this->params_ ) {
-			m.mutate( param );
-		}
-		m.mutate( this->returns_ );
-	}
-	
 	FuncDecl(const std::string& name_, const List<Type>& params_,
 	         const List<Type>& returns_)
 		: name_(name_), tag_(), params_(params_), 
-		  returns_( gen_returns( returns_ ) ), tyVars_() {}
+		  returns_( gen_returns( returns_ ) ), forall_() {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_,
 	         const List<Type>& params_, const List<Type>& returns_)
 		: name_(name_), tag_(tag_), params_(params_),
-		  returns_( gen_returns( returns_ ) ), tyVars_() {}
+		  returns_( gen_returns( returns_ ) ), forall_() {}
 
 	FuncDecl(const std::string& name_, const List<Type>& params_, 
-	         const List<Type>& returns_, unique_ptr<TypeBinding>&& tyVars_ )
+	         const List<Type>& returns_, unique_ptr<Forall>&& forall_ )
 		: name_(name_), tag_(), params_(params_), 
-		  returns_( gen_returns( returns_ ) ), 
-		  tyVars_( move(tyVars_) ) {}
+		  returns_( gen_returns( returns_ ) ), forall_( move(forall_) ) {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const List<Type>& params_, const List<Type>& returns_, unique_ptr<TypeBinding>&& tyVars_ )
+	         const List<Type>& params_, const List<Type>& returns_, 
+			 unique_ptr<Forall>&& forall_ )
 		: name_(name_), tag_(tag_), params_(params_), 
-		  returns_( gen_returns( returns_ ) ), 
-		  tyVars_( move(tyVars_) ) {}
+		  returns_( gen_returns( returns_ ) ), forall_( move(forall_) ) {}
+	
+	FuncDecl(const std::string& name_, const std::string& tag_,
+	         List<Type>&& params_, const Type* returns_, unique_ptr<Forall>&& forall_)
+		: name_(name_), tag_(tag_), params_( move(params_) ), 
+		  returns_(returns_), forall_( move(forall_) ) {}
 	
 	Decl* clone() const override {
-		return new FuncDecl( name_, tag_, params_, returns_, tyVars_ );
+		ForallSubstitutor m;
+		return m( this );
 	}
 	
 	bool operator== (const FuncDecl& that) const { 
@@ -92,7 +83,7 @@ public:
 	const std::string& tag() const { return tag_; }
 	const List<Type>& params() const { return params_; }
 	const Type* returns() const { return returns_; }
-	const unique_ptr<TypeBinding>& tyVars() const { return tyVars_; }
+	const Forall* forall() const { return forall_.get(); }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		returns_->write( out, style );
@@ -102,14 +93,14 @@ public:
 			out << " ";
 			t->write( out, style );
 		}
-		if ( tyVars_ ) for ( auto asn : tyVars_->assertions() ) {
+		if ( forall_ ) for ( auto asn : forall_->assertions() ) {
 			out << " | ";
-			asn.first->write( out, style );
+			asn->write( out, style );
 		}
 	}
 
 protected:
 	void trace(const GC& gc) const override {
-		gc << params_ << returns_ << tyVars_.get();
+		gc << params_ << returns_ << forall_.get();
 	}
 };

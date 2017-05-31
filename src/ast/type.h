@@ -13,7 +13,7 @@
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
-#include "resolver/binding.h"
+#include "resolver/forall.h"
 
 /// A type declaration
 class Type : public ASTNode {
@@ -120,18 +120,18 @@ protected:
 
 /// Representation of a polymorphic type
 class PolyType : public Type {
-	std::string name_;        ///< Name of the polymorphic type variable
-	const TypeBinding* src_;  ///< Type binding this type belongs to
+	std::string name_;   ///< Name of the polymorphic type variable
+	const Forall* src_;  ///< Forall clause this type belongs to
 public:
 	typedef Type Base;
 
-	PolyType( const std::string& name_, const TypeBinding* src_ = nullptr )
+	PolyType( const std::string& name_, const Forall* src_ = nullptr )
 		: name_(name_), src_(src_) {}
 
 	Type* clone() const override { return new PolyType( name_, src_ ); }
 
 	/// Clones bound to a new type binding
-	PolyType* clone_bound( const TypeBinding* new_src ) const {
+	PolyType* clone_bound( const Forall* new_src ) const {
 		return new PolyType( name_, new_src );
 	}
 
@@ -141,13 +141,13 @@ public:
 	bool operator!= (const PolyType& that) const { return !(*this == that); }
 	
 	const std::string& name() const { return name_; }
-	const TypeBinding* src() const { return src_; }
+	const Forall* src() const { return src_; }
 
 	unsigned size() const override { return 1; }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << name_;
-		if ( src_ && style != ASTNode::Print::InputStyle ) { out << "@" << src_->name; }
+		if ( src_ && style != ASTNode::Print::InputStyle ) { out << "@" << src_->name(); }
 	}
 
 protected:
@@ -159,7 +159,7 @@ protected:
 	}
 
 	std::size_t hash() const override {
-		return (std::hash<std::string>{}( name_ ) << 1) ^ std::hash<const TypeBinding*>{}( src_ );
+		return (std::hash<std::string>{}( name_ ) << 1) ^ std::hash<const Forall*>{}( src_ );
 	}
 };
 

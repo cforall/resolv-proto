@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <type_traits>
 #include <utility>
 
@@ -71,6 +72,8 @@ public:
     cow_ptr( T* p = nullptr ) : p(p) {}
     cow_ptr( const T* p ) : p( as_unowned(p) ) {}
     cow_ptr( std::nullptr_t ) : p(nullptr) {}
+
+    cow_ptr( const std::unique_ptr<T>& u ) : p( as_unowned(u.get()) ) {}
 
     cow_ptr( const cow_ptr<T>& o ) : p( as_unowned(o.p.ptr) ) {}
     cow_ptr( cow_ptr<T>&& o ) : p( o.p.ptr ) { o.p.ptr = nullptr; }

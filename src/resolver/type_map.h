@@ -17,6 +17,7 @@
 #include "data/collections.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "resolver/forall.h"
 
 /// Key type for ConcType
 struct ConcKey {
@@ -51,9 +52,9 @@ struct NamedKey {
 /// Key type for PolyType
 struct PolyKey {
     std::string name;
-    const TypeBinding* src;
+    const Forall* src;
 
-    PolyKey( const std::string& name, const TypeBinding* src ) : name(name), src(src) {}
+    PolyKey( const std::string& name, const Forall* src ) : name(name), src(src) {}
     PolyKey( const PolyType* pt ) : name( pt->name() ), src( pt->src() ) {}
 
     const Type* value() const { return new PolyType{ name, src }; }
@@ -61,12 +62,11 @@ struct PolyKey {
     bool operator== (const PolyKey& o) const { return src == o.src && name == o.name; }
     bool operator< (const PolyKey& o) const {
         int ccode = name.compare( o.name );
-        return ccode < 0 || (ccode == 0 && std::less<const TypeBinding*>{}( src, o.src ));
+        return ccode < 0 || (ccode == 0 && std::less<const Forall*>{}( src, o.src ));
     }
 
     std::size_t hash() const {
-        return (std::hash<std::string>{}( name ) << 1) 
-                ^ std::hash<const TypeBinding*>{}( src );
+        return (std::hash<std::string>{}( name ) << 1) ^ std::hash<const Forall*>{}( src );
     }
 };
 
