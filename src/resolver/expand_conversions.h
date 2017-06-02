@@ -5,12 +5,11 @@
 
 #include "conversion.h"
 #include "cost.h"
-#include "environment.h"
+#include "env.h"
 #include "interpretation.h"
 #include "type_map.h"
 
 #include "data/cast.h"
-#include "data/cow.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "merge/eager_merge.h"
@@ -143,11 +142,12 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
     }
 }
 
-/// Replaces expression with the best conversion to the given type, updating cost and env as needed
+/// Replaces expression with the best conversion to the given type, updating cost and env as needed.
+/// Returns nullptr for no such conversion; may update env and cost on such a failure result.
 const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr, 
-                            ConversionGraph& conversions, cow_ptr<Environment>& env, Cost& cost ) {
+                            ConversionGraph& conversions, unique_ptr<Env>& env, Cost& cost ) {
     // substitute target according to environment TODO count poly-cost
-    targetType = replace( env, targetType );
+    targetType = replace( env.get(), targetType );
     
     const Type* ty = expr->type();
     
@@ -160,7 +160,7 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
 
     // substitute expression type according to environment TODO count poly-cost
     if ( typeof<PolyType>() == tid ) {
-        ty = replace( env, as<PolyType>(ty) );
+        ty = replace( env.get(), as<PolyType>(ty) );
         tid = typeof( ty );
     }
 
@@ -192,19 +192,15 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
         // decompose into elements and recurse
         List<TypedExpr> els;
         els.reserve( tty->size() );
-        cow_ptr<Environment> newEnv = env;
-        Cost newCost = cost;
         for ( unsigned j = 0; j < tty->size(); ++j ) {
             const TypedExpr* el = convertTo( ttarget->types()[j], 
                                              new TupleElementExpr{ expr, j }, 
-                                             conversions, newEnv, newCost );
+                                             conversions, env, cost );
             // fail on no element conversion
             if ( ! el ) return nullptr;
 
             els.push_back( el );
         }
-        env = move(newEnv);
-        cost = newCost;
         return new TupleExpr{ move(els) };
     } else if ( typeof<PolyType>() == tid ) {
         // we know here that ty is unbound, or it would have been replaced above
@@ -223,7 +219,7 @@ const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr,
 /// Replaces `results` with the best interpretation (possibly conversion-expanded) as `targetType`.
 /// If `targetType` is polymorphic, may result in multiple best interpretations.
 InterpretationList convertTo( const Type* targetType, InterpretationList&& results, 
-                              ConversionGraph& conversions, const cow_ptr<Environment>& env ) {
+                              ConversionGraph& conversions, const Env* env ) {
     // substitute target according to environment
     targetType = replace( env, targetType );
 
@@ -238,7 +234,7 @@ InterpretationList convertTo( const Type* targetType, InterpretationList&& resul
             setOrUpdateInterpretation( best, ty, i->cost, [i]() { return i; } );
         } else {
             Cost cost = i->cost;
-            cow_ptr<Environment> newEnv = env;
+            unique_ptr<Env> newEnv = Env::from( env );
             const TypedExpr* newExpr = convertTo( targetType, i->expr, conversions, newEnv, cost );
             if ( newExpr ) {
                 setOrUpdateInterpretation( best, newExpr->type(), cost, 

@@ -4,10 +4,9 @@
 
 #include "resolver.h"
 
-#include "binding.h"
-#include "binding_sub_mutator.h"
 #include "cost.h"
-#include "environment.h"
+#include "env.h"
+#include "env_substitutor.h"
 #include "expand_conversions.h"
 #include "func_table.h"
 #include "interpretation.h"
@@ -15,12 +14,13 @@
 #include "unify.h"
 
 #include "ast/expr.h"
+#include "ast/forall.h"
+#include "ast/forall_substitutor.h"
 #include "ast/mutator.h"
 #include "ast/typed_expr_visitor.h"
 #include "ast/typed_expr_mutator.h"
 #include "data/cast.h"
 #include "data/collections.h"
-#include "data/cow.h"
 #include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
@@ -29,8 +29,8 @@
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, 
-                               const Funcs& funcs, Resolver::Mode resolve_mode ) {
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
+                               Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	// find functions with no parameters, skipping remaining checks if none
@@ -42,23 +42,20 @@ InterpretationList matchFuncs( Resolver& resolver,
 	DBG( "  with<0>params: " << print_all_deref( withNParams() ) );
 	
 	// attempt to match functions to arguments
-	for ( auto&& func : withNParams() ) {
+	for ( const FuncDecl* func : withNParams() ) {
 		// skip functions returning no values, unless at top level
 		if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
 		Cost cost; // initialized to zero
-		unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
-		cow_ptr<Environment> env; // initialized to nullptr
+		unique_ptr<Env> env; // initialized to nullptr
 		
-		CallExpr* call = new CallExpr{ func, List<TypedExpr>{}, move(localEnv) };
+		CallExpr* call = new CallExpr{ func };
 
 		// check type assertions if at top level
 		if ( resolve_mode == Resolver::TOP_LEVEL ) {
-			if ( assertionsUnresolvable( resolver, as_non_const(call->forall()), cost, env ) ) 
-				continue;
+			if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
 		}
 		
-		// create new zero-cost interpretation for resolved call
 		results.push_back( new Interpretation{ call, move(cost), move(env) } );
 	}
 	
@@ -85,32 +82,35 @@ InterpretationList matchFuncs( Resolver& resolver,
 		DBG( "    with<" << n << ">params: " << print_all_deref( withNParams() ) );
 
 		// attempt to match functions to arguments
-		for ( const auto& func : withNParams() ) {
+		for ( const FuncDecl* func : withNParams() ) {
 			// skip functions returning no values, unless at top level
 			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
-			unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
-			cow_ptr<Environment> env = arg->env;
-
+			unique_ptr<Env> env = Env::from( arg->env );
+			unique_ptr<Forall> forall = Forall::from( func->forall() );
+			if ( forall ) {
+				ForallSubstitutor replaceLocals{ func->forall(), forall.get() };
+				func = replaceLocals( func );
+			}
+			
 			// skip functions that don't match the parameter types
 			if ( n == 1 ) { // concrete type arg
-				if ( ! unify( func->params()[0], arg->type(), cost, *localEnv, env ) ) continue;
+				if ( ! unify( func->params()[0], arg->type(), cost, env ) ) continue;
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( ! unify( func->params()[i], argTypes[i], cost, *localEnv, env ) ) 
-						goto nextFunc;
+					if ( ! unify( func->params[i], argTypes[i], cost, env ) ) goto nextFunc;
 				}
 			}
 
 			{ // extra scope so don't get goto errors for the labelled break simulation
-				CallExpr* call = new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(localEnv) };
+				CallExpr* call = new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(forall) };
 
 				// check type assertions if at top level
 				if ( resolve_mode == Resolver::TOP_LEVEL ) {
-					if ( ExprAssertionsUnresolvable{ resolver, cost, env }( call ) ) continue;
+					if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
 				}
 
 				// create new interpretation for resolved call
@@ -128,8 +128,8 @@ typedef std::vector< std::pair<Cost, InterpretationList> > ComboList;
 /// Checks if a list of argument types match a list of parameter types.
 /// The argument types may contain tuple types, which should be flattened; the parameter 
 /// types will not. The two lists should be the same length after flattening.
-bool argsMatchParams( const InterpretationList& args, const List<Type>& params, 
-                      Cost& cost, TypeBinding& localEnv, cow_ptr<Environment>& env ) {
+bool argsMatchParams( const InterpretationList& args, const List<Type>& params,
+                      Cost& cost, unique_ptr<Env>& env ) {
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
 		// merge in argument environment
@@ -137,12 +137,12 @@ bool argsMatchParams( const InterpretationList& args, const List<Type>& params,
 		// test unification of parameters
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {
-			if ( ! unify( params[i], args[j]->type(), cost, localEnv, env ) ) return false;
+			if ( ! unify( params[i], args[j]->type(), cost, env ) ) return false;
 			++i;
 		} else {
 			const List<Type>& argTypes = as<TupleType>( args[j]->type() )->types();
 			for ( unsigned k = 0; k < m; ++k ) {
-				if ( ! unify( params[i], argTypes[k], cost, localEnv, env ) ) return false;
+				if ( ! unify( params[i], argTypes[k], cost, env ) ) return false;
 				++i;
 			}
 		}
@@ -162,8 +162,7 @@ List<TypedExpr> argsFrom( const InterpretationList& is ) {
 /// Return an interpretation for all matches between functions in funcs and 
 /// argument packs in combos
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, 
-                               const Funcs& funcs, ComboList&& combos, 
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList&& combos, 
                                Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
@@ -183,24 +182,27 @@ InterpretationList matchFuncs( Resolver& resolver,
 		DBG( "    with<" << n << ">Params: " << print_all_deref( withNParams() ) );
 		
 		// attempt to match functions to arguments
-		for ( auto&& func : withNParams() ) {
+		for ( const FuncDecl* func : withNParams() ) {
 			// skip functions returning no values, unless at top level
 			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
-			unique_ptr<TypeBinding> localEnv = copy(func->tyVars());
-			cow_ptr<Environment> env; // initialized by argsMatchParams()
+			unique_ptr<Env> env{}; // initialized by argsMatchParams()
+			unique_ptr<Forall> forall = Forall::from( func->forall() );
+			if ( forall ) {
+				ForallSubstitutor replaceLocals{ func->forall(), forall.get() };
+				func = replaceLocals( func );
+			}
 
 			// skip functions that don't match the parameter types
-			if ( ! argsMatchParams( combo.second, func->params(), cost, *localEnv, env ) ) 
-				continue;
+			if ( ! argsMatchParams( combo.second, func->params(), cost, env ) ) continue;
 			
-			CallExpr* call = new CallExpr{ func, argsFrom( combo.second ), move(localEnv) };
+			CallExpr* call = new CallExpr{ func, argsFrom( combo.second ), move(forall) };
 
 			// check type assertions if at top level
 			if ( resolve_mode == Resolver::TOP_LEVEL ) {
-				if ( ExprAssertionsUnresolvable{ resolver, cost, env }( call ) ) continue;
+				if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
 			}
 			
 			// create new interpretation for resolved call
@@ -240,7 +242,8 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 				results = matchFuncs( *this, withName(), resolve_mode );
 			} break;
 			case 1: {
-				results = matchFuncs( *this, withName(), resolve( funcExpr->args().front() ), resolve_mode );
+				results = matchFuncs( *this, withName(), resolve( funcExpr->args().front() ), 
+				                      resolve_mode );
 			} break;
 			default: {
 				std::vector<InterpretationList> sub_results;
@@ -274,7 +277,7 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 }
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
-	                                          const cow_ptr<Environment>& env ) {
+	                                          const Env* env ) {
 	return convertTo( targetType, resolve( expr, NO_CONVERSIONS ), conversions, env );
 }
 
@@ -282,22 +285,11 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 /// ambiguous.
 class ResolvedExprInvalid : public TypedExprVisitor<ResolvedExprInvalid, bool> {
 	AmbiguousEffect& on_ambiguous;
-	UnboundEffect& on_unbound;
 
 public:
-	ResolvedExprInvalid( AmbiguousEffect& on_ambiguous, UnboundEffect& on_unbound )
-		: on_ambiguous(on_ambiguous), on_unbound(on_unbound) {}
+	ResolvedExprInvalid( AmbiguousEffect& on_ambiguous ) : on_ambiguous(on_ambiguous) {}
 	
 	using TypedExprVisitor<ResolvedExprInvalid, bool>::visit;
-
-	bool visit( const CallExpr* e, bool& invalid ) {
-		if ( e->forall() && e->forall()->unbound() ) {
-			on_unbound( e, *e->forall() );
-			invalid = true;
-			return false;
-		}
-		return visitChildren( e, invalid );
-	}
 
 	bool visit( const AmbiguousExpr* e, bool& invalid ) {
 		on_ambiguous( e->expr(), e->alts().begin(), e->alts().end() );
@@ -335,13 +327,17 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	}
 	
 	const Interpretation* candidate = results.front();
-
-	// apply interpretations in environment to individual calls
-	apply( candidate->env );
 	
-	// handle ambiguous candidate from conversion expansion
-	ResolvedExprInvalid is_invalid{ on_ambiguous, on_unbound };
+	// handle ambiguous candidate from conversion expansion TODO inline this again
+	ResolvedExprInvalid is_invalid{ on_ambiguous };
 	if ( is_invalid( candidate->expr ) ) {
+		return Interpretation::make_invalid();
+	}
+
+	// check for unbound type variables in environment
+	List<TypeClass> unbound = getUnbound( candidate->env.get() );
+	if ( ! unbound.empty() ) {
+		on_unbound( expr, unbound );
 		return Interpretation::make_invalid();
 	}
 	

@@ -1,9 +1,11 @@
 #include "forall.h"
 
-#include "forall_substitutor.h"
+#include <algorithm>
 
-#include "ast/decl.h"
-#include "ast/type.h"
+#include "decl.h"
+#include "forall_substitutor.h"
+#include "type.h"
+
 #include "data/gc.h"
 
 Forall::Forall( const Forall& o ) : vars(), assns() {
@@ -27,6 +29,21 @@ Forall& Forall::operator= ( const Forall& o ) {
 	for ( const FuncDecl* a : o.assns ) { assns.push_back( m(a) ); }
 
 	return *this;
+}
+
+const PolyType* Forall::get( const std::string& p ) const {
+	auto rit = std::find_if( vars.begin(), vars.end(), 
+		[&p]( const PolyType* v ) { return v->name() == p; } );
+	return rit == vars.end() ? nullptr : *rit;
+}
+
+PolyType* Forall::add( const std::string& p ) {
+	const PolyType* rep = get( p );
+	if ( ! rep ) {
+		rep = new PolyType{ p, this };
+		vars.push_back( rep );
+	}
+	return rep;
 }
 
 std::ostream& operator<< (std::ostream& out, const Forall& f) {

@@ -39,28 +39,34 @@ void Env::trace(const GC& gc) const {
 	}
 }
 
+std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
+	if ( c.vars.size() == 1 ) {
+		out << *c.vars.front();
+	} else {
+		out << '[';
+		auto it = c.vars.begin();
+		while (true) {
+			out << **it;
+			if ( ++it == c.vars.end() ) break;
+			out << ", ";
+		}
+		out << ']';
+	}
+	
+	out < " => ";
+
+	if ( c.bound ) { out << *c.bound; }
+	else { out << "???" }
+
+	return out;
+}
+
 std::ostream& Env::write(std::ostream& out) const {
 	out << "{";
 	
 	auto it = classes.begin();
 	while (true) {
-		if ( it->vars.size() == 1 ) {
-			out << *it->vars.front();
-		} else {
-			out << "[";
-			auto jt = it->vars.begin();
-			while (true) {
-				out << **jt;
-				if ( ++jt == it->vars.end() ) break;
-				out << ", ";
-			}
-			out << "]";
-		}
-		out << " => ";
-		
-		if ( it->bound ) { out << *it->bound; }
-		else { out << "???"; }
-
+		out << *it;
 		if ( ++it == classes.end() ) break;
 		out << ", ";
 	}

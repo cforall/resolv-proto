@@ -1,6 +1,7 @@
 #include "forall_substitutor.h"
 
-#include "ast/decl.h"
+#include "decl.h"
+
 #include "data/cast.h"
 #include "data/mem.h"
 

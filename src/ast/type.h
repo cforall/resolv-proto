@@ -9,11 +9,11 @@
 #include <string>
 
 #include "ast.h"
+#include "forall.h"
 
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
-#include "resolver/forall.h"
 
 /// A type declaration
 class Type : public ASTNode {
@@ -125,15 +125,12 @@ class PolyType : public Type {
 public:
 	typedef Type Base;
 
-	PolyType( const std::string& name_, const Forall* src_ = nullptr )
-		: name_(name_), src_(src_) {}
+	PolyType( const std::string& name_, const Forall* src_ ) : name_(name_), src_(src_) {}
 
 	Type* clone() const override { return new PolyType( name_, src_ ); }
 
-	/// Clones bound to a new type binding
-	PolyType* clone_bound( const Forall* new_src ) const {
-		return new PolyType( name_, new_src );
-	}
+	/// Gets the canonical version of this PolyType (useful in case of clones)
+	const PolyType* canonical() const { return src_->get( name_ ); }
 
 	bool operator== (const PolyType& that) const {
 		return src_ == that.src_ && name_ == that.name_;

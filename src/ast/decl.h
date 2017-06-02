@@ -6,13 +6,13 @@
 #include <vector>
 
 #include "ast.h"
+#include "forall.h"
+#include "forall_substitutor.h"
 #include "type.h"
 
 #include "data/cow.h"
 #include "data/list.h"
 #include "data/mem.h"
-#include "resolver/forall.h"
-#include "resolver/forall_substitutor.h"
 
 /// A resolver declaration
 class Decl : public ASTNode {
@@ -32,11 +32,23 @@ class FuncDecl final : public Decl {
 	static const Type* gen_returns(const List<Type>& rs) {
 		switch ( rs.size() ) {
 		case 0:
-			return new VoidType();
+			return new VoidType{};
 		case 1:
 			return rs.front();
 		default:
-			return new TupleType( rs );
+			return new TupleType{ rs };
+		}
+	}
+
+	/// Generate appropriate return type from return list
+	static const Type* gen_returns(List<Type>&& rs) {
+		switch ( rs.size() ) {
+		case 0:
+			return new VoidType{};
+		case 1:
+			return rs.front();
+		default:
+			return new TupleType{ move(rs) };
 		}
 	}
 	
@@ -53,16 +65,16 @@ public:
 		: name_(name_), tag_(tag_), params_(params_),
 		  returns_( gen_returns( returns_ ) ), forall_() {}
 
-	FuncDecl(const std::string& name_, const List<Type>& params_, 
-	         const List<Type>& returns_, unique_ptr<Forall>&& forall_ )
-		: name_(name_), tag_(), params_(params_), 
-		  returns_( gen_returns( returns_ ) ), forall_( move(forall_) ) {}
+	FuncDecl(const std::string& name_, List<Type>&& params_, 
+	         List<Type>&& returns_, unique_ptr<Forall>&& forall_ )
+		: name_(name_), tag_(), params_(move(params_)), 
+		  returns_( gen_returns( move(returns_) ) ), forall_( move(forall_) ) {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         const List<Type>& params_, const List<Type>& returns_, 
+	         List<Type>&& params_, List<Type>&& returns_, 
 			 unique_ptr<Forall>&& forall_ )
-		: name_(name_), tag_(tag_), params_(params_), 
-		  returns_( gen_returns( returns_ ) ), forall_( move(forall_) ) {}
+		: name_(name_), tag_(tag_), params_(move(params_)), 
+		  returns_( gen_returns( move(returns_) ) ), forall_( move(forall_) ) {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_,
 	         List<Type>&& params_, const Type* returns_, unique_ptr<Forall>&& forall_)

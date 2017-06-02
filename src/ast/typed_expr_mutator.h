@@ -3,6 +3,8 @@
 #include <unordered_map>
 
 #include "expr.h"
+#include "forall.h"
+#include "forall_substitutor.h"
 #include "mutator.h"
 #include "typed_expr_visitor.h"
 
@@ -42,8 +44,17 @@ public:
             return true;
         }
 
-        TypeBinding* forall = e->forall() ? new TypeBinding{ *e->forall() } : nullptr;
-        r = new CallExpr{ e->func(), *move(newArgs), unique_ptr<TypeBinding>{ forall } };
+        // instantiate new forall and substitute function type, if needed
+        unique_ptr<Forall> forall = Forall::from( e->forall() );
+        const FuncDecl* func = e->func();
+        if ( forall ) {
+            ForallSubstitutor m{ e->forall(), forall.get() };
+            func = m(func);
+            // TODO should newArgs be mutated according to the new forall?
+            // I think no, as long as the polymorphic parameter types don't leak down to the args.
+        }
+
+        r = new CallExpr{ func, *move(newArgs), move(forall) };
         return true;
     }
 

@@ -8,14 +8,14 @@
 
 #include "ast.h"
 #include "decl.h"
+#include "forall.h"
+#include "forall_substitutor.h"
 #include "type.h"
 
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "resolver/conversion.h"
-#include "resolver/forall.h"
-#include "resolver/forall_substitutor.h"
 
 /// A resolvable expression
 class Expr : public ASTNode {
@@ -123,14 +123,12 @@ public:
 	typedef Expr Base;
 	
 	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_ = List<TypedExpr>{} )
-			: func_( func_ ), args_( move(args_) ), 
-			  forall_( func_->forall() ? new Forall{ *func_->forall() } : nullptr ),
+			: func_( func_ ), args_( move(args_) ), forall_( Forall::from( func_->forall() ) ),
 			  retType_( func_->returns() ) { fixRetType( func_->forall() ); }
 
 	CallExpr( const FuncDecl* func_, const List<TypedExpr>& args_, 
 	          const unique_ptr<Forall>& forall_ )
-			: func_( func_ ), args_( args_ ), 
-		 	  forall_( forall_ ? new Forall{ *forall_ } : nullptr ),
+			: func_( func_ ), args_( args_ ), forall_( Forall::from( forall_.get() ) ),
 			  retType_( func_->returns() ) { fixRetType( forall_.get() ); }
 
 	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, 

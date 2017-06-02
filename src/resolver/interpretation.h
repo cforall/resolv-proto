@@ -11,22 +11,20 @@
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/cast.h"
-#include "data/cow.h"
 #include "data/gc.h"
 #include "data/list.h"
 #include "data/mem.h"
 
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {
-	const TypedExpr* expr;   ///< Base expression for interpretation
-	Cost cost;               ///< Cost of interpretation
-	/// Set of free polymorphic type variables bound; nullptr for none
-	cow_ptr<Env> env;  
+	const TypedExpr* expr;  ///< Base expression for interpretation
+	Cost cost;              ///< Cost of interpretation
+	unique_ptr<Env> env;    ///< Type variables and assertions bound by this interpretation
 	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0] and environment [default empty]
 	Interpretation( const TypedExpr* expr = nullptr, Cost&& cost = Cost{}, 
-	                cow_ptr<Env>&& env = nullptr )
+	                unique_ptr<Env>&& env = nullptr )
 		: expr( expr ), cost( move(cost) ), env( move(env) ) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
@@ -90,7 +88,7 @@ inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	return out << " " << *i.expr;
 }
 
-/// List of interpretations
+/// List of interpretations TODO just inline typedef
 typedef List<Interpretation> InterpretationList;
 
 /// Functor to extract the cost from an interpretation

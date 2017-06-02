@@ -12,12 +12,12 @@
 #include <utility>
 #include <vector>
 
+#include "ast/forall.h"
 #include "ast/type.h"
 #include "data/cast.h"
 #include "data/collections.h"
 #include "data/list.h"
 #include "data/mem.h"
-#include "resolver/forall.h"
 
 /// Key type for ConcType
 struct ConcKey {

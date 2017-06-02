@@ -8,10 +8,10 @@
 
 #include "ast/decl.h"
 #include "ast/expr.h"
+#include "ast/forall.h"
 #include "ast/type.h"
 #include "data/list.h"
 #include "data/mem.h"
-#include "resolver/binding.h"
 #include "resolver/func_table.h"
 
 /// Parses a name (lowercase alphanumeric ASCII string starting with a 
@@ -78,7 +78,7 @@ bool parse_poly_type(char *&token, std::string& ret) {
 /// Parses a type name, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
 /// to types. token must not be null.  
-bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& binding, List<Type>& out) {
+bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<Forall>& forall, List<Type>& out) {
 	int t;
 	std::string n;
 
@@ -89,11 +89,8 @@ bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& 
 		out.push_back( get_canon<NamedType>( types, n ) );
 		return true;
 	} else if ( parse_poly_type(token, n) ) {
-		if ( ! binding ) {
-			binding.reset( new TypeBinding{} );
-		}
-		binding->add( n );
-		out.push_back( new PolyType{ n, binding.get() } );
+		if ( ! forall ) { forall.reset( new Forall{} ); }
+		out.push_back( forall->add( n ) );
 		return true;
 	} else return false;
 }
@@ -101,7 +98,7 @@ bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& 
 /// Parses a type assertion, returning true and adding the assertion into 
 /// binding if so. Concrete types will be canonicalized according to types. 
 /// token must not be null.
-bool parse_assertion(char*&token, CanonicalTypeMap& types, unique_ptr<TypeBinding>& binding) {
+bool parse_assertion(char*&token, CanonicalTypeMap& types, unique_ptr<Forall>& forall) {
 	char* end = token;
 
 	// look for type assertion
@@ -112,7 +109,7 @@ bool parse_assertion(char*&token, CanonicalTypeMap& types, unique_ptr<TypeBindin
 
 	// parse return types
 	match_whitespace(end);
-	while ( parse_type(end, types, binding, returns) ) {
+	while ( parse_type(end, types, forall, returns) ) {
 		match_whitespace(end);
 	}
 
@@ -121,14 +118,12 @@ bool parse_assertion(char*&token, CanonicalTypeMap& types, unique_ptr<TypeBindin
 	
 	// parse parameters
 	match_whitespace(end);
-	while ( parse_type(end, types, binding, params) ) {
+	while ( parse_type(end, types, forall, params) ) {
 		match_whitespace(end);
 	}
 
-	if ( ! binding ) {
-		binding.reset( new TypeBinding );
-	}
-	binding->add_assertion( new FuncDecl{ name, params, returns } );
+	if ( ! forall ) { forall.reset( new Forall{} ); }
+	forall->addAssertion( new FuncDecl{ name, params, returns } );
 	token = end;
 	return true;
 }
@@ -140,12 +135,12 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	List<Type> returns, params;
 	std::string name;
 	std::string tag;
-	unique_ptr<TypeBinding> binding;
+	unique_ptr<Forall> forall;
 	bool saw_tag = false;
 	
 	// parse return types
 	match_whitespace(line);
-	while ( parse_type(line, types, binding, returns) ) {
+	while ( parse_type(line, types, forall, returns) ) {
 		match_whitespace(line);
 	}
 	
@@ -163,25 +158,25 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	
 	// parse parameters
 	match_whitespace(line);
-	while ( parse_type(line, types, binding, params) ) {
+	while ( parse_type(line, types, forall, params) ) {
 		match_whitespace(line);
 	}
 
 	// parse type assertions
-	while ( parse_assertion(line, types, binding) );
+	while ( parse_assertion(line, types, forall) );
 	
 	// check line consumed
 	if ( ! is_empty(line) ) return false;
 
-	if ( binding ) {
-		binding->set_name( name );
+	if ( forall ) {
+		forall->set_name( name );
 	}
 	
 	// pass completed declaration into return list
 	if ( saw_tag ) {
-		funcs.insert( new FuncDecl{name, tag, params, returns, move(binding)} );
+		funcs.insert( new FuncDecl{name, tag, move(params), move(returns), move(forall)} );
 	} else {
-		funcs.insert( new FuncDecl{name, params, returns, move(binding)} );
+		funcs.insert( new FuncDecl{name, move(params), move(returns), move(forall)} );
 	}
 	
 	return true;

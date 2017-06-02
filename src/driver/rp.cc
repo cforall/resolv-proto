@@ -5,13 +5,17 @@
 
 #include "ast/expr.h"
 #include "ast/type.h"
+#include "data/list.h"
 #include "resolver/canonical_type_map.h"
 #include "resolver/conversion.h"
+#include "resolver/env.h"
 #include "resolver/func_table.h"
 #include "resolver/interpretation.h"
 #include "resolver/resolver.h"
 
-long ms_between(std::clock_t start, std::clock_t end) { return (end - start) / (CLOCKS_PER_SEC / 1000); }
+long ms_between(std::clock_t start, std::clock_t end) {
+	return (end - start) / (CLOCKS_PER_SEC / 1000);
+}
 
 int main(int argc, char **argv) {
 	Args args(argc, argv);
@@ -27,7 +31,7 @@ int main(int argc, char **argv) {
 	InvalidEffect on_invalid = []( const Expr* e ) {};
 	AmbiguousEffect on_ambiguous = 
 		[]( const Expr* e, List<TypedExpr>::const_iterator i, List<TypedExpr>::const_iterator end ) {};
-	UnboundEffect on_unbound = []( const Expr* e, const TypeBinding& tb ) {};
+	UnboundEffect on_unbound = []( const Expr* e, const List<TypeClass>& cs ) {};
 
 	switch ( args.filter() ) {
 	case Args::Filter::None:
@@ -48,9 +52,10 @@ int main(int argc, char **argv) {
 			out << std::endl;
 		};
 
-		on_unbound = [&out]( const Expr* e, const TypeBinding& tb ) {
-			out << "ERROR: unbound type variable" << (tb.unbound() > 1 ? "s" : "") 
-					<< " on " << tb.name << tb << std::endl;
+		on_unbound = [&out]( const Expr* e, const List<TypeClass>& cs ) {
+			out << "ERROR: unbound type variables in " << *e << ":";
+			for ( const TypeClass* c : cs ) { out << ' ' << *c; }
+			out << std::endl;
 		};
 		break;
 	case Args::Filter::Invalid:
@@ -68,7 +73,7 @@ int main(int argc, char **argv) {
 			out << std::endl;
 		};
 
-		on_unbound = [&out]( const Expr* e, const TypeBinding& tb ) {
+		on_unbound = [&out]( const Expr* e, const List<TypeClass>& cs ) {
 			e->write( out, ASTNode::Print::InputStyle );
 			out << std::endl;
 		};

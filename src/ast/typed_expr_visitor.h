@@ -17,7 +17,7 @@ public:
         if ( ! e ) return as<Self>(this)->visit( nullptr, r );
 
         auto tid = typeof(e);
-        if ( tid == typeof<VarExpr>() )\
+        if ( tid == typeof<VarExpr>() )
             return as<Self>(this)->visit( as<VarExpr>(e), r );
         else if ( tid == typeof<CastExpr>() ) 
             return as<Self>(this)->visit( as<CastExpr>(e), r );
@@ -81,7 +81,6 @@ public:
     
     bool visit( const AmbiguousExpr* e, T& r ) { return visitChildren( e, r ); }
 
-public:
     /// Returns a (default-constructed) value from the visit
     T operator() ( const TypedExpr* e ) {
         T r{};

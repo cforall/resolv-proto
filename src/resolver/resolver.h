@@ -2,31 +2,30 @@
 
 #include <functional>
 
-#include "binding.h"
 #include "conversion.h"
 #include "cost.h"
-#include "environment.h"
+#include "env.h"
 #include "func_table.h"
 #include "interpretation.h"
 
 #include "ast/expr.h"
 #include "ast/type.h"
-#include "data/cow.h"
+#include "data/mem.h"
 
 /// Effect to run on invalid interpretation; argument is the expression which 
-/// could not be resolved
-typedef std::function<void(const Expr*)> InvalidEffect;
+/// could not be resolved.
+using InvalidEffect = std::function<void(const Expr*)>;
 
 /// Effect to run on ambiguous interpretation; arguments are the expression which 
 /// could not be resolved and an iterator pair representing the first ambiguous 
-/// candidate and the iterator after the last (range is guaranteed to be non-empty)
-typedef std::function<void(const Expr*,
-                           List<TypedExpr>::const_iterator, 
-	                       List<TypedExpr>::const_iterator)> AmbiguousEffect;
+/// candidate and the iterator after the last (range is guaranteed to be non-empty).
+using AmbiguousEffect = std::function<void(const Expr*, 
+                                           List<TypedExpr>::const_iterator, 
+	                                       List<TypedExpr>::const_iterator)>;
 
 /// Effect to be run on unbound type variables; arguments are the expression which 
-/// has unbound type variables and its type binding
-typedef std::function<void(const Expr*, const TypeBinding&)> UnboundEffect;
+/// has unbound type variables and the unbound typeclasses.
+using UnboundEffect = std::function<void(const Expr*, const List<TypeClass>&)>;
 
 /// State-tracking class for resolving expressions
 class Resolver {
@@ -42,11 +41,9 @@ class Resolver {
 	
 public:
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
-	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous,
-			  UnboundEffect on_unbound )
+	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound )
 		: conversions( conversions ), funcs( funcs ),
-		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ),
-		  on_unbound( on_unbound ) {}
+		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
 	
 	/// Mode for type conversions
 	enum Mode {
@@ -63,8 +60,7 @@ public:
 	
 	/// Resolves `expr` as `targetType`, subject to `env`. 
 	/// Returns all interpretations (possibly ambiguous).
-	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, 
-	                                    const cow_ptr<Environment>& env );
+	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, const Env* env );
 
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 
