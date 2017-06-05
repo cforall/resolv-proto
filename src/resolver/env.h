@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "data/cast.h"
@@ -34,7 +35,7 @@ struct TypeClass {
 		: vars{ orig }, bound(nullptr) {}
 };
 
-std::ostream& operator<< (std::ostream& const TypeClass&);
+std::ostream& operator<< (std::ostream&, const TypeClass&);
 
 /// Stores type-variable and assertion bindings
 class Env final : public GC_Traceable {
@@ -210,7 +211,9 @@ public:
 
 	/// Makes a new environment with the given environment as parent.
 	/// If the given environment is null, so will be the new one.
-	static unique_ptr<Env> from( const Env* env ) { return { env ? new Env{ *env } : nullptr }; }
+	static unique_ptr<Env> from( const Env* env ) {
+		return unique_ptr<Env>{ env ? new Env{ *env } : nullptr };
+	}
 
 	/// Query for assertion map
 	const AssertionMap& assertions() const { return assns; }
@@ -337,7 +340,7 @@ public:
 			auto it = assns.find( a.first );
 			if ( it == assns.end() ) {
 				assns.insert( a );
-				++localAssns;et
+				++localAssns;
 			} else {
 				if ( it->second != a.second ) return false;
 			}
@@ -399,7 +402,7 @@ inline const Type* replace( const Env* env, const PolyType* pty ) {
 
 /// Inserts the given type variable into this environment if it is not currently present.
 /// Returns false if the variable was already there.
-inline void insert( unique_ptr<Env>& env, const PolyType* orig ) {
+inline bool insert( unique_ptr<Env>& env, const PolyType* orig ) {
 	if ( ! env ) {
 		env.reset( new Env( orig ) );
 		return true;
@@ -410,7 +413,7 @@ inline void insert( unique_ptr<Env>& env, const PolyType* orig ) {
 
 /// Adds the given substitution to this environment. `orig` should be currently unbound.
 /// Creates new environment if `env == null` 
-inline void bind( unique_ptr<Env>& env, const PolyType* orig, const Type* sub ) {
+inline void bindType( unique_ptr<Env>& env, const PolyType* orig, const Type* sub ) {
     if ( ! env ) {
         env.reset( new Env(orig, sub) );
     } else {

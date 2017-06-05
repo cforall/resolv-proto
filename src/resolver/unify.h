@@ -41,10 +41,10 @@ template<typename T, typename>
 bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, unique_ptr<Env>& env) {
     // Attempts to make `concType` the representative for `polyType` in `env`; 
     // true iff no representative or `concType` unifies with the existing representative 
-    const Type* boundArgType = find( env, polyArgType );
+    const Type* boundArgType = find( env.get(), polyArgType );
     if ( boundArgType ) return unify( concParamType, boundArgType, cost, env );
     
-    bind( env, polyArgType, concParamType );
+    bindType( env, polyArgType, concParamType );
     
     ++cost.poly;  // poly-cost for global type variable binding
     return true;
@@ -66,13 +66,13 @@ bool unify(const T* concParamType, const Type* argType, Cost& cost, unique_ptr<E
 
 bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, unique_ptr<Env>& env) {
     // Check if there is an existing binding for the parameter type
-    const Type* boundParamType = find( env, polyParamType );
+    const Type* boundParamType = find( env.get(), polyParamType );
     if ( boundParamType ) return unify( boundParamType, argType, cost, env );
 
     auto aid = typeof(argType);
     if ( aid == typeof<ConcType>() || aid == typeof<NamedType>() ) {
         // make concrete type the new class representative
-        bind( env, polyParamType, argType );
+        bindType( env, polyParamType, argType );
     } else if ( aid == typeof<PolyType>() ) {
         // add polymorphic type to type class
         bindClass( env, polyParamType, as<PolyType>(argType) );

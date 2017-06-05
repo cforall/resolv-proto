@@ -30,7 +30,9 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		/// Outputs a pair consisting of the merged environment and the list of interpretations
 		using OutType = std::pair<unique_ptr<Env>, InterpretationList>;
 
-		interpretation_env_merger( const Env* env ) : crnt{}, envs{ Env::from( env ) } {}
+		interpretation_env_merger( const Env* env ) : crnt{}, envs{} {
+			envs.push_back( Env::from( env ) );
+		}
 
 		ComboResult append( const Interpretation* i ) {
 			unique_ptr<Env> env = Env::from( envs.back().get() );
@@ -54,13 +56,15 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	/// Comparator for interpretation_env_merger outputs that sums their costs and caches 
 	/// the stored sums
 	class interpretation_env_coster {
-		std::unordered_map<Element*, Cost> cache;  ///< Cache of element costs
 	public:
 		using Element = interpretation_env_merger::OutType;
-
+	private:
+		using Memo = std::unordered_map<const Element*, Cost>;
+		Memo cache;  ///< Cache of element costs
+	public:
 		/// Reports cached cost of an element
 		const Cost& get( const Element& x ) {
-			auto it = cache.find( &x );
+			Memo::const_iterator it = cache.find( &x );
 			if ( it == cache.end() ) {
 				Cost k;
 				for ( const Interpretation* i : x.second ) { k += i->cost; }
@@ -69,7 +73,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 			return it->second;
 		}
 
-		bool operator() ( const Element& a, const Element& b ) { return get( a ) < get( b ); }	
+		bool operator() ( const Element& a, const Element& b ) { return get( a ) < get( b ); }
 	};
 
 	Resolver& resolver;       ///< Resolver to perform searches.
@@ -96,7 +100,7 @@ public:
 		const CallExpr* ee = e;  // use ee instead of e after this block
 		if ( newArgs ) {
 			// trim expressions that lose any args
-			if ( newArgs->size() < e->args.size() ) {
+			if ( newArgs->size() < e->args().size() ) {
 				r = nullptr;
 				return false;
 			}
@@ -136,19 +140,20 @@ public:
 			InterpretationList satisfying = resolver.resolveWithType( asnExpr, asnRet, env.get() );
 
 			switch ( satisfying.size() ) {
-			case 0:  // no satisfying assertions: return failure
-				r = nullptr;
-				return false;
-			case 1:  // unique satisfying assertion: add to environment
-				const Interpretation* s = satisfying.front();
-				merge( env, s->env.get() );
-				cost += s->cost;
-				bindAssertion( env, asn, s->expr );
-				break;
-			default:  // multiple satisfying assertions: defer evaluation
-				deferIds.push_back( asn );
-				deferred.emplace_back( move(satisfying) );
-				break;
+				case 0: { // no satisfying assertions: return failure
+					r = nullptr;
+					return false;
+				} case 1: { // unique satisfying assertion: add to environment
+					const Interpretation* s = satisfying.front();
+					merge( env, s->env.get() );
+					cost += s->cost;
+					bindAssertion( env, asn, s->expr );
+					break;
+				} default: { // multiple satisfying assertions: defer evaluation
+					deferIds.push_back( asn );
+					deferred.emplace_back( move(satisfying) );
+					break;
+				}
 			}
 		}
 
@@ -176,7 +181,7 @@ public:
 			// re-resolve alternative assertions under current environment
 			const TypedExpr* alt_bak = alt;
 			Cost alt_cost = cost;
-			unique_ptr<Env> alt_env = Env::from( env );
+			unique_ptr<Env> alt_env = Env::from( env.get() );
 			AssertionResolver alt_resolver{ resolver, alt_cost, alt_env };
 			alt_resolver.mutate( alt );
 			if ( alt != alt_bak ) { unchanged = false; }
@@ -191,7 +196,7 @@ public:
 				min_alts.clear();
 				min_alts.push_back( alt );
 			} else if ( alt_cost == min_cost ) {
-				min_alts.push_back( ti );
+				min_alts.push_back( alt );
 			}
 		}
 
@@ -222,7 +227,8 @@ public:
 		(*this)( r, r );
 
 		// attempt to disambiguate deferred assertion matches with additional information
-		auto compatible = filter_combos( deferred, interpretation_env_merger{ env.get() } );
+		auto compatible = 
+			filter_combos<const Interpretation*>( deferred, interpretation_env_merger{ env.get() } );
 		if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
 		// sort deferred assertion matches by cost
@@ -247,7 +253,8 @@ public:
 /// type/assertion bindings in cost and env, respectively. Returns whether all assertions can 
 /// be consistently bound at a unique minimum cost; may mutate call to disambiguate ambiguous 
 /// expressions.
-bool resolveAssertions( Resolver& resolver, CallExpr*& call, Cost& cost, unique_ptr<Env>& env ) {
+bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, 
+		unique_ptr<Env>& env ) {
 	AssertionResolver assnResolver{ resolver, cost, env };
 	return assnResolver.mutate( call ) != nullptr;
 }

@@ -31,7 +31,9 @@ public:
 	Forall& operator= ( const Forall& );
 
 	/// Copies the given forall clause, returning a null pointer if o is null.
-	static unique_ptr<Forall> from( const Forall* o ) { return { o ? new Forall{ *o } : nullptr }; }
+	static unique_ptr<Forall> from( const Forall* o ) {
+		return unique_ptr<Forall>{ o ? new Forall{ *o } : nullptr };
+	}
 	
 	const std::string& name() const { return n; }
 	const List<PolyType>& variables() const { return vars; }
@@ -43,7 +45,7 @@ public:
 	const PolyType* get( const std::string& p ) const;
 
 	/// Adds a new type variable in this forall if not present; returns existing var if present
-	PolyType* add( const std::string& p );
+	const PolyType* add( const std::string& p );
 
 	/// Adds a new assertion to this forall
 	void addAssertion( const FuncDecl* f ) { assns.push_back( f ); }

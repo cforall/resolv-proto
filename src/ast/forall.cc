@@ -37,7 +37,7 @@ const PolyType* Forall::get( const std::string& p ) const {
 	return rit == vars.end() ? nullptr : *rit;
 }
 
-PolyType* Forall::add( const std::string& p ) {
+const PolyType* Forall::add( const std::string& p ) {
 	const PolyType* rep = get( p );
 	if ( ! rep ) {
 		rep = new PolyType{ p, this };

@@ -53,10 +53,10 @@ std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
 		out << ']';
 	}
 	
-	out < " => ";
+	out << " => ";
 
 	if ( c.bound ) { out << *c.bound; }
-	else { out << "???" }
+	else { out << "???"; }
 
 	return out;
 }
@@ -73,7 +73,7 @@ std::ostream& Env::write(std::ostream& out) const {
 
 	for ( const auto& assn : assns ) {
 		out << " | " << *assn.first << " => ";
-		if ( assn.second ) { out << *assn.second->expr; } else { out << "???"; }
+		if ( assn.second ) { out << *assn.second; } else { out << "???"; }
 	}
 
 	return out << "}";

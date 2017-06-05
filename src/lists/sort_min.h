@@ -24,9 +24,13 @@ Iter sort_mins( Iter begin, Iter end, Compare& lt ) {
 	return min_pos;
 }
 
+template<typename Iter, typename Compare>
+inline Iter sort_mins( Iter begin, Iter end, Compare&& lt ) {
+	return sort_mins( begin, end, lt );
+}
+
 /// sort_mins defaulted to use std::less
 template<typename Iter>
-Iter sort_mins( Iter begin, Iter end ) {
-	std::less<typename std::iterator_traits<Iter>::value_type> lt;
-	return sort_mins( begin, end, lt );
+inline Iter sort_mins( Iter begin, Iter end ) {
+	return sort_mins( begin, end, std::less<typename std::iterator_traits<Iter>::value_type>{} );
 }

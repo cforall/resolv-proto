@@ -25,7 +25,7 @@
 #include "data/list.h"
 #include "data/mem.h"
 #include "data/option.h"
-#include "merge/eager_merge.h"
+#include "lists/eager_merge.h"
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
@@ -49,7 +49,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		Cost cost; // initialized to zero
 		unique_ptr<Env> env; // initialized to nullptr
 		
-		CallExpr* call = new CallExpr{ func };
+		const TypedExpr* call = new CallExpr{ func };
 
 		// check type assertions if at top level
 		if ( resolve_mode == Resolver::TOP_LEVEL ) {
@@ -88,7 +88,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
-			unique_ptr<Env> env = Env::from( arg->env );
+			unique_ptr<Env> env = Env::from( arg->env.get() );
 			unique_ptr<Forall> forall = Forall::from( func->forall() );
 			if ( forall ) {
 				ForallSubstitutor replaceLocals{ func->forall(), forall.get() };
@@ -101,12 +101,13 @@ InterpretationList matchFuncs( Resolver& resolver,
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( ! unify( func->params[i], argTypes[i], cost, env ) ) goto nextFunc;
+					if ( ! unify( func->params()[i], argTypes[i], cost, env ) ) goto nextFunc;
 				}
 			}
 
 			{ // extra scope so don't get goto errors for the labelled break simulation
-				CallExpr* call = new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(forall) };
+				const TypedExpr* call = 
+					new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(forall) };
 
 				// check type assertions if at top level
 				if ( resolve_mode == Resolver::TOP_LEVEL ) {
@@ -133,7 +134,7 @@ bool argsMatchParams( const InterpretationList& args, const List<Type>& params,
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
 		// merge in argument environment
-		if ( ! merge( env, args[j]->env ) ) return false;
+		if ( ! merge( env, args[j]->env.get() ) ) return false;
 		// test unification of parameters
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {
@@ -198,7 +199,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 			// skip functions that don't match the parameter types
 			if ( ! argsMatchParams( combo.second, func->params(), cost, env ) ) continue;
 			
-			CallExpr* call = new CallExpr{ func, argsFrom( combo.second ), move(forall) };
+			const TypedExpr* call = new CallExpr{ func, argsFrom( combo.second ), move(forall) };
 
 			// check type assertions if at top level
 			if ( resolve_mode == Resolver::TOP_LEVEL ) {
