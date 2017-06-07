@@ -226,6 +226,9 @@ public:
 	const TypedExpr* mutate( const TypedExpr*& r ) {
 		(*this)( r, r );
 
+		// end early if no deferred assertions
+		if ( deferred.empty() ) return r;
+
 		// attempt to disambiguate deferred assertion matches with additional information
 		auto compatible = 
 			filter_combos<const Interpretation*>( deferred, interpretation_env_merger{ env.get() } );

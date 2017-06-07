@@ -36,6 +36,7 @@ public:
 
 /// Filters combinations from qs by the given combo iterator. If the iterator rejects some prefix 
 /// of a combination, it will not accept any combination with that prefix.
+/// qs should not be empty
 template<typename T, typename Q, typename ComboIter>
 auto filter_combos( const std::vector<Q>& qs, ComboIter&& iter )
 	-> std::vector<typename ComboIter::OutType> {
