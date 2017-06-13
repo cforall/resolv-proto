@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <utility>
 
@@ -142,78 +143,93 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
     }
 }
 
-/// Replaces expression with the best conversion to the given type, updating cost and env as needed.
-/// Returns nullptr for no such conversion; may update env and cost on such a failure result.
-const TypedExpr* convertTo( const Type* targetType, const TypedExpr* expr, 
-                            ConversionGraph& conversions, unique_ptr<Env>& env, Cost& cost ) {
-    // substitute target according to environment TODO count poly-cost
-    targetType = replace( env.get(), targetType );
-    
-    const Type* ty = expr->type();
-    
-    if ( *ty == *targetType ) {
-        // original expression matches
-        return expr;
-    }
+/// Attempts to bind a typeclass r to the concrete type conc in the current environment, 
+/// returning true and incrementing cost if successful
+bool classBinds( ClassRef r, const Type* conc, unique_ptr<Env>& env, Cost& cost ) {
+    // test for match if class already has a representative.
+    // TODO this is a restriction to exact polymorphic type binding, but loosening it 
+    //      would be non-trivial
+    if ( r->bound ) return *r->bound == *conc;
+    // otherwise make concrete class the new typeclass representative, incrementing cost
+    bindType( env, r, conc );
+    ++cost.poly;
+    return true;
+}
 
-    auto tid = typeof( ty );
+/// Replaces expression with the best conversion to the given type, updating cost and env 
+/// as needed. Returns nullptr for no such conversion; may update env and cost on such a 
+/// failure result.
+const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,                
+                            ConversionGraph& conversions, unique_ptr<Env>& env, 
+                            Cost& cost ) {
+    const Type* etype = expr->type();
+    auto eid = typeof( etype );
+    auto tid = typeof( ttype );
 
-    // substitute expression type according to environment TODO count poly-cost
-    if ( typeof<PolyType>() == tid ) {
-        ty = replace( env.get(), as<PolyType>(ty) );
-        tid = typeof( ty );
-    }
+    if ( eid == typeof<ConcType>() || eid == typeof<NamedType>() ) {
+        if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() ) {
+            // check exact match
+            if ( *etype == *ttype ) return expr;
 
-    if ( typeof<ConcType>() == tid || typeof<NamedType>() == tid )  {
-        // check for and bind unbound polymorphic target (bound poly target replaced above)
-        if ( const PolyType* ptarget = as_safe<PolyType>(targetType) ) {
-            ++cost.poly;
-            bindType( env, ptarget, ty );
-            return expr;
-        }
-
-        // scan conversion list for matching type
-        for ( const Conversion& conv : conversions.find( ty ) ) {
-            if ( *conv.to->type == *targetType ) {
-                cost += conv.cost;
-                return new CastExpr{ expr, &conv };
+            // scan conversion list for matching type
+            for ( const Conversion& conv : conversions.find( etype ) ) {
+                if ( *conv.to->type == *ttype ) {
+                    cost += conv.cost;
+                    return new CastExpr{ expr, &conv };
+                }
             }
-        }
-    } else if ( typeof<TupleType>() == tid ) {
-        // fail for non-tuple target
-        if ( typeof<TupleType>() != typeof( targetType ) ) return nullptr;
 
-        const TupleType* tty = as<TupleType>(ty);
-        const TupleType* ttarget = as<TupleType>(targetType);
+            // no conversion matches
+            return nullptr;
+        } else if ( tid == typeof<PolyType>() ) {
+            // test for match if target typeclass already has representative
+            ClassRef tclass = getClass( env, as<PolyType>(ttype) );
+            return classBinds( tclass, etype, env, cost ) ? expr : nullptr;
+        } else if ( tid == typeof<TupleType>() ) {
+            // can't match tuples to non-tuple types
+            return nullptr;
+        } else assert(false && "Unhandled target type");
+    } else if ( eid == typeof<PolyType>() ) {
+        ClassRef eclass = getClass( env, as<PolyType>(etype) );
 
-        // fail for mismatch on target size
-        if ( tty->size() != ttarget->size() ) return nullptr;
-        
+        if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() ) {
+            return classBinds( eclass, ttype, env, cost ) ? expr : nullptr;
+        } else if ( tid == typeof<PolyType>() ) {
+            // attempt to merge two typeclasses
+            if ( bindVar( env, eclass, as<PolyType>(ttype) ) ) {
+                ++cost.poly;
+                return expr;
+            } else return nullptr;
+        } else if ( tid == typeof<TupleType>() ) {
+            // tuples can't bind to PolyType vars.
+            // TODO introduce ttype vars for this
+            return nullptr;
+        } else assert(false && "Unhandled target type");
+    } else if ( eid == typeof<TupleType>() ) {
+        // fail for non-tuple targets
+        // TODO add ttype type variables
+        if ( tid != typeof<TupleType>() ) return nullptr;
+
+        const TupleType* etuple = as<TupleType>(etype);
+        const TupleType* ttuple = as<TupleType>(ttype);
+
+        // fail on arity mismatch
+        if ( etuple->size() != ttuple->size() ) return nullptr;
+
         // decompose into elements and recurse
         List<TypedExpr> els;
-        els.reserve( tty->size() );
-        for ( unsigned j = 0; j < tty->size(); ++j ) {
-            const TypedExpr* el = convertTo( ttarget->types()[j], 
-                                             new TupleElementExpr{ expr, j }, 
+        els.reserve( ttuple->size() );
+        for ( unsigned j = 0; j < ttuple->size(); ++j ) {
+            const TypedExpr* el = convertTo( ttuple->types()[j],
+                                             new TupleElementExpr{ expr, j },
                                              conversions, env, cost );
-            // fail on no element conversion
             if ( ! el ) return nullptr;
-
             els.push_back( el );
         }
         return new TupleExpr{ move(els) };
-    } else if ( typeof<PolyType>() == tid ) {
-        // we know here that ty is unbound, or it would have been replaced above
-        ++cost.poly;
-        if ( const PolyType* ptarget = as_safe<PolyType>(targetType) ) {
-            bindClass( env, ptarget, as<PolyType>(ty) );
-        } else {
-            bindType( env, as<PolyType>(ty), targetType );
-        }
-        return expr;
-    }
+    } else assert(false && "Unhandled expression type");
 
-    return nullptr;
+    return nullptr; // unreachable
 }
 
 /// Replaces `results` with the best interpretation (possibly conversion-expanded) as `targetType`.

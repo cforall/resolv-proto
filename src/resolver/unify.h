@@ -9,8 +9,9 @@
 #include "data/cast.h"
 
 template<typename T>
-using is_conc_or_named_type = typename std::enable_if< std::is_same<T, ConcType>::value 
-                                                       || std::is_same<T, NamedType>::value >::type;
+using is_conc_or_named_type 
+    = typename std::enable_if< std::is_same<T, ConcType>::value 
+                               || std::is_same<T, NamedType>::value >::type;
 
 /// Tests if the first (parameter) type can be unified with the second (argument) type, 
 /// while respecting the global type environment, and accumulating costs for the  
@@ -39,13 +40,13 @@ bool unify( const T* concParamType, const T* concArgType, Cost&, unique_ptr<Env>
 
 template<typename T, typename>
 bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, unique_ptr<Env>& env) {
-    // Attempts to make `concType` the representative for `polyType` in `env`; 
-    // true iff no representative or `concType` unifies with the existing representative 
-    const Type* boundArgType = find( env.get(), polyArgType );
-    if ( boundArgType ) return unify( concParamType, boundArgType, cost, env );
-    
-    bindType( env, polyArgType, concParamType );
-    
+    // locate type binding for parameter type
+    ClassRef argClass = getClass( env, polyArgType );
+    // test for match if class already has representative
+    if ( argClass->bound ) return unify( concParamType, argClass->bound, cost, env );
+    // otherwise make concrete type the new class representative
+    bindType( env, argClass, concParamType );
+
     ++cost.poly;  // poly-cost for global type variable binding
     return true;
 }
@@ -65,17 +66,18 @@ bool unify(const T* concParamType, const Type* argType, Cost& cost, unique_ptr<E
 }
 
 bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, unique_ptr<Env>& env) {
-    // Check if there is an existing binding for the parameter type
-    const Type* boundParamType = find( env.get(), polyParamType );
-    if ( boundParamType ) return unify( boundParamType, argType, cost, env );
+    // locate type binding for parameter type
+    ClassRef paramClass = getClass( env, polyParamType );
 
     auto aid = typeof(argType);
     if ( aid == typeof<ConcType>() || aid == typeof<NamedType>() ) {
+        // test for match if class already has representative
+        if ( paramClass->bound ) return unify( paramClass->bound, argType, cost, env );
         // make concrete type the new class representative
-        bindType( env, polyParamType, argType );
+        bindType( env, paramClass, argType );
     } else if ( aid == typeof<PolyType>() ) {
         // add polymorphic type to type class
-        bindClass( env, polyParamType, as<PolyType>(argType) );
+        if ( ! bindVar( env, paramClass, as<PolyType>(argType) ) ) return false;
     } else assert(false && "Unhandled argument type");
     
     ++cost.poly;  // poly-cost for global type variable binding

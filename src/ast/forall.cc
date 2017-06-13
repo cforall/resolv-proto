@@ -8,10 +8,10 @@
 
 #include "data/gc.h"
 
-Forall::Forall( const Forall& o ) : vars(), assns() {
+Forall::Forall( const Forall& o ) : n(o.n), vars(), assns() {
 	ForallSubstitutor m{ &o, this };
 	vars.reserve( o.vars.size() );
-	for ( const PolyType* v : o.vars ) { vars.push_back( as<PolyType>(m(v)) ); }
+	for ( const PolyType* v : o.vars ) { m(v); } // substitutor adds vars when seen
 	assns.reserve( o.assns.size() );
 	for ( const FuncDecl* a : o.assns ) { assns.push_back( m(a) ); }
 }
@@ -22,9 +22,10 @@ Forall& Forall::operator= ( const Forall& o ) {
 	vars.clear();
 	assns.clear();
 
+	n = o.n;
 	ForallSubstitutor m{ &o, this };
 	vars.reserve( o.vars.size() );
-	for ( const PolyType* v : o.vars ) { vars.push_back( as<PolyType>(m(v)) ); }
+	for ( const PolyType* v : o.vars ) { m(v); } // substitutor adds vars when seen
 	assns.reserve( o.assns.size() );
 	for ( const FuncDecl* a : o.assns ) { assns.push_back( m(a) ); }
 

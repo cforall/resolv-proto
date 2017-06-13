@@ -10,21 +10,21 @@
 #include "data/cast.h"
 #include "data/gc.h"
 
-bool Env::mergeBound( StorageRef& r, const Type* cbound ) {
+bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	if ( cbound == nullptr ) return true;
 
-	const TypeClass* rc = &classOf( r );
+	const TypeClass* rc = &*r;
 	if ( rc->bound == nullptr ) {
-		if ( r.first != this ) {
+		if ( r.env != this ) {
 			r = { this, copyClass( r ) };
-			rc = &classes[ r.second ];
+			rc = &classes[ r.ind ];
 		}
 		as_non_const(rc)->bound = cbound;
 		return true;
 	} else {
 		return *rc->bound == *cbound;
-		// TODO: possibly account for safe/unsafe conversions here; would need cost information
-		// in environment.
+		// TODO: possibly account for safe/unsafe conversions here; would need cost 
+		// information in environment.
 	}
 }
 

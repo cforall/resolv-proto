@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "data/list.h"
 #include "data/mem.h"
 
+class Env;
 class FuncDecl;
 class PolyType;
 class Type;
@@ -37,26 +39,44 @@ struct TypeClass {
 
 std::ostream& operator<< (std::ostream&, const TypeClass&);
 
+/// Reference to typeclass, noting containing environment
+class ClassRef {
+	friend Env;
+
+	const Env* env;   ///< Containing environment
+	std::size_t ind;  ///< Index in that environment's class storage
+public:
+	ClassRef() : env(nullptr), ind(0) {}
+	ClassRef( const Env* env, std::size_t ind ) : env(env), ind(ind) {}
+
+	// Get referenced typeclass
+	const TypeClass& operator* () const;
+	const TypeClass* operator-> () const { return &(this->operator*()); }
+
+	// Check that there is a referenced typeclass
+	explicit operator bool() const { return env != nullptr; }
+
+	bool operator== (const ClassRef& o) const { return env == o.env && ind == o.ind; }
+	bool operator!= (const ClassRef& o) const { return !(*this == o); }
+};
+
 /// Stores type-variable and assertion bindings
 class Env final : public GC_Traceable {
+	friend ClassRef;
 	friend std::ostream& operator<< (std::ostream&, const Env&);
 
 	/// Backing storage for typeclasses
 	using Storage = std::vector<TypeClass>;
-	/// Reference to typeclass storage
-	using StorageRef = std::pair<const Env*, Storage::size_type>;
 	/// Underlying map type
-	using Map = std::unordered_map<const PolyType*, StorageRef>;
+	using Map = std::unordered_map<const PolyType*, ClassRef>;
 	/// Assertions known by this environment
 	using AssertionMap = std::unordered_map<const FuncDecl*, const TypedExpr*>;
 
 	Storage classes;         ///< Backing storage for typeclasses
 	Map bindings;            ///< Bindings from a named type variable to another type
 	AssertionMap assns;      ///< Backing storage for assertions
-	unsigned localAssns;     ///< Count of local assertions
+	std::size_t localAssns;  ///< Count of local assertions
 	const Env* parent;       ///< Environment this inherits bindings from
-
-	static inline const TypeClass& classOf( StorageRef r ) { return r.first->classes[ r.second ]; }
 
 	/// Inserts a new typeclass, mapping `orig` to null; `orig` should not be present.
 	void insert( const PolyType* orig, std::nullptr_t ) {
@@ -79,16 +99,16 @@ class Env final : public GC_Traceable {
 
 	/// Copies a typeclass from a parent; r.first should not be this or null, and none 
 	/// of the members of the class should be bound directly in this.
-	Storage::size_type copyClass( StorageRef r ) {
-		Storage::size_type i = classes.size();
-		classes.push_back( classOf(r) );
+	std::size_t copyClass( ClassRef r ) {
+		std::size_t i = classes.size();
+		classes.push_back( *r );
 		for ( const PolyType* v : classes[i].vars ) { bindings[v] = { this, i }; }	
 		return i;
 	}
 
 	/// Finds the binding reference for this polytype, { nullptr, _ } for none such.
 	/// Updates the local map with the binding, if found.
-	StorageRef findRef( const PolyType* orig ) const {
+	ClassRef findRef( const PolyType* orig ) const {
 		// search self
 		auto it = bindings.find( orig );
 		if ( it != bindings.end() ) return it->second;
@@ -100,50 +120,55 @@ class Env final : public GC_Traceable {
 				return it->second;
 			}
 		}
-		return { nullptr, 0 };
+		return {};
 	}
 
 	/// Makes cbound the bound of r in this environment, returning false if incompatible.
 	/// May mutate r to copy into local scope.
-	bool mergeBound( StorageRef& r, const Type* cbound );
+	bool mergeBound( ClassRef& r, const Type* cbound );
 
 	/// Adds v to local class with id rid; v should not be bound in this environment.
-	void addToClass( Storage::size_type rid, const PolyType* v ) {
+	void addToClass( std::size_t rid, const PolyType* v ) {
 		classes[ rid ].vars.push_back( v );
-		bindings[ v ] = StorageRef{ this, rid };
+		bindings[ v ] = { this, rid };
 	}
 
 	/// Merges s into r; returns false if fails due to contradictory bindings.
 	/// r should be local, but may be moved by the merging process; s should be non-null
-	bool mergeClasses( StorageRef& r, StorageRef s ) {
-		TypeClass& rc = classes[ r.second ];
-		const TypeClass& sc = classOf( s );
+	bool mergeClasses( ClassRef& r, ClassRef s ) {
+		TypeClass& rc = classes[ r.ind ];
+		const TypeClass& sc = *s;
 
 		// ensure bounds match
 		if ( ! mergeBound( r, sc.bound ) ) return false;
 
-		if ( s.first == this ) {
-			// need to merge two existing local classes -- guaranteed that vars don't overlap
+		if ( s.env == this ) {
+			// need to merge two existing local classes -- guaranteed that vars don't 
+			// overlap
 			rc.vars.insert( rc.vars.end(), sc.vars.begin(), sc.vars.end() );
 			for ( const PolyType* v : sc.vars ) { bindings[v] = r; }
 			// remove s from local class-list
-			Storage::size_type victim = classes.size() - 1;
-			if ( s.second != victim ) {
-				classes[ s.second ] = move(classes[victim]);
-				for ( const PolyType* v : classes[ s.second ].vars ) { bindings[v] = s; }
+			std::size_t victim = classes.size() - 1;
+			if ( s.ind != victim ) {
+				classes[ s.ind ] = move(classes[victim]);
+				for ( const PolyType* v : classes[ s.ind ].vars ) { bindings[v] = s; }
 			}
 			classes.pop_back();
-			if ( r.second == victim ) { r.second = s.second; }
+			if ( r.ind == victim ) {
+				// note that r has been moved to the old position of s
+				r.ind = s.ind;
+				for ( const PolyType* v : classes[ r.ind ].vars ) { bindings[v] = r; }
+			}
 			return true;
 		}
 		
 		// merge in variables
 		rc.vars.reserve( rc.vars.size() + sc.vars.size() );
 		for ( const PolyType* v : sc.vars ) {
-			StorageRef rr = findRef( v );
-			if ( rr.first == nullptr ) {
+			ClassRef rr = findRef( v );
+			if ( ! rr ) {
 				// not bound
-				addToClass( r.second, v );
+				addToClass( r.ind, v );
 				continue;
 			} else if ( rr == r ) {
 				// already in class
@@ -172,7 +197,7 @@ class Env final : public GC_Traceable {
 	}
 
 	/// Is this environment descended from the other?
-	bool inherits_from( const Env& o ) const {
+	bool inheritsFrom( const Env& o ) const {
 		const Env* crnt = this;
 		do {
 			if ( crnt == &o ) return true;
@@ -182,7 +207,7 @@ class Env final : public GC_Traceable {
 	}
 
 	/// Returns first non-empty parent environment.
-	const Env* get_parent() const {
+	const Env* getParent() const {
 		for ( const Env* crnt = parent; crnt; crnt = crnt->parent ) {
 			if ( localAssns > 0 || ! classes.empty() ) return crnt;
 		}
@@ -194,17 +219,38 @@ public:
 
     /// Constructs a brand new environment with a single binding
     Env( const PolyType* orig, const Type* sub = nullptr ) 
-		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) { insert( orig, sub ); }
+		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) 
+		{ insert( orig, sub ); }
 
     /// Constructs a brand new environment with two poly types bound together
     Env( const PolyType* orig, const PolyType* added ) 
-		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) { insert( orig, added ); }
+		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) 
+		{ insert( orig, added ); }
 
+	/// Constructs a brand new environment with a single unbound variable
     Env( const PolyType* orig, std::nullptr_t ) 
-		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) { insert( orig, nullptr ); }
+		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) 
+		{ insert( orig, nullptr ); }
+
+	/// Constructs a brand new environment with a single bound class
+	Env( ClassRef r, const Type* sub = nullptr )
+		: classes(), bindings(), assns(), localAssns(0), parent(nullptr)
+		{ copyClass(r); classes.front().bound = sub; }
+	
+	/// Constructs a brand new environment with a single class with an added type variable
+	Env( ClassRef r, const PolyType* var )
+		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
+		copyClass(r);
+		if ( ! bindings.count( var ) ) { addToClass(0, var); }
+	}
+	
+	/// Constructs a brand new environment with a single class
+	Env( ClassRef r, std::nullptr_t )
+		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) { copyClass(r); }
 
 	/// Shallow copy, just sets parent of new environment
-	Env( const Env& o ) : classes(), bindings(), assns(), localAssns(0), parent(o.get_parent()) {}
+	Env( const Env& o )
+		: classes(), bindings(), assns(), localAssns(0), parent(o.getParent()) {}
 
 	/// Deleted to avoid the possibility of environment cycles.
 	Env& operator= ( const Env& o ) = delete;
@@ -218,24 +264,29 @@ public:
 	/// Query for assertion map
 	const AssertionMap& assertions() const { return assns; }
 
-	/// Checks if this environment contains a typeclass (possibly unbound) for a polytype
-	bool contains( const PolyType* orig ) const {
-		return findRef( orig ).first != nullptr;
-	}
-
 	/// Inserts a type variable if it doesn't already exist in the environment.
 	/// Returns false if already present.
 	bool insert( const PolyType* orig ) {
-		if ( findRef(orig).first != nullptr ) return false;
+		if ( findRef(orig) ) return false;
 		insert( orig, nullptr );
 		return true;
 	}
 
 	/// Finds a mapping in this environment, returns null if none
     const Type* find( const PolyType* orig ) const {
-		StorageRef r = findRef( orig );
-		return r.first == nullptr ? nullptr : classOf( r ).bound;
+		ClassRef r = findRef( orig );
+		return r ? r->bound : nullptr;
     }
+
+	/// Gets the type-class for a type variable, creating it if needed
+	ClassRef getClass( const PolyType* orig ) {
+		ClassRef r = findRef( orig );
+		if ( ! r ) {
+			r = { this, classes.size() };
+			insert( orig, nullptr );
+		}
+		return r;
+	}
 
 	/// Finds an assertion in this environment, returns null if none
 	const TypedExpr* findAssertion( const FuncDecl* f ) const {
@@ -255,26 +306,49 @@ public:
 
     /// Adds the given substitution to this binding. `orig` should be currently unbound.
     void bind( const PolyType* orig, const Type* sub ) {
-		StorageRef r = findRef( orig );
-		if ( r.first == nullptr ) {
+		ClassRef r = findRef( orig );
+		if ( ! r ) {
 			insert( orig, sub );
 		} else {
-			if ( r.first != this ) { r.second = copyClass( r ); }
-			classes[ r.second ].bound = sub;
+			if ( r.env != this ) { r.ind = copyClass( r ); }
+			classes[ r.ind ].bound = sub;
 		}
     }
 
-    /// Adds the second PolyType to the class of the first; the second PolyType should not 
-    /// currently exist in the binding table.
+	/// Binds this class to the given type; class should be currently unbound.
+	/// May copy class into local scope; class should belong to this or a parent.
+	void bindType( ClassRef r, const Type* sub ) {
+		if ( r.env != this ) { r.ind = copyClass( r ); }
+		classes[ r.ind ].bound = sub;
+	}
+
+    /// Adds the second PolyType to the class of the first; the second PolyType should 
+    /// not currently exist in the binding table.
     void bindClass( const PolyType* orig, const PolyType* added ) {
-		StorageRef r = findRef( orig );
-		if ( r.first == nullptr ) {
+		ClassRef r = findRef( orig );
+		if ( ! r ) {
 			insert( orig, added );
 		} else {
-			if ( r.first != this ) { r.second = copyClass( r ); }
-			addToClass( r.second, added );
+			if ( r.env != this ) { r.ind = copyClass( r ); }
+			addToClass( r.ind, added );
 		}
     }
+
+	/// Binds the type variable into to the given class; returns false if the 
+	/// type variable is incompatibly bound.
+	bool bindVar( ClassRef r, const PolyType* var ) {
+		ClassRef vr = findRef( var );
+		if ( vr == r ) return true;  // exit early if already bound
+		if ( r.env != this ) { r = { this, copyClass(r) }; }  // ensure r is local
+		if ( vr ) {
+			// merge variable's existing class into this one
+			return mergeClasses( r, vr );
+		} else {
+			// add unbound variable to class
+			addToClass( r.ind, var );
+			return true;
+		}
+	}
 
 	/// Binds an assertion in this environment. `f` should be currently unbound.
 	void bindAssertion( const FuncDecl* f, const TypedExpr* assn ) {
@@ -286,42 +360,41 @@ public:
 	/// Returns false if fails, but does NOT roll back partial changes.
 	/// seen makes sure work isn't doubled for inherited bindings
 	bool merge( const Env& o, 
-			std::unordered_set<const PolyType*>&& seen = std::unordered_set<const PolyType*>{} ) {
+			std::unordered_set<const PolyType*>&& seen 
+				= std::unordered_set<const PolyType*>{} ) {
 		// Already compatible with o, by definition.
-		// The "o inherits from this" case shouldn't happen, but should be properly handled by below.
-		if ( inherits_from( o ) ) return true;
+		if ( inheritsFrom( o ) ) return true;
 		
 		// merge classes
-		for ( Storage::size_type ci = 0; ci < o.classes.size(); ++ci ) {
+		for ( std::size_t ci = 0; ci < o.classes.size(); ++ci ) {
 			const TypeClass& c = o.classes[ ci ];
-			unsigned n = c.vars.size();
-			unsigned i;
-			StorageRef r{ nullptr, 0 };              // typeclass in this environment
+			std::size_t n = c.vars.size();
+			std::size_t i;
+			ClassRef r{};  // typeclass in this environment
 
 			for ( i = 0; i < n; ++i ) {
-				// mark variable as seen
-				if ( seen.count( c.vars[i] ) ) continue;
-				else seen.insert( c.vars[i] );
+				// mark variable as seen; skip if already seen
+				if ( seen.insert( c.vars[i] ).second == false ) continue;
 				// look for first existing bound variable
 				r = findRef( c.vars[i] );
-				if ( r.first != nullptr ) break;
+				if ( r ) break;
 			}
 
 			if ( i < n ) {
 				// attempt to merge bound into r
 				if ( ! mergeBound( r, c.bound ) ) return false;
 				// merge previous variables into this class
-				if ( r.first != this ) { r = { this, copyClass( r ) }; }
-				for ( unsigned j = 0; j <= i; ++j ) addToClass( r.second, c.vars[j] );
+				if ( r.env != this ) { r = { this, copyClass( r ) }; }
+				for ( std::size_t j = 0; j <= i; ++j ) addToClass( r.ind, c.vars[j] );
 				// merge subsequent variables into this class
 				while ( ++i < n ) {
-					// mark variable as seen
-					if ( seen.count( c.vars[i] ) ) continue;
-					else seen.insert( c.vars[i] );
-					// copy unbound variables into this class, skipping ones already bound to it
-					StorageRef rr = findRef( c.vars[i] );
-					if ( rr.first == nullptr ) {
-						addToClass( r.second, c.vars[i] );
+					// mark variable as seen; skip if already seen
+					if ( seen.insert( c.vars[i] ).second == false ) continue;
+					// copy unbound variables into this class, skipping ones already 
+					// bound to it
+					ClassRef rr = findRef( c.vars[i] );
+					if ( ! rr ) {
+						addToClass( r.ind, c.vars[i] );
 						continue;
 					} else if ( rr == r ) continue;
 
@@ -330,7 +403,7 @@ public:
 				}
 			} else {
 				// no variables in this typeclass bound; just copy up
-				copyClass( StorageRef{ &o, ci } );
+				copyClass( ClassRef{ &o, ci } );
 				continue;
 			}
 		}
@@ -366,16 +439,20 @@ private:
     std::ostream& write(std::ostream& out) const;
 };
 
-/// Returns true iff the type is contained.
-/// Handles null environment correctly.
-inline const bool contains( const Env* env, const PolyType* orig ) {
-	return env ? env->contains( orig ) : false;
+inline const TypeClass& ClassRef::operator* () const {
+	return env->classes[ ind ];
 }
 
 /// Returns nullptr for unbound type, contained type otherwise.
 /// Handles null environment correctly.
 inline const Type* find( const Env* env, const PolyType* orig ) {
     return env ? env->find( orig ) : nullptr;
+}
+
+/// Gets the typeclass for a given type variable, inserting it if necessary.
+inline ClassRef getClass( unique_ptr<Env>& env, const PolyType* orig ) {
+	if ( ! env ) { env.reset( new Env{} ); }
+	return env->getClass( orig );
 }
 
 // TODO consider having replace return the first PolyType in a class as a unique representative
@@ -421,6 +498,17 @@ inline void bindType( unique_ptr<Env>& env, const PolyType* orig, const Type* su
     }
 }
 
+/// Adds the given substitution to this environment. 
+/// `r` should be currently unbound and belong to `env` or a parent.
+/// Creates a new environment if `env == null`
+inline void bindType( unique_ptr<Env>& env, ClassRef r, const Type* sub ) {
+	if ( ! env ) {
+		env.reset( new Env(r, sub) );
+	} else {
+		env->bindType( r, sub );
+	}
+}
+
 /// Adds the second PolyType to the class of the first; the second PolyType should not 
 /// currently exist in the binding table. Creates new environment if null
 inline void bindClass( unique_ptr<Env>& env, const PolyType* orig, const PolyType* added ) {
@@ -429,6 +517,17 @@ inline void bindClass( unique_ptr<Env>& env, const PolyType* orig, const PolyTyp
     } else {
         env->bindClass( orig, added );
     }
+}
+
+/// Adds the type variable to the given class. Creates new environment if null, 
+/// returns false if incompatible binding.
+inline bool bindVar( unique_ptr<Env>& env, ClassRef r, const PolyType* var ) {
+	if ( ! env ) {
+		env.reset( new Env(r, var) );
+		return true;
+	} else {
+		return env->bindVar( r, var );
+	}
 }
 
 /// Adds the given assertion to the envrionment; the assertion should not currently exist in the 

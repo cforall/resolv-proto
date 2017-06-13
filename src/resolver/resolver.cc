@@ -329,9 +329,8 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	
 	const Interpretation* candidate = results.front();
 	
-	// handle ambiguous candidate from conversion expansion TODO inline this again
-	ResolvedExprInvalid is_invalid{ on_ambiguous };
-	if ( is_invalid( candidate->expr ) ) {
+	// handle ambiguous candidate from conversion expansion
+	if ( ResolvedExprInvalid{ on_ambiguous }( candidate->expr ) ) {
 		return Interpretation::make_invalid();
 	}
 

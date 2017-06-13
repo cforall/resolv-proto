@@ -21,7 +21,7 @@ FuncDecl* ForallSubstitutor::operator() ( const FuncDecl* d ) {
 		foralls.emplace( d->forall(), forall.get() );
 		
 		for ( const PolyType* v : d->forall()->variables() ) {
-			forall->vars.push_back( as<PolyType>((*this)(v)) );
+			(*this)(v); // substitutor adds vars when seen
 		}
 		for ( const FuncDecl* a : d->forall()->assertions() ) {
 			forall->assns.push_back( (*this)(a) );
