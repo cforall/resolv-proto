@@ -166,11 +166,12 @@ class Env final : public GC_Traceable {
 		for ( const PolyType* v : sc.vars ) {
 			ClassRef rr = findRef( v );
 			if ( ! rr || rr == s ) {
-				// not bound or bound in victim class (in parent); can safely add to r
+				// not bound or bound in target class in parent; can safely add to r
 				addToClass( r.ind, v );
 			} else if ( rr == r ) {
 				// already in class; do nothing
 			} else {
+				// new victim class; needs to merge successfully as well
 				if ( ! mergeClasses( r, rr ) ) return false;
 			}
 		}
@@ -178,7 +179,8 @@ class Env final : public GC_Traceable {
 	}
 
 	/// Recursively places references to unbound typeclasses in the output list
-	void getUnbound( std::unordered_set<const PolyType*>& seen, List<TypeClass>& out ) const {
+	void getUnbound( std::unordered_set<const PolyType*>& seen, 
+	                 List<TypeClass>& out ) const {
 		for ( const TypeClass& c : classes ) {
 			for ( const PolyType* v : c.vars ) {
 				// skip classes containing vars we've seen before
@@ -381,7 +383,7 @@ public:
 				if ( ! mergeBound( r, c.bound ) ) return false;
 				// merge previous variables into this class
 				if ( r.env != this ) { r = { this, copyClass( r ) }; }
-				for ( std::size_t j = 0; j <= i; ++j ) addToClass( r.ind, c.vars[j] );
+				for ( std::size_t j = 0; j < i; ++j ) addToClass( r.ind, c.vars[j] );
 				// merge subsequent variables into this class
 				while ( ++i < n ) {
 					// mark variable as seen; skip if already seen
@@ -390,12 +392,14 @@ public:
 					// bound to it
 					ClassRef rr = findRef( c.vars[i] );
 					if ( ! rr ) {
+						// unbound; safe to add
 						addToClass( r.ind, c.vars[i] );
-						continue;
-					} else if ( rr == r ) continue;
-
-					// merge new class into existing
-					if ( ! mergeClasses( r, rr ) ) return false;
+					} else if ( rr == r ) {
+						// bound to target class; already added, do nothing
+					} else {
+						// merge new class into existing
+						if ( ! mergeClasses( r, rr ) ) return false;
+					}
 				}
 			} else {
 				// no variables in this typeclass bound; just copy up

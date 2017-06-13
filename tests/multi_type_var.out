@@ -1,0 +1,4 @@
+
+[#a / (0,2,0)]{A@baz => #a, B@baz => #b | A@baz bar B@baz => bar( #b ) | B@baz foo A@baz => foo( #a )} baz{A, B | B foo A | A bar B}( #a )
+
+[#a / (0,3,0)]{A@f => #a, B@f => #b | B@f g A@f => g( #a ) | A@f h B@f => h( B@f )} f{A, B | B g A | A h B}( #a )

@@ -3,6 +3,6 @@
 
 [#bar / (0,0,0)] g( #bar )
 
-[#foo / (0,1,0)] h{T => #foo | T@h f T@h => [#foo / (0,0,0)] f( #foo )}( #foo )
+[#foo / (0,1,0)]{T@h => #foo | T@h f T@h => f( #foo )} h{T | T f T}( #foo )
 
-ERROR: no valid resolution for b( #bar )
+ERROR: no valid resolution for h( #bar )

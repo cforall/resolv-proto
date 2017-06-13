@@ -82,7 +82,7 @@ protected:
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	if ( i.expr == nullptr ) return out << "<invalid interpretation>";
 	
-	out << "[" << *i.type() << " / " << i.cost << "]";
+	out << "[" << *replace( i.env.get(), i.type() ) << " / " << i.cost << "]";
 	if ( i.env ) { out << *i.env; }
 	return out << " " << *i.expr;
 }
