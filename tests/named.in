@@ -5,4 +5,4 @@ T h T | T f T
 f( #foo )
 g( #bar )
 h( #foo )
-b( #bar )
+h( #bar )

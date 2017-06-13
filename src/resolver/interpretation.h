@@ -4,7 +4,6 @@
 #include <ostream>
 #include <utility>
 
-#include "binding.h"
 #include "cost.h"
 #include "env.h"
 

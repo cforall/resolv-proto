@@ -163,8 +163,8 @@ List<TypedExpr> argsFrom( const InterpretationList& is ) {
 /// Return an interpretation for all matches between functions in funcs and 
 /// argument packs in combos
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList&& combos, 
-                               Resolver::Mode resolve_mode ) {
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
+                               ComboList&& combos, Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	for ( const auto& combo : combos ) {
@@ -185,7 +185,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 		// attempt to match functions to arguments
 		for ( const FuncDecl* func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
+			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) 
+				continue;
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
@@ -199,7 +200,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 			// skip functions that don't match the parameter types
 			if ( ! argsMatchParams( combo.second, func->params(), cost, env ) ) continue;
 			
-			const TypedExpr* call = new CallExpr{ func, argsFrom( combo.second ), move(forall) };
+			const TypedExpr* call = 
+				new CallExpr{ func, argsFrom( combo.second ), move(forall) };
 
 			// check type assertions if at top level
 			if ( resolve_mode == Resolver::TOP_LEVEL ) {
@@ -243,8 +245,8 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 				results = matchFuncs( *this, withName(), resolve_mode );
 			} break;
 			case 1: {
-				results = matchFuncs( *this, withName(), resolve( funcExpr->args().front() ), 
-				                      resolve_mode );
+				results = matchFuncs( *this, withName(), 
+				                      resolve( funcExpr->args().front() ), resolve_mode );
 			} break;
 			default: {
 				std::vector<InterpretationList> sub_results;
@@ -258,7 +260,8 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 				
 				interpretation_unambiguous valid;
 				auto merged = unsorted_eager_merge<
-					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );
+					const Interpretation*, Cost, interpretation_cost>( 
+						sub_results, valid );
 				
 				results = matchFuncs( *this, withName(), move(merged), resolve_mode );
 			} break;

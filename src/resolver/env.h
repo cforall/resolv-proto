@@ -157,7 +157,6 @@ class Env final : public GC_Traceable {
 			if ( r.ind == victim ) {
 				// note that r has been moved to the old position of s
 				r.ind = s.ind;
-				for ( const PolyType* v : classes[ r.ind ].vars ) { bindings[v] = r; }
 			}
 			return true;
 		}
@@ -166,13 +165,11 @@ class Env final : public GC_Traceable {
 		rc.vars.reserve( rc.vars.size() + sc.vars.size() );
 		for ( const PolyType* v : sc.vars ) {
 			ClassRef rr = findRef( v );
-			if ( ! rr ) {
-				// not bound
+			if ( ! rr || rr == s ) {
+				// not bound or bound in victim class (in parent); can safely add to r
 				addToClass( r.ind, v );
-				continue;
 			} else if ( rr == r ) {
-				// already in class
-				continue;
+				// already in class; do nothing
 			} else {
 				if ( ! mergeClasses( r, rr ) ) return false;
 			}
@@ -206,12 +203,11 @@ class Env final : public GC_Traceable {
 		return false;
 	}
 
-	/// Returns first non-empty parent environment.
-	const Env* getParent() const {
-		for ( const Env* crnt = parent; crnt; crnt = crnt->parent ) {
-			if ( localAssns > 0 || ! classes.empty() ) return crnt;
-		}
-		return nullptr;
+	/// Returns this or its first non-empty parent environment (null for empty env).
+	const Env* getNonempty() const {
+		// rely on the invariant that if this is empty, its parent will be 
+		// either null or non-empty
+		return ( localAssns > 0 || ! classes.empty() ) ? this : parent;
 	}
 
 public:
@@ -250,7 +246,7 @@ public:
 
 	/// Shallow copy, just sets parent of new environment
 	Env( const Env& o )
-		: classes(), bindings(), assns(), localAssns(0), parent(o.getParent()) {}
+		: classes(), bindings(), assns(), localAssns(0), parent(o.getNonempty()) {}
 
 	/// Deleted to avoid the possibility of environment cycles.
 	Env& operator= ( const Env& o ) = delete;

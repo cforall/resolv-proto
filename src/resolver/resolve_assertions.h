@@ -21,11 +21,14 @@
 class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	using DeferList = std::vector<InterpretationList>;
 
-	/// Combo iterator that combines interpretations into an interpretation list, merging their 
-	/// environments. Rejects an appended interpretation if the environments cannot be merged.
+	/// Combo iterator that combines interpretations into an interpretation list, merging 
+	/// their environments. Rejects an appended interpretation if the environments cannot 
+	/// be merged.
 	class interpretation_env_merger {
-		InterpretationList crnt;            ///< Current list of merged interpretations
-		std::vector<unique_ptr<Env>> envs;  ///< Stack of environments, to support backtracking
+		/// Current list of merged interpretations
+		InterpretationList crnt;
+		/// Stack of environments, to support backtracking
+		std::vector<unique_ptr<Env>> envs;
 	public:
 		/// Outputs a pair consisting of the merged environment and the list of interpretations
 		using OutType = std::pair<unique_ptr<Env>, InterpretationList>;
@@ -73,7 +76,9 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 			return it->second;
 		}
 
-		bool operator() ( const Element& a, const Element& b ) { return get( a ) < get( b ); }
+		bool operator() ( const Element& a, const Element& b ) {
+			return get( a ) < get( b );
+		}
 	};
 
 	Resolver& resolver;       ///< Resolver to perform searches.
@@ -134,9 +139,9 @@ public:
 			const Type* asnRet = replaceLocals( asn->returns() );
 
 			// attempt to resolve assertion
-			// TODO this visitor should probably be integrated into the resolver; that way the 
-			//   defer-list of assertions can be iterated over at the top level and overly-deep 
-			//   recursive invocations can be caught.
+			// TODO this visitor should probably be integrated into the resolver; that 
+			//      way the defer-list of assertions can be iterated over at the top 
+			//      level and overly-deep recursive invocations can be caught.
 			InterpretationList satisfying = resolver.resolveWithType( asnExpr, asnRet, env.get() );
 
 			switch ( satisfying.size() ) {
@@ -166,9 +171,10 @@ public:
 
 
 	bool visit( const AmbiguousExpr* e, const TypedExpr*& r ) {
-		// TODO I'm a little worried that this won't properly defer disambiguation of some 
-		// ambiguous alternatives. However, making it a separate, deferred pass might mutate 
-		// the Forall in containing CallExpr nodes without updating the environment.
+		// TODO I'm a little worried that this won't properly defer disambiguation of 
+		// some ambiguous alternatives. However, making it a separate, deferred pass 
+		// might mutate the Forall in containing CallExpr nodes without updating the 
+		// environment.
 
 		// TODO Maybe make AmbiguousExpr store the full environment for each alternative?
 
@@ -231,7 +237,8 @@ public:
 
 		// attempt to disambiguate deferred assertion matches with additional information
 		auto compatible = 
-			filter_combos<const Interpretation*>( deferred, interpretation_env_merger{ env.get() } );
+			filter_combos<const Interpretation*>( 
+				deferred, interpretation_env_merger{ env.get() } );
 		if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
 		// sort deferred assertion matches by cost
@@ -252,10 +259,10 @@ public:
 	}
 };
 
-/// Resolves all assertions contained recursively in call, accumulating conversion cost and 
-/// type/assertion bindings in cost and env, respectively. Returns whether all assertions can 
-/// be consistently bound at a unique minimum cost; may mutate call to disambiguate ambiguous 
-/// expressions.
+/// Resolves all assertions contained recursively in call, accumulating conversion cost 
+/// and type/assertion bindings in cost and env, respectively. Returns whether all 
+/// assertions can be consistently bound at a unique minimum cost; may mutate call to 
+/// disambiguate ambiguous expressions.
 bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, 
 		unique_ptr<Env>& env ) {
 	AssertionResolver assnResolver{ resolver, cost, env };
