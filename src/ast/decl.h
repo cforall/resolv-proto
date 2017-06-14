@@ -55,24 +55,12 @@ class FuncDecl final : public Decl {
 public:
 	typedef Decl Base;
 	
-	FuncDecl(const std::string& name_, const List<Type>& params_,
-	         const List<Type>& returns_)
-		: name_(name_), tag_(), params_(params_), 
-		  returns_( gen_returns( returns_ ) ), forall_() {}
-	
-	FuncDecl(const std::string& name_, const std::string& tag_,
-	         const List<Type>& params_, const List<Type>& returns_)
-		: name_(name_), tag_(tag_), params_(params_),
-		  returns_( gen_returns( returns_ ) ), forall_() {}
-
-	FuncDecl(const std::string& name_, List<Type>&& params_, 
-	         List<Type>&& returns_, unique_ptr<Forall>&& forall_ )
+	FuncDecl(const std::string& name_, List<Type>&& params_, List<Type>&& returns_)
 		: name_(name_), tag_(), params_(move(params_)), 
-		  returns_( gen_returns( move(returns_) ) ), forall_( move(forall_) ) {}
+		  returns_( gen_returns( move(returns_) ) ), forall_() {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
-	         List<Type>&& params_, List<Type>&& returns_, 
-			 unique_ptr<Forall>&& forall_ )
+	         List<Type>&& params_, List<Type>&& returns_, unique_ptr<Forall>&& forall_ )
 		: name_(name_), tag_(tag_), params_(move(params_)), 
 		  returns_( gen_returns( move(returns_) ) ), forall_( move(forall_) ) {}
 	

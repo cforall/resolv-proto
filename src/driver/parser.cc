@@ -123,7 +123,7 @@ bool parse_assertion(char*&token, CanonicalTypeMap& types, unique_ptr<Forall>& f
 	}
 
 	if ( ! forall ) { forall.reset( new Forall{} ); }
-	forall->addAssertion( new FuncDecl{ name, params, returns } );
+	forall->addAssertion( new FuncDecl{ name, move(params), move(returns) } );
 	token = end;
 	return true;
 }
@@ -134,9 +134,8 @@ bool parse_assertion(char*&token, CanonicalTypeMap& types, unique_ptr<Forall>& f
 bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	List<Type> returns, params;
 	std::string name;
-	std::string tag;
+	std::string tag = "";
 	unique_ptr<Forall> forall;
-	bool saw_tag = false;
 	
 	// parse return types
 	match_whitespace(line);
@@ -149,11 +148,8 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	
 	// optionally parse tag
 	if ( match_char(line, '-') ) {
-		if ( parse_name(line, tag) ) {
-			saw_tag = true;
-		} else {
-			--line;  // might have been subsequent negative-valued type
-		}
+		// might have been subsequent negative-valued type
+		if ( ! parse_name(line, tag) ) { --line; }
 	}
 	
 	// parse parameters
@@ -173,11 +169,7 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	}
 	
 	// pass completed declaration into return list
-	if ( saw_tag ) {
-		funcs.insert( new FuncDecl{name, tag, move(params), move(returns), move(forall)} );
-	} else {
-		funcs.insert( new FuncDecl{name, move(params), move(returns), move(forall)} );
-	}
+	funcs.insert( new FuncDecl{ name, tag, move(params), move(returns), move(forall) } );
 	
 	return true;
 }
