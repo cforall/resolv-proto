@@ -163,7 +163,7 @@ public:
 		}
 
 		// ensure all type variables exist in the environment
-		for ( const PolyType* v : ee->forall()->variables() ) { insert( env, v ); }
+		for ( const PolyType* v : ee->forall()->variables() ) { insertVar( env, v ); }
 		
 		r = ee;
 		return true;

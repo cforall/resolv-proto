@@ -1,7 +1,6 @@
 # TODO #
 
 ## Next few days ##
-* Clean up dead code in Env
 * look at TODO tags in code (primarily AmbiguousExpr => List<Interpretation>)
 
 ## Next few weeks ##
