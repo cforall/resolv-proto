@@ -2,7 +2,6 @@
 
 ## Next few days ##
 * Clean up dead code in Env, look at FuncDecl constructors too
-* Delete environment.h, binding.h
 * look at TODO tags in code (primarily AmbiguousExpr => List<Interpretation>)
 
 ## Next few weeks ##
