@@ -44,7 +44,8 @@ public:
 	/// Finds the existing type variable with the given name; returns null if none such
 	const PolyType* get( const std::string& p ) const;
 
-	/// Adds a new type variable in this forall if not present; returns existing var if present
+	/// Adds a new type variable in this forall if not present; returns existing var if 
+	/// present
 	const PolyType* add( const std::string& p );
 
 	/// Adds a new assertion to this forall
