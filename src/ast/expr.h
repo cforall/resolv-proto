@@ -17,6 +17,8 @@
 #include "data/mem.h"
 #include "resolver/conversion.h"
 
+class Interpretation;
+
 /// A resolvable expression
 class Expr : public ASTNode {
 public:
@@ -234,20 +236,20 @@ protected:
 
 /// An ambiguous interpretation with a given type
 class AmbiguousExpr : public TypedExpr {
-	const Expr* expr_;      ///< Expression that is ambiguously resolved
-	const Type* type_;      ///< Type of ambiguous expression
-	List<TypedExpr> alts_;  ///< Equal-cost alternatives
+	const Expr* expr_;           ///< Expression that is ambiguously resolved
+	const Type* type_;           ///< Type of ambiguous expression
+	List<Interpretation> alts_;  ///< Equal-cost alternatives
 public:
 	typedef Expr Base;
 	
-	AmbiguousExpr( const Expr* expr_, const Type* type_, List<TypedExpr>&& alts_ = {} )
+	AmbiguousExpr( const Expr* expr_, const Type* type_, List<Interpretation>&& alts_ = {} )
 		: expr_(expr_), type_( type_ ), alts_( move(alts_) ) {}
 	
 	Expr* clone() const override { return new AmbiguousExpr( expr_, type_, copy(alts_) ); }
 
 	const Expr* expr() const { return expr_; }
 	
-	const List<TypedExpr>& alts() const { return alts_; }
+	const List<Interpretation>& alts() const { return alts_; }
 
 	const Type* type() const override { return type_; }
 
@@ -258,5 +260,5 @@ public:
 	}
 
 protected:
-	void trace(const GC& gc) const override { gc << expr_ << type_ << alts_; }
+	void trace(const GC& gc) const override;
 };

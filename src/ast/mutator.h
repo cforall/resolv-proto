@@ -13,19 +13,22 @@ bool mutateAll( Self* self, const List<T>& in, option<List<T>>& out ) {
     unsigned i;
     unsigned n = in.size();
     const T* last = nullptr;
+    // scan for first modified element
     for ( i = 0; i < n; ++i ) {
         const T* ti = last = in[i];
         if ( ! self->visit( ti, last ) ) return false;
         if ( last != ti ) goto modified;
     }
-    return true;
+    return true;  // no changes
     
     modified:
     List<T> ts;
     ts.reserve( n );
+    // copy unmodified items into output
     for ( unsigned j = 0; j < i; ++j ) {
         ts.push_back( in[j] );
     }
+    // copy modified items into output
     if ( last ) ts.push_back( last );
     for ( ++i; i < n; ++i ) {
         const T* ti = in[i];

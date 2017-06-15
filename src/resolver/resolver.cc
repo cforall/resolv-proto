@@ -318,14 +318,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		
 		// ambiguous if more than one min-cost interpretation
 		if ( min_pos != results.begin() ) {
-			List<TypedExpr> options;
-			auto it = results.begin();
-			while (true) {
-				options.push_back( (*it)->expr );
-				if ( it == min_pos ) break;
-				++it;
-			}
-			on_ambiguous( expr, options.begin(), options.end() );
+			on_ambiguous( expr, results.begin(), ++min_pos );
 			return Interpretation::make_invalid();
 		}
 	}

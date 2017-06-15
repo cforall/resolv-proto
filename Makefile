@@ -54,7 +54,7 @@ $(BUILDDIR)/%.o : %.cc $(BUILDDIR)/%.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # rp objects
-OBJS = $(addprefix $(BUILDDIR)/, conversion.o env.o forall.o forall_substitutor.o gc.o parser.o resolver.o rp.o)
+OBJS = $(addprefix $(BUILDDIR)/, conversion.o env.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o rp.o)
 
 # bench_gen objects
 BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o env.o forall.o forall_substitutor.o random_partitioner.o bench_gen.o)

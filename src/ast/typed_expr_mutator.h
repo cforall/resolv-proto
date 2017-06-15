@@ -80,7 +80,8 @@ public:
         option<List<TypedExpr>> newEls;
         if ( ! mutateAll( this, e->els(), newEls ) ) return false;
         if ( ! newEls ) return true;
-        if ( newEls->size() < e->els().size() ) {  // trim expressions that lose any elements
+        if ( newEls->size() < e->els().size() ) {
+            // trim expressions that lose any elements
             r = nullptr;
             return true;
         }
@@ -89,16 +90,47 @@ public:
     }
 
     bool visit( const AmbiguousExpr* e, const TypedExpr*& r ) {
-        option<List<TypedExpr>> newAlts;
-        if ( ! mutateAll( this, e->alts(), newAlts ) ) return false;
-        if ( ! newAlts ) return true;
-        switch ( newAlts->size() ) {  // trimmed alternatives may disambiguate expression
-        case 0:
-            r = nullptr; break;
-        case 1:
-            r = newAlts->front(); break;
-        default:
-            r = new AmbiguousExpr{ e->expr(), e->type(), *move(newAlts) }; break;
+        // code copied from mutator.h:mutateAll()
+
+        unsigned i;
+        unsigned n = e->alts().size();
+        const TypedExpr* last = nullptr;
+        // scan for first modified element
+        for ( i = 0; i < n; ++i ) {
+            const TypedExpr* ei = last = e->alts()[i]->expr;
+            if ( ! visit( ei, last ) ) return false;
+            if ( last != ei ) goto modified;
+        }
+        return true;  // no changes
+
+        modified:
+        List<Interpretation> alts;
+        alts.reserve( n );
+        // copy unmodified items into output
+        for ( unsigned j = 0; j < i; ++j ) {
+            alts.push_back( e->alts()[j] );
+        }
+        // copy modified items into output
+        if ( last ) {
+            const Interpretation* ii = e->alts()[i];
+            alts.push_back( new Interpretation{ last, ii->cost, ii->env } );
+        }
+        for ( ++i; i < n; ++i ) {
+            const Interpretation* ii = e->alts()[i];
+            const TypedExpr* ei = ii->expr;
+            if ( ! visit( ei, ei ) ) return false;
+            if ( ei == ii->expr ) {
+                alts.push_back( ii );
+            } else if ( ei ) {
+                alts.push_back( new Interpretation{ ei, ii->cost, ii->env } );
+            }
+        }
+
+        // trimmed alternatives may disambiguate expression
+        switch( alts.size() ) {
+        case 0:  r = nullptr; break;
+        case 1:  r = alts[0]->expr; break;
+        default: r = new AmbiguousExpr{ e->expr(), e->type(), move(alts) }; break;
         }
         return true;
     }

@@ -6,6 +6,7 @@
 #include "expr.h"
 
 #include "data/cast.h"
+#include "resolver/interpretation.h"
 
 /// Visitor for typed expressions. 
 template<typename Self, typename T>
@@ -61,8 +62,8 @@ public:
     }
 
     bool visitChildren( const AmbiguousExpr* e, T& r ) {
-        for ( const TypedExpr* alt : e->alts() ) {
-            if ( ! visit( alt, r ) ) return false;
+        for ( const Interpretation* alt : e->alts() ) {
+            if ( ! visit( alt->expr, r ) ) return false;
         }
         return true;
     }

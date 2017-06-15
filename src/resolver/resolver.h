@@ -20,8 +20,8 @@ using InvalidEffect = std::function<void(const Expr*)>;
 /// could not be resolved and an iterator pair representing the first ambiguous 
 /// candidate and the iterator after the last (range is guaranteed to be non-empty).
 using AmbiguousEffect = std::function<void(const Expr*, 
-                                           List<TypedExpr>::const_iterator, 
-	                                       List<TypedExpr>::const_iterator)>;
+                                           List<Interpretation>::const_iterator, 
+	                                       List<Interpretation>::const_iterator)>;
 
 /// Effect to be run on unbound type variables; arguments are the expression which 
 /// has unbound type variables and the unbound typeclasses.
@@ -48,7 +48,7 @@ public:
 	/// Mode for type conversions
 	enum Mode {
 		NO_CONVERSIONS,  ///< Do not expand interpretations or allow void interpretations
-		TOP_LEVEL,       ///< Do not expand interpretations, but allow void interpretations
+		TOP_LEVEL,       ///< Do not expand interpretations; allow void interpretations
 		ALL_NON_VOID     ///< Expand interpretations to all non-void types
 	};
 

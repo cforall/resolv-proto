@@ -1,7 +1,7 @@
 # TODO #
 
 ## Next few days ##
-* look at TODO tags in code (primarily AmbiguousExpr => List<Interpretation>)
+* look at TODO tags in code
 
 ## Next few weeks ##
 * Top-down resolver algorithm (to compare to my existing bottom-up algorithm - I'll finally have some real data when I'm done this)

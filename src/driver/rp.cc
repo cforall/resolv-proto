@@ -30,7 +30,8 @@ int main(int argc, char **argv) {
 	
 	InvalidEffect on_invalid = []( const Expr* e ) {};
 	AmbiguousEffect on_ambiguous = 
-		[]( const Expr* e, List<TypedExpr>::const_iterator i, List<TypedExpr>::const_iterator end ) {};
+		[]( const Expr* e, List<Interpretation>::const_iterator i, 
+		    List<Interpretation>::const_iterator end ) {};
 	UnboundEffect on_unbound = []( const Expr* e, const List<TypeClass>& cs ) {};
 
 	switch ( args.filter() ) {
@@ -41,8 +42,8 @@ int main(int argc, char **argv) {
 			out << "ERROR: no valid resolution for " << *e << std::endl;
 		};
 
-		on_ambiguous = [&out]( const Expr* e, List<TypedExpr>::const_iterator i, 
-				List<TypedExpr>::const_iterator end ) {
+		on_ambiguous = [&out]( const Expr* e, List<Interpretation>::const_iterator i, 
+				List<Interpretation>::const_iterator end ) {
 			out << "ERROR: ambiguous resolution for " << *e << "\n"
 				<< "       candidates are:\n";
 
@@ -61,8 +62,8 @@ int main(int argc, char **argv) {
 	case Args::Filter::Invalid:
 		break;
 	case Args::Filter::Unambiguous:
-		on_ambiguous = [&out]( const Expr* e, List<TypedExpr>::const_iterator i, 
-				List<TypedExpr>::const_iterator end ) {
+		on_ambiguous = [&out]( const Expr* e, List<Interpretation>::const_iterator i, 
+				List<Interpretation>::const_iterator end ) {
 			e->write( out, ASTNode::Print::InputStyle );
 			out << std::endl;
 		};

@@ -176,33 +176,35 @@ public:
 		// might mutate the Forall in containing CallExpr nodes without updating the 
 		// environment.
 
-		// TODO Maybe make AmbiguousExpr store the full environment for each alternative?
-
 		// find all min-cost resolvable alternatives
-		bool unchanged = true;
-		Cost min_cost = Cost::max();
-		unique_ptr<Env> min_env{};
-		List<TypedExpr> min_alts;
-		for ( const TypedExpr* alt : e->alts() ) {
-			// re-resolve alternative assertions under current environment
-			const TypedExpr* alt_bak = alt;
-			Cost alt_cost = cost;
+		bool changed = false;
+		List<Interpretation> min_alts;
+		for ( const Interpretation* alt : e->alts() ) {
+			const TypedExpr* alt_expr = alt->expr;
+			const TypedExpr* alt_bak = alt_expr;
+			Cost alt_cost = cost + alt->cost;
 			unique_ptr<Env> alt_env = Env::from( env.get() );
+			// skip alternatives that can't be resolved in the current environment
+			if ( ! merge( alt_env, alt->env.get() ) ) {
+				changed = true;
+				continue;
+			}
+			// re-resolve alternative assertions under current environment
 			AssertionResolver alt_resolver{ resolver, alt_cost, alt_env };
-			alt_resolver.mutate( alt );
-			if ( alt != alt_bak ) { unchanged = false; }
+			alt_resolver.mutate( alt_expr );
+			if ( alt_expr != alt_bak ) { changed = true; }
 
 			// skip un-resolvable alternatives
-			if ( ! alt ) continue;
+			if ( ! alt_expr ) continue;
 
 			// keep min-cost alternatives
-			if ( alt_cost < min_cost ) {
-				min_cost = alt_cost;
-				min_env.swap( alt_env );
+			if ( min_alts.empty() || alt_cost < min_alts[0]->cost ) {
 				min_alts.clear();
-				min_alts.push_back( alt );
-			} else if ( alt_cost == min_cost ) {
-				min_alts.push_back( alt );
+				min_alts.push_back( 
+					new Interpretation{ alt_expr, move(alt_cost), move(alt_env) } );
+			} else if ( alt_cost == min_alts[0]->cost ) {
+				min_alts.push_back(
+					new Interpretation{ alt_expr, move(alt_cost), move(alt_env) } );
 			}
 		}
 
@@ -212,20 +214,17 @@ public:
 			return true;
 		}
 
-		cost = min_cost;
-
-		// make no change if none needed
-		if ( unchanged ) return true;
+		cost = min_alts[0]->cost;
 
 		// unique min disambiguates expression
 		if ( min_alts.size() == 1 ) {
-			merge( env, min_env.get() );
-			r = min_alts.front();
+			merge( env, min_alts[0]->env.get() );
+			r = min_alts.front()->expr;
 			return true;
 		}
 
-		// otherwise new ambiguous expression
-		r = new AmbiguousExpr{ e->expr(), e->type(), move(min_alts) };
+		// new ambiguous expression if changed
+		if ( changed ) { r = new AmbiguousExpr{ e->expr(), e->type(), move(min_alts) }; }
 		return true;
 	}
 
@@ -245,14 +244,27 @@ public:
 		interpretation_env_coster costs;
 		auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
 		if ( minPos == compatible.begin() ) {  // unique min-cost
+			// NOTE env is a parent of minPos->first, so we can't just set 
+			//      env = minPos->first, but need to merge in the child parts
+			// TODO write flatten( env, parent ) -> new_env method for this case
 			merge( env, minPos->first.get() );
 			cost += costs.get( *minPos );
 			for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 				bindAssertion( env, deferIds[i], minPos->second[i]->expr );
 			}
-		} else {  // ambiguous min-cost
-			// TODO AmbiguousExpr should hold Interpretation rather than TypedExpr
-			r = nullptr;
+		} else {  // ambiguous min-cost assertion matches
+			List<Interpretation> alts;
+			Cost alt_cost = cost + costs.get( *minPos );
+			auto it = compatible.begin();
+			do {
+				// build an interpretation for each compatible min-cost assertion binding
+				unique_ptr<Env> alt_env = move(it->first);
+				for ( unsigned i = 0; i < deferIds.size(); ++i ) {
+					bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
+				}
+				alts.push_back( new Interpretation{ r, move(alt_cost), move(alt_env) } );
+			} while ( it != minPos );
+			r = new AmbiguousExpr{ r, r->type(), move(alts) };
 		}
 
 		return r;

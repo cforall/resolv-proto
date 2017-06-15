@@ -26,6 +26,10 @@ struct Interpretation : public GC_Object {
 	                unique_ptr<Env>&& env = nullptr )
 		: expr( expr ), cost( move(cost) ), env( move(env) ) {}
 	
+	/// Fieldwise copy-constructor
+	Interpretation( const TypedExpr* expr, const Cost& cost, const unique_ptr<Env>& env )
+		: expr( expr ), cost( cost ), env( Env::from( env.get() ) ) {}
+	
 	friend void swap(Interpretation& a, Interpretation& b) {
 		using std::swap;
 
@@ -47,23 +51,24 @@ struct Interpretation : public GC_Object {
 	/// Returns a fresh invalid interpretation
 	static Interpretation* make_invalid() { return new Interpretation{}; }
 
-	/// Merges two interpretations (must have same cost, type, and underlying 
-	/// expression) to produce a new ambiguous interpretation
+	/// Merges two interpretations (must have same cost, type, and underlying expression) 
+	/// to produce a new ambiguous interpretation. No environment is stored in the outer 
+	/// interpretations, but inner environments are preserved.
 	static Interpretation* merge_ambiguous( const Interpretation* i, 
 	                                        const Interpretation* j ) {
-		List<TypedExpr> alts;
+		List<Interpretation> alts;
 		const Expr* expr;
 		if ( const AmbiguousExpr* ie = as_safe<AmbiguousExpr>( i->expr ) ) {
 			alts = ie->alts();
 			expr = ie->expr();
 		} else {
-			alts.push_back( i->expr );
+			alts.push_back( i );
 			expr = i->expr;
 		}
 		if ( const AmbiguousExpr* je = as_safe<AmbiguousExpr>( j->expr ) ) {
 			alts.insert( alts.end(), je->alts().begin(), je->alts().end() );
 		} else {
-			alts.push_back( j->expr );
+			alts.push_back( j );
 		}
 
 		return new Interpretation{ new AmbiguousExpr{ expr, i->type(), move(alts) }, 
