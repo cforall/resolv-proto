@@ -1,8 +1,7 @@
 # TODO #
 
 ## Next few days ##
-* Test failing cases for type variables, to make sure that the _expected_ errors occur.
-* Add TypedExprTypeMutator (mutates the types in a TypedExpr according to some TypeMutator), use for interpretation printing.
+* Look at odd result in convert_amb test
 
 ## Next few weeks ##
 * Top-down resolver algorithm (to compare to my existing bottom-up algorithm - I'll finally have some real data when I'm done this)

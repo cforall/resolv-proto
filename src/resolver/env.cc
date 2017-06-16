@@ -4,9 +4,11 @@
 #include "env.h"
 
 #include "interpretation.h"
+#include "env_substitutor.h"
 
 #include "ast/decl.h"
 #include "ast/type.h"
+#include "ast/typed_expr_type_mutator.h"
 #include "data/cast.h"
 #include "data/gc.h"
 
@@ -64,6 +66,8 @@ std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
 std::ostream& Env::write(std::ostream& out) const {
 	out << "{";
 	
+	// TODO include parents?
+
 	auto it = classes.begin();
 	while (true) {
 		out << *it;
@@ -71,9 +75,10 @@ std::ostream& Env::write(std::ostream& out) const {
 		out << ", ";
 	}
 
+	TypedExprTypeMutator<EnvSubstitutor> sub{ EnvSubstitutor{ this } };
 	for ( const auto& assn : assns ) {
 		out << " | " << *assn.first << " => ";
-		if ( assn.second ) { out << *assn.second; } else { out << "???"; }
+		if ( assn.second ) { out << *sub(assn.second); } else { out << "???"; }
 	}
 
 	return out << "}";

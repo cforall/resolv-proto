@@ -23,6 +23,7 @@ protected:
 
 public:
     using TypedExprVisitor<Self, const TypedExpr*>::visit;
+    using TypedExprVisitor<Self, const TypedExpr*>::operator();
 
     bool visit( const CastExpr* e, const TypedExpr*& r ) {
         if ( const TypedExpr* arg = as_derived_safe<TypedExpr>( e->arg() ) ) {
@@ -142,6 +143,12 @@ public:
         default: r = new AmbiguousExpr{ e->expr(), e->type(), move(alts) }; break;
         }
         return true;
+    }
+
+    /// Mutates the provided type pointer.
+    const TypedExpr* operator() ( const TypedExpr* e ) {
+        visit( e, e );
+        return e;
     }
 
     const TypedExpr* mutate( const TypedExpr*& e ) {
