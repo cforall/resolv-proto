@@ -125,21 +125,19 @@ public:
 		// bind assertions
 		for ( const FuncDecl* asn : ee->forall()->assertions() ) {
 			// generate FuncExpr for assertion
-			/* EnvSubstitutor replaceLocals{ env.get() }; */
 			List<Expr> asnArgs;
 			asnArgs.reserve( asn->params().size() );
 			for ( const Type* pType : asn->params() ) {
-				asnArgs.push_back( new VarExpr( /*replaceLocals(*/ pType /*)*/ ) );
+				asnArgs.push_back( new VarExpr( pType ) );
 			}
 			const FuncExpr* asnExpr = new FuncExpr{ asn->name(), move(asnArgs) };
-			const Type* asnRet = /*replaceLocals(*/ asn->returns() /*)*/;
 
 			// attempt to resolve assertion
 			// TODO this visitor should probably be integrated into the resolver; that 
 			//      way the defer-list of assertions can be iterated over at the top 
 			//      level and overly-deep recursive invocations can be caught.
 			InterpretationList satisfying = 
-				resolver.resolveWithType( asnExpr, asnRet, env.get() );
+				resolver.resolveWithType( asnExpr, asn->returns(), env.get() );
 
 			switch ( satisfying.size() ) {
 				case 0: { // no satisfying assertions: return failure

@@ -261,10 +261,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
 /// `targetType`.
 /// If `targetType` is polymorphic, may result in multiple best interpretations.
 InterpretationList convertTo( const Type* targetType, InterpretationList&& results, 
-                              ConversionGraph& conversions, const Env* env ) {
-    // substitute target according to environment
-    /* targetType = replace( env, targetType ); */
-
+                              ConversionGraph& conversions ) {
     // best interpretation as targetType, null for none such
     TypeMap<const Interpretation*> best;
 
@@ -276,7 +273,7 @@ InterpretationList convertTo( const Type* targetType, InterpretationList&& resul
             setOrUpdateInterpretation( best, ty, i->cost, [i]() { return i; } );
         } else {
             Cost cost = i->cost;
-            unique_ptr<Env> newEnv = Env::from( env );
+            unique_ptr<Env> newEnv = Env::from( i->env.get() );
             const TypedExpr* newExpr = 
                 convertTo( targetType, i->expr, conversions, newEnv, cost );
             if ( newExpr ) {

@@ -30,7 +30,7 @@
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
 InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
-                               Resolver::Mode resolve_mode ) {
+                               const Env* outEnv, Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	// find functions with no parameters, skipping remaining checks if none
@@ -47,7 +47,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
 		Cost cost; // initialized to zero
-		unique_ptr<Env> env; // initialized to nullptr
+		unique_ptr<Env> env = Env::from( outEnv );
 		
 		const TypedExpr* call = new CallExpr{ func };
 
@@ -229,7 +229,8 @@ struct interpretation_unambiguous {
 	}
 };
 
-InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_mode ) {
+InterpretationList Resolver::resolve( const Expr* expr, const Env* env, 
+                                      Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	if ( const FuncExpr* funcExpr = as_safe<FuncExpr>( expr ) ) {
@@ -244,17 +245,19 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 		// get interpretations for subexpressions (if any)
 		switch( funcExpr->args().size() ) {
 			case 0: {
-				results = matchFuncs( *this, withName(), resolve_mode );
+				// environment is threaded to other matchFuncs variants from arguments
+				results = matchFuncs( *this, withName(), env, resolve_mode );
 			} break;
 			case 1: {
 				results = matchFuncs( *this, withName(), 
-				                      resolve( funcExpr->args().front() ), resolve_mode );
+				                      resolve( funcExpr->args().front(), env ), 
+									  resolve_mode );
 			} break;
 			default: {
 				std::vector<InterpretationList> sub_results;
 				for ( auto& sub : funcExpr->args() ) {
 					// break early if no subexpression results
-					InterpretationList sresults = resolve( sub );
+					InterpretationList sresults = resolve( sub, env );
 					if ( sresults.empty() ) return results;
 					
 					sub_results.push_back( move(sresults) );
@@ -270,7 +273,7 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 		}
 	} else if ( const TypedExpr* typedExpr = as_derived_safe<TypedExpr>( expr ) ) {
 		// do nothing for expressions which are already typed
-		results.push_back( new Interpretation(typedExpr) );
+		results.push_back( new Interpretation{ typedExpr, Cost{}, Env::from(env) } );
 	} else assert(!"Unsupported expression type");
 	
 	if ( resolve_mode == ALL_NON_VOID ) {
@@ -283,7 +286,7 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
 	                                          const Env* env ) {
 	Mode resolve_mode = is<VoidType>(targetType) ? TOP_LEVEL : NO_CONVERSIONS;
-	return convertTo( targetType, resolve( expr, resolve_mode ), conversions, env );
+	return convertTo( targetType, resolve( expr, env, resolve_mode ), conversions );
 }
 
 /// Ensures that resolved expressions have all their type variables bound and are not 
@@ -304,7 +307,7 @@ public:
 };
 
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
-	InterpretationList results = resolve( expr, Resolver::TOP_LEVEL );
+	InterpretationList results = resolve( expr, nullptr, Resolver::TOP_LEVEL );
 	
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {
