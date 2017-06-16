@@ -1,2 +1,9 @@
 
+ERROR: ambiguous resolution for f( 2 2 )
+       candidates are:
+
+[Void / (0,0,2)] f-s0s1( 2 => 4 2 )
+[Void / (0,0,2)] f-s0s2( 2 2 => 4 )
+[Void / (0,0,2)] f-s1s1( 2 => 3 2 => 3 )
+
 [Void / (0,1,1)]{T@g => 3 | Void f T@g T@g => f-s1s1( 3 3 )} g{T |  f T T}( 2 => 3 )
