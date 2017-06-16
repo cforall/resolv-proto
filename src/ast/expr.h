@@ -52,7 +52,7 @@ protected:
 	void trace(const GC& gc) const override { gc << ty_; }
 };
 
-/// A cast expression
+/// A converting cast expression
 class CastExpr : public TypedExpr {
 	const Expr* arg_;         ///< Argument to the cast
 	const Conversion* cast_;  ///< Conversion applied
@@ -62,7 +62,7 @@ public:
 	CastExpr(const Expr* arg_, const Conversion* cast_)
 		: arg_( arg_ ), cast_( cast_ ) {}
 	
-	Expr* clone() const override { return new CastExpr( arg_, cast_ ); }
+	Expr* clone() const override { return new CastExpr{ arg_, cast_ }; }
 	
 	const Expr* arg() const { return arg_; }
 	const Conversion* cast() const { return cast_; }
@@ -79,6 +79,52 @@ public:
 
 protected:
 	void trace(const GC& gc) const override { gc << arg_; }
+};
+
+/// A truncating cast expression (e.g concrete to void, or dropping a tuple suffix)
+class TruncateExpr : public TypedExpr {
+	const TypedExpr* arg_;  ///< Expression that is truncated
+	const Type* target_;    ///< Type arg is trimmed to
+public:
+	typedef Expr Base;
+
+	TruncateExpr(const TypedExpr* arg_, const Type* target_)
+		: arg_(arg_), target_(target_) {}
+
+	/// Trim TypedExpr type to n elements (n < arg_->type()->size())
+	TruncateExpr(const TypedExpr* arg_, unsigned n) : arg_(arg_) {
+		assert( n < arg_->type()->size() );
+		switch ( n ) {
+		case 0:
+			target_ = new VoidType;
+			break;
+		case 1:
+			// target has more than 1 type, must be tuple
+			target_ = as<TupleType>(arg_->type())->types()[0];
+			break;
+		default:
+			// target has more than n > 1 types, must be tuple
+			const List<Type>& argt = as<TupleType>(arg_->type())->types();
+			target_ = new TupleType{ List<Type>( argt.begin(), argt.begin() + n ) };
+		}
+	}
+
+	Expr* clone() const override { return new TruncateExpr{ arg_, target_ }; }
+
+	const TypedExpr* arg() const { return arg_; }
+	
+	const Type* type() const override { return target_; }
+
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		arg_->write( out, style );
+		if ( style != ASTNode::Print::InputStyle ) {
+			out << " => ";
+			target_->write( out, style );
+		}
+	}
+
+protected:
+	void trace(const GC& gc) const override { gc << arg_ << target_; }
 };
 
 /// An untyped function call expression
@@ -119,19 +165,23 @@ class CallExpr : public TypedExpr {
 	const Type* retType_;        ///< Return type of call, after type substitution
 
 	void fixRetType( const Forall* oldForall ) {
-		if ( forall_ ) { ForallSubstitutor{ oldForall, forall_.get() }.mutate( retType_ ); }
+		if ( forall_ ) {
+			ForallSubstitutor{ oldForall, forall_.get() }.mutate( retType_ );
+		}
 	}
 public:
 	typedef Expr Base;
 	
 	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_ = List<TypedExpr>{} )
-			: func_( func_ ), args_( move(args_) ), forall_( Forall::from( func_->forall() ) ),
-			  retType_( func_->returns() ) { fixRetType( func_->forall() ); }
+		: func_( func_ ), args_( move(args_) ), 
+		  forall_( Forall::from( func_->forall() ) ), retType_( func_->returns() ) 
+		{ fixRetType( func_->forall() ); }
 
 	CallExpr( const FuncDecl* func_, const List<TypedExpr>& args_, 
 	          const unique_ptr<Forall>& forall_ )
-			: func_( func_ ), args_( args_ ), forall_( Forall::from( forall_.get() ) ),
-			  retType_( func_->returns() ) { fixRetType( forall_.get() ); }
+		: func_( func_ ), args_( args_ ), forall_( Forall::from( forall_.get() ) ),
+		  retType_( func_->returns() )
+		{ fixRetType( forall_.get() ); }
 
 	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, 
 	          unique_ptr<Forall>&& forall_ )
@@ -161,7 +211,9 @@ public:
 	}
 	
 protected:
-	void trace(const GC& gc) const override { gc << func_ << args_ << forall_.get() << retType_; }
+	void trace(const GC& gc) const override {
+		gc << func_ << args_ << forall_.get() << retType_;
+	}
 };
 
 /// A single element of a tuple from an underlying expression
@@ -202,7 +254,8 @@ class TupleExpr : public TypedExpr {
 	List<TypedExpr> els_;
 	const TupleType* ty_;
 
-	TupleExpr( const List<TypedExpr>& els_, const TupleType* ty_ ) : els_( els_ ), ty_( ty_ ) {}
+	TupleExpr( const List<TypedExpr>& els_, const TupleType* ty_ ) 
+		: els_( els_ ), ty_( ty_ ) {}
 public:
 	typedef Expr Base;
 
@@ -242,10 +295,13 @@ class AmbiguousExpr : public TypedExpr {
 public:
 	typedef Expr Base;
 	
-	AmbiguousExpr( const Expr* expr_, const Type* type_, List<Interpretation>&& alts_ = {} )
+	AmbiguousExpr( const Expr* expr_, const Type* type_, 
+	               List<Interpretation>&& alts_ = {} )
 		: expr_(expr_), type_( type_ ), alts_( move(alts_) ) {}
 	
-	Expr* clone() const override { return new AmbiguousExpr( expr_, type_, copy(alts_) ); }
+	Expr* clone() const override {
+		return new AmbiguousExpr( expr_, type_, copy(alts_) );
+	}
 
 	const Expr* expr() const { return expr_; }
 	

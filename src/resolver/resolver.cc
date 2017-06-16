@@ -84,7 +84,8 @@ InterpretationList matchFuncs( Resolver& resolver,
 		// attempt to match functions to arguments
 		for ( const FuncDecl* func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
+			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) 
+				continue;
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
@@ -101,7 +102,8 @@ InterpretationList matchFuncs( Resolver& resolver,
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( ! unify( func->params()[i], argTypes[i], cost, env ) ) goto nextFunc;
+					if ( ! unify( func->params()[i], argTypes[i], cost, env ) ) 
+						goto nextFunc;
 				}
 			}
 
@@ -184,7 +186,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		
 		// attempt to match functions to arguments
 		for ( const FuncDecl* func : withNParams() ) {
-			// skip functions returning no values, unless at top level
+			// skip functions returning no values unless at top level
 			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) 
 				continue;
 			
@@ -269,9 +271,7 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 	} else if ( const TypedExpr* typedExpr = as_derived_safe<TypedExpr>( expr ) ) {
 		// do nothing for expressions which are already typed
 		results.push_back( new Interpretation(typedExpr) );
-	} else {
-		assert(false && "Unsupported expression type");
-	}
+	} else assert(!"Unsupported expression type");
 	
 	if ( resolve_mode == ALL_NON_VOID ) {
 		expandConversions( results, conversions );
@@ -282,7 +282,8 @@ InterpretationList Resolver::resolve( const Expr* expr, Resolver::Mode resolve_m
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
 	                                          const Env* env ) {
-	return convertTo( targetType, resolve( expr, NO_CONVERSIONS ), conversions, env );
+	Mode resolve_mode = is<VoidType>(targetType) ? TOP_LEVEL : NO_CONVERSIONS;
+	return convertTo( targetType, resolve( expr, resolve_mode ), conversions, env );
 }
 
 /// Ensures that resolved expressions have all their type variables bound and are not 

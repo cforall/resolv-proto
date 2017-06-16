@@ -13,8 +13,8 @@
 #include "data/mem.h"
 #include "data/option.h"
 
-/// Produces a mutated copy of a typed expression, where any un-mutated subexpressions are 
-/// shared with the original.
+/// Produces a mutated copy of a typed expression, where any un-mutated subexpressions 
+/// are shared with the original.
 template<typename Self>
 class TypedExprMutator : public TypedExprVisitor<Self, const TypedExpr*> {
 protected:
@@ -35,11 +35,20 @@ public:
         return true;
     }
 
+    bool visit( const TruncateExpr* e, const TypedExpr*& r ) {
+        const TypedExpr* newArg = e->arg();
+        if ( ! visit( e->arg(), newArg ) ) return false;
+        if ( newArg != e->arg() ) {
+            r = newArg ? new TruncateExpr{ newArg, e->type() } : nullptr;
+        }
+        return true;
+    }
+
     bool visit( const CallExpr* e, const TypedExpr*& r ) {
         option<List<TypedExpr>> newArgs;
         if ( ! mutateAll( this, e->args(), newArgs ) ) return false;
         if ( ! newArgs ) return true;
-        if ( newArgs->size() < e->args().size() ) {  // trim expressions that lose any args
+        if ( newArgs->size() < e->args().size() ) {  // trim expressions that lose args
             r = nullptr;
             return true;
         }
@@ -51,7 +60,7 @@ public:
             ForallSubstitutor m{ e->forall(), forall.get() };
             func = m(func);
             // TODO should newArgs be mutated according to the new forall?
-            // I think no, as long as the polymorphic parameter types don't leak down to the args.
+            // I think no, as long as the polymorphic parameter types don't leak down.
         }
 
         r = new CallExpr{ func, *move(newArgs), move(forall) };

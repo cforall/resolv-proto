@@ -75,8 +75,9 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
                 Cost toCost = i->cost + conv.cost;
 
                 setOrUpdateInterpretation( expanded, to, toCost, 
-                    [i,&conv,&toCost]() { return new Interpretation{ new CastExpr{ i->expr, &conv }, 
-                                                                    copy(toCost) }; } );
+                    [i,&conv,&toCost]() { 
+                        return new Interpretation{ new CastExpr{ i->expr, &conv }, 
+                                                   copy(toCost) }; } );
             }
         } else if ( typeof<TupleType>() == tid ) {
             const TupleType* tty = as<TupleType>(ty);
@@ -131,7 +132,8 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
                                 }
                             }
 
-                            return new Interpretation{ new TupleExpr( move(els) ), copy(toCost) };
+                            return new Interpretation{ 
+                                new TupleExpr( move(els) ), copy(toCost) };
                         } );
                 } );
         }
@@ -150,7 +152,7 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 bool classBinds( ClassRef r, const Type* conc, unique_ptr<Env>& env, Cost& cost ) {
     // test for match if class already has a representative.
     // TODO this is a restriction to exact polymorphic type binding, but loosening it 
-    //      would be non-trivial
+    //      would be non-trivial; [ or maybe I just call convertTo here... ]
     if ( r->bound ) return *r->bound == *conc;
     // otherwise make concrete class the new typeclass representative, incrementing cost
     bindType( env, r, conc );
@@ -187,10 +189,14 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
             // test for match if target typeclass already has representative
             ClassRef tclass = getClass( env, as<PolyType>(ttype) );
             return classBinds( tclass, etype, env, cost ) ? expr : nullptr;
+        } else if ( tid == typeof<VoidType>() ) {
+            // one safe conversion to truncate concrete type to Void
+            ++cost.safe;
+            return new TruncateExpr{ expr, ttype };
         } else if ( tid == typeof<TupleType>() ) {
             // can't match tuples to non-tuple types
             return nullptr;
-        } else assert(false && "Unhandled target type");
+        } else assert(!"Unhandled target type");
     } else if ( eid == typeof<PolyType>() ) {
         ClassRef eclass = getClass( env, as<PolyType>(etype) );
 
@@ -202,34 +208,51 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
                 ++cost.poly;
                 return expr;
             } else return nullptr;
-        } else if ( tid == typeof<TupleType>() ) {
-            // tuples can't bind to PolyType vars.
+        } else if ( tid == typeof<VoidType>() || tid == typeof<TupleType>() ) {
+            // neither tuples nor void can bind to PolyType vars.
             // TODO introduce ttype vars for this
             return nullptr;
-        } else assert(false && "Unhandled target type");
+        } else assert(!"Unhandled target type");
+    } else if ( eid == typeof<VoidType>() ) {
+        // fail for non-void targets
+        return ( tid == typeof<VoidType>() ) ? expr : nullptr;
     } else if ( eid == typeof<TupleType>() ) {
-        // fail for non-tuple targets
-        // TODO add ttype type variables
-        if ( tid != typeof<TupleType>() ) return nullptr;
-
         const TupleType* etuple = as<TupleType>(etype);
-        const TupleType* ttuple = as<TupleType>(ttype);
+        unsigned en = etuple->size(), tn = ttype->size();
 
-        // fail on arity mismatch
-        if ( etuple->size() != ttuple->size() ) return nullptr;
+        // fail for target of greater arity
+        if ( tn > en ) return nullptr;
 
-        // decompose into elements and recurse
-        List<TypedExpr> els;
-        els.reserve( ttuple->size() );
-        for ( unsigned j = 0; j < ttuple->size(); ++j ) {
-            const TypedExpr* el = convertTo( ttuple->types()[j],
-                                             new TupleElementExpr{ expr, j },
+        // target of lesser arity has safe cost of the number of elements trimmed
+        switch (tn) {
+        case 0: {
+            // truncate to void
+            cost.safe += en;
+            return new TruncateExpr{ expr, ttype };
+        } case 1: {
+            // truncate to first element
+            const TypedExpr* el = convertTo( ttype, new TupleElementExpr{ expr, 0 },
                                              conversions, env, cost );
             if ( ! el ) return nullptr;
-            els.push_back( el );
-        }
-        return new TupleExpr{ move(els) };
-    } else assert(false && "Unhandled expression type");
+            cost.safe += en - 1;
+            return el;
+        } default: {
+            // make tuple out of the appropriate prefix
+            const TupleType* ttuple = as<TupleType>(ttype);
+
+            List<TypedExpr> els;
+            els.reserve( ttuple->size() );
+            for ( unsigned j = 0; j < tn; ++j ) {
+                const TypedExpr* el = convertTo( ttuple->types()[j],
+                                                 new TupleElementExpr{ expr, j },
+                                                 conversions, env, cost );
+                if ( ! el ) return nullptr;
+                els.push_back( el );
+            }
+            cost.safe += en - tn;
+            return new TupleExpr{ move(els) };
+        }}
+    } else assert(!"Unhandled expression type");
 
     return nullptr; // unreachable
 }
@@ -240,7 +263,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
 InterpretationList convertTo( const Type* targetType, InterpretationList&& results, 
                               ConversionGraph& conversions, const Env* env ) {
     // substitute target according to environment
-    targetType = replace( env, targetType );
+    /* targetType = replace( env, targetType ); */
 
     // best interpretation as targetType, null for none such
     TypeMap<const Interpretation*> best;
@@ -259,7 +282,8 @@ InterpretationList convertTo( const Type* targetType, InterpretationList&& resul
             if ( newExpr ) {
                 setOrUpdateInterpretation( best, newExpr->type(), cost, 
                     [newExpr,&cost,e = move(newEnv)]() {
-                        return new Interpretation{ newExpr, copy(cost), move(as_non_const(e)) };
+                        return new Interpretation{ 
+                            newExpr, copy(cost), move(as_non_const(e)) };
                     } );
             }
         }

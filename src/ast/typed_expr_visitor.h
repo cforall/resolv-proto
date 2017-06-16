@@ -22,6 +22,8 @@ public:
             return as<Self>(this)->visit( as<VarExpr>(e), r );
         else if ( tid == typeof<CastExpr>() ) 
             return as<Self>(this)->visit( as<CastExpr>(e), r );
+        else if ( tid == typeof<TruncateExpr>() )
+            return as<Self>(this)->visit( as<TruncateExpr>(e), r );
         else if ( tid == typeof<CallExpr>() )
             return as<Self>(this)->visit( as<CallExpr>(e), r );
         else if ( tid == typeof<TupleElementExpr>() )
@@ -40,6 +42,8 @@ public:
             return visit( arg, r );
         } else return true;
     }
+
+    bool visitChildren( const TruncateExpr* e, T& r ) { return visit( e->arg(), r ); }
 
     bool visitChildren( const CallExpr* e, T& r ) {
         for ( const TypedExpr *arg : e->args() ) {
@@ -73,6 +77,8 @@ public:
     bool visit( const VarExpr*, T& ) { return true; }
     
     bool visit( const CastExpr* e, T& r ) { return visitChildren( e, r ); }
+
+    bool visit( const TruncateExpr* e, T& r) { return visitChildren( e, r ); }
     
     bool visit( const CallExpr* e, T& r ) { return visitChildren( e, r ); }
     

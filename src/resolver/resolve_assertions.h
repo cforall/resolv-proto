@@ -112,12 +112,8 @@ public:
 
 			// rebind to new forall clause if necessary
 			unique_ptr<Forall> forall = Forall::from( e->forall() );
-			const FuncDecl* func = e->func();
-			if ( forall ) {
-				ForallSubstitutor m{ e->forall(), forall.get() };
-				func = m(func);
-			}
-			ee = new CallExpr{ func, *move(newArgs), move(forall) };
+			// TODO should maybe run a ForallSubstitutor over the environment here...
+			ee = new CallExpr{ e->func(), *move(newArgs), move(forall) };
 		}
 
 		// exit early if no assertions on this node
@@ -129,20 +125,21 @@ public:
 		// bind assertions
 		for ( const FuncDecl* asn : ee->forall()->assertions() ) {
 			// generate FuncExpr for assertion
-			EnvSubstitutor replaceLocals{ env.get() };
+			/* EnvSubstitutor replaceLocals{ env.get() }; */
 			List<Expr> asnArgs;
 			asnArgs.reserve( asn->params().size() );
 			for ( const Type* pType : asn->params() ) {
-				asnArgs.push_back( new VarExpr( replaceLocals( pType ) ) );
+				asnArgs.push_back( new VarExpr( /*replaceLocals(*/ pType /*)*/ ) );
 			}
 			const FuncExpr* asnExpr = new FuncExpr{ asn->name(), move(asnArgs) };
-			const Type* asnRet = replaceLocals( asn->returns() );
+			const Type* asnRet = /*replaceLocals(*/ asn->returns() /*)*/;
 
 			// attempt to resolve assertion
 			// TODO this visitor should probably be integrated into the resolver; that 
 			//      way the defer-list of assertions can be iterated over at the top 
 			//      level and overly-deep recursive invocations can be caught.
-			InterpretationList satisfying = resolver.resolveWithType( asnExpr, asnRet, env.get() );
+			InterpretationList satisfying = 
+				resolver.resolveWithType( asnExpr, asnRet, env.get() );
 
 			switch ( satisfying.size() ) {
 				case 0: { // no satisfying assertions: return failure

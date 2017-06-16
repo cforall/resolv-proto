@@ -17,7 +17,7 @@ FuncDecl* ForallSubstitutor::operator() ( const FuncDecl* d ) {
 	// clone assertion foralls, recursively
 	unique_ptr<Forall> forall{};
 	if ( d->forall() ) {
-		forall.reset( new Forall{} );
+		forall.reset( new Forall{ d->name() } );
 		foralls.emplace( d->forall(), forall.get() );
 		
 		for ( const PolyType* v : d->forall()->variables() ) {
