@@ -57,7 +57,7 @@ struct PolyKey {
     PolyKey( const std::string& name, const Forall* src ) : name(name), src(src) {}
     PolyKey( const PolyType* pt ) : name( pt->name() ), src( pt->src() ) {}
 
-    const Type* value() const { return new PolyType{ name, src }; }
+    const Type* value() const { return src->get( name ); }
 
     bool operator== (const PolyKey& o) const { return src == o.src && name == o.name; }
     bool operator< (const PolyKey& o) const {

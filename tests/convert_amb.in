@@ -2,6 +2,11 @@ f-s1s1 3 3
 f-s0s2 2 4
 f-s0s1 4 2
 g T | f T T
+
+j-s0s2 2 4
+j-s2s0 4 2
+h T | j T T
 %%
 f( 2 2 )
 g( 2 )
+h( 2 )
