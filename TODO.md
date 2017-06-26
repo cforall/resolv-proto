@@ -1,6 +1,8 @@
 # TODO #
 
 ## Next few days ##
+* Modify TypeMap to store a `std::pair<const Type*, Value>` in `Leaf`
+  * `value_type` and `const_value_type` can then drop their references.
 * Modify FuncTable to also index by type
   * This may need a map adapter that can pass a query down to its sub-map to handle poly types, or possibly a similar adapter for type_map
   * Might just need a flatten operator/iterator (do you already have one?)
@@ -16,3 +18,4 @@
 
 ## Indeterminate Future ##
 * Nail down exact semantics of type bindings, type assertions, cost model; cases in convert_amb.in would be a good start.
+* Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)

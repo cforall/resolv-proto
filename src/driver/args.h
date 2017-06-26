@@ -71,7 +71,8 @@ public:
           in_(nullptr),
           out_(nullptr),
           verbosity_(Verbosity::Default),
-          filter_(Filter::None)
+          filter_(Filter::None),
+          bench_(false)
     {
         char* name = argv[0];
 

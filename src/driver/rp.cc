@@ -18,7 +18,7 @@ long ms_between(std::clock_t start, std::clock_t end) {
 }
 
 int main(int argc, char **argv) {
-	Args args(argc, argv);
+	Args args{argc, argv};
 	FuncTable funcs;
 	List<Expr> exprs;
 	CanonicalTypeMap types;

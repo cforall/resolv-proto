@@ -30,7 +30,13 @@ ifdef DEBUG
 CXXFLAGS += -DRP_DEBUG
 endif
 
-ifeq "${LAST_OPT};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG}" "${OPT};${SORTED};${USER_CONVS};${DEBUG}"
+RESOLVER_O = resolver-bu.o
+ifdef TOP_DOWN
+CXXFLAGS += -DRP_TOP_DOWN
+RESOLVER_O = resolver-td.o
+endif
+
+ifeq "${LAST_OPT};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG};${TOP_DOWN}" "${OPT};${SORTED};${USER_CONVS};${DEBUG};${LAST_TOP_DOWN}"
 .lastmakeflags:
 	@touch .lastmakeflags
 else
@@ -39,6 +45,7 @@ else
 	@echo "LAST_SORTED=${SORTED}" >> .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
 	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
+	@echo "LAST_TOP_DOWN=${TOP_DOWN}" >> .lastmakeflags
 endif
 
 # rewrite object generation to auto-determine dependencies, run prebuild
@@ -54,7 +61,7 @@ $(BUILDDIR)/%.o : %.cc $(BUILDDIR)/%.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # rp objects
-OBJS = $(addprefix $(BUILDDIR)/, conversion.o env.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o rp.o)
+OBJS = $(addprefix $(BUILDDIR)/, $(RESOLVER_O) conversion.o env.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o rp.o)
 
 # bench_gen objects
 BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o env.o forall.o forall_substitutor.o random_partitioner.o bench_gen.o)

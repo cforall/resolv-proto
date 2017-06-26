@@ -260,7 +260,7 @@ public:
             return get<NamedKey>().value();
         case Poly:
             return get<PolyKey>().value();
-        default: assert(false && "Invalid key type"); return nullptr;
+        default: assert(!"Invalid key type"); return nullptr;
         }
     } 
 
@@ -273,7 +273,7 @@ public:
             return get<NamedKey>() == o.get<NamedKey>();
         case Poly:
             return get<PolyKey>() == o.get<PolyKey>();
-        default: assert(false && "Invalid key type"); return false;
+        default: assert(!"Invalid key type"); return false;
         }
     }
 
@@ -286,7 +286,7 @@ public:
             return get<NamedKey>() < o.get<NamedKey>();
         case Poly:
             return get<PolyKey>() < o.get<PolyKey>();
-        default: assert(false && "Invalid key type"); return false;
+        default: assert(!"Invalid key type"); return false;
         }
     }
 
@@ -302,7 +302,7 @@ public:
         case Poly:
             h = get<PolyKey>().hash();
             break;
-        default: assert(false && "Invalid key type");
+        default: assert(!"Invalid key type");
         }
         return (h << 2) | (std::size_t)key_type;
     }
@@ -312,8 +312,7 @@ struct KeyHash {
     std::size_t operator() ( const TypeKey& k ) const { return k.hash(); }
 };
 
-/// A map from types to some value; lookup is done by structural 
-/// decomposition on types.
+/// A map from types to some value; lookup is done by structural decomposition on types.
 template<typename Value>
 class TypeMap {
 public:
@@ -733,6 +732,12 @@ public:
         return insert( v.first, move(v.second) ).first;
     }
     iterator insert( const const_iterator& hint, const value_type& v ) {
+        return insert( v.first, v.second ).first;
+    }
+    iterator insert( const const_iterator& hint, std::pair<const Type*, Value>&& v ) {
+        return insert( v.first, move(v.second) ).first;
+    }
+    iterator insert( const const_iterator& hint, const std::pair<const Type*, Value>& v ) {
         return insert( v.first, v.second ).first;
     }
 

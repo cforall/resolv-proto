@@ -2,8 +2,13 @@
 
 #include <iterator>
 #include <map>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
+
+/// Gets underlying value type of a map
+template<typename T>
+using value_from = std::remove_reference_t<typename T::value_type::second_type>;
 
 /// An iterator for a map with collection-type values that iterates over the 
 /// collections contained in the map entries
@@ -11,17 +16,17 @@
 template<typename Underlying>
 class FlatMapIter : public std::iterator<
 		std::forward_iterator_tag,
-		typename Underlying::value_type::second_type::value_type,
-		typename Underlying::value_type::second_type::difference_type,
-		typename Underlying::value_type::second_type::pointer,
-		typename Underlying::value_type::second_type::reference > {
+		typename value_from<Underlying>::value_type,
+		typename value_from<Underlying>::difference_type,
+		typename value_from<Underlying>::pointer,
+		typename value_from<Underlying>::reference > {
 template<typename U> friend class ConstFlatMapIter;
 public:
-	typedef typename Underlying::value_type::second_type InnerColl;
-	typedef typename Underlying::iterator Iter;
-	typedef typename InnerColl::iterator Inner;
-	typedef typename InnerColl::reference reference;
-	typedef typename InnerColl::pointer pointer;
+	using InnerColl = value_from<Underlying>;
+	using Iter = typename Underlying::iterator;
+	using Inner = typename InnerColl::iterator;
+	using reference = typename InnerColl::reference;
+	using pointer = typename InnerColl::pointer;
 
 private:
 	Iter i;   ///< Current iterator for outer range
@@ -85,16 +90,16 @@ public:
 template<typename Underlying>
 class ConstFlatMapIter : public std::iterator<
 		std::forward_iterator_tag,
-		typename Underlying::value_type::second_type::value_type,
-		typename Underlying::value_type::second_type::difference_type,
-		typename Underlying::value_type::second_type::const_pointer,
-		typename Underlying::value_type::second_type::const_reference > {
+		typename value_from<Underlying>::value_type,
+		typename value_from<Underlying>::difference_type,
+		typename value_from<Underlying>::const_pointer,
+		typename value_from<Underlying>::const_reference > {
 public:
-	typedef typename Underlying::value_type::second_type InnerColl;
-	typedef typename Underlying::const_iterator Iter;
-	typedef typename InnerColl::const_iterator Inner;
-	typedef typename InnerColl::const_reference reference;
-	typedef typename InnerColl::const_pointer pointer;
+	using InnerColl = value_from<Underlying>;
+	using Iter = typename Underlying::const_iterator;
+	using Inner = typename InnerColl::const_iterator;
+	using reference = typename InnerColl::const_reference;
+	using pointer = typename InnerColl::const_pointer;
 
 private:
 	Iter i;   ///< Current iterator for outer range
