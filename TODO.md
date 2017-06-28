@@ -1,18 +1,16 @@
 # TODO #
 
 ## Next few days ##
-* Modify TypeMap to store a `std::pair<const Type*, Value>` in `Leaf`
-  * `value_type` and `const_value_type` can then drop their references.
-* Modify FuncTable to also index by type
-  * This may need a map adapter that can pass a query down to its sub-map to handle poly types, or possibly a similar adapter for type_map
-  * Might just need a flatten operator/iterator (do you already have one?)
+* Write top-down resolver algorithm
+* Modify semantics of top-level resolution to resolve to `void`
+* Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
+  * possibly make `Env` a `GC_Object`, change `unique_ptr<Env>&` to `Env*` as needed
 
 ## Next few weeks ##
-* Top-down resolver algorithm (to compare to my existing bottom-up algorithm - I'll finally have some real data when I'm done this)
 * Generic types in resolver prototype (right now I can't model pointers, which are a sort of generic type, and the exponential failure cases in the existing resolver need either pointers or generics to trigger)
 
 ## Next few months ##
-* more resolver algorithms (hybrid traversal orders, lazy evaluation, etc.)
+* more resolver algorithms (hybrid traversal orders, lazy evaluation, caching resolver queries, etc.)
 * investigate user-defined conversions
 * maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
 

@@ -13,14 +13,7 @@ struct Cost {
 	constexpr Cost() : unsafe(0), poly(0), safe(0) {}
 	constexpr Cost(unsigned unsafe, unsigned poly, unsigned safe)
 		: unsafe(unsafe), poly(poly), safe(safe) {}
-	
-	/// Maximum cost value
-	static constexpr Cost max() {
-		return Cost{ std::numeric_limits<unsigned>::max(),
-		             std::numeric_limits<unsigned>::max(),
-					 std::numeric_limits<unsigned>::max() };
-	}
-	
+
 	Cost(const Cost&) = default;
 	Cost(Cost&&) = default;
 	Cost& operator= (const Cost&) = default;
@@ -33,12 +26,34 @@ struct Cost {
 		swap(a.poly, b.poly);
 		swap(a.safe, b.safe);
 	}
+
+	/// Maximum cost value
+	static constexpr Cost max() {
+		return Cost{ std::numeric_limits<unsigned>::max(),
+		             std::numeric_limits<unsigned>::max(),
+					 std::numeric_limits<unsigned>::max() };
+	}
 	
 	/// Generates a new cost from an integer difference; the cost will have 
 	/// the same magnitude as diff, unsafe if diff is negative, safe if diff 
 	/// is positive
-	static Cost from_diff(int diff) {
+	static constexpr Cost from_diff(int diff) {
 		return diff < 0 ? Cost{ unsigned(-diff), 0, 0 } : Cost{ 0, 0, unsigned(diff) };
+	}
+
+	/// Cost with only unsafe component
+	static constexpr Cost from_unsafe(unsigned unsafe) {
+		return Cost{ unsafe, 0, 0 };
+	}
+
+	/// Cost with only polymorphic component
+	static constexpr Cost from_poly(unsigned poly) {
+		return Cost{ 0, poly, 0 };
+	}
+
+	/// Cost with only safe component
+	static constexpr Cost from_safe(unsigned safe) {
+		return Cost{ 0, 0, safe };
 	}
 };
 

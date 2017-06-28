@@ -18,7 +18,7 @@ const GC& operator<< (const GC& gc, const ConversionGraph& g) {
 std::ostream& operator<< ( std::ostream& out, const ConversionGraph& g ) {
 	for ( const auto& u : g.nodes ) {
 		out << *u.first << std::endl;
-		for ( const auto& v : u.second.conversions ) {
+		for ( const auto& v : u.second.out ) {
 			out << " => " << *(v.to->type) << " " << v.cost << std::endl; 
 		}
 	}

@@ -204,15 +204,15 @@ private:
 	/// created if required.
 	typename Underlying::iterator find_or_create( const Key& k ) {
 		auto i = m.find( k );
-		return i == m.end() ? 
-			m.insert( i, std::make_pair(k, Inner{}) ) :
-			i;
+		return i == m.end() 
+			? m.insert( i, std::make_pair(k, Inner{}) ) 
+			: i;
 	}
 	
 	/// Creates an iterator from an underlying iterator
 	iterator from_underlying( const typename Underlying::iterator& i ) {
-		return i == m.end() || i->second.empty() ?
-			iterator{ m.end() } : iterator{ i, m.end() };
+		return i == m.end() || i->second.empty() 
+			? iterator{ m.end() } : iterator{ i, m.end() };
 	}
 	
 	/// Creates a const iterator from an underlying const iterator
@@ -230,6 +230,10 @@ public:
 	iterator end() { return iterator{ m.end() }; }
 	const_iterator end() const { return const_iterator{ m.end() }; }
 	const_iterator cend() const { return const_iterator{ m.cend() }; }
+
+	/// Gets a reference to the underlying index, useful if it has features not replicated in the 
+	/// FlatMap API.
+	const Underlying& index() const { return m; }
 	
 	bool empty() const { return n == 0; }
 	size_type size() const { return n; }

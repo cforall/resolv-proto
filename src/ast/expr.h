@@ -188,6 +188,10 @@ public:
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ), 
 		  retType_( func_->returns() ) {}
 	
+	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, unique_ptr<Forall>&& forall_, 
+	          const Type* retType_ )
+		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ), retType( retType_ ) {}
+	
 	Expr* clone() const override { return new CallExpr( func_, args_, forall_ ); }
 	
 	const FuncDecl* func() const { return func_; }

@@ -67,9 +67,10 @@ class Env final : public GC_Traceable {
 	Map bindings;            ///< Bindings from a named type variable to another type
 	AssertionMap assns;      ///< Backing storage for assertions
 	std::size_t localAssns;  ///< Count of local assertions
-	const Env* parent;       ///< Environment this inherits bindings from
 
 public:
+	const Env* parent;       ///< Environment this inherits bindings from
+
 	/// Finds the binding reference for this polytype, { nullptr, _ } for none such.
 	/// Updates the local map with the binding, if found.
 	ClassRef findRef( const PolyType* var ) const {
@@ -361,6 +362,32 @@ public:
 		return o.parent ? merge( *o.parent, move(seen) ) : true;
 	}
 
+	/// Gets an environment equivalent to this one, but with structure flattened up to p.
+	/// p must be an ancestor of this.
+	unique_ptr<Env> flatten( const Env* p ) const {
+		unique_ptr<Env> env = Env::from( p );
+		
+		std::unordered_set<const PolyType*> seen;
+		for (const Env* crnt = this; crnt != p; crnt = crnt->parent) {
+			// loop through classes, copying those not previously seen
+			for ( unsigned i = 0; i < crnt->classes.size(); ++i ) {
+				bool add = true;
+				for ( const PolyType* v : crnt->classes[i].vars ) {
+					// skip class if already seen any included var
+					if ( seen.insert( v ).second == false ) { add = false; break; }
+				}
+				if ( add ) { env->copyClass( ClassRef{ crnt, i } ); }
+			}
+
+			// loop through assertions, copying any seen
+			for ( const auto& assn : assns ) {
+				env->localAssns += (env->assns.insert( assn ).second == true);
+			}
+		}
+		
+		return env;
+	}
+
 	/// Gets the list of unbound typeclasses in this environment
 	List<TypeClass> getUnbound() const {
 		std::unordered_set<const PolyType*> seen;
@@ -468,6 +495,14 @@ inline bool merge( unique_ptr<Env>& a, const Env* b ) {
         return false;
     }
     return true;
+}
+
+/// Returns child, flattened so that it doesn't inherit from parent.
+/// child should be a descendant of parent.
+inline unique_ptr<Env> flattenOut( const Env* child, const Env* parent ) {
+	if ( ! child ) return {};
+	if ( ! parent || child == parent ) return { new Env{ *child } };
+	return child->flatten( parent->parent );
 }
 
 /// Gets the list of unbound typeclasses in an environment

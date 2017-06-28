@@ -7,6 +7,8 @@
 #include "type.h"
 #include "type_mutator.h"
 
+#include "data/list.h"
+
 class FuncDecl;
 
 /// Replaces polymorphic type variables by fresh variables bound to a different forall clause.
@@ -52,4 +54,12 @@ public:
 
 	/// Substitute a function declarations types according to the substitution map.
 	FuncDecl* operator() ( const FuncDecl* d );
+
+	/// Substitute a list of types
+	List<Type> operator() ( const List<Type>& ts ) {
+		List<Type> rs;
+		rs.reserve( ts.size() );
+		for ( const Type* t : ts ) { rs.push_back( (*this)( t ) ); }
+		return rs;
+	}
 };

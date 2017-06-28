@@ -25,6 +25,9 @@ public:
 	
 	/// How many elemental types are represented by this type
 	virtual unsigned size() const = 0;
+
+	/// Creates a type of appropriate arity from the list of types
+	static const Type* from(const List<Type>& ts);
 protected:
 	/// Check this type for equality with other types
 	virtual bool equals(const Type&) const = 0; 
@@ -233,3 +236,11 @@ protected:
 		return r;
 	}
 };
+
+static const Type* Type::from(const List<Type>& ts) {
+	switch ( ts.size() ) {
+	case 0:  return new VoidType{};
+	case 1:  return ts.front();
+	default: return new TupleType{ ts };
+	}
+}
