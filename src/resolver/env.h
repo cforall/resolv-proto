@@ -501,7 +501,7 @@ inline bool merge( unique_ptr<Env>& a, const Env* b ) {
 /// child should be a descendant of parent.
 inline unique_ptr<Env> flattenOut( const Env* child, const Env* parent ) {
 	if ( ! child ) return {};
-	if ( ! parent || child == parent ) return { new Env{ *child } };
+	if ( ! parent || child == parent ) return make_unique<Env>( *child );
 	return child->flatten( parent->parent );
 }
 
