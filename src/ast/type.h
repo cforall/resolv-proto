@@ -237,7 +237,7 @@ protected:
 	}
 };
 
-static const Type* Type::from(const List<Type>& ts) {
+const Type* Type::from(const List<Type>& ts) {
 	switch ( ts.size() ) {
 	case 0:  return new VoidType{};
 	case 1:  return ts.front();

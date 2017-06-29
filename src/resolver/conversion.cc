@@ -6,27 +6,25 @@
 #include "data/cast.h"
 #include "data/gc.h"
 
-const ConversionGraph::ConversionList ConversionGraph::no_conversions = {};
-
 const GC& operator<< (const GC& gc, const ConversionGraph& g) {
 	for ( const auto& v : g.nodes ) {
-		gc << v.first << v.second.type;
+		gc << v.second.type;
 	}
 	return gc;
 }
 
 std::ostream& operator<< ( std::ostream& out, const ConversionGraph& g ) {
-	for ( const auto& u : g.nodes ) {
-		out << *u.first << std::endl;
-		for ( const auto& v : u.second.out ) {
-			out << " => " << *(v.to->type) << " " << v.cost << std::endl; 
-		}
+	for ( const Conversion& c : g.edges ) {
+		out << *(c.from->type) << " => " << *(c.to->type) << ' ' << c.cost << std::endl;
 	}
 	
 	return out;
 }
 
 ConversionGraph make_conversions( CanonicalTypeMap& types ) {
+	using ConversionRef = ConversionGraph::ConversionRef;
+	using ConversionNode = ConversionGraph::ConversionNode;
+
 	ConversionGraph g;
 
 #ifdef RP_USER_CONVS
@@ -36,24 +34,33 @@ ConversionGraph make_conversions( CanonicalTypeMap& types ) {
 	for ( auto from = types.begin(); from != types.end(); ++from ) {
 		const ConcType* f = as_safe<ConcType>(from->second);
 		if ( ! f ) continue;
-		ConversionGraph::ConversionNode& fromNode = g.try_insert( f );
+		ConversionNode& fromNode = g.try_insert( f );
 
 		// loop over "to" types
 		auto to = from;
 		for (++to; to != types.end(); ++to) {
 			const ConcType* t = as_safe<ConcType>(to->second);
 			if ( ! t ) continue;
-			ConversionGraph::ConversionNode& toNode = g.try_insert( t );
-			
-			fromNode.conversions.emplace_back( &toNode, Cost::from_diff( t->id() - f->id() ) );
-			toNode.conversions.emplace_back( &fromNode, Cost::from_diff( f->id() - t->id() ) );
+			ConversionNode& toNode = g.try_insert( t );
+
+			// make conversions
+			ConversionRef out = g.edges.size(), in = g.edges.size() + 1;
+			g.edges.emplace_back( &toNode, &fromNode, Cost::from_diff( t->id() - f->id() ) );
+			g.edges.emplace_back( &fromNode, &toNode, Cost::from_diff( f->id() - t->id() ) );
+
+			// add to nodes
+			fromNode.out.push_back( out );
+			fromNode.in.push_back( in );
+			toNode.out.push_back( in );
+			toNode.in.push_back( out );
 		}
 
-		// done with from type, ensure conversion list sorted
-		std::sort( fromNode.conversions.begin(), fromNode.conversions.end(),
-		           []( const Conversion& a, const Conversion& b ) {
-					   return a.cost < b.cost;
-				   });
+		// done with from type, ensure conversion lists are sorted
+		auto conversionListSort = [&g]( ConversionRef a, ConversionRef b )  {
+			return g.edges[a].cost < g.edges[b].cost;
+		};
+		std::sort( fromNode.out.begin(), fromNode.out.end(), conversionListSort );
+		std::sort( fromNode.in.begin(), fromNode.in.end(), conversionListSort );
 	}
 #endif
 	

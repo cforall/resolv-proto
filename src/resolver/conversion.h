@@ -70,7 +70,7 @@ private:
 	/// Returns the node for ty, creating one if none exists
 	ConversionNode& try_insert( const Type* ty ) {
 		auto it = nodes.find( ty );
-		return ( it == nodes.end() ?
+		return ( it == nodes.end()
 					? nodes.insert( ty, ConversionNode{ ty } ).first 
 					: it )->second;
 	}
@@ -84,14 +84,14 @@ public:
 			const Conversion&> {
 	friend class ConversionGraph;
 
-		const ConversionGraph& g;     ///< Graph iterated
-		ConversionList::iterator it;  ///< Storage iterator
+		const ConversionGraph& g;           ///< Graph iterated
+		ConversionList::const_iterator it;  ///< Storage iterator
 
 		const_iterator(const ConversionGraph& g) : g(g), it() {}
-		const_iterator(const ConversionGraph& g, ConversionList::iterator it) : g(g), it(it) {}
+		const_iterator(const ConversionGraph& g, ConversionList::const_iterator it) : g(g), it(it) {}
 	
 	public:
-		const_iterator() g(*(const ConversionGraph*)0), it() {}
+		const_iterator() : g(*(const ConversionGraph*)0), it() {}
 		const_iterator(const const_iterator&) = default;
 		const_iterator& operator= (const const_iterator&) = default;
 
@@ -133,7 +133,7 @@ public:
 	using iterator = const_iterator;
 
 	/// Returns a range containing all the conversions from ty
-	const std::pair<const_iterator, const_iterator>& find_from( const Type* ty ) const {
+	const std::pair<const_iterator, const_iterator> find_from( const Type* ty ) const {
 		auto it = nodes.find( ty );
 		if ( it == nodes.end() ) {
 			return { const_iterator{*this}, const_iterator{*this} };
@@ -144,7 +144,7 @@ public:
 	}
 
 	/// Returns a list of all the conversions to ty
-	const std::pair<const_iterator, const_iterator>& find_to( const Type* ty ) const {
+	const std::pair<const_iterator, const_iterator> find_to( const Type* ty ) const {
 		auto it = nodes.find( ty );
 		if ( it == nodes.end() ) {
 			return { const_iterator{*this}, const_iterator{*this} };
