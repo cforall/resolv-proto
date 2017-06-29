@@ -5,6 +5,8 @@
 
 #include "merge.h"
 
+#include "data/range.h"
+
 /// Default (do nothing) "on index change" behaviour for `for_each_combo`
 template<typename Q>
 struct default_on_index_change {
@@ -81,13 +83,35 @@ inline void for_each_combo( const std::vector<Q>& qs, F f ) {
 /// @param Q    Underlying vector type 
 template<typename T, typename Q = std::vector<T>>
 class defaulted_vector {
-    const T& head;
-    const Q& tail;
+    const T& head;  ///< First (default) element
+    const Q& tail;  ///< Remainder of vector
 
 public:
-    typedef typename Q::size_type size_type;
+    using size_type = typename Q::size_type;
 
     defaulted_vector( const T& head, const Q& tail ) : head(head), tail(tail) {}
+
+    const T& operator[] ( size_type i ) const { return ( i == 0 ) ? head : tail[i-1]; }
+
+    size_type size() const { return tail.size() + 1; }
+
+    bool empty() const { return false; }
+};
+
+/// Wraps a range with an added default first element.
+/// Provided functions are sufficient for use in for_each_combo and friends.
+///
+/// @param T    Element type of the range
+/// @param I    Underlying range iterator type
+template<typename T, typename I>
+class defaulted_range {
+    const T& head;  ///< First (default) element
+    range<I> tail;  ///< Remainder of range
+
+public:
+    using size_type = typename range<I>::size_type;
+
+    defaulted_range( const T& head, range<I>&& tail ) : head(head), tail( std::move(tail) ) {}
 
     const T& operator[] ( size_type i ) const { return ( i == 0 ) ? head : tail[i-1]; }
 

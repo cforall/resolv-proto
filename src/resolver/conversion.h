@@ -12,6 +12,7 @@
 #include "ast/type.h"
 #include "data/gc.h"
 #include "data/list.h"
+#include "data/range.h"
 
 /// Graph of conversions
 class ConversionGraph {
@@ -132,26 +133,51 @@ public:
 	/// Alias for const_iterator
 	using iterator = const_iterator;
 
+private:
+	/// returns an empty range for this graph
+	range<const_iterator> empty_range() const {
+		return { const_iterator{*this}, const_iterator{*this} };
+	}
+
+	/// returns a range for a conversion list for this graph
+	range<const_iterator> range_of( const ConversionList& ls ) const {
+		return { const_iterator{*this, ls.begin()}, const_iterator{*this, ls.end()} };
+	}
+
+public:
 	/// Returns a range containing all the conversions from ty
-	const std::pair<const_iterator, const_iterator> find_from( const Type* ty ) const {
+	range<const_iterator> find_from( const Type* ty ) const {
 		auto it = nodes.find( ty );
-		if ( it == nodes.end() ) {
-			return { const_iterator{*this}, const_iterator{*this} };
-		} else {
-			return { const_iterator{*this, it->second.out.begin()}, 
-			         const_iterator{*this, it->second.out.end()} };
-		}
+		return ( it == nodes.end() ) ? empty_range() : range_of( it->second.out );
 	}
 
 	/// Returns a list of all the conversions to ty
-	const std::pair<const_iterator, const_iterator> find_to( const Type* ty ) const {
+	range<const_iterator> find_to( const Type* ty ) const {
 		auto it = nodes.find( ty );
-		if ( it == nodes.end() ) {
-			return { const_iterator{*this}, const_iterator{*this} };
+		return ( it == nodes.end() ) ? empty_range() : range_of( it->second.in );
+	}
+
+	/// Finds the conversion between two types (nullptr if not present)
+	const Conversion* find_between( const Type* from, const Type* to ) const {
+		auto from_it = nodes.find( from );
+		if ( from_it == nodes.end() ) return nullptr;
+		auto to_it = nodes.find( to );
+		if ( to_it == nodes.end() ) return nullptr;
+
+		const ConversionList& from_list = from_it->second.out;
+		const ConversionList& to_list = to_it->second.in;
+		if ( to_list.size() < from_list.size() ) {
+			const ConversionNode* target = &from_it->second;
+			for ( const Conversion& conv : range_of( to_list ) ) {
+				if ( conv.from == target ) return &conv;
+			}
 		} else {
-			return { const_iterator{*this, it->second.in.begin()}, 
-			         const_iterator{*this, it->second.in.end()} };
+			const ConversionNode* target = &to_it->second;
+			for ( const Conversion& conv : range_of( from_list ) ) {
+				if ( conv.to == target ) return &conv;
+			}
 		}
+		return nullptr;
 	}
 	
 	/// Sets up a new conversion 

@@ -13,6 +13,7 @@
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "data/range.h"
 #include "lists/eager_merge.h"
 
 /// Inserts a new interpretation into `expanded` with type `ty` if there is no 
@@ -70,7 +71,7 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 #else // ! RP_USER_CONVS
         auto tid = typeof( ty );
         if ( typeof<ConcType>() == tid || typeof<NamedType>() == tid ) {
-            for ( const Conversion& conv : conversions.find( ty ) ) {
+            for ( const Conversion& conv : conversions.find_from( ty ) ) {
                 const Type* to = conv.to->type;
                 Cost toCost = i->cost + conv.cost;
 
@@ -82,14 +83,14 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
         } else if ( typeof<TupleType>() == tid ) {
             const TupleType* tty = as<TupleType>(ty);
 
-            /// list of conversions with default "self" non-conversion in each queue
-            typedef std::vector< defaulted_vector< Conversion, std::vector<Conversion> > >
-                    ConversionQueues;  
+            // list of conversions with default "self" non-conversion in each queue
+            using ConversionQueues 
+                = std::vector< defaulted_range<Conversion, ConversionGraph::const_iterator> >;
             ConversionQueues convs;
             convs.reserve( tty->size() );
             Conversion no_conv;  // special marker for self-conversion
             for ( unsigned j = 0; j < tty->size(); ++j ) {
-                convs.emplace_back( no_conv, conversions.find( tty->types()[j] ) );
+                convs.emplace_back( no_conv, conversions.find_from( tty->types()[j] ) );
             }
 
             struct conversion_cost {
@@ -175,15 +176,13 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
             // check exact match
             if ( *etype == *ttype ) return expr;
 
-            // scan conversion list for matching type
-            for ( const Conversion& conv : conversions.find( etype ) ) {
-                if ( *conv.to->type == *ttype ) {
-                    cost += conv.cost;
-                    return new CastExpr{ expr, &conv };
-                }
+            // check converted match
+            if ( const Conversion* conv = conversions.find_between( etype, ttype ) ) {
+                cost += conv->cost;
+                return new CastExpr{ expr, conv };
             }
 
-            // no conversion matches
+            // no matches
             return nullptr;
         } else if ( tid == typeof<PolyType>() ) {
             // test for match if target typeclass already has representative
