@@ -306,6 +306,8 @@ public:
         }
         return (h << 2) | (std::size_t)key_type;
     }
+
+    KeyMode mode() const { return key_type; }
 };
 
 struct KeyHash {
@@ -339,13 +341,15 @@ private:
     #endif
 
     /// Optional leaf value for map
-    typedef std::unique_ptr<Value> Leaf;
-    /// Map type for concrete types
-    typedef KeyMap< std::unique_ptr<TypeMap<Value>> > ConcMap;
+    using Leaf = std::unique_ptr<Value>;
+    /// Map type for child types
+    using ConcMap = KeyMap< std::unique_ptr<TypeMap<Value>> >;
+    /// Secondary index of polymorphic children
+    using PolyList = std::vector< std::pair<PolyKey, TypeMap<Value>*> >;
 
-    // TODO build union representation
-    Leaf leaf;      ///< Storage for leaf values
-    ConcMap nodes;  ///< Storage for concrete types (and tuples starting with concrete types)
+    Leaf leaf;       ///< Storage for leaf values
+    ConcMap nodes;   ///< Storage for child types
+    PolyList polys;  ///< Secondary index of polymorphic children
 
     struct Iter {
         typedef TypeMap<Value> Base;                  ///< Underlying map
@@ -525,6 +529,7 @@ public:
     void clear() {
         leaf.reset();
         nodes.clear();
+        polys.clear();
     }
 
     /// Gets the leaf value, or nullptr for none such. 
@@ -667,7 +672,8 @@ public:
         TypeKey k = TypeKey{ ty };
         auto it = nodes.find( k );
         if ( it == nodes.end() ) {
-            it = nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
+            it = nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
+            polys.emplace_back( move(k), copy(it->second) );
         }
         if ( ! it->second->leaf ) {
             it->second->set( forward<V>(v) );
@@ -692,7 +698,12 @@ public:
             auto it = tm->nodes.find( k );
             if ( it == tm->nodes.end() ) {
                 // add new nodes as needed
-                it = tm->nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
+                if ( k.mode() == Poly ) {
+                    it = tm->nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
+                    tm->polys.emplace_back( move(k), copy(it->second) );
+                } else {
+                    it = tm->nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
+                }
             }
 
             rpre.emplace_back( it, tm );

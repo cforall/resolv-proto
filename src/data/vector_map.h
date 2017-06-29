@@ -4,7 +4,7 @@
 // The contents of this file are covered under the licence agreement in the
 // file "LICENCE" distributed with Cforall.
 //
-// ScopedMap.h --
+// VectorMap.h --
 //
 // Author           : Aaron B. Moss
 // Created On       : Wed Feb  1 16:55:00 2017

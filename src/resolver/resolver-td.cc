@@ -113,8 +113,9 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 							  const Env* env, ClassRef bound = {} ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
+	
+	// For any type (or tuple that has the target type as a prefix)
 	if ( const TypeMap<FuncList>* matches = funcIndex.get( target_type ) ) {
-		// For any type (or tuple) that has the target type as a prefix
 		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
@@ -139,8 +140,35 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 		}
 	}
 
+	// Loop through conversions to targetType, repeating above
+	for ( const Conversion& conv : resolver.conversions.find_to( target_type ) ) {
+		// for any type (or tuple that has the conversion type as a prefix)
+		if ( const TypeMap<FuncList>* matches = funcIndex.get( conv.from ) ) {
+			for ( auto it = matches->begin(); it != matches->end(); ++it ) {
+				// results for all the functions with that type
+				InterpretationList sResults = resolveToAny(
+					resovler, it.get(), expr, env, Resolver::NO_CONVERSIONS, bound );
+				if ( sResults.empty() ) continue;
+
+				// cast and perhaps truncate expressions to match result type
+				const Type* keyType = it.key();
+				bool trunc = keyType->size() > conv.from.size();
+				Cost sCost = trunc
+					? conv.cost + Cost::from_safe( keyType->size() - targetType->size() )
+					: conv.cost;
+				for ( const Interpretation* i : sResults ) {
+					TypedExpr* sExpr = new CastExpr{ i->expr, &conv };
+					if ( trunc ) {
+						sExpr = new TruncateExpr{ sExpr, conv.from };
+					}
+					results.push_back(
+						new Interpretation{ sExpr, i->cost + sCost, move(i->env) } );
+				}
+			}
+		}
+	}
+
 	// TODO
-	// * Loop through conversions to targetType, repeat above for those
 	// * Ditto above for anything with a polymorphic return type, +(0,1,0) cost
 	// * think about caching child resolutions across top-level parameters
 	return results;
