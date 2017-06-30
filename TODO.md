@@ -1,6 +1,8 @@
 # TODO #
 
 ## Next few days ##
+* Finish lazy_list
+* Use lazy_list to write poly-iterator for type
 * Write top-down resolver algorithm
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly make `Env` a `GC_Object`, change `unique_ptr<Env>&` to `Env*` as needed
