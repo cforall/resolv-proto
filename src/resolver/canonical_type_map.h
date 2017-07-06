@@ -17,7 +17,7 @@ inline const T* get_canon(CanonicalTypeMap& m, Args&&... args) {
             return as<T>(*tt);
         } else {
             const T* t = new T{ forward<Args>(args)... };
-            mm->set( t );
+            mm->set( t, t );
             return t;
         }
     } else {

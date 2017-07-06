@@ -115,7 +115,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 	const auto& funcIndex = funcs.index();
 	
 	// For any type (or tuple that has the target type as a prefix)
-	if ( const TypeMap<FuncList>* matches = funcIndex.get( target_type ) ) {
+	if ( const TypeMap<FuncList>* matches = funcIndex.get( targetType ) ) {
 		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
@@ -141,13 +141,13 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 	}
 
 	// Loop through conversions to targetType, repeating above
-	for ( const Conversion& conv : resolver.conversions.find_to( target_type ) ) {
+	for ( const Conversion& conv : resolver.conversions.find_to( targetType ) ) {
 		// for any type (or tuple that has the conversion type as a prefix)
 		if ( const TypeMap<FuncList>* matches = funcIndex.get( conv.from ) ) {
 			for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 				// results for all the functions with that type
 				InterpretationList sResults = resolveToAny(
-					resovler, it.get(), expr, env, Resolver::NO_CONVERSIONS, bound );
+					resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, bound );
 				if ( sResults.empty() ) continue;
 
 				// cast and perhaps truncate expressions to match result type
@@ -168,9 +168,21 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 		}
 	}
 
-	// TODO
-	// * Ditto above for anything with a polymorphic return type, +(0,1,0) cost
-	// * think about caching child resolutions across top-level parameters
+	// Ditto above for anything with a polymorphic return type, +(0,1,0) cost
+	for ( const TypeMap<FuncList>& matches : funcIndex.get_poly_maps( targetType ) ) {
+		// TODO attempt to unify result type with target type
+
+		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
+			// results for all the functions with that type
+			InterpretationList sResults = resolveToAny(
+				resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS,
+				bound );
+			if ( sResults.empty() ) continue;
+
+			// TODO truncate expressions to match result type
+		}
+	}
+	// TODO think about caching child resolutions across top-level parameters
 	return results;
 }
 

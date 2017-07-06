@@ -18,6 +18,8 @@
 #include "data/collections.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "data/option.h"
+#include "data/range.h"
 
 /// Key type for ConcType
 struct ConcKey {
@@ -307,7 +309,15 @@ public:
         return (h << 2) | (std::size_t)key_type;
     }
 
+    /// Gets the key mode
     KeyMode mode() const { return key_type; }
+
+    /// Gets the underlying key variant, or empty for mismatch
+    template<typename T>
+    option<typename key_info<T>::type> key_for() const {
+        if ( key_type != key_info<T>::key ) return {};
+        return { get<typename key_info<T>::type>() };
+    }
 };
 
 struct KeyHash {
@@ -318,17 +328,16 @@ struct KeyHash {
 template<typename Value>
 class TypeMap {
 public:
-    typedef const Type* key_type;
-    typedef Value mapped_type;
-    typedef std::pair<const Type* const, Value&> value_type;
-    typedef std::pair<const Type* const, const Value&> const_value_type;
-    typedef std::size_t size_type;
-    typedef std::ptrdiff_t difference_type;
-    typedef ByValueCompare<Type> key_compare;
-    typedef value_type reference;
-    typedef const_value_type const_reference;
-    typedef std::unique_ptr< value_type > pointer;
-    typedef std::unique_ptr< const_value_type > const_pointer;
+    using key_type = const Type*;
+    using mapped_type = Value;
+    using value_type = std::pair<const Type* const, Value>;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using key_compare = ByValueCompare<Type>;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
 
 private:
     /// Underlying map type
@@ -341,7 +350,7 @@ private:
     #endif
 
     /// Optional leaf value for map
-    using Leaf = std::unique_ptr<Value>;
+    using Leaf = std::unique_ptr<value_type>;
     /// Map type for child types
     using ConcMap = KeyMap< std::unique_ptr<TypeMap<Value>> >;
     /// Secondary index of polymorphic children
@@ -352,9 +361,10 @@ private:
     PolyList polys;  ///< Secondary index of polymorphic children
 
     struct Iter {
-        typedef TypeMap<Value> Base;                  ///< Underlying map
-        typedef typename ConcMap::iterator ConcIter;  ///< Concrete map iterator
+        using Base = TypeMap<Value>;         ///< Underlying type map
+        using ConcIter = typename ConcMap::iterator;  ///< Concrete map iterator
 
+        /// Backtracking information for iteration
         struct Backtrack {
             ConcIter it;  ///< Iterator for concrete map
             Base* base;   ///< TypeMap containing concrete map
@@ -366,11 +376,13 @@ private:
             bool operator== ( const Backtrack& o ) const { return it == o.it && base == o.base; }
             bool operator!= ( const Backtrack& that ) const { return !( *this == that ); }
         };
-        typedef std::vector<Backtrack> BacktrackList;
-
+        /// Stack of backtrack information
+        using BacktrackList = std::vector<Backtrack>;
+        
         Base* base;            ///< Current concrete map; null if none such
         BacktrackList prefix;  ///< Prefix of tuple types
 
+        /// Steps into the children of the current node
         inline void push_prefix() {
             prefix.emplace_back( base->nodes.begin(), base );
             base = prefix.back().it->second.get();
@@ -401,26 +413,18 @@ private:
         /// Unchecked field-wise constructor
         Iter( Base* b, BacktrackList&& p ) : base(b), prefix( move(p) ) {}
 
-        /// Get the type represented by the key of this iterator [iterator should not be end]
-        const Type* key() const {
-            switch ( prefix.size() ) {
-            case 0:
-                return new VoidType();
-            case 1:
-                return prefix.front().it->first.get();
-            default: {
-                List<Type> types( prefix.size() );
-                for (unsigned i = 0; i < prefix.size(); ++i) {
-                    types[i] = prefix[i].it->first.get();
-                }
-                return new TupleType( move(types) );
-            }
-            }
-        }
+        /// Get the key stored in the map at this iterator (should not be end())
+        const Type* key() const { return base->leaf->first; }
 
-        /// Get the value stored in the map at this iterator
-        Value& get() { return *base->leaf; }
-        const Value& get() const { return *base->leaf; }
+        /// Get the value stored in the map at this iterator (should not be end())
+        Value& get() { return base->leaf->second; }
+        const Value& get() const { return &base->leaf->second; }
+
+        reference operator* () { return *base->leaf; }
+        const_reference operator* () const { return *base->leaf; }
+
+        pointer operator-> () { return base->leaf.get(); }
+        const_pointer operator-> () const { return base->leaf.get(); }
 
         Iter& operator++ () {
             // will crash if called on end iterator
@@ -453,9 +457,10 @@ private:
         }
         bool operator!= ( const Iter& that ) const { return !(*this == that); }
 
+        explicit operator bool () const { return base != nullptr; }
     };
-    typedef typename Iter::Backtrack Backtrack;
-    typedef typename Iter::BacktrackList BacktrackList;
+    using Backtrack = typename Iter::Backtrack;
+    using BacktrackList = typename Iter::BacktrackList;
 
 public:
     class iterator : public std::iterator<
@@ -477,19 +482,21 @@ public:
         const Type* key() { return i.key(); }
         Value& get() { return i.get(); }
 
-        reference operator* () { return { i.key(), i.get() }; }
-        pointer operator-> () { return make_unique< value_type >( i.key(), i.get() ); }
+        reference operator* () { return *i; }
+        pointer operator-> () { return i.operator->(); }
 
         iterator& operator++ () { ++i; return *this; }
         iterator& operator++ (int) { iterator tmp = *this; ++i; return tmp; }
 
         bool operator== ( const iterator& o ) const { return i == o.i; }
         bool operator!= ( const iterator& o ) const { return i != o.i; }
+
+        explicit operator bool () const { return (bool)i; }
     };
 
     class const_iterator : public std::iterator<
             std::input_iterator_tag,
-            const_value_type,
+            value_type,
             long,
             const_pointer,
             const_reference> {
@@ -507,14 +514,16 @@ public:
         const Type* key() { return i.key(); }
         const Value& get() { return i.get(); }
 
-        const_reference operator* () { return { i.key(), i.get() }; }
-        const_pointer operator-> () { return make_unique< const_value_type >( i.key(), i.get() ); }
+        const_reference operator* () { return *i; }
+        const_pointer operator-> () { return i.operator->(); }
 
         const_iterator& operator++ () { ++i; return *this; }
         const_iterator& operator++ (int) { const_iterator tmp = *this; ++i; return tmp; }
 
         bool operator== ( const const_iterator& o ) const { return i == o.i; }
         bool operator!= ( const const_iterator& o ) const { return !(*this == o); }
+
+        explicit operator bool () const { return (bool)i; }
     };
 
     iterator begin() { return iterator{ this }; }
@@ -532,9 +541,12 @@ public:
         polys.clear();
     }
 
+    /// Gets the key for this map, or nullptr if no node stored at that key
+    const Type* key() const { return leaf ? leaf->first : nullptr; }
+
     /// Gets the leaf value, or nullptr for none such. 
-    Value* get() { return leaf.get(); }
-    const Value* get() const { return leaf.get(); }
+    Value* get() { return leaf ? &leaf->second : nullptr; }
+    const Value* get() const { return leaf ? &leaf->second : nullptr; }
 
     /// Gets the TypeMap for types starting with this type, or nullptr for none such.
     TypeMap<Value>* get( std::nullptr_t ) { return nullptr; }
@@ -608,9 +620,132 @@ public:
         return as_non_const(this)->get( forward<Args>(args)... );
     }
 
+    /// Iterator for all non-exact matches of a type
+    class PolyIter : public std::iterator<
+            std::forward_iterator_tag,
+            TypeMap<Value>,
+            long,
+            const TypeMap<Value>*,
+            const TypeMap<Value>&> {
+        using Base = TypeMap<Value>;          ///< Underlying type map
+        using ListIter = typename PolyList::iterator;  ///< Poly-list iterator
+
+        /// Backtracking information for this iteration
+        struct Backtrack {
+            ListIter next;     ///< Iterator pointing to next polymorphic type
+            const Base* base;  ///< Map containing poly-list
+
+            Backtrack() = default;
+            Backtrack( const ListIter& i, Base* b ) : next(i), base(b) {}
+            Backtrack( ListIter&& i, Base* b ) : next(move(i)), base(b) {}
+
+            bool operator== ( const Backtrack& o ) const {
+                return next == o.next && base == o.base;
+            }
+            bool operator!= ( const Backtrack& o ) const { return !(*this == o); }
+        };
+        /// Stack of backtrack information
+        using BacktrackList = std::vector<Backtrack>;
+
+        const Base* m;         ///< Current type map
+        BacktrackList prefix;  ///< Backtracking stack for search
+        const Type* ty;        ///< Type to iterate
+
+        /// Gets the type atom at index j; j should be less than ty->size()
+        inline const Type* type_at(unsigned j) const {
+            switch ( ty->size() ) {
+            // return atom for void or concrete type
+            case 0: case 1: return ty;
+            // return tuple element otherwise
+            default: return as<TupleType>(ty)->types()[j];
+            }
+        }
+
+        /// Steps further into the type; ty should not be fully consumed
+        inline bool push_prefix() {
+            ListIter it = m->polys.begin();
+            if ( Base* nm = m->get( type_at( prefix.size() ) ) ) {
+                // look at concrete expansions of the current type
+                prefix.emplace_back( move(it), m );
+                m = nm;
+                return true;
+            } else if ( it != m->polys.end() ) {
+                // look at polymorphic expansions of the current type
+                Base* nm = it->second;
+                prefix.emplace_back( move(++it), m );
+                m = nm;
+                return true;
+            } else return false;  // no elements for this type
+        }
+
+        /// Gets the next valid prefix state (or empty)
+        inline void next_valid() {
+            // back out to parent type if no sibling
+            while ( ! prefix.empty() 
+                    && prefix.back().next == prefix.back().base->polys.end() ) {
+                prefix.pop_back();
+            }
+            // check for end of iteration
+            if ( prefix.empty() ) {
+                m = nullptr;
+                return;
+            }
+            // go to sibling (guaranteed present here)
+            m = prefix.back().next->second;
+            ++prefix.back().next;
+            // fill tail back to end of prefix
+            unsigned n = ty->size();
+            while ( prefix.size() < n ) {
+                if ( ! push_prefix() ) {
+                    // backtrack again on dead-end prefix
+                    prefix.pop_back();
+                    next_valid();
+                    return;
+                }
+            }
+        }
+
+        PolyIter() : m(nullptr), prefix(), ty(nullptr) {}
+
+        PolyIter(const Base* b, const Type* t) : m(b), prefix(), ty(t) {
+            // scan initial prefix until it matches the target type
+            unsigned n = ty->size();
+            while ( prefix.size() < n ) {
+                if ( ! push_prefix() ) {
+                    // backtrack again on dead-end prefix
+                    prefix.pop_back();
+                    next_valid();
+                    return;
+                }
+            }
+        }
+
+        const Base& operator* () { return *m; }
+        
+        const Base* operator-> () { return m; }
+
+        PolyIter& operator++ () { next_valid(); return *this; }
+        PolyIter operator++ (int) { auto tmp = *this; next_valid(); return tmp; }
+        
+        /// true if not an end iterator
+        explicit operator bool() const { return m != nullptr; }
+
+        bool operator== (const PolyIter& o) const { return m == o.m; }
+
+        bool operator!= (const PolyIter& o) const { return m != o.m; }
+    };
+
+    /// Gets type maps for a given type, where one or more of the subtypes 
+    /// have been switched with polymorphic bindings.
+    range<PolyIter> get_poly_maps(const Type* ty) {
+        return { PolyIter{ this, ty }, PolyIter{} };
+    }
+
     /// Stores v in the leaf pointer
     template<typename V>
-    void set( V&& v ) { leaf = make_unique<Value>( forward<V>(v) ); }
+    void set( const Type* ty, V&& v ) {
+        leaf = make_unique<value_type>( ty, forward<V>(v) );
+    }
 
     template<typename V>
     std::pair<iterator, bool> insert( std::nullptr_t, V&& ) { return { end(), false }; }
@@ -620,7 +755,7 @@ public:
         bool r = false;
         
         if ( ! leaf ) {
-            set( forward<V>(v) );
+            set( ty, forward<V>(v) );
             r = true;
         }
 
@@ -637,7 +772,7 @@ public:
             it = nodes.emplace_hint( it, k, make_unique<TypeMap<Value>>() );
         }
         if ( ! it->second->leaf ) {
-            it->second->set( forward<V>(v) );
+            it->second->set( ty, forward<V>(v) );
             r = true;
         }
 
@@ -656,7 +791,7 @@ public:
             it = nodes.emplace_hint( it, k, make_unique<TypeMap<Value>>() );
         }
         if ( ! it->second->leaf ) {
-            it->second->set( forward<V>(v) );
+            it->second->set( ty, forward<V>(v) );
             r = true;
         }
 
@@ -673,10 +808,10 @@ public:
         auto it = nodes.find( k );
         if ( it == nodes.end() ) {
             it = nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
-            polys.emplace_back( move(k), copy(it->second) );
+            polys.emplace_back( *k.key_for<PolyType>(), it->second.get() );
         }
         if ( ! it->second->leaf ) {
-            it->second->set( forward<V>(v) );
+            it->second->set( ty, forward<V>(v) );
             r = true;
         }
 
@@ -700,7 +835,8 @@ public:
                 // add new nodes as needed
                 if ( k.mode() == Poly ) {
                     it = tm->nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
-                    tm->polys.emplace_back( move(k), copy(it->second) );
+                    tm->polys.emplace_back( 
+                        *k.key_for<PolyType>(), it->second.get() );
                 } else {
                     it = tm->nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
                 }
@@ -711,7 +847,7 @@ public:
         }
 
         if ( ! tm->leaf ) {
-            tm->set( forward<V>(v) );
+            tm->set( ty, forward<V>(v) );
             r = true;
         }
 
@@ -743,12 +879,6 @@ public:
         return insert( v.first, move(v.second) ).first;
     }
     iterator insert( const const_iterator& hint, const value_type& v ) {
-        return insert( v.first, v.second ).first;
-    }
-    iterator insert( const const_iterator& hint, std::pair<const Type*, Value>&& v ) {
-        return insert( v.first, move(v.second) ).first;
-    }
-    iterator insert( const const_iterator& hint, const std::pair<const Type*, Value>& v ) {
         return insert( v.first, v.second ).first;
     }
 

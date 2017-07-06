@@ -30,14 +30,14 @@ void setOrUpdateInterpretation( TypeMap< const Interpretation* >& expanded,
         // Pre-existing interpretation ...
         if ( c < (*j)->cost ) {
             /// ... with higher cost
-            existing->set( interpretation() );
+            existing->set( ty, interpretation() );
         } else if ( c == (*j)->cost ) {
             // ... with equal cost
-            existing->set( Interpretation::merge_ambiguous( *j, interpretation() ) );
+            existing->set( ty, Interpretation::merge_ambiguous( *j, interpretation() ) );
         }   // ... ignore pre-existing interpretation with lower cost
     } else {
         // No value for type exists in map
-        existing->set( interpretation() );
+        existing->set( ty, interpretation() );
     }
 }
 
