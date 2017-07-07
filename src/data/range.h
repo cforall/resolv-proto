@@ -46,6 +46,9 @@ public:
 	reference operator[] ( size_type n ) { return i[n]; }
 	const_reference operator[] ( size_type n ) const { return i[n]; }
 
+	/// Excludes first element from range
+	range<Iter>& operator++ () { ++i; return *this; }
+
 	reference front() { return *i; }
 	const_reference front() const { return *i; }
 

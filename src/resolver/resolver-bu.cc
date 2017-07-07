@@ -128,31 +128,6 @@ InterpretationList matchFuncs( Resolver& resolver,
 /// List of argument combinations
 typedef std::vector< std::pair<Cost, InterpretationList> > ComboList;
 
-/// Checks if a list of argument types match a list of parameter types.
-/// The argument types may contain tuple types, which should be flattened; the parameter 
-/// types will not. The two lists should be the same length after flattening.
-bool argsMatchParams( const InterpretationList& args, const List<Type>& params,
-                      Cost& cost, unique_ptr<Env>& env ) {
-	unsigned i = 0;
-	for ( unsigned j = 0; j < args.size(); ++j ) {
-		// merge in argument environment
-		if ( ! merge( env, args[j]->env.get() ) ) return false;
-		// test unification of parameters
-		unsigned m = args[j]->type()->size();
-		if ( m == 1 ) {
-			if ( ! unify( params[i], args[j]->type(), cost, env ) ) return false;
-			++i;
-		} else {
-			const List<Type>& argTypes = as<TupleType>( args[j]->type() )->types();
-			for ( unsigned k = 0; k < m; ++k ) {
-				if ( ! unify( params[i], argTypes[k], cost, env ) ) return false;
-				++i;
-			}
-		}
-	}
-	return true;
-}
-
 /// Create a list of argument expressions from a list of interpretations
 List<TypedExpr> argsFrom( const InterpretationList& is ) {
 	List<TypedExpr> args;
@@ -192,7 +167,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
-			unique_ptr<Env> env{}; // initialized by argsMatchParams()
+			unique_ptr<Env> env{}; // initialized by unifyList()
 			unique_ptr<Forall> forall = Forall::from( func->forall() );
 			if ( forall ) {
 				ForallSubstitutor replaceLocals{ func->forall(), forall.get() };
@@ -200,7 +175,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			}
 
 			// skip functions that don't match the parameter types
-			if ( ! argsMatchParams( combo.second, func->params(), cost, env ) ) continue;
+			if ( ! unifyList( func->params(), combo.second, cost, env ) ) continue;
 			
 			const TypedExpr* call = 
 				new CallExpr{ func, argsFrom( combo.second ), move(forall) };

@@ -7,6 +7,7 @@
 #include "func_table.h"
 #include "interpretation.h"
 #include "resolve_assertions.h"
+#include "unify.h"
 
 #include "ast/decl.h"
 #include "ast/expr.h"
@@ -169,17 +170,41 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 	}
 
 	// Ditto above for anything with a polymorphic return type, +(0,1,0) cost
-	for ( const TypeMap<FuncList>& matches : funcIndex.get_poly_maps( targetType ) ) {
-		// TODO attempt to unify result type with target type
-
+	auto polys = funcIndex.get_poly_maps( targetType );
+	// skip exact concrete match
+	if ( polys.begin() != polys.end() && polys.begin().is_concrete() ) { ++polys; }
+	for ( const TypeMap<FuncList>& matches : polys ) {
 		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
+			const Type* keyType = it.key();
+
+			// attempt to unify result type with target type
+			Cost tCost{};
+			Env tEnv = Env::from(env);
+			if ( ! unifyTuple( targetType, keyType, tCost, tEnv.get() ) )
+				continue;
+
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
-				resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS,
+				resolver, it.get(), expr, tEnv.get(), Resolver::NO_CONVERSIONS,
 				bound );
 			if ( sResults.empty() ) continue;
 
-			// TODO truncate expressions to match result type
+			// truncate expressions to match result type
+			int n = targetType->size();
+			if ( keyType->size() > n ) {
+				tCost.safe += keyType->size() - targetType->size();
+				for ( const Interpretation* i : tResults ) {
+					results.push_back( new Interpretation{ 
+						new TruncateExpr{ i->expr, n }, 
+						i->cost + tCost, 
+						move(i->env) } );
+				}
+			} else {
+				for ( const Interpretation* i : tResults ) {
+					results.push_back(
+						new Interpretation{ i->expr, i->cost + tCost, move(i->env) } );
+				}
+			}
 		}
 	}
 	// TODO think about caching child resolutions across top-level parameters
@@ -204,7 +229,8 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 	return {};
 }
 
-InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType,                                                 const Env* env ) {
+InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType,
+                                              const Env* env ) {
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
 		// convert leaf expression to given type

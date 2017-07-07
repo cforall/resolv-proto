@@ -733,6 +733,14 @@ public:
         bool operator== (const PolyIter& o) const { return m == o.m; }
 
         bool operator!= (const PolyIter& o) const { return m != o.m; }
+
+        /// true if currrent state only uses concrete types
+        bool is_concrete() const {
+            for ( const auto& b : prefix ) {
+                if ( b.next != b.base->polys.begin() ) return false;
+            }
+            return true;
+        }
     };
 
     /// Gets type maps for a given type, where one or more of the subtypes 
