@@ -47,7 +47,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
 		Cost cost; // initialized to zero
-		unique_ptr<Env> env = Env::from( outEnv );
+		Env* env = Env::from( outEnv );
 		
 		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
 
@@ -56,7 +56,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
 		}
 		
-		results.push_back( new Interpretation{ call, move(cost), move(env) } );
+		results.push_back( new Interpretation{ call, move(cost), env } );
 	}
 	
 	return results;
@@ -89,7 +89,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 
 			// Environment for call bindings
 			Cost cost = arg->cost;
-			unique_ptr<Env> env = Env::from( arg->env.get() );
+			Env* env = Env::from( arg->env );
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
 				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
@@ -114,7 +114,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 				}
 
 				// create new interpretation for resolved call
-				results.push_back( new Interpretation{ call, move(cost), move(env) } );
+				results.push_back( new Interpretation{ call, move(cost), env } );
 			}
 		nextFunc:; }
 	}
@@ -164,7 +164,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			
 			// Environment for call bindings
 			Cost cost = combo.first;
-			unique_ptr<Env> env{}; // initialized by unifyList()
+			Env* env = nullptr; // initialized by unifyList()
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
 				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
@@ -181,7 +181,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			}
 			
 			// create new interpretation for resolved call
-			results.push_back( new Interpretation{ call, move(cost), move(env) } );
+			results.push_back( new Interpretation{ call, move(cost), env } );
 		}
 	}
 	

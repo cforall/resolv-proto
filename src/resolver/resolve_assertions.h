@@ -28,20 +28,20 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		/// Current list of merged interpretations
 		InterpretationList crnt;
 		/// Stack of environments, to support backtracking
-		std::vector<unique_ptr<Env>> envs;
+		std::vector<Env*> envs;
 	public:
 		/// Outputs a pair consisting of the merged environment and the list of interpretations
-		using OutType = std::pair<unique_ptr<Env>, InterpretationList>;
+		using OutType = std::pair<Env*, InterpretationList>;
 
 		interpretation_env_merger( const Env* env ) : crnt{}, envs{} {
 			envs.push_back( Env::from( env ) );
 		}
 
 		ComboResult append( const Interpretation* i ) {
-			unique_ptr<Env> env = Env::from( envs.back().get() );
-			if ( ! merge( env, i->env.get() ) ) return ComboResult::REJECT_THIS;
+			Env* env = Env::from( envs.back() );
+			if ( ! merge( env, i->env ) ) return ComboResult::REJECT_THIS;
 			crnt.push_back( i );
-			envs.push_back( move(env) );
+			envs.push_back( env );
 			return ComboResult::ACCEPT;
 		}
 
@@ -50,10 +50,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 			envs.pop_back();
 		}
 
-		OutType finalize() {
-			// backtrack always called after finalize
-			return { move( envs.back() ), crnt };
-		}
+		OutType finalize() { return { envs.back(), crnt }; }
 	};
 
 	/// Comparator for interpretation_env_merger outputs that sums their costs and caches 
@@ -83,11 +80,11 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 
 	Resolver& resolver;       ///< Resolver to perform searches.
 	Cost& cost;               ///< Cost of accumulated bindings.
-	unique_ptr<Env>& env;     ///< Environment to bind types and assertions into.
+	Env*& env;                ///< Environment to bind types and assertions into.
 	List<FuncDecl> deferIds;  ///< Assertions that cannot be bound at their own call
 	DeferList deferred;       ///< Available interpretations of deferred assertions
 public:
-	AssertionResolver( Resolver& resolver, Cost& cost, unique_ptr<Env>& env )
+	AssertionResolver( Resolver& resolver, Cost& cost, Env*& env )
 		: resolver(resolver), cost(cost), env(env), deferIds(), deferred() {}
 	
 	using TypedExprMutator<AssertionResolver>::visit;
@@ -137,7 +134,7 @@ public:
 			//      way the defer-list of assertions can be iterated over at the top 
 			//      level and overly-deep recursive invocations can be caught.
 			InterpretationList satisfying = 
-				resolver.resolveWithType( asnExpr, asn->returns(), env.get() );
+				resolver.resolveWithType( asnExpr, asn->returns(), env );
 
 			switch ( satisfying.size() ) {
 				case 0: { // no satisfying assertions: return failure
@@ -145,7 +142,7 @@ public:
 					return false;
 				} case 1: { // unique satisfying assertion: add to environment
 					const Interpretation* s = satisfying.front();
-					merge( env, s->env.get() );
+					merge( env, s->env );
 					cost += s->cost;
 					bindAssertion( env, asn, s->expr );
 					break;
@@ -178,9 +175,9 @@ public:
 			const TypedExpr* alt_expr = alt->expr;
 			const TypedExpr* alt_bak = alt_expr;
 			Cost alt_cost = cost + alt->cost;
-			unique_ptr<Env> alt_env = Env::from( env.get() );
+			Env* alt_env = Env::from( env );
 			// skip alternatives that can't be resolved in the current environment
-			if ( ! merge( alt_env, alt->env.get() ) ) {
+			if ( ! merge( alt_env, alt->env ) ) {
 				changed = true;
 				continue;
 			}
@@ -196,10 +193,10 @@ public:
 			if ( min_alts.empty() || alt_cost < min_alts[0]->cost ) {
 				min_alts.clear();
 				min_alts.push_back( 
-					new Interpretation{ alt_expr, move(alt_cost), move(alt_env) } );
+					new Interpretation{ alt_expr, move(alt_cost), alt_env } );
 			} else if ( alt_cost == min_alts[0]->cost ) {
 				min_alts.push_back(
-					new Interpretation{ alt_expr, move(alt_cost), move(alt_env) } );
+					new Interpretation{ alt_expr, move(alt_cost), alt_env } );
 			}
 		}
 
@@ -213,7 +210,7 @@ public:
 
 		// unique min disambiguates expression
 		if ( min_alts.size() == 1 ) {
-			merge( env, min_alts[0]->env.get() );
+			merge( env, min_alts[0]->env );
 			r = min_alts.front()->expr;
 			return true;
 		}
@@ -232,7 +229,7 @@ public:
 		// attempt to disambiguate deferred assertion matches with additional information
 		auto compatible = 
 			filter_combos<const Interpretation*>( 
-				deferred, interpretation_env_merger{ env.get() } );
+				deferred, interpretation_env_merger{ env } );
 		if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
 		// sort deferred assertion matches by cost
@@ -242,7 +239,7 @@ public:
 			// NOTE env is a parent of minPos->first, so we can't just set 
 			//      env = minPos->first, but need to merge in the child parts
 			// TODO write flatten( env, parent ) -> new_env method for this case
-			merge( env, minPos->first.get() );
+			merge( env, minPos->first );
 			cost += costs.get( *minPos );
 			for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 				bindAssertion( env, deferIds[i], minPos->second[i]->expr );
@@ -253,11 +250,11 @@ public:
 			auto it = compatible.begin();
 			do {
 				// build an interpretation for each compatible min-cost assertion binding
-				unique_ptr<Env> alt_env = move(it->first);
+				Env* alt_env = it->first;
 				for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 					bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
 				}
-				alts.push_back( new Interpretation{ r, move(alt_cost), move(alt_env) } );
+				alts.push_back( new Interpretation{ r, move(alt_cost), alt_env } );
 			} while ( it != minPos );
 			r = new AmbiguousExpr{ r, r->type(), move(alts) };
 		}
@@ -270,8 +267,7 @@ public:
 /// and type/assertion bindings in cost and env, respectively. Returns whether all 
 /// assertions can be consistently bound at a unique minimum cost; may mutate call to 
 /// disambiguate ambiguous expressions.
-bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, 
-		unique_ptr<Env>& env ) {
+bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, Env*& env ) {
 	AssertionResolver assnResolver{ resolver, cost, env };
 	return assnResolver.mutate( call ) != nullptr;
 }

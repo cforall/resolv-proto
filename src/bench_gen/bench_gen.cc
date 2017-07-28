@@ -352,7 +352,7 @@ class BenchGenerator {
     /// Returns return type of the expression
     const Type* generate_expr( const Type* ty = nullptr ) {
         unique_ptr<Forall> forall;  ///< Local polymorphic variables
-        unique_ptr<Env> env;        ///< Environment to track consistent bindings
+        Env* env;                   ///< Environment to track consistent bindings
         const FuncDecl* decl;       ///< Function to call
         const Type* rtype;          ///< Return type of this function
 
@@ -463,7 +463,7 @@ class BenchGenerator {
         }
         std::cout << " )";
 
-        return replace( env.get(), rtype );
+        return replace( env, rtype );
     }
 
     void generate_exprs( bool is_toplevel = false ) {

@@ -150,7 +150,7 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 
 /// Attempts to bind a typeclass r to the concrete type conc in the current environment, 
 /// returning true and incrementing cost if successful
-bool classBinds( ClassRef r, const Type* conc, unique_ptr<Env>& env, Cost& cost ) {
+bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
     // test for match if class already has a representative.
     // TODO this is a restriction to exact polymorphic type binding, but loosening it 
     //      would be non-trivial; [ or maybe I just call convertTo here... ]
@@ -165,8 +165,7 @@ bool classBinds( ClassRef r, const Type* conc, unique_ptr<Env>& env, Cost& cost 
 /// as needed. Returns nullptr for no such conversion; may update env and cost on such a 
 /// failure result.
 const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,                
-                            ConversionGraph& conversions, unique_ptr<Env>& env, 
-                            Cost& cost ) {
+                            ConversionGraph& conversions, Env*& env, Cost& cost ) {
     const Type* etype = expr->type();
     auto eid = typeof( etype );
     auto tid = typeof( ttype );
@@ -272,14 +271,13 @@ InterpretationList convertTo( const Type* targetType, InterpretationList&& resul
             setOrUpdateInterpretation( best, ty, i->cost, [i]() { return i; } );
         } else {
             Cost cost = i->cost;
-            unique_ptr<Env> newEnv = Env::from( i->env.get() );
+            Env* newEnv = Env::from( i->env );
             const TypedExpr* newExpr = 
                 convertTo( targetType, i->expr, conversions, newEnv, cost );
             if ( newExpr ) {
                 setOrUpdateInterpretation( best, newExpr->type(), cost, 
-                    [newExpr,&cost,e = move(newEnv)]() {
-                        return new Interpretation{ 
-                            newExpr, copy(cost), move(as_non_const(e)) };
+                    [newExpr,&cost,newEnv]() {
+                        return new Interpretation{ newExpr, copy(cost), newEnv };
                     } );
             }
         }

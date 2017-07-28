@@ -56,7 +56,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	}
 
 	// check for unbound type variables in environment
-	List<TypeClass> unbound = getUnbound( candidate->env.get() );
+	List<TypeClass> unbound = getUnbound( candidate->env );
 	if ( ! unbound.empty() ) {
 		on_unbound( expr, unbound );
 		return Interpretation::make_invalid();

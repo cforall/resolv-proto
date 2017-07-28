@@ -18,30 +18,30 @@ using is_conc_or_named_type
 /// Tests if the first (parameter) type can be unified with the second (argument) type, 
 /// while respecting the global type environment, and accumulating costs for the  
 /// unification.
-bool unify( const ConcType*, const NamedType*, Cost&, unique_ptr<Env>& ) { return false; }
+bool unify( const ConcType*, const NamedType*, Cost&, Env*& ) { return false; }
 
-bool unify( const NamedType*, const ConcType*, Cost&, unique_ptr<Env>& ) { return false; }
-
-template<typename T, typename = is_conc_or_named_type<T>>
-bool unify(const T*, const T*, Cost&, unique_ptr<Env>&);
+bool unify( const NamedType*, const ConcType*, Cost&, Env*& ) { return false; }
 
 template<typename T, typename = is_conc_or_named_type<T>>
-bool unify(const T*, const PolyType*, Cost&, unique_ptr<Env>&);
+bool unify(const T*, const T*, Cost&, Env*&);
 
 template<typename T, typename = is_conc_or_named_type<T>>
-bool unify(const T*, const Type*, Cost&, unique_ptr<Env>&);
+bool unify(const T*, const PolyType*, Cost&, Env*&);
 
-bool unify(const PolyType*, const Type*, Cost&, unique_ptr<Env>&);
+template<typename T, typename = is_conc_or_named_type<T>>
+bool unify(const T*, const Type*, Cost&, Env*&);
 
-bool unify(const Type*, const Type*, Cost&, unique_ptr<Env>&);
+bool unify(const PolyType*, const Type*, Cost&, Env*&);
+
+bool unify(const Type*, const Type*, Cost&, Env*&);
 
 template<typename T, typename>
-bool unify( const T* concParamType, const T* concArgType, Cost&, unique_ptr<Env>&) {
+bool unify( const T* concParamType, const T* concArgType, Cost&, Env*&) {
     return *concParamType == *concArgType;
 }
 
 template<typename T, typename>
-bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, unique_ptr<Env>& env) {
+bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, Env*& env) {
     // locate type binding for parameter type
     ClassRef argClass = getClass( env, polyArgType );
     // test for match if class already has representative
@@ -54,7 +54,7 @@ bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, uniq
 }
 
 template<typename T, typename>
-bool unify(const T* concParamType, const Type* argType, Cost& cost, unique_ptr<Env>& env) {
+bool unify(const T* concParamType, const Type* argType, Cost& cost, Env*& env) {
     auto aid = typeof(argType);
     if ( aid == typeof<ConcType>() ) 
         return unify( concParamType, as<ConcType>(argType), cost, env );
@@ -67,7 +67,7 @@ bool unify(const T* concParamType, const Type* argType, Cost& cost, unique_ptr<E
     return false; // unreachable
 }
 
-bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, unique_ptr<Env>& env) {
+bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, Env*& env) {
     // locate type binding for parameter type
     ClassRef paramClass = getClass( env, polyParamType );
 
@@ -86,7 +86,7 @@ bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, uniqu
     return true;
 }
 
-bool unify(const Type* paramType, const Type* argType, Cost& cost, unique_ptr<Env>& env) {
+bool unify(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
     auto pid = typeof(paramType);
     if ( pid == typeof<ConcType>() ) 
         return unify( as<ConcType>(paramType), argType, cost, env );
@@ -100,8 +100,7 @@ bool unify(const Type* paramType, const Type* argType, Cost& cost, unique_ptr<En
 }
 
 /// Unifies a tuple type with another type; may truncate the argument tuple to match
-bool unifyTuple(const Type* paramType, const TupleType* argType, 
-                Cost& cost, unique_ptr<Env>& env) {
+bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env*& env) {
     auto pid = typeof(paramType);
     if ( pid == typeof<VoidType>() ) {
         cost.safe += argType->size();
@@ -148,12 +147,11 @@ bool unifyTuple(const Type* paramType, const TupleType* argType,
 /// Checks if a list of argument types match a list of parameter types.
 /// The argument types may contain tuple types, which should be flattened; the parameter 
 /// types will not. The two lists should be the same length after flattening.
-bool unifyList( const List<Type>& params, const InterpretationList& args, 
-                Cost& cost, unique_ptr<Env>& env ) {
+bool unifyList( const List<Type>& params, const InterpretationList& args, Cost& cost, Env*& env ) {
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
 		// merge in argument environment
-		if ( ! merge( env, args[j]->env.get() ) ) return false;
+		if ( ! merge( env, args[j]->env ) ) return false;
 		// test unification of parameters
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {

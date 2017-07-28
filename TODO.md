@@ -3,7 +3,7 @@
 ## Next few days ##
 * Write top-down resolver algorithm
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
-  * possibly make `Env` a `GC_Object`, change `unique_ptr<Env>&` to `Env*` as needed
+  * possibly just take advantage of new Env as GC_Object
 * Look at tuple truncations as conversions in expand_conversions
 * Handle multi-parameter tuple arguments in multi-arg top-down resolver
 * ??? Change `src` for `PolyType` to be an `Expr*` -- would be `nullptr` for the function declarations, and the source `FuncExpr` for the call expressions (should be enough to disambiguate calls to the same function in the same expression tree, but can be cloned into different call trees without a full-tree substitution)

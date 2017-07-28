@@ -52,7 +52,7 @@ public:
 };
 
 /// Stores type-variable and assertion bindings
-class Env final : public GC_Traceable {
+class Env final : public GC_Object {
 	friend ClassRef;
 	friend std::ostream& operator<< (std::ostream&, const Env&);
 
@@ -226,9 +226,7 @@ public:
 
 	/// Makes a new environment with the given environment as parent.
 	/// If the given environment is null, so will be the new one.
-	static unique_ptr<Env> from( const Env* env ) {
-		return unique_ptr<Env>{ env ? new Env{ *env } : nullptr };
-	}
+	static Env* from( const Env* env ) { return env ? new Env{ *env } : nullptr; }
 
 	/// Inserts a type variable if it doesn't already exist in the environment.
 	/// Returns false if already present.
@@ -248,6 +246,9 @@ public:
 		return r;
 	}
 
+	/// Gets local class list
+	const Storage& getClasses() const { return classes; }
+
 	/// Finds an assertion in this environment, returns null if none
 	const TypedExpr* findAssertion( const FuncDecl* f ) const {
 		// search self
@@ -263,6 +264,9 @@ public:
 		}
 		return nullptr;
 	}
+
+	/// Gets local assertion list
+	const AssertionMap& getAssertions() const { return assns; }
 
 	/// Binds this class to the given type; class should be currently unbound.
 	/// May copy class into local scope; class should belong to this or a parent.
@@ -364,8 +368,8 @@ public:
 
 	/// Gets an environment equivalent to this one, but with structure flattened up to p.
 	/// p must be an ancestor of this.
-	unique_ptr<Env> flatten( const Env* p ) const {
-		unique_ptr<Env> env = Env::from( p );
+	Env* flatten( const Env* p ) const {
+		Env* env = Env::from( p );
 		
 		std::unordered_set<const PolyType*> seen;
 		for (const Env* crnt = this; crnt != p; crnt = crnt->parent) {
@@ -409,8 +413,8 @@ inline const TypeClass& ClassRef::operator* () const {
 }
 
 /// Gets the typeclass for a given type variable, inserting it if necessary.
-inline ClassRef getClass( unique_ptr<Env>& env, const PolyType* orig ) {
-	if ( ! env ) { env.reset( new Env{} ); }
+inline ClassRef getClass( Env*& env, const PolyType* orig ) {
+	if ( ! env ) { env = new Env{}; }
 	return env->getClass( orig );
 }
 
@@ -438,9 +442,9 @@ inline const Type* replace( const Env* env, const Type* ty ) {
 
 /// Inserts the given type variable into this environment if it is not currently present.
 /// Returns false if the variable was already there.
-inline bool insertVar( unique_ptr<Env>& env, const PolyType* orig ) {
+inline bool insertVar( Env*& env, const PolyType* orig ) {
 	if ( ! env ) {
-		env.reset( new Env( orig ) );
+		env = new Env( orig );
 		return true;
 	} else {
 		return env->insertVar( orig );
@@ -450,9 +454,9 @@ inline bool insertVar( unique_ptr<Env>& env, const PolyType* orig ) {
 /// Adds the given substitution to this environment. 
 /// `r` should be currently unbound and belong to `env` or a parent.
 /// Creates a new environment if `env == null`
-inline void bindType( unique_ptr<Env>& env, ClassRef r, const Type* sub ) {
+inline void bindType( Env*& env, ClassRef r, const Type* sub ) {
 	if ( ! env ) {
-		env.reset( new Env(r, sub) );
+		env = new Env(r, sub);
 	} else {
 		env->bindType( r, sub );
 	}
@@ -460,9 +464,9 @@ inline void bindType( unique_ptr<Env>& env, ClassRef r, const Type* sub ) {
 
 /// Adds the type variable to the given class. Creates new environment if null, 
 /// returns false if incompatible binding.
-inline bool bindVar( unique_ptr<Env>& env, ClassRef r, const PolyType* var ) {
+inline bool bindVar( Env*& env, ClassRef r, const PolyType* var ) {
 	if ( ! env ) {
-		env.reset( new Env(r, var) );
+		env = new Env(r, var);
 		return true;
 	} else {
 		return env->bindVar( r, var );
@@ -477,36 +481,35 @@ inline const TypedExpr* findAssertion( const Env* env, const FuncDecl* f ) {
 
 /// Adds the given assertion to the envrionment; the assertion should not currently exist 
 /// in the environment. Creates new envrionment if null.
-inline void bindAssertion( unique_ptr<Env>& env, const FuncDecl* f, 
-                           const TypedExpr* assn ) {
-	if ( ! env ) { env.reset( new Env{} ); }
+inline void bindAssertion( Env*& env, const FuncDecl* f, const TypedExpr* assn ) {
+	if ( ! env ) { env = new Env{}; }
 	env->bindAssertion( f, assn );
 }
 
 /// Merges b into a, returning false and nulling a on failure
-inline bool merge( unique_ptr<Env>& a, const Env* b ) {
+inline bool merge( Env*& a, const Env* b ) {
     if ( ! b ) return true;
     if ( ! a ) {
-        a.reset( new Env{ *b } );
+        a = new Env{ *b };
         return true;
     }
     if ( ! a->merge( *b ) ) {
-        a.reset();
+        a = nullptr;
         return false;
     }
     return true;
 }
 
 /// Gets self, or parent if environment is non-null but empty
-inline const Env* getNonempty( const unique_ptr<Env>& env ) {
+inline const Env* getNonempty( const Env* env ) {
 	return env ? env->getNonempty() : nullptr;
 }
 
 /// Returns child, flattened so that it doesn't inherit from parent.
 /// child should be a descendant of parent.
-inline unique_ptr<Env> flattenOut( const Env* child, const Env* parent ) {
-	if ( ! child ) return {};
-	if ( ! parent || child == parent ) return make_unique<Env>( *child );
+inline Env* flattenOut( const Env* child, const Env* parent ) {
+	if ( ! child ) return nullptr;
+	if ( ! parent || child == parent ) return new Env{ *child };
 	return child->flatten( parent->parent );
 }
 

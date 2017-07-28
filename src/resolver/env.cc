@@ -11,6 +11,7 @@
 #include "ast/typed_expr_type_mutator.h"
 #include "data/cast.h"
 #include "data/gc.h"
+#include "data/mem.h"
 
 bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	if ( cbound == nullptr ) return true;
@@ -31,7 +32,6 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 }
 
 void Env::trace(const GC& gc) const {
-	gc << parent;
 	for ( const TypeClass& entry : classes ) {
 		gc << entry.vars << entry.bound;
 	}
@@ -39,6 +39,7 @@ void Env::trace(const GC& gc) const {
 	for ( const auto& assn : assns ) {
 		gc << assn.first << assn.second;
 	}
+	gc << parent;
 }
 
 std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
@@ -63,23 +64,38 @@ std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
 	return out;
 }
 
-std::ostream& Env::write(std::ostream& out) const {
-	out << "{";
-	
-	// TODO include parents?
+void writeClasses(std::ostream& out, const Env* env, bool printed = false,
+	              std::unordered_set<const PolyType*>&& seen = {}) {
+	for ( const TypeClass& c : env->getClasses() ) {
+		for ( const PolyType* v : c.vars ) {
+			// skip classes containing vars we've seen before
+			if ( ! seen.insert( v ).second ) goto nextClass;
+		}
+		if ( printed ) { out << ", "; } else { printed = true; }
+		out << c;
+	nextClass:; }
 
-	auto it = classes.begin();
-	while (true) {
-		out << *it;
-		if ( ++it == classes.end() ) break;
-		out << ", ";
-	}
+	// recurse to parent if necessary
+	if ( env->parent ) writeClasses(out, env->parent, printed, move(seen));
+}
 
-	TypedExprTypeMutator<EnvSubstitutor> sub{ EnvSubstitutor{ this } };
-	for ( const auto& assn : assns ) {
+void writeAssertions(std::ostream& out, const Env* env, TypedExprTypeMutator<EnvSubstitutor>& sub,
+                     std::unordered_set<const FuncDecl*>&& seen = {}) {
+	for ( const auto& assn : env->getAssertions() ) {
+		// skip seen assertions
+		if ( ! seen.insert( assn.first ).second ) continue;
+		// print assertion
 		out << " | " << *assn.first << " => ";
 		if ( assn.second ) { out << *sub(assn.second); } else { out << "???"; }
 	}
+	// recurse to parent if necessary
+	if ( env->parent ) writeAssertions(out, env->parent, sub, move(seen));
+}
 
+std::ostream& Env::write(std::ostream& out) const {
+	out << "{";
+	writeClasses(out, this);
+	TypedExprTypeMutator<EnvSubstitutor> sub{ EnvSubstitutor{ this } };
+	writeAssertions(out, this, sub);
 	return out << "}";
 }

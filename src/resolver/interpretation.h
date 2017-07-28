@@ -18,17 +18,16 @@
 struct Interpretation : public GC_Object {
 	const TypedExpr* expr;  ///< Base expression for interpretation
 	Cost cost;              ///< Cost of interpretation
-	unique_ptr<Env> env;    ///< Type variables and assertions bound by this interpretation
+	Env* env;               ///< Type variables and assertions bound by this interpretation
 	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0] and environment [default empty]
-	Interpretation( const TypedExpr* expr = nullptr, Cost&& cost = Cost{}, 
-	                unique_ptr<Env>&& env = nullptr )
-		: expr( expr ), cost( move(cost) ), env( move(env) ) {}
+	Interpretation( const TypedExpr* expr = nullptr, Cost&& cost = Cost{}, Env* env = nullptr )
+		: expr( expr ), cost( move(cost) ), env( env ) {}
 	
 	/// Fieldwise copy-constructor
-	Interpretation( const TypedExpr* expr, const Cost& cost, const unique_ptr<Env>& env )
-		: expr( expr ), cost( cost ), env( Env::from( env.get() ) ) {}
+	Interpretation( const TypedExpr* expr, const Cost& cost, const Env* env )
+		: expr( expr ), cost( cost ), env( Env::from( env ) ) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
 		using std::swap;
@@ -79,15 +78,13 @@ struct Interpretation : public GC_Object {
 	bool operator< (const Interpretation& o) const { return cost < o.cost; }
 
 protected:
-	virtual void trace(const GC& gc) const {
-		gc << expr << env.get();
-    }
+	virtual void trace(const GC& gc) const { gc << expr << env; }
 };
 
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	if ( i.expr == nullptr ) return out << "<invalid interpretation>";
 	
-	out << "[" << *replace( i.env.get(), i.type() ) << " / " << i.cost << "]";
+	out << "[" << *replace( i.env, i.type() ) << " / " << i.cost << "]";
 	if ( i.env ) { out << *i.env; }
 	return out << " " << *i.expr;
 }
