@@ -186,6 +186,7 @@ private:
 		return false;
 	}
 
+public:
 	/// Returns this or its first non-empty parent environment (null for empty env).
 	const Env* getNonempty() const {
 		// rely on the invariant that if this is empty, its parent will be 
@@ -193,7 +194,6 @@ private:
 		return ( localAssns > 0 || ! classes.empty() ) ? this : parent;
 	}
 
-public:
 	Env() = default;
 
 	/// Constructs a brand new environment with a single class containing only var
@@ -495,6 +495,11 @@ inline bool merge( unique_ptr<Env>& a, const Env* b ) {
         return false;
     }
     return true;
+}
+
+/// Gets self, or parent if environment is non-null but empty
+inline const Env* getNonempty( const unique_ptr<Env>& env ) {
+	return env ? env->getNonempty() : nullptr;
 }
 
 /// Returns child, flattened so that it doesn't inherit from parent.

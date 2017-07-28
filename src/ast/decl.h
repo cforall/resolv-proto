@@ -7,7 +7,6 @@
 
 #include "ast.h"
 #include "forall.h"
-#include "forall_substitutor.h"
 #include "type.h"
 
 #include "data/cow.h"
@@ -70,8 +69,7 @@ public:
 		  returns_(returns_), forall_( move(forall_) ) {}
 	
 	Decl* clone() const override {
-		ForallSubstitutor m;
-		return m( this );
+		return new FuncDecl{ name_, tag_, copy(params_), returns_, copy(forall_) };
 	}
 	
 	bool operator== (const FuncDecl& that) const { 
@@ -86,16 +84,21 @@ public:
 	const Forall* forall() const { return forall_.get(); }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
-		returns_->write( out, style );
-		out << " " << name_;
-		if ( ! tag_.empty() ) { out << "-" << tag_; }
-		for ( auto& t : params_ ) {
+		if ( style != ASTNode::Print::Concise ) {
+			returns_->write( out, style );
 			out << " ";
-			t->write( out, style );
 		}
-		if ( forall_ ) for ( auto asn : forall_->assertions() ) {
-			out << " | ";
-			asn->write( out, style );
+		out << name_;
+		if ( ! tag_.empty() ) { out << "-" << tag_; }
+		if ( style != ASTNode::Print::Concise ) {
+			for ( auto& t : params_ ) {
+				out << " ";
+				t->write( out, style );
+			}
+			if ( forall_ ) for ( auto asn : forall_->assertions() ) {
+				out << " | ";
+				asn->write( out, style );
+			}
 		}
 	}
 

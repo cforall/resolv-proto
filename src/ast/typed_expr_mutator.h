@@ -54,17 +54,7 @@ public:
             return true;
         }
 
-        // instantiate new forall and substitute function type, if needed
-        unique_ptr<Forall> forall = Forall::from( e->forall() );
-        const FuncDecl* func = e->func();
-        if ( forall ) {
-            ForallSubstitutor m{ e->forall(), forall.get() };
-            func = m(func);
-            // TODO should newArgs be mutated according to the new forall?
-            // I think no, as long as the polymorphic parameter types don't leak down.
-        }
-
-        r = new CallExpr{ func, *move(newArgs), move(forall) };
+        r = new CallExpr{ e->func(), *move(newArgs), Forall::from( e->forall() ) };
         return true;
     }
 

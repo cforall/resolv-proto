@@ -54,21 +54,24 @@ struct NamedKey {
 /// Key type for PolyType
 struct PolyKey {
     std::string name;
-    const Forall* src;
+    unsigned id;
 
-    PolyKey( const std::string& name, const Forall* src ) : name(name), src(src) {}
-    PolyKey( const PolyType* pt ) : name( pt->name() ), src( pt->src() ) {}
+    PolyKey( const std::string& name, unsigned id ) : name(name), id(id) {}
+    PolyKey( const PolyType* pt ) : name( pt->name() ), id( pt->id() ) {}
 
-    const Type* value() const { return src->get( name ); }
+    const Type* value() const { return new PolyType{ name, id }; }
 
-    bool operator== (const PolyKey& o) const { return src == o.src && name == o.name; }
+    bool operator== (const PolyKey& o) const {
+        return id == 0 ? o.id == 0 : name == o.name;
+    }
     bool operator< (const PolyKey& o) const {
-        int ccode = name.compare( o.name );
-        return ccode < 0 || (ccode == 0 && std::less<const Forall*>{}( src, o.src ));
+        return id == 0 
+            ? o.id > 0 || name < o.name
+            : id < o.id;
     }
 
     std::size_t hash() const {
-        return (std::hash<std::string>{}( name ) << 1) ^ std::hash<const Forall*>{}( src );
+        return (std::hash<std::string>{}( name ) << 1) ^ id;
     }
 };
 

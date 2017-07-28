@@ -48,6 +48,14 @@ public:
 
 	/// Excludes first element from range
 	range<Iter>& operator++ () { ++i; return *this; }
+	/// Excludes first element from range, returning old range
+	range<Iter> operator++ (int) { range<Iter> tmp = *this; ++i; return tmp; }
+	
+	/// Returns a new range with first n elements excluded
+	range<Iter> operator+ ( size_type n ) const { return { i + n, e }; }
+
+	/// Exclude first n elements from range
+	range<Iter>& operator+= ( size_type n ) const { i += n; return *this; }
 
 	reference front() { return *i; }
 	const_reference front() const { return *i; }
@@ -99,3 +107,21 @@ template<typename Iter>
 range<Iter> make_range( const std::pair<Iter, Iter>& p ) { return { p }; }
 template<typename Iter>
 range<Iter> make_range( std::pair<Iter, Iter>&& p ) { return { std::move(p) }; }
+
+/// Makes a singleton range for a single element
+template<typename T>
+range<T*> singleton( T& x ) { return { &x, &x + 1 }; }
+template<typename T>
+range<const T*> singleton( const T& x ) { return { &x, &x + 1 }; }
+
+/// Builds a range from a collection
+template<typename C>
+auto range_from( C& c ) -> range<decltype( std::begin(c) )> {
+	return { std::begin(c), std::end(c) };
+}
+
+/// Builds a reversed range from a collection
+template<typename C>
+auto reversed( C& c ) -> range<decltype( std::rbegin(c) )> {
+	return { std::rbegin(c), std::rend(c) };
+}

@@ -8,28 +8,12 @@
 
 #include "data/gc.h"
 
-Forall::Forall( const Forall& o ) : n(o.n), vars(), assns() {
-	ForallSubstitutor m{ &o, this };
-	vars.reserve( o.vars.size() );
-	for ( const PolyType* v : o.vars ) { m(v); } // substitutor adds vars when seen
-	assns.reserve( o.assns.size() );
-	for ( const FuncDecl* a : o.assns ) { assns.push_back( m(a) ); }
-}
-
-Forall& Forall::operator= ( const Forall& o ) {
-	if ( &o == this ) return *this;
-
-	vars.clear();
-	assns.clear();
-
-	n = o.n;
-	ForallSubstitutor m{ &o, this };
-	vars.reserve( o.vars.size() );
-	for ( const PolyType* v : o.vars ) { m(v); } // substitutor adds vars when seen
-	assns.reserve( o.assns.size() );
-	for ( const FuncDecl* a : o.assns ) { assns.push_back( m(a) ); }
-
-	return *this;
+Forall::Forall(const Forall& o, unsigned& src) : vars(), assns() {
+	vars.reserve(o.vars.size());
+	for ( const PolyType* v : o.vars ) { vars.push_back( new PolyType{ v->name(), ++src } ); }
+	assns.reserve(o.assns.size());
+	ForallSubstitutor m{ this };
+	for ( const FuncDecl* a : o.assns ) { assns.push_back( m(a, src) ); }
 }
 
 const PolyType* Forall::get( const std::string& p ) const {
@@ -41,7 +25,16 @@ const PolyType* Forall::get( const std::string& p ) const {
 const PolyType* Forall::add( const std::string& p ) {
 	const PolyType* rep = get( p );
 	if ( ! rep ) {
-		rep = new PolyType{ p, this };
+		rep = new PolyType{ p };
+		vars.push_back( rep );
+	}
+	return rep;
+}
+
+const PolyType* Forall::add( const std::string& p, unsigned& src ) {
+	const PolyType* rep = get( p );
+	if ( ! rep ) {
+		rep = new PolyType{ p, ++src };
 		vars.push_back( rep );
 	}
 	return rep;
@@ -55,14 +48,14 @@ std::ostream& operator<< (std::ostream& out, const Forall& f) {
 	if ( ! vars.empty() ) {
 		auto it = vars.begin();
 		while (true) {
-			out << (*it)->name();
+			out << **it;
 			if ( ++it == vars.end() ) break;
 			out << ", ";
 		}
 	}
 	for ( auto assn : f.assertions() ) {
 		out << " | ";
-		assn->write( out, ASTNode::Print::InputStyle );
+		out << *assn;
 	}
 	return out << '}';
 }

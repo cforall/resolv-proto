@@ -123,35 +123,38 @@ protected:
 
 /// Representation of a polymorphic type
 class PolyType : public Type {
-	std::string name_;   ///< Name of the polymorphic type variable
-	const Forall* src_;  ///< Forall clause this type belongs to
+	/// Name of the polymorphic type variable
+	std::string name_;
+	/// Unique ID of this type variable instantiation; 0 for type variable declaration.
+	/// IDs are unique within the context of a top-level resolution call
+	unsigned id_;
+
 public:
 	typedef Type Base;
 
-	PolyType( const std::string& name_, const Forall* src_ ) : name_(name_), src_(src_) {}
+	PolyType( const std::string& name_, unsigned id_ = 0 ) : name_(name_), id_(id_) {}
 
-	Type* clone() const override { return new PolyType( name_, src_ ); }
-
-	/// Gets the canonical version of this PolyType (useful in case of clones)
-	const PolyType* canonical() const { return src_->get( name_ ); }
+	Type* clone() const override { return new PolyType( name_, id_ ); }
 
 	bool operator== (const PolyType& that) const {
-		return src_ == that.src_ && name_ == that.name_;
+		return id_ == 0 ? name_ == that.name_ : id_ == that.id_;
 	}
 	bool operator!= (const PolyType& that) const { return !(*this == that); }
 	
 	const std::string& name() const { return name_; }
-	const Forall* src() const { return src_; }
+	unsigned id() const { return id_; }
 
 	unsigned size() const override { return 1; }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << name_;
-		if ( src_ && style != ASTNode::Print::InputStyle ) { out << "@" << src_->name(); }
+		if ( id_ != 0 && style == ASTNode::Print::Default ) {
+			out << "<" << id_ << ">";
+		}
 	}
 
 protected:
-	void trace(const GC& gc) const override { gc << src_; }
+	void trace(const GC& gc) const override {}
 
 	bool equals(const Type& obj) const override {
 		const PolyType* that = as_safe<PolyType>(&obj);
@@ -159,7 +162,7 @@ protected:
 	}
 
 	std::size_t hash() const override {
-		return (std::hash<std::string>{}( name_ ) << 1) ^ std::hash<const Forall*>{}( src_ );
+		return (std::hash<std::string>{}( name_ ) << 1) ^ id_;
 	}
 };
 

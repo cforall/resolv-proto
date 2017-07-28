@@ -113,7 +113,7 @@ public:
 			// rebind to new forall clause if necessary
 			unique_ptr<Forall> forall = Forall::from( e->forall() );
 			// TODO should maybe run a ForallSubstitutor over the environment here...
-			ee = new CallExpr{ e->func(), *move(newArgs), move(forall) };
+			ee = new CallExpr{ e->func(), *move(newArgs), Forall::from( e->forall() ) };
 		}
 
 		// exit early if no assertions on this node

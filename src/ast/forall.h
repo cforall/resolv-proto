@@ -15,38 +15,38 @@ class Forall {
 	friend const GC& operator<< (const GC&, const Forall*);
 	friend class ForallSubstitutor;
 
-	std::string n;        ///< Name for this clause; not required to be unique
 	List<PolyType> vars;  ///< Type variables owned by this forall clause
 	List<FuncDecl> assns; ///< Type assertions owned by this forall clause
 
 public:
 	Forall() = default;
 
-	/// Name-only constructor
-	Forall( const std::string& n ) : n(n), vars(), assns() {}
-
-	/// Copy constructor re-binds vars to new forall instance
-	Forall( const Forall& );
-	/// Assignment operator re-binds vars to new forall instance
-	Forall& operator= ( const Forall& );
+	/// Copies a given forall clause, rebinding its type variables to new indices starting after src
+	Forall(const Forall& o, unsigned& src);
 
 	/// Copies the given forall clause, returning a null pointer if o is null.
 	static unique_ptr<Forall> from( const Forall* o ) {
 		return unique_ptr<Forall>{ o ? new Forall{ *o } : nullptr };
 	}
+
+	/// Copies the given forall clause, rebound to src, returns null pointer if o is null
+	static unique_ptr<Forall> from( const Forall* o, unsigned& src ) {
+		return unique_ptr<Forall>{ o ? new Forall{ *o, src } : nullptr };
+	}
 	
-	const std::string& name() const { return n; }
 	const List<PolyType>& variables() const { return vars; }
 	const List<FuncDecl>& assertions() const { return assns; }
-
-	void set_name( const std::string& x ) { n = x; }
 
 	/// Finds the existing type variable with the given name; returns null if none such
 	const PolyType* get( const std::string& p ) const;
 
-	/// Adds a new type variable in this forall if not present; returns existing var if 
-	/// present
+	/// Adds a new type variable with ID 0 in this forall if not present;
+	/// returns existing var if present
 	const PolyType* add( const std::string& p );
+
+	/// Adds a new type variable with a new ID from the given source in this forall if not present; 
+	/// returns existing var if present
+	const PolyType* add( const std::string& p, unsigned& src );
 
 	/// Adds a new assertion to this forall
 	void addAssertion( const FuncDecl* f ) { assns.push_back( f ); }

@@ -40,10 +40,13 @@ class Resolver {
 	UnboundEffect on_unbound;
 	
 public:
+	unsigned id_src;               ///< Source of type variable IDs
+
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
 	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound )
 		: conversions( conversions ), funcs( funcs ),
-		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
+		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ), 
+		  id_src(0) {}
 	
 	/// Mode for type conversions
 	enum Mode {

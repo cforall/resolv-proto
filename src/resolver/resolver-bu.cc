@@ -49,7 +49,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		Cost cost; // initialized to zero
 		unique_ptr<Env> env = Env::from( outEnv );
 		
-		const TypedExpr* call = new CallExpr{ func };
+		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
 
 		// check type assertions if at top level
 		if ( resolve_mode == Resolver::TOP_LEVEL ) {
@@ -90,20 +90,17 @@ InterpretationList matchFuncs( Resolver& resolver,
 			// Environment for call bindings
 			Cost cost = arg->cost;
 			unique_ptr<Env> env = Env::from( arg->env.get() );
-			unique_ptr<Forall> forall = Forall::from( func->forall() );
-			if ( forall ) {
-				ForallSubstitutor replaceLocals{ func->forall(), forall.get() };
-				func = replaceLocals( func );
-			}
+			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
+			List<Type> params = forall ? 
+				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
 			
 			// skip functions that don't match the parameter types
 			if ( n == 1 ) { // concrete type arg
-				if ( ! unify( func->params()[0], arg->type(), cost, env ) ) continue;
+				if ( ! unify( params[0], arg->type(), cost, env ) ) continue;
 			} else {  // tuple type arg
 				const List<Type>& argTypes = as<TupleType>( arg->type() )->types();
 				for ( unsigned i = 0; i < n; ++i ) {
-					if ( ! unify( func->params()[i], argTypes[i], cost, env ) ) 
-						goto nextFunc;
+					if ( ! unify( params[i], argTypes[i], cost, env ) ) goto nextFunc;
 				}
 			}
 
@@ -168,14 +165,12 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			// Environment for call bindings
 			Cost cost = combo.first;
 			unique_ptr<Env> env{}; // initialized by unifyList()
-			unique_ptr<Forall> forall = Forall::from( func->forall() );
-			if ( forall ) {
-				ForallSubstitutor replaceLocals{ func->forall(), forall.get() };
-				func = replaceLocals( func );
-			}
+			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
+			List<Type> params = forall ? 
+				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
 
 			// skip functions that don't match the parameter types
-			if ( ! unifyList( func->params(), combo.second, cost, env ) ) continue;
+			if ( ! unifyList( params, combo.second, cost, env ) ) continue;
 			
 			const TypedExpr* call = 
 				new CallExpr{ func, argsFrom( combo.second ), move(forall) };

@@ -104,22 +104,22 @@ bool unifyTuple(const Type* paramType, const TupleType* argType,
                 Cost& cost, unique_ptr<Env>& env) {
     auto pid = typeof(paramType);
     if ( pid == typeof<VoidType>() ) {
-        cost.safe += argType.size();
+        cost.safe += argType->size();
         return true;
     } else if ( pid == typeof<ConcType>() ) {
         if ( unify( as<ConcType>(paramType), argType->types()[0], cost, env ) ) {
-            cost.safe += argType.size() - 1;
-            return true
+            cost.safe += argType->size() - 1;
+            return true;
         } else return false;
     } else if ( pid == typeof<NamedType>() ) {
         if ( unify( as<NamedType>(paramType), argType->types()[0], cost, env ) ) {
-            cost.safe += argType.size() - 1;
-            return true
+            cost.safe += argType->size() - 1;
+            return true;
         } else return false;
     } else if ( pid == typeof<PolyType>() ) {
         if ( unify( as<PolyType>(paramType), argType->types()[0], cost, env ) ) {
-            cost.safe += argType.size() - 1;
-            return true
+            cost.safe += argType->size() - 1;
+            return true;
         } else return false;
     } else if ( pid == typeof<TupleType>() ) {
         const TupleType* tParam = as<TupleType>(paramType);

@@ -9,8 +9,9 @@ class ASTNode : public GC_Object {
 public:
 	/// Printing modes
 	enum class Print {
-		Default,    ///< Using the default style.
-		InputStyle  ///< Styled to emulate the input format.
+		Default,     ///< Using the default style.
+		InputStyle,  ///< Styled to emulate the input format.
+		Concise      ///< Concise printing style
 	};
 
 	/// Print this node, using the named style

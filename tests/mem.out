@@ -1,12 +1,12 @@
 
-[1 / (0,1,0)]{T@cons => 1} cons{T}( 1 1 )
+[1 / (0,1,0)]{T<1> => 1} cons{T<1>}( 1 1 )
 
-[1 / (0,2,0)]{[T@cons, T@new] => 1} cons{T}( 1 new{T}( ) )
+[1 / (0,2,0)]{[T<2>, T<1>] => 1} cons{T<2>}( 1 new{T<1>}( ) )
 
-[1 / (0,3,0)]{[T@cons, T@cons, T@new] => 1} cons{T}( cons{T}( 1 new{T}( ) ) 1 )
+[1 / (0,3,0)]{[T<3>, T<2>, T<1>] => 1} cons{T<3>}( cons{T<2>}( 1 new{T<1>}( ) ) 1 )
 
-[1 / (0,4,0)]{[T@cons, T@cons, T@new, T@new] => 1} cons{T}( cons{T}( 1 new{T}( ) ) new{T}( ) )
+[1 / (0,4,0)]{[T<4>, T<2>, T<1>, T<3>] => 1} cons{T<4>}( cons{T<2>}( 1 new{T<1>}( ) ) new{T<3>}( ) )
 
-[1 / (0,4,0)]{[T@cons, T@cons, T@new, T@new] => 1} cons{T}( cons{T}( new{T}( ) new{T}( ) ) 1 )
+[1 / (0,4,0)]{[T<4>, T<3>, T<1>, T<2>] => 1} cons{T<4>}( cons{T<3>}( new{T<1>}( ) new{T<2>}( ) ) 1 )
 
-ERROR: unbound type variables in new( ): T@new => ???
+ERROR: unbound type variables in new( ): T<1> => ???

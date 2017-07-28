@@ -145,12 +145,15 @@ public:
 	const List<Expr>& args() const { return args_; }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
-		out << name_ << "(";
-		for (auto& arg : args_) {
-			out << " ";
-			arg->write( out, style );
-		} 
-		out << " )";
+		out << name_;
+		if ( style != ASTNode::Print::Concise ) {
+			out << "(";
+			for (auto& arg : args_) {
+				out << " ";
+				arg->write( out, style );
+			} 
+			out << " )";
+		}
 	}
 
 protected:
@@ -164,35 +167,31 @@ class CallExpr : public TypedExpr {
 	unique_ptr<Forall> forall_;  ///< Type variables owned by this call.
 	const Type* retType_;        ///< Return type of call, after type substitution
 
-	void fixRetType( const Forall* oldForall ) {
+	/// Replaces type variables in the return type with type variables from the forall
+	void fixRetType() {
 		if ( forall_ ) {
-			ForallSubstitutor{ oldForall, forall_.get() }.mutate( retType_ );
+			ForallSubstitutor{ forall_.get() }.mutate( retType_ );
 		}
 	}
 public:
 	typedef Expr Base;
 	
-	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_ = List<TypedExpr>{} )
+	CallExpr( const FuncDecl* func_, unsigned& src, List<TypedExpr>&& args_ = List<TypedExpr>{} )
 		: func_( func_ ), args_( move(args_) ), 
-		  forall_( Forall::from( func_->forall() ) ), retType_( func_->returns() ) 
-		{ fixRetType( func_->forall() ); }
+		  forall_( Forall::from( func_->forall(), src ) ), retType_( func_->returns() ) 
+		{ fixRetType(); }
 
-	CallExpr( const FuncDecl* func_, const List<TypedExpr>& args_, 
-	          const unique_ptr<Forall>& forall_ )
-		: func_( func_ ), args_( args_ ), forall_( Forall::from( forall_.get() ) ),
-		  retType_( func_->returns() )
-		{ fixRetType( forall_.get() ); }
-
-	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, 
-	          unique_ptr<Forall>&& forall_ )
+	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, unique_ptr<Forall>&& forall_ )
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ), 
-		  retType_( func_->returns() ) {}
+		  retType_( func_->returns() ) { fixRetType(); }
 	
 	CallExpr( const FuncDecl* func_, List<TypedExpr>&& args_, unique_ptr<Forall>&& forall_, 
 	          const Type* retType_ )
 		: func_( func_ ), args_( move(args_) ), forall_( move(forall_) ), retType_( retType_ ) {}
 	
-	Expr* clone() const override { return new CallExpr( func_, args_, forall_ ); }
+	Expr* clone() const override {
+		return new CallExpr( func_, copy(args_), copy(forall_), retType_ );
+	}
 	
 	const FuncDecl* func() const { return func_; }
 	const List<TypedExpr>& args() const { return args_; }
@@ -203,15 +202,21 @@ public:
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << func_->name();
 		if ( style != ASTNode::Print::InputStyle ) {
-			if ( ! func_->tag().empty() ) { out << "-" << func_->tag(); }
+			if ( ! func_->tag().empty() ) {
+				out << "-" << func_->tag();
+			}
+		}
+		if ( style == ASTNode::Print::Default ) {
 			if ( forall_ ) { out << *forall_; }
 		}
-		out << "(";
-		for (auto& arg : args_) {
-			out << " "; 
-			arg->write( out, style );
+		if ( style != ASTNode::Print::Concise ) {
+			out << "(";
+			for (auto& arg : args_) {
+				out << " "; 
+				arg->write( out, style );
+			}
+			out << " )";
 		}
-		out << " )"; 
 	}
 	
 protected:
@@ -314,7 +319,9 @@ public:
 	const Type* type() const override { return type_; }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
-		out << "<ambiguous resolution of type " << *type_ << " for ";
+		out << "<ambiguous resolution of type ";
+		type_->write( out, style );
+		out << " for ";
 		expr_->write( out, style );
 		out << ">";
 	}

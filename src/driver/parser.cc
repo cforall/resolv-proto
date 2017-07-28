@@ -163,10 +163,6 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	
 	// check line consumed
 	if ( ! is_empty(line) ) return false;
-
-	if ( forall ) {
-		forall->set_name( name );
-	}
 	
 	// pass completed declaration into return list
 	funcs.insert( new FuncDecl{ name, tag, move(params), move(returns), move(forall) } );
