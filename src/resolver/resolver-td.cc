@@ -1,7 +1,12 @@
 #include <cassert>
+#include <functional>
+#include <vector>
+#include <unordered_map>
+#include <utility>
 
 #include "resolver.h"
 
+#include "cost.h"
 #include "env.h"
 #include "expand_conversions.h"
 #include "func_table.h"
@@ -13,13 +18,52 @@
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/cast.h"
+#include "data/range.h"
+
+/// State to iteratively build a top-down match of expressions to arguments
+struct ArgPack {
+	Cost cost;                        ///< Current cost
+	Env* env;                         ///< Current environment
+	List<TypedExpr> args;             ///< List of current arguments
+	const TypedExpr* crnt;            ///< Current expression being built (nullptr for on_last == 0)
+	unsigned on_last;                 ///< Number of unpaired type atoms on final arg
+	List<Expr>::const_iterator next;  ///< Next argument expression
+
+	ArgPack() = default;
+	
+	/// Initialize ArgPack with first argument iterator and initial environment
+	ArgPack(const List<Expr>::const_iterator& it, const Env* e) 
+		: cost(), env( Env::from(e) ), args(), crnt(nullptr), on_last(0), next(it) {}
+	
+	/// Update ArgPack with new interpretation for next arg; moves i->env
+	ArgPack(const ArgPack& old, const Interpretation* i)
+		: cost(old.cost + i->cost), env( Env::from(i->env) ), args(old.args), 
+		  crnt(nullptr), on_last(0), next(old.next) {
+		if ( old.crnt ) { args.push_back(old.crnt); }
+		args.push_back(i->expr);
+		++next;
+	}
+};
+
+/// key type for argument cache
+using ArgKey = std::pair<const Expr*, const Env*>;
+
+namespace std {
+	template<> struct hash<ArgKey> {
+		typedef ArgKey argument_type;
+		typedef std::size_t result_type;
+		result_type operator() (const argument_type& k) const {
+			return hash<const Expr*>{}(k.first) ^ hash<const Env*>{}(k.second);
+		}
+	};
+}
 
 /// Resolves a function expression with any return type, binding the result to `bound` if 
 /// a valid ref
 template<typename Funcs>
 InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs, 
                                  const FuncExpr* expr, const Env* env, 
-                                 Resolver::Mode resolve_mode = ALL_NON_VOID, 
+                                 Resolver::Mode resolve_mode = Resolver::ALL_NON_VOID, 
 								 ClassRef bound = {} ) {
 	InterpretationList results{};
 	
@@ -32,14 +76,14 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 		if ( func->params().size() < expr->args().size() ) continue;
 
 		// take zero-arg functions iff expr is zero-arg
-		if ( func->params().empty() ^ expr->args().empty() ) continue;
+		if ( func->params().empty() != expr->args().empty() ) continue;
 
 		// generate forall and parameter/return types for forall
-		unique_ptr<Forall> rForall = Forall::from( func->forall() );
+		unique_ptr<Forall> rForall = Forall::from( func->forall(), resolver.id_src );
 		const Type* rType;
 		List<Type> rParams;
 		if ( rForall ) {
-			ForallSubstitutor m{ func->forall(), rForall.get() };
+			ForallSubstitutor m{ rForall.get() };
 			rType = m( func->returns() );
 			rParams = m( func->params() );
 		} else {
@@ -49,13 +93,14 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 		// make new environment for child resolution, binding function return type
 		Cost rCost;
-		unique_ptr<Env> rEnv = Env::from(env);
+		Env* rEnv = Env::from(env);
 		if ( bound ) {
 			// TODO account for tuple targets here
 			if ( const PolyType* rPoly = as_safe<PolyType>(rType) ) {
 				if ( ! bindVar( rEnv, bound, rPoly ) ) continue;
 			} else {
-				if ( ! bindType( rEnv, bound, rType ) ) continue;
+				assert( ! bound->bound && "resolveToAny shouldn't be called with bound variable" ); 
+				bindType( rEnv, bound, rType );
 			}
 			++rCost.poly;
 		}
@@ -67,40 +112,93 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					new CallExpr{ func, List<TypedExpr>{}, move(rForall), rType };
 				
 				// check assertions if at top level
-				if ( resolve_mode == TOP_LEVEL 
+				if ( resolve_mode == Resolver::TOP_LEVEL 
 				     && ! resolveAssertions( resolver, call, rCost, rEnv ) ) 
 					continue;
 				
-				results.push_back( new Interpretation{ call, move(rCost), move(rEnv) } );
+				results.push_back( new Interpretation{ call, move(rCost), rEnv } );
 			} break;
 			case 1: {
 				// single arg, accept and move up
 				InterpretationList subs = resolver.resolveWithType( 
-					expr->args().front(), Type::from( rParams ), rEnv.get() );
+					expr->args().front(), Type::from( rParams ), rEnv );
 				for ( const Interpretation* sub : subs ) {
 					// make interpretation for this arg
 					const TypedExpr* call = 
-						new CallExpr{ func, List<TypedExpr>{ sub->expr }, move(rForall), 
-						              rType };
+						new CallExpr{ func, List<TypedExpr>{ sub->expr }, copy(rForall), rType };
 					Cost sCost = rCost + sub->cost;
-					unique_ptr<Env> sEnv = flattenOut( sub->env.get(), rEnv.get() );
+					Env* sEnv = Env::from( sub->env );
 					
 					// check assertions if at top level
-					if ( resolve_mode == TOP_LEVEL 
+					if ( resolve_mode == Resolver::TOP_LEVEL 
 					     && ! resolveAssertions( resolver, call, sCost, sEnv ) )
 						continue;
 					
-					results.push_back(
-						new Interpretation{ call, move(sCost), move(sEnv) } );
+					results.push_back( new Interpretation{ call, move(sCost), sEnv } );
 				}
 			} break;
 			default: {
-				assert(!"TODO");
+				// multiple args; proceed through matches
+				std::vector<ArgPack> combos{ ArgPack{ expr->args().begin(), rEnv } };
+				std::vector<ArgPack> nextCombos{};
+
+				// Build match combos, one parameter at a time
+				for ( const Type* param : rParams ) {
+					// setup cache for parameters
+					std::unordered_map<ArgKey, InterpretationList> argCache{};
+					// find interpretations with this type
+					for ( ArgPack& combo : combos ) {
+						if ( combo.on_last > 0 ) {
+							// TODO: test matches for leftover combo args
+						}
+						// skip combos with no arguments left
+						if ( combo.next == expr->args().end() ) continue;
+						// Find interpretation for this argument
+						ArgKey key{ *combo.next, getNonempty( combo.env ) };
+						auto cached = argCache.find( key );
+						if ( cached == argCache.end() ) {
+							// TODO: do this, but without truncation
+							cached = argCache.emplace_hint( cached, resolver.resolveWithType(
+								*combo.next, param, getNonempty( combo.env ) ) );
+						}
+						InterpretationList subs = cached->second;
+						// build new combos from interpretations
+						for ( const Interpretation* i : subs ) {
+							// TODO: handle multi-parameter args
+							// Build new ArgPack for this interpretation
+							nextCombos.emplace_back( combo, i );
+						}
+					}
+					
+					// reset for next parameter
+					combos.swap( nextCombos );
+					nextCombos.clear();
+					// exit early if no combinations
+					if ( combos.empty() ) break;
+				}
+
+				// Validate matching combos, adding to final result list
+				for ( ArgPack& combo : combos ) {
+					// skip combos with leftover arguments
+					if ( combo.next != expr->args().end() ) continue;
+
+					// make interpretation for this combo
+					const TypedExpr* call = 
+						new CallExpr{ func, move(combo.args), copy(rForall), rType };
+					Cost cCost = rCost + combo.cost;
+					
+					// check assertions if at top level
+					if ( resolve_mode == Resolver::TOP_LEVEL
+					     && ! resolveAssertions( resolver, call, cCost, combo.env ) )
+						continue;
+					
+					results.push_back( new Interpretation{ call, move(cCost), combo.env } );
+				}
 			} break;
 		}
 	}
 
-	if ( resolve_mode == ALL_NON_VOID ) {
+	if ( resolve_mode == Resolver::ALL_NON_VOID ) {
 		expandConversions( results, resolver.conversions );
 	}
 
@@ -109,6 +207,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 /// Resolves a function expression with a fixed return type, binding the result to 
 /// `bound` if a valid ref
+template<typename Iter>
 InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, 
                               const FuncExpr* expr, const Type* targetType, 
 							  const Env* env, ClassRef bound = {} ) {
@@ -132,7 +231,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 					results.push_back( new Interpretation{ 
 						new TruncateExpr{ i->expr, targetType }, 
 						i->cost + sCost, 
-						move(i->env) } );
+						i->env } );
 				}
 			} else {
 				// just append sResults to overall results
@@ -144,7 +243,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 	// Loop through conversions to targetType, repeating above
 	for ( const Conversion& conv : resolver.conversions.find_to( targetType ) ) {
 		// for any type (or tuple that has the conversion type as a prefix)
-		if ( const TypeMap<FuncList>* matches = funcIndex.get( conv.from ) ) {
+		if ( const TypeMap<FuncList>* matches = funcIndex.get( conv.from->type ) ) {
 			for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 				// results for all the functions with that type
 				InterpretationList sResults = resolveToAny(
@@ -153,17 +252,17 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 
 				// cast and perhaps truncate expressions to match result type
 				const Type* keyType = it.key();
-				bool trunc = keyType->size() > conv.from.size();
+				bool trunc = keyType->size() > conv.from->type->size();
 				Cost sCost = trunc
 					? conv.cost + Cost::from_safe( keyType->size() - targetType->size() )
 					: conv.cost;
 				for ( const Interpretation* i : sResults ) {
 					TypedExpr* sExpr = new CastExpr{ i->expr, &conv };
 					if ( trunc ) {
-						sExpr = new TruncateExpr{ sExpr, conv.from };
+						sExpr = new TruncateExpr{ sExpr, conv.from->type };
 					}
 					results.push_back(
-						new Interpretation{ sExpr, i->cost + sCost, move(i->env) } );
+						new Interpretation{ sExpr, i->cost + sCost, i->env } );
 				}
 			}
 		}
@@ -174,18 +273,18 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 	// skip exact concrete match
 	if ( polys.begin() != polys.end() && polys.begin().is_concrete() ) { ++polys; }
 	for ( const TypeMap<FuncList>& matches : polys ) {
-		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
+		for ( auto it = matches.begin(); it != matches.end(); ++it ) {
 			const Type* keyType = it.key();
 
 			// attempt to unify result type with target type
 			Cost tCost{};
-			Env tEnv = Env::from(env);
-			if ( ! unifyTuple( targetType, keyType, tCost, tEnv.get() ) )
+			Env* tEnv = Env::from(env);
+			if ( ! unifyTuple( targetType, keyType, tCost, tEnv ) )
 				continue;
 
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
-				resolver, it.get(), expr, tEnv.get(), Resolver::NO_CONVERSIONS,
+				resolver, it.get(), expr, tEnv, Resolver::NO_CONVERSIONS,
 				bound );
 			if ( sResults.empty() ) continue;
 
@@ -193,16 +292,16 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 			int n = targetType->size();
 			if ( keyType->size() > n ) {
 				tCost.safe += keyType->size() - targetType->size();
-				for ( const Interpretation* i : tResults ) {
+				for ( const Interpretation* i : sResults ) {
 					results.push_back( new Interpretation{ 
 						new TruncateExpr{ i->expr, n }, 
 						i->cost + tCost, 
-						move(i->env) } );
+						i->env } );
 				}
 			} else {
-				for ( const Interpretation* i : tResults ) {
+				for ( const Interpretation* i : sResults ) {
 					results.push_back(
-						new Interpretation{ i->expr, i->cost + tCost, move(i->env) } );
+						new Interpretation{ i->expr, i->cost + tCost, i->env } );
 				}
 			}
 		}
@@ -215,7 +314,8 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
                                       Resolver::Mode resolve_mode ) {
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
-		return InterpretationList{ new Interpretation{ expr, Cost{}, Env::from(env) } };
+		return InterpretationList{
+			new Interpretation{ as<VarExpr>(expr), Cost{}, Env::from(env) } };
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>(expr);
 		// find candidates with this function name, skipping if none
@@ -234,12 +334,13 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
 		// convert leaf expression to given type
-		unique_ptr<Env> rEnv = Env::from( env );
+		Env* rEnv = Env::from( env );
 		Cost rCost;
-		const TypedExpr* rExpr = convertTo( targetType, expr, conversions, rEnv, rCost );
+		const TypedExpr* rExpr = 
+			convertTo( targetType, as<VarExpr>(expr), conversions, rEnv, rCost );
 		// return expression if applicable
 		return rExpr 
-			? InterpretationList{ new Interpretation{ rExpr, move(rCost), move(rEnv) } } 
+			? InterpretationList{ new Interpretation{ rExpr, move(rCost), rEnv } } 
 			: InterpretationList{};
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>(expr);
@@ -249,12 +350,11 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 
 		if ( const PolyType* pTarget = as_safe<PolyType>(targetType) ) {
 			// polymorphic return; look for any option if unbound, bind to polytype
-			unique_ptr<Env> rEnv = Env::from( env );
+			Env* rEnv = Env::from( env );
 			ClassRef pClass = getClass( rEnv, pTarget );
-			return ( pClass.bound )
-				? resolveTo( *this, withName(), funcExpr, pClass.bound, rEnv.get(), 
-						pClass );
-				: resolveToAny( *this, withName(), funcExpr, rEnv.get(), 
+			return ( pClass->bound )
+				? resolveTo( *this, withName(), funcExpr, pClass->bound, rEnv, pClass )
+				: resolveToAny( *this, withName(), funcExpr, rEnv, 
 						is<VoidType>(targetType) ? TOP_LEVEL : ALL_NON_VOID, pClass );
 		} else {
 			// monomorphic return; look for matching options

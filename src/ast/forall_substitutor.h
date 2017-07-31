@@ -21,7 +21,7 @@ public:
 	using TypeMutator<ForallSubstitutor>::visit;
 	using TypeMutator<ForallSubstitutor>::operator();
 
-	ForallSubstitutor( Forall* base ) : ctx{ base } {}
+	ForallSubstitutor( const Forall* base ) : ctx{ base } {}
 
 	bool visit( const PolyType* orig, const Type*& r ) {
 		// Break early if not unbound

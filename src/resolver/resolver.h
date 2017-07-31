@@ -29,8 +29,10 @@ using UnboundEffect = std::function<void(const Expr*, const List<TypeClass>&)>;
 
 /// State-tracking class for resolving expressions
 class Resolver {
+public:
 	ConversionGraph& conversions;  ///< Conversions between known types
 	FuncTable& funcs;              ///< Known function declarations
+	unsigned id_src;               ///< Source of type variable IDs
 	
 	/// Effect to run on invalid interpretation
 	InvalidEffect on_invalid;
@@ -38,15 +40,11 @@ class Resolver {
 	AmbiguousEffect on_ambiguous;
 	/// Effect to run on unbound type variables
 	UnboundEffect on_unbound;
-	
-public:
-	unsigned id_src;               ///< Source of type variable IDs
 
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
 	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound )
-		: conversions( conversions ), funcs( funcs ),
-		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ), 
-		  id_src(0) {}
+		: conversions( conversions ), funcs( funcs ), id_src(0),
+		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
 	
 	/// Mode for type conversions
 	enum Mode {

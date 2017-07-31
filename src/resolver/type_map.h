@@ -556,7 +556,7 @@ public:
     const TypeMap<Value>* get( std::nullptr_t ) const { return nullptr; }
 
     TypeMap<Value>* get( const VoidType* ) { return this; }
-    const TypeMap<Value>* get( VoidType* ) const { return this; }
+    const TypeMap<Value>* get( const VoidType* ) const { return this; }
 
     TypeMap<Value>* get( const ConcType* ty ) {
         auto it = nodes.find( TypeKey{ ty } );
@@ -591,7 +591,7 @@ public:
         }
         return tm;
     }
-    const TypeMap<Value>* get( TupleType* ty ) const {
+    const TypeMap<Value>* get( const TupleType* ty ) const {
         return as_non_const(this)->get( ty );
     }
 
@@ -608,7 +608,7 @@ public:
         assert(false);
         return nullptr;
     }
-    const TypeMap<Value>* get( Type* ty ) const {
+    const TypeMap<Value>* get( const Type* ty ) const {
         return as_non_const(this)->get( ty );
     }
 
@@ -748,7 +748,7 @@ public:
 
     /// Gets type maps for a given type, where one or more of the subtypes 
     /// have been switched with polymorphic bindings.
-    range<PolyIter> get_poly_maps(const Type* ty) {
+    range<PolyIter> get_poly_maps(const Type* ty) const {
         return { PolyIter{ this, ty }, PolyIter{} };
     }
 
