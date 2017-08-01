@@ -3,6 +3,6 @@
 
 [#bar / (0,0,0)] g( #bar )
 
-[#foo / (0,1,0)]{T<1> => #foo | T<1> f T<1> => f( #foo )} h{T<1> | T<1> f T<1>}( #foo )
+[#foo / (0,1,0)]{T<0> => #foo | T<0> f T<0> => f( #foo )} h{T<0> | T<0> f T<0>}( #foo )
 
 ERROR: no valid resolution for h( #bar )

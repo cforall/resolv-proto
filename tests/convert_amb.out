@@ -6,6 +6,6 @@ ERROR: ambiguous resolution for f( 2 2 )
 [Void / (0,0,2)] f-s0s2( 2 2 => 4 )
 [Void / (0,0,2)] f-s1s1( 2 => 3 2 => 3 )
 
-[Void / (0,1,1)]{T<3> => 3 | Void f T<3> T<3> => f-s1s1( 3 3 )} g{T<3> | Void f T<3> T<3>}( 2 => 3 )
+[Void / (0,1,1)]{T<0> => 3 | Void f T<0> T<0> => f-s1s1( 3 3 )} g{T<0> | Void f T<0> T<0>}( 2 => 3 )
 
 ERROR: no valid resolution for h( 2 )

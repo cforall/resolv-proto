@@ -1,5 +1,6 @@
 /rp
 /bench_gen
+/tests/renumber
 *.o
 *.d
 .lastmakeflags

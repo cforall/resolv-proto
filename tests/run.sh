@@ -2,6 +2,9 @@
 
 cd `dirname "${BASH_SOURCE[0]}"`
 
+#ensure renumber works
+make --silent renumber
+
 tests=()
 if [ $# -eq 0 ]; then
     # get tests from all .in files in test directory if none given
@@ -15,7 +18,7 @@ fi
 
 for t in "${tests[@]}"; do
     printf "  %-16s" $t
-    ../rp $t.{in,test}
+    ../rp $t.in | ./renumber > $t.test
     if [ -e $t.out ]; then
         diff $t.{out,test} > $t.diff
         if [ $? -eq 0 ]; then
