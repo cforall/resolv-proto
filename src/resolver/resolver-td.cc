@@ -158,8 +158,9 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						auto cached = argCache.find( key );
 						if ( cached == argCache.end() ) {
 							// TODO: do this, but without truncation
-							cached = argCache.emplace_hint( cached, resolver.resolveWithType(
-								*combo.next, param, getNonempty( combo.env ) ) );
+							cached = argCache.emplace_hint( cached, move(key), 
+									resolver.resolveWithType(
+										*combo.next, param, getNonempty( combo.env ) ) );
 						}
 						InterpretationList subs = cached->second;
 						// build new combos from interpretations
@@ -207,7 +208,6 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 /// Resolves a function expression with a fixed return type, binding the result to 
 /// `bound` if a valid ref
-template<typename Iter>
 InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, 
                               const FuncExpr* expr, const Type* targetType, 
 							  const Env* env, ClassRef bound = {} ) {
@@ -289,7 +289,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 			if ( sResults.empty() ) continue;
 
 			// truncate expressions to match result type
-			int n = targetType->size();
+			unsigned n = targetType->size();
 			if ( keyType->size() > n ) {
 				tCost.safe += keyType->size() - targetType->size();
 				for ( const Interpretation* i : sResults ) {

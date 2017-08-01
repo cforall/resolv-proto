@@ -630,8 +630,8 @@ public:
             long,
             const TypeMap<Value>*,
             const TypeMap<Value>&> {
-        using Base = TypeMap<Value>;          ///< Underlying type map
-        using ListIter = typename PolyList::iterator;  ///< Poly-list iterator
+        using Base = TypeMap<Value>;                         ///< Underlying type map
+        using ListIter = typename PolyList::const_iterator;  ///< Poly-list iterator
 
         /// Backtracking information for this iteration
         struct Backtrack {
@@ -639,8 +639,8 @@ public:
             const Base* base;  ///< Map containing poly-list
 
             Backtrack() = default;
-            Backtrack( const ListIter& i, Base* b ) : next(i), base(b) {}
-            Backtrack( ListIter&& i, Base* b ) : next(move(i)), base(b) {}
+            Backtrack( const ListIter& i, const Base* b ) : next(i), base(b) {}
+            Backtrack( ListIter&& i, const Base* b ) : next(move(i)), base(b) {}
 
             bool operator== ( const Backtrack& o ) const {
                 return next == o.next && base == o.base;
@@ -667,14 +667,14 @@ public:
         /// Steps further into the type; ty should not be fully consumed
         inline bool push_prefix() {
             ListIter it = m->polys.begin();
-            if ( Base* nm = m->get( type_at( prefix.size() ) ) ) {
+            if ( const Base* nm = m->get( type_at( prefix.size() ) ) ) {
                 // look at concrete expansions of the current type
                 prefix.emplace_back( move(it), m );
                 m = nm;
                 return true;
             } else if ( it != m->polys.end() ) {
                 // look at polymorphic expansions of the current type
-                Base* nm = it->second;
+                const Base* nm = it->second;
                 prefix.emplace_back( move(++it), m );
                 m = nm;
                 return true;
@@ -708,6 +708,7 @@ public:
             }
         }
 
+    public:
         PolyIter() : m(nullptr), prefix(), ty(nullptr) {}
 
         PolyIter(const Base* b, const Type* t) : m(b), prefix(), ty(t) {

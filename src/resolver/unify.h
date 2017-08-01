@@ -144,6 +144,35 @@ bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env
     return false; // unreachable
 }
 
+/// Unifies a (possibly tuple) type with another type; mat truncate the argument type to match
+bool unifyTuple(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
+    auto aid = typeof(argType);
+    if ( aid == typeof<VoidType>() ) {
+        return is<VoidType>(paramType);
+    } else if ( aid == typeof<TupleType>() ) {
+        return unifyTuple(paramType, as<TupleType>(argType), cost, env);
+    } else {
+        // single-element argument type
+        auto pid = typeof(paramType);
+        if ( pid == typeof<VoidType>() ) {
+            // truncate to zero
+            ++cost.safe;
+            return true;
+        } else if ( pid == typeof<TupleType>() ) {
+            // can't extend to tuple
+            return false;
+        } else if ( pid == typeof<ConcType>() ) {
+            return unify( as<ConcType>(paramType), argType, cost, env );
+        } else if ( pid == typeof<NamedType>() ) {
+            return unify( as<NamedType>(paramType), argType, cost, env );
+        } else if ( pid == typeof<PolyType>() ) {
+            return unify( as<PolyType>(paramType), argType, cost, env );
+        } else assert(!"Unhandled parameter type");
+
+        return false; // unreachable
+    }
+}
+
 /// Checks if a list of argument types match a list of parameter types.
 /// The argument types may contain tuple types, which should be flattened; the parameter 
 /// types will not. The two lists should be the same length after flattening.
