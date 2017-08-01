@@ -99,8 +99,11 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 			if ( const PolyType* rPoly = as_safe<PolyType>(rType) ) {
 				if ( ! bindVar( rEnv, bound, rPoly ) ) continue;
 			} else {
-				assert( ! bound->bound && "resolveToAny shouldn't be called with bound variable" ); 
-				bindType( rEnv, bound, rType );
+				if ( bound->bound ) {
+					if ( ! unify( bound->bound, rType, rCost, rEnv ) ) continue;
+				} else {
+					bindType( rEnv, bound, rType );
+				}
 			}
 			++rCost.poly;
 		}

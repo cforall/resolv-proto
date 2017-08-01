@@ -684,8 +684,7 @@ public:
         /// Gets the next valid prefix state (or empty)
         inline void next_valid() {
             // back out to parent type if no sibling
-            while ( ! prefix.empty() 
-                    && prefix.back().next == prefix.back().base->polys.end() ) {
+            while ( ! prefix.empty() && prefix.back().next == prefix.back().base->polys.end() ) {
                 prefix.pop_back();
             }
             // check for end of iteration
@@ -716,6 +715,11 @@ public:
             unsigned n = ty->size();
             while ( prefix.size() < n ) {
                 if ( ! push_prefix() ) {
+                    // quit on dead-end base
+                    if ( prefix.empty() ) {
+                        m = nullptr;
+                        return;
+                    }
                     // backtrack again on dead-end prefix
                     prefix.pop_back();
                     next_valid();
