@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <ostream>
 #include <string>
@@ -90,9 +91,9 @@ public:
 
 private:
 	/// Inserts a new typeclass, consisting of a single var (should not be present).
-	void insert( const PolyType* var ) {
-		bindings[ var ] = { this, classes.size() };
-		classes.emplace_back( List<PolyType>{ var } );
+	void insert( const PolyType* v ) {
+		bindings[ v ] = { this, classes.size() };
+		classes.emplace_back( List<PolyType>{ v } );
 	}
 
 	/// Copies a typeclass from a parent; r.first should not be this or null, and none 

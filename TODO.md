@@ -1,18 +1,21 @@
 # TODO #
 
 ## Next few days ##
-* Write top-down resolver algorithm
+* Look at failing tests
+  * higher poly-cost: `assertion`, `multi_type_var`, `named`
+  * resolution failure (non-tuple): `assertion`
+  * resolution failure (tuple): `tuple`
+  * out-of-order env: `multi_type_var`
+  * out-of-order alts: `convert_amb`
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly just take advantage of new Env as GC_Object
-* Look at tuple truncations as conversions in expand_conversions
 * Handle multi-parameter tuple arguments in multi-arg top-down resolver
-* ??? Change `src` for `PolyType` to be an `Expr*` -- would be `nullptr` for the function declarations, and the source `FuncExpr` for the call expressions (should be enough to disambiguate calls to the same function in the same expression tree, but can be cloned into different call trees without a full-tree substitution)
-  * Rewrite CallExpr constructors to pass src
 
 ## Next few weeks ##
 * Look at caching argument calls between function resolutions in top-level resolver
 * Modify semantics of top-level resolution to resolve to `void`
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
+  * Look at tuple truncations as conversions in expand_conversions
 * Generic types in resolver prototype (right now I can't model pointers, which are a sort of generic type, and the exponential failure cases in the existing resolver need either pointers or generics to trigger)
 
 ## Next few months ##

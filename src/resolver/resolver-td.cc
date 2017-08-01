@@ -279,22 +279,15 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 		for ( auto it = matches.begin(); it != matches.end(); ++it ) {
 			const Type* keyType = it.key();
 
-			// attempt to unify result type with target type
-			Cost tCost{};
-			Env* tEnv = Env::from(env);
-			if ( ! unifyTuple( targetType, keyType, tCost, tEnv ) )
-				continue;
-
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
-				resolver, it.get(), expr, tEnv, Resolver::NO_CONVERSIONS,
-				bound );
+				resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, bound );
 			if ( sResults.empty() ) continue;
 
 			// truncate expressions to match result type
 			unsigned n = targetType->size();
 			if ( keyType->size() > n ) {
-				tCost.safe += keyType->size() - targetType->size();
+				Cost tCost = Cost::from_safe( keyType->size() - targetType->size() );
 				for ( const Interpretation* i : sResults ) {
 					results.push_back( new Interpretation{ 
 						new TruncateExpr{ i->expr, n }, 
@@ -303,8 +296,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 				}
 			} else {
 				for ( const Interpretation* i : sResults ) {
-					results.push_back(
-						new Interpretation{ i->expr, i->cost + tCost, i->env } );
+					results.push_back( new Interpretation{ i->expr, i->cost, i->env } );
 				}
 			}
 		}
