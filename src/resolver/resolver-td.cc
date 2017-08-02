@@ -98,14 +98,15 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 			// TODO account for tuple targets here
 			if ( const PolyType* rPoly = as_safe<PolyType>(rType) ) {
 				if ( ! bindVar( rEnv, bound, rPoly ) ) continue;
+				++rCost.poly;
 			} else {
 				if ( bound->bound ) {
 					if ( ! unify( bound->bound, rType, rCost, rEnv ) ) continue;
 				} else {
 					bindType( rEnv, bound, rType );
+					++rCost.poly;
 				}
 			}
-			++rCost.poly;
 		}
 
 		switch( expr->args().size() ) {

@@ -2,8 +2,8 @@
 
 ## Next few days ##
 * Look at failing tests
-  * higher poly-cost: `assertion`, `multi_type_var`, `named`
-  * resolution failure (non-tuple): `assertion`
+  * higher poly-cost: `multi_type_var`
+  * resolution failure (no conversion on type variable): `assertion`
   * resolution failure (tuple): `tuple`
   * out-of-order env: `multi_type_var`
   * out-of-order alts: `convert_amb`
