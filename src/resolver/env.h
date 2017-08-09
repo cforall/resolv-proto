@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <utility>
 
+#include "cost.h"
+
 #include "data/cast.h"
 #include "data/gc.h"
 #include "data/list.h"
@@ -63,6 +65,8 @@ class Env final : public GC_Object {
 	using Map = std::unordered_map<const PolyType*, ClassRef>;
 	/// Assertions known by this environment
 	using AssertionMap = std::unordered_map<const FuncDecl*, const TypedExpr*>;
+	/// Set of seen types for recursion on classes
+	using SeenTypes = std::unordered_set<const PolyType*>;
 
 	Storage classes;         ///< Backing storage for typeclasses
 	Map bindings;            ///< Bindings from a named type variable to another type
@@ -71,6 +75,7 @@ class Env final : public GC_Object {
 
 public:
 	const Env* parent;       ///< Environment this inherits bindings from
+	EnvCost cost;            ///< Summed cost of the bindings in this environment
 
 	/// Finds the binding reference for this polytype, { nullptr, _ } for none such.
 	/// Updates the local map with the binding, if found.
@@ -90,25 +95,59 @@ public:
 	}
 
 private:
+	/// true iff any of the types in c have been seen already; adds types in c to seen
+	static bool seenAny(SeenTypes& seen, const TypeClass& c) {
+		for ( const PolyType* v : c.vars ) if ( seen.insert( v ).second == false ) return true;
+		return false;
+	}
+
+	/// Resets the environment cost from direct calculation
+	void recost() {
+		SeenTypes seen{};
+		cost = EnvCost{};  // reset cost
+
+		for (const Env* crnt = this; crnt; crnt = crnt->parent ) {
+			for ( const TypeClass& c : crnt->classes ) {
+				// skip seen typeclasses
+				if ( seenAny( seen, c ) ) continue;
+				// count bound variables
+				cost.vars += c.vars.size() - 1;
+				if ( c.bound ) ++cost.vars;
+			}
+			// count local type assertions
+			cost.assns += crnt->localAssns;
+		}
+	}
+
 	/// Inserts a new typeclass, consisting of a single var (should not be present).
 	void insert( const PolyType* v ) {
 		bindings[ v ] = { this, classes.size() };
 		classes.emplace_back( List<PolyType>{ v } );
 	}
 
-	/// Copies a typeclass from a parent; r.first should not be this or null, and none 
-	/// of the members of the class should be bound directly in this.
-	std::size_t copyClass( ClassRef r ) {
+	/// Copies a typeclass from a parent; r.first should not be this or null, and none of the 
+	/// members of the class should be bound directly in this. Updates r with the new location
+	void copyClass( ClassRef& r ) {
 		std::size_t i = classes.size();
 		classes.push_back( *r );
-		for ( const PolyType* v : classes[i].vars ) { bindings[v] = { this, i }; }	
-		return i;
+		r = ClassRef{ this, i };
+		for ( const PolyType* v : classes[i].vars ) { bindings[v] = r; }
+	}
+
+	/// Copies a typeclass from a parent; r.first should not be this or null, and none of the 
+	/// members of the class should be bound directly in this.
+	void copyClass( ClassRef&& r ) {
+		std::size_t i = classes.size();
+		classes.push_back( *r );
+		r = ClassRef{ this, i };
+		for ( const PolyType* v : classes[i].vars ) { bindings[v] = r; }
 	}
 
 	/// Adds v to local class with id rid; v should not be bound in this environment.
 	void addToClass( std::size_t rid, const PolyType* v ) {
 		classes[ rid ].vars.push_back( v );
 		bindings[ v ] = { this, rid };
+		++cost.vars;
 	}
 
 	/// Makes cbound the bound of r in this environment, returning false if incompatible.
@@ -129,6 +168,8 @@ private:
 			// overlap
 			rc.vars.insert( rc.vars.end(), sc.vars.begin(), sc.vars.end() );
 			for ( const PolyType* v : sc.vars ) { bindings[v] = r; }
+			// note cost increase if needed (+1 for var-to-var binding, -1 if sc bound eliminated)
+			if ( ! sc.bound ) { ++cost.vars; }
 			// remove s from local class-list
 			std::size_t victim = classes.size() - 1;
 			if ( s.ind != victim ) {
@@ -164,14 +205,11 @@ private:
 	void getUnbound( std::unordered_set<const PolyType*>& seen, 
 	                 List<TypeClass>& out ) const {
 		for ( const TypeClass& c : classes ) {
-			for ( const PolyType* v : c.vars ) {
-				// skip classes containing vars we've seen before
-				if ( ! seen.insert( v ).second ) goto nextClass;
-			}
-
+			// skip classes containing vars we've seen before
+			if ( seenAny( seen, c ) ) continue;
 			// report unbound classes
 			if ( ! c.bound ) { out.push_back( &c ); }
-		nextClass:; }
+		}
 
 		// recurse to parent
 		if ( parent ) { parent->getUnbound( seen, out ); }
@@ -199,28 +237,35 @@ public:
 
 	/// Constructs a brand new environment with a single class containing only var
 	Env( const PolyType* var ) 
-		: classes(), bindings(), assns(), localAssns(0), parent(nullptr)
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost()
 		{ insert( var ); }
 
 	/// Constructs a brand new environment with a single bound class
-	Env( ClassRef r, const Type* sub = nullptr )
-		: classes(), bindings(), assns(), localAssns(0), parent(nullptr)
-		{ copyClass(r); classes.front().bound = sub; }
+	Env( ClassRef& r, const Type* sub = nullptr )
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost() {
+		copyClass(r);
+		classes.front().bound = sub;
+		recost();
+	}
 	
 	/// Constructs a brand new environment with a single class with an added type variable
-	Env( ClassRef r, const PolyType* var )
-		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
+	Env( ClassRef& r, const PolyType* var )
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost() {
 		copyClass(r);
 		if ( ! bindings.count( var ) ) { addToClass(0, var); }
+		recost();
 	}
 	
 	/// Constructs a brand new environment with a single class
-	Env( ClassRef r, std::nullptr_t )
-		: classes(), bindings(), assns(), localAssns(0), parent(nullptr) { copyClass(r); }
+	Env( ClassRef& r, std::nullptr_t )
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost() {
+		copyClass(r);
+		recost();
+	}
 
 	/// Shallow copy, just sets parent of new environment
 	Env( const Env& o )
-		: classes(), bindings(), assns(), localAssns(0), parent(o.getNonempty()) {}
+		: classes(), bindings(), assns(), localAssns(0), parent(o.getNonempty()), cost(o.cost) {}
 
 	/// Deleted to avoid the possibility of environment cycles.
 	Env& operator= ( const Env& o ) = delete;
@@ -271,17 +316,18 @@ public:
 
 	/// Binds this class to the given type; class should be currently unbound.
 	/// May copy class into local scope; class should belong to this or a parent.
-	void bindType( ClassRef r, const Type* sub ) {
-		if ( r.env != this ) { r.ind = copyClass( r ); }
+	void bindType( ClassRef& r, const Type* sub ) {
+		if ( r.env != this ) { copyClass( r ); }
 		classes[ r.ind ].bound = sub;
+		++cost.vars;
 	}
 
 	/// Binds the type variable into to the given class; returns false if the 
 	/// type variable is incompatibly bound.
-	bool bindVar( ClassRef r, const PolyType* var ) {
+	bool bindVar( ClassRef& r, const PolyType* var ) {
 		ClassRef vr = findRef( var );
 		if ( vr == r ) return true;  // exit early if already bound
-		if ( r.env != this ) { r = { this, copyClass(r) }; }  // ensure r is local
+		if ( r.env != this ) { copyClass(r); }  // ensure r is local
 		if ( vr ) {
 			// merge variable's existing class into this one
 			return mergeClasses( r, vr );
@@ -296,14 +342,13 @@ public:
 	void bindAssertion( const FuncDecl* f, const TypedExpr* assn ) {
 		assns.emplace( f, assn );
 		++localAssns;
+		++cost.assns;
 	}
 
 	/// Merges the target environment with this one.
 	/// Returns false if fails, but does NOT roll back partial changes.
 	/// seen makes sure work isn't doubled for inherited bindings
-	bool merge( const Env& o, 
-			std::unordered_set<const PolyType*>&& seen 
-				= std::unordered_set<const PolyType*>{} ) {
+	bool merge( const Env& o, SeenTypes&& seen = SeenTypes{}, bool topLevel = true ) {
 		// Already compatible with o, by definition.
 		if ( inheritsFrom( o ) ) return true;
 		
@@ -326,7 +371,7 @@ public:
 				// attempt to merge bound into r
 				if ( ! mergeBound( r, c.bound ) ) return false;
 				// merge previous variables into this class
-				if ( r.env != this ) { r = { this, copyClass( r ) }; }
+				if ( r.env != this ) { copyClass( r ); }
 				for ( std::size_t j = 0; j < i; ++j ) addToClass( r.ind, c.vars[j] );
 				// merge subsequent variables into this class
 				while ( ++i < n ) {
@@ -364,7 +409,10 @@ public:
 		}
 
 		// merge parents
-		return o.parent ? merge( *o.parent, move(seen) ) : true;
+		if ( o.parent && ! merge( *o.parent, move(seen), false ) ) return false;
+		
+		recost();
+		return true;
 	}
 
 	/// Gets an environment equivalent to this one, but with structure flattened up to p.
@@ -455,7 +503,7 @@ inline bool insertVar( Env*& env, const PolyType* orig ) {
 /// Adds the given substitution to this environment. 
 /// `r` should be currently unbound and belong to `env` or a parent.
 /// Creates a new environment if `env == null`
-inline void bindType( Env*& env, ClassRef r, const Type* sub ) {
+inline void bindType( Env*& env, ClassRef& r, const Type* sub ) {
 	if ( ! env ) {
 		env = new Env(r, sub);
 	} else {
@@ -465,7 +513,7 @@ inline void bindType( Env*& env, ClassRef r, const Type* sub ) {
 
 /// Adds the type variable to the given class. Creates new environment if null, 
 /// returns false if incompatible binding.
-inline bool bindVar( Env*& env, ClassRef r, const PolyType* var ) {
+inline bool bindVar( Env*& env, ClassRef& r, const PolyType* var ) {
 	if ( ! env ) {
 		env = new Env(r, var);
 		return true;
@@ -505,6 +553,9 @@ inline bool merge( Env*& a, const Env* b ) {
 inline const Env* getNonempty( const Env* env ) {
 	return env ? env->getNonempty() : nullptr;
 }
+
+/// Gets cost, or zero cost if null
+inline EnvCost getCost( const Env* env ) { return env ? env->cost : EnvCost{}; }
 
 /// Returns child, flattened so that it doesn't inherit from parent.
 /// child should be a descendant of parent.

@@ -1,0 +1,9 @@
+// based on example on p.93 of Glen's thesis
+//
+// Expected output:
+// f( g-l( 1 => 2 ) => 3 )
+f 3
+4 g-i 1
+2 g-l 2
+%%
+f( g( 1 ) )

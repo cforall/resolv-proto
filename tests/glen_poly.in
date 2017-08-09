@@ -1,0 +1,17 @@
+// based on example on p.89 of Glen's thesis
+//
+// Expected behaviour:
+// f-f3( 1 1 )
+// f-f2( 2 2 )
+// f-f3( 0 0 => 1 )
+// f-f2( 1 => 2 2 )
+// f-f1( 1 #p )
+f-f1 T U
+f-f2 T T
+f-f3 T 1
+%%
+f( 1 1 )
+f( 2 2 )
+f( 0 0 )
+f( 1 2 )
+f( 1 #p )

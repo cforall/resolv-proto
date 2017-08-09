@@ -1,0 +1,10 @@
+// Based on example in pp.92-93 of Glen's thesis
+// 
+// Expected result is f( not-i( 1 ) => 3 ) (e.g. break total-cost ties based on local cost) 
+1 not-i 1
+2 not-ui 2
+3 not-ul 3
+f 3
+%%
+f( not( 1 ) )
+

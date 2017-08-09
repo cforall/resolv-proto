@@ -22,8 +22,9 @@
 
 /// State to iteratively build a top-down match of expressions to arguments
 struct ArgPack {
-	Cost cost;                        ///< Current cost
 	Env* env;                         ///< Current environment
+	Cost cost;                        ///< Current cost
+	Cost argCost;                     ///< Current argument-only cost
 	List<TypedExpr> args;             ///< List of current arguments
 	const TypedExpr* crnt;            ///< Current expression being built (nullptr for on_last == 0)
 	unsigned on_last;                 ///< Number of unpaired type atoms on final arg
@@ -33,12 +34,12 @@ struct ArgPack {
 	
 	/// Initialize ArgPack with first argument iterator and initial environment
 	ArgPack(const List<Expr>::const_iterator& it, const Env* e) 
-		: cost(), env( Env::from(e) ), args(), crnt(nullptr), on_last(0), next(it) {}
+		: env( Env::from(e) ), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(it) {}
 	
-	/// Update ArgPack with new interpretation for next arg; moves i->env
+	/// Update ArgPack with new interpretation for next arg
 	ArgPack(const ArgPack& old, const Interpretation* i)
-		: cost(old.cost + i->cost), env( Env::from(i->env) ), args(old.args), 
-		  crnt(nullptr), on_last(0), next(old.next) {
+		: env( Env::from(i->env) ), cost(old.cost + i->cost), argCost(old.argCost + i->cost), 
+		  args(old.args), crnt(nullptr), on_last(0), next(old.next) {
 		if ( old.crnt ) { args.push_back(old.crnt); }
 		args.push_back(i->expr);
 		++next;
@@ -75,7 +76,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 		// skip functions without enough parameters
 		if ( func->params().size() < expr->args().size() ) continue;
 
-		// take zero-arg functions iff expr is zero-arg
+		// take zero-param functions iff expr is zero-arg
 		if ( func->params().empty() != expr->args().empty() ) continue;
 
 		// generate forall and parameter/return types for forall
@@ -98,15 +99,14 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 			// TODO account for tuple targets here
 			if ( const PolyType* rPoly = as_safe<PolyType>(rType) ) {
 				if ( ! bindVar( rEnv, bound, rPoly ) ) continue;
-				++rCost.poly;
 			} else {
 				if ( bound->bound ) {
 					if ( ! unify( bound->bound, rType, rCost, rEnv ) ) continue;
 				} else {
 					bindType( rEnv, bound, rType );
-					++rCost.poly;
 				}
 			}
+			++rCost.poly;
 		}
 
 		switch( expr->args().size() ) {
@@ -120,7 +120,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 				     && ! resolveAssertions( resolver, call, rCost, rEnv ) ) 
 					continue;
 				
-				results.push_back( new Interpretation{ call, move(rCost), rEnv } );
+				results.push_back( new Interpretation{ call, rEnv, move(rCost) } );
 			} break;
 			case 1: {
 				// single arg, accept and move up
@@ -138,7 +138,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					     && ! resolveAssertions( resolver, call, sCost, sEnv ) )
 						continue;
 					
-					results.push_back( new Interpretation{ call, move(sCost), sEnv } );
+					results.push_back(
+						new Interpretation{ call, sEnv, move(sCost), move(sub->cost) } );
 				}
 			} break;
 			default: {
@@ -197,7 +198,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					     && ! resolveAssertions( resolver, call, cCost, combo.env ) )
 						continue;
 					
-					results.push_back( new Interpretation{ call, move(cCost), combo.env } );
+					results.push_back(
+						new Interpretation{ call, combo.env, move(cCost), move(combo.cost) } );
 				}
 			} break;
 		}
@@ -227,19 +229,11 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 			if ( sResults.empty() ) continue;
 
 			const Type* keyType = it.key();
-			if ( keyType->size() > targetType->size() ) {
-				// truncate result expressions down for results
-				Cost sCost = Cost::from_safe( keyType->size() - targetType->size() );
-
-				for ( const Interpretation* i : sResults ) {
-					results.push_back( new Interpretation{ 
-						new TruncateExpr{ i->expr, targetType }, 
-						i->cost + sCost, 
-						i->env } );
-				}
-			} else {
-				// just append sResults to overall results
-				results.insert( results.end(), sResults.begin(), sResults.end() );
+			bool trunc = keyType->size() > targetType->size();
+			Cost sCost = trunc ? Cost::from_safe( keyType->size() - targetType->size() ) : Cost{};
+			for ( const Interpretation* i : sResults ) {
+				const TypedExpr* sExpr = trunc ? new TruncateExpr{ i->expr, targetType } : i->expr;
+				results.push_back( new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
 			}
 		}
 	}
@@ -261,12 +255,12 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 					? conv.cost + Cost::from_safe( keyType->size() - targetType->size() )
 					: conv.cost;
 				for ( const Interpretation* i : sResults ) {
-					TypedExpr* sExpr = new CastExpr{ i->expr, &conv };
+					const TypedExpr* sExpr = new CastExpr{ i->expr, &conv };
 					if ( trunc ) {
 						sExpr = new TruncateExpr{ sExpr, conv.from->type };
 					}
 					results.push_back(
-						new Interpretation{ sExpr, i->cost + sCost, i->env } );
+						new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
 				}
 			}
 		}
@@ -287,18 +281,11 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 
 			// truncate expressions to match result type
 			unsigned n = targetType->size();
-			if ( keyType->size() > n ) {
-				Cost tCost = Cost::from_safe( keyType->size() - targetType->size() );
-				for ( const Interpretation* i : sResults ) {
-					results.push_back( new Interpretation{ 
-						new TruncateExpr{ i->expr, n }, 
-						i->cost + tCost, 
-						i->env } );
-				}
-			} else {
-				for ( const Interpretation* i : sResults ) {
-					results.push_back( new Interpretation{ i->expr, i->cost, i->env } );
-				}
+			bool trunc = keyType->size() > n;
+			Cost sCost = trunc ? Cost::from_safe( n - targetType->size() ) : Cost{};
+			for ( const Interpretation* i : sResults ) {
+				const TypedExpr* sExpr = trunc ? new TruncateExpr{ i->expr, n } : i->expr;
+				results.push_back( new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
 			}
 		}
 	}
@@ -310,8 +297,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
                                       Resolver::Mode resolve_mode ) {
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
-		return InterpretationList{
-			new Interpretation{ as<VarExpr>(expr), Cost{}, Env::from(env) } };
+		return InterpretationList{ new Interpretation{ as<VarExpr>(expr), Env::from(env) } };
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>(expr);
 		// find candidates with this function name, skipping if none
@@ -336,7 +322,7 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 			convertTo( targetType, as<VarExpr>(expr), conversions, rEnv, rCost );
 		// return expression if applicable
 		return rExpr 
-			? InterpretationList{ new Interpretation{ rExpr, move(rCost), rEnv } } 
+			? InterpretationList{ new Interpretation{ rExpr, rEnv, move(rCost) } }
 			: InterpretationList{};
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>(expr);

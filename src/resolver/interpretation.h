@@ -10,6 +10,7 @@
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/cast.h"
+#include "data/compare.h"
 #include "data/gc.h"
 #include "data/list.h"
 #include "data/mem.h"
@@ -17,23 +18,26 @@
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {
 	const TypedExpr* expr;  ///< Base expression for interpretation
-	Cost cost;              ///< Cost of interpretation
 	Env* env;               ///< Type variables and assertions bound by this interpretation
+	Cost cost;              ///< Overall cost of interpretation
+	Cost argCost;			///< Summed cost of the interpretation's arguments
 	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0] and environment [default empty]
-	Interpretation( const TypedExpr* expr = nullptr, Cost&& cost = Cost{}, Env* env = nullptr )
-		: expr( expr ), cost( move(cost) ), env( env ) {}
+	Interpretation( const TypedExpr* expr = nullptr, Env* env = nullptr, 
+	                Cost&& cost = Cost{}, Cost&& argCost = Cost{} )
+		: expr(expr), env(env), cost(move(cost)), argCost(move(argCost)) {}
 	
 	/// Fieldwise copy-constructor
-	Interpretation( const TypedExpr* expr, const Cost& cost, const Env* env )
-		: expr( expr ), cost( cost ), env( Env::from( env ) ) {}
+	Interpretation( const TypedExpr* expr, const Env* env, const Cost& cost, const Cost& argCost )
+		: expr(expr), env(Env::from( env )), cost(cost), argCost(argCost) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
 		using std::swap;
 
 		swap(a.expr, b.expr);
 		swap(a.cost, b.cost);
+		swap(a.argCost, b.argCost);
 		swap(a.env, b.env);
 	}
 	
@@ -71,15 +75,39 @@ struct Interpretation : public GC_Object {
 		}
 
 		return new Interpretation{ new AmbiguousExpr{ expr, i->type(), move(alts) }, 
-		                           copy(i->cost) };
+		                           nullptr, copy(i->cost), copy(i->argCost) };
 	}
-
-	/// Orders two interpretations by cost.
-	bool operator< (const Interpretation& o) const { return cost < o.cost; }
 
 protected:
 	virtual void trace(const GC& gc) const { gc << expr << env; }
 };
+
+/// Orders two interpretations by cost
+inline comparison compare(const Interpretation& a, const Interpretation& b) {
+	comparison c;
+	if ( (c = compare(a.cost.unsafe, b.cost.unsafe)) != 0 ) return c;
+	if ( (c = compare(a.cost.poly, b.cost.poly)) != 0 ) return c;
+	if ( (c = compare(getCost(a.env), getCost(b.env))) != 0 ) return c;
+	if ( (c = compare(a.cost.safe, b.cost.safe)) != 0 ) return c;
+	return compare(a.argCost, b.argCost);
+}
+
+/// Orders two interpretations by cost.
+inline bool operator< (const Interpretation& a, const Interpretation& b) {
+	return compare(a, b) < 0;
+}
+
+inline bool operator<= (const Interpretation& a, const Interpretation& b) {
+	return compare(a, b) <= 0;
+}
+
+inline bool operator> (const Interpretation& a, const Interpretation& b) {
+	return compare(a, b) > 0;
+}
+
+inline bool operator>= (const Interpretation& a, const Interpretation& b) {
+	return compare(a, b) >= 0;
+}
 
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	if ( i.expr == nullptr ) return out << "<invalid interpretation>";

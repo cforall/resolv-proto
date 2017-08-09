@@ -29,8 +29,8 @@
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
-                               const Env* outEnv, Resolver::Mode resolve_mode ) {
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env* outEnv, 
+                               Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
 	// find functions with no parameters, skipping remaining checks if none
@@ -56,7 +56,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
 		}
 		
-		results.push_back( new Interpretation{ call, move(cost), env } );
+		// no interpretation with zero arg cost
+		results.push_back( new Interpretation{ call, env, move(cost) } );
 	}
 	
 	return results;
@@ -64,8 +65,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 
 /// Return an interpretation for all single-argument interpretations in funcs
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, 
-                               const Funcs& funcs, InterpretationList&& args, 
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, InterpretationList&& args, 
                                Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 
@@ -88,7 +88,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 				continue;
 
 			// Environment for call bindings
-			Cost cost = arg->cost;
+			Cost cost = arg->cost; // cost for this call
 			Env* env = Env::from( arg->env );
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
@@ -114,7 +114,7 @@ InterpretationList matchFuncs( Resolver& resolver,
 				}
 
 				// create new interpretation for resolved call
-				results.push_back( new Interpretation{ call, move(cost), env } );
+				results.push_back( new Interpretation{ call, env, cost, copy(arg->cost) } );
 			}
 		nextFunc:; }
 	}
@@ -181,7 +181,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			}
 			
 			// create new interpretation for resolved call
-			results.push_back( new Interpretation{ call, move(cost), env } );
+			results.push_back( new Interpretation{ call, env, move(cost), move(combo.first) } );
 		}
 	}
 	
@@ -203,7 +203,13 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
                                       Resolver::Mode resolve_mode ) {
 	InterpretationList results;
 	
-	if ( const FuncExpr* funcExpr = as_safe<FuncExpr>( expr ) ) {
+	auto eid = typeof(expr);
+	if ( eid == typeof<VarExpr>() ) {
+		// do nothing for expressions which are already typed
+		results.push_back( new Interpretation{ as<VarExpr>(expr), Env::from(env) } );
+	} else if ( eid == typeof<FuncExpr>() ) {
+		const FuncExpr* funcExpr = as<FuncExpr>( expr );
+
 		// find candidates with this function name, skipping if none
 		auto withName = funcs.find( funcExpr->name() );
 		if ( withName == funcs.end() ) {
@@ -235,15 +241,11 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 				
 				interpretation_unambiguous valid;
 				auto merged = unsorted_eager_merge<
-					const Interpretation*, Cost, interpretation_cost>( 
-						sub_results, valid );
+					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );
 				
 				results = matchFuncs( *this, withName(), move(merged), resolve_mode );
 			} break;
 		}
-	} else if ( const TypedExpr* typedExpr = as_derived_safe<TypedExpr>( expr ) ) {
-		// do nothing for expressions which are already typed
-		results.push_back( new Interpretation{ typedExpr, Cost{}, Env::from(env) } );
 	} else assert(!"Unsupported expression type");
 	
 	if ( resolve_mode == ALL_NON_VOID ) {

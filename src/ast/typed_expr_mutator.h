@@ -113,7 +113,7 @@ public:
         // copy modified items into output
         if ( last ) {
             const Interpretation* ii = e->alts()[i];
-            alts.push_back( new Interpretation{ last, ii->cost, ii->env } );
+            alts.push_back( new Interpretation{ last, ii->env, ii->cost, ii->argCost } );
         }
         for ( ++i; i < n; ++i ) {
             const Interpretation* ii = e->alts()[i];
@@ -122,7 +122,7 @@ public:
             if ( ei == ii->expr ) {
                 alts.push_back( ii );
             } else if ( ei ) {
-                alts.push_back( new Interpretation{ ei, ii->cost, ii->env } );
+                alts.push_back( new Interpretation{ ei, ii->env, ii->cost, ii->argCost } );
             }
         }
 

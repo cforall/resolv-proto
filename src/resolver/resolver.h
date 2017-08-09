@@ -56,13 +56,11 @@ public:
 	/// Recursively resolve interpretations subject to `env`, expanding conversions if 
 	/// not at the top level. May return ambiguous interpretations, but otherwise will 
 	/// not return invalid interpretations.
-	InterpretationList resolve( const Expr* expr, const Env* env, 
-	                            Mode resolve_mode = ALL_NON_VOID );
+	InterpretationList resolve( const Expr* expr, const Env* env, Mode resolve_mode = ALL_NON_VOID );
 	
 	/// Resolves `expr` as `targetType`, subject to `env`. 
 	/// Returns all interpretations (possibly ambiguous).
-	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, 
-	                                    const Env* env );
+	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, const Env* env );
 
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 

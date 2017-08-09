@@ -1,9 +1,11 @@
 # TODO #
 
 ## Next few days ##
+* Nail down exact semantics of type bindings, type assertions, cost model; cases in convert_amb.in would be a good start, as would distinctions between BU and TD in assertion.in.
 * Look at failing tests
   * higher poly-cost: `multi_type_var`
-  * resolution failure (no conversion on type variable): `assertion`
+    * Looks like it's double-counting the cost of the #b assignment somehow
+  * resolution failure (no conversion on type variable): `assertion`, `convert_amb`
   * resolution failure (tuple): `tuple`
   * out-of-order env: `multi_type_var`
   * out-of-order alts: `convert_amb`
@@ -25,5 +27,4 @@
 * maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
 
 ## Indeterminate Future ##
-* Nail down exact semantics of type bindings, type assertions, cost model; cases in convert_amb.in would be a good start.
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)

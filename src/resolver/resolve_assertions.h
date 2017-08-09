@@ -133,8 +133,7 @@ public:
 			// TODO this visitor should probably be integrated into the resolver; that 
 			//      way the defer-list of assertions can be iterated over at the top 
 			//      level and overly-deep recursive invocations can be caught.
-			InterpretationList satisfying = 
-				resolver.resolveWithType( asnExpr, asn->returns(), env );
+			InterpretationList satisfying = resolver.resolveWithType( asnExpr, asn->returns(), env );
 
 			switch ( satisfying.size() ) {
 				case 0: { // no satisfying assertions: return failure
@@ -190,13 +189,19 @@ public:
 			if ( ! alt_expr ) continue;
 
 			// keep min-cost alternatives
-			if ( min_alts.empty() || alt_cost < min_alts[0]->cost ) {
+			Interpretation* new_alt = 
+				new Interpretation{ alt_expr, alt_env, move(alt_cost), copy(alt->argCost) };
+			if ( min_alts.empty() ) {
+				min_alts.push_back( new_alt );
+			} else switch ( compare( *new_alt, *min_alts[0] ) ) {
+			case lt:
 				min_alts.clear();
-				min_alts.push_back( 
-					new Interpretation{ alt_expr, move(alt_cost), alt_env } );
-			} else if ( alt_cost == min_alts[0]->cost ) {
-				min_alts.push_back(
-					new Interpretation{ alt_expr, move(alt_cost), alt_env } );
+				// fallthrough
+			case eq:
+				min_alts.push_back( new_alt );
+				break;
+			case gt:
+				break;
 			}
 		}
 
@@ -228,8 +233,7 @@ public:
 
 		// attempt to disambiguate deferred assertion matches with additional information
 		auto compatible = 
-			filter_combos<const Interpretation*>( 
-				deferred, interpretation_env_merger{ env } );
+			filter_combos<const Interpretation*>( deferred, interpretation_env_merger{ env } );
 		if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
 		// sort deferred assertion matches by cost
@@ -254,7 +258,7 @@ public:
 				for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 					bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
 				}
-				alts.push_back( new Interpretation{ r, move(alt_cost), alt_env } );
+				alts.push_back( new Interpretation{ r, alt_env, copy(alt_cost) } );
 			} while ( it != minPos );
 			r = new AmbiguousExpr{ r, r->type(), move(alts) };
 		}

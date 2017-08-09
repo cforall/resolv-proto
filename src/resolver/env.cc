@@ -16,18 +16,15 @@
 bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	if ( cbound == nullptr ) return true;
 
-	const TypeClass* rc = &*r;
-	if ( rc->bound == nullptr ) {
-		if ( r.env != this ) {
-			r = { this, copyClass( r ) };
-			rc = &classes[ r.ind ];
-		}
-		as_non_const(rc)->bound = cbound;
+	if ( r->bound == nullptr ) {
+		if ( r.env != this ) { copyClass(r); }
+		classes[r.ind].bound = cbound;
+		++cost.vars;
 		return true;
 	} else {
-		return *rc->bound == *cbound;
-		// TODO: possibly account for safe/unsafe conversions here; would need cost 
-		// information in environment.
+		return *r->bound == *cbound;
+		// TODO possibly account for safe/unsafe conversions here; would need cost information in 
+		// environment.
 	}
 }
 
