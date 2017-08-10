@@ -45,7 +45,12 @@ bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, Env*
     // locate type binding for parameter type
     ClassRef argClass = getClass( env, polyArgType );
     // test for match if class already has representative
-    if ( argClass->bound ) return unify( concParamType, argClass->bound, cost, env );
+    if ( argClass->bound ) {
+        if ( unify( concParamType, argClass->bound, cost, env ) ) {
+            ++cost.poly;
+            return true;
+        } else return false;
+    }
     // otherwise make concrete type the new class representative
     bindType( env, argClass, concParamType );
 
@@ -74,7 +79,12 @@ bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, Env*&
     auto aid = typeof(argType);
     if ( aid == typeof<ConcType>() || aid == typeof<NamedType>() ) {
         // test for match if class already has representative
-        if ( paramClass->bound ) return unify( paramClass->bound, argType, cost, env );
+        if ( paramClass->bound ) {
+            if ( unify( paramClass->bound, argType, cost, env ) ) {
+                ++cost.poly;
+                return true;
+            } else return false;
+        }
         // make concrete type the new class representative
         bindType( env, paramClass, argType );
     } else if ( aid == typeof<PolyType>() ) {

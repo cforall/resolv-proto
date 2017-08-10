@@ -1,8 +1,7 @@
 # TODO #
 
 ## Next few days ##
-* Nail down exact semantics of type bindings, type assertions, cost model; cases in convert_amb.in would be a good start, as would distinctions between BU and TD in assertion.in.
-* Look at failing tests
+* Look at failing tests for top-down resolver
   * higher poly-cost: `multi_type_var`
     * Looks like it's double-counting the cost of the #b assignment somehow
   * resolution failure (no conversion on type variable): `assertion`, `convert_amb`
@@ -27,4 +26,9 @@
 * maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
 
 ## Indeterminate Future ##
+* Refine cost model for assertions
+  * Cases in `convert_amb` would be a good start.
+  * Consider not including assertion costs in cost of resolving parent expression 
+    * i.e. if there is a unique consistent min-cost resolution for all the assertions, take it, but only represent it in the cost tuple as -(#assns).
+    * May need to split -(#generic type specializations) into separate counter if you do this
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)

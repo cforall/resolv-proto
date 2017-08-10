@@ -112,13 +112,19 @@ inline bool operator>= (const Interpretation& a, const Interpretation& b) {
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	if ( i.expr == nullptr ) return out << "<invalid interpretation>";
 	
-	out << "[" << *replace( i.env, i.type() ) << " / " << i.cost << "]";
+	out << "[" << *replace( i.env, i.type() ) << " / (" 
+		<< i.cost.unsafe << "," << i.cost.poly << ",";
+	if ( i.env ) {
+		out << i.env->cost.vars << ",";
+		if ( i.env->cost.assns ) { out << "-" << i.env->cost.assns; } else { out << "0"; }
+	} else { out << "0,0"; }
+	out << "," << i.cost.safe << ")]";
 	if ( i.env ) { out << *i.env; }
 	return out << " " << *i.expr;
 }
 
 /// List of interpretations TODO just inline typedef
-typedef List<Interpretation> InterpretationList;
+using InterpretationList = List<Interpretation>;
 
 /// Functor to extract the cost from an interpretation
 struct interpretation_cost {
