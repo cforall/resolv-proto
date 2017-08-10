@@ -7,6 +7,7 @@
 #include "cost.h"
 #include "env.h"
 
+#include "ast/ast.h"
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/cast.h"
@@ -78,6 +79,24 @@ struct Interpretation : public GC_Object {
 		                           nullptr, copy(i->cost), copy(i->argCost) };
 	}
 
+	/// Print this interpretation, using the named style
+	void write( std::ostream& out, ASTNode::Print style = ASTNode::Print::Default ) const {
+		if ( expr == nullptr ) {
+			out << "<invalid interpretation>";
+			return;
+		}
+	
+		out << "[" << *replace( env, type() ) << " / (" << cost.unsafe << "," << cost.poly << ",";
+		if ( env ) {
+			out << env->cost.vars << ",";
+			if ( env->cost.assns ) { out << "-" << env->cost.assns; } else { out << "0"; }
+		} else { out << "0,0"; }
+		out << "," << cost.safe << ")]";
+		if ( style == ASTNode::Print::Default && env != nullptr ) { out << *env; }
+		out << " ";
+		expr->write(out, style);
+	}
+
 protected:
 	virtual void trace(const GC& gc) const { gc << expr << env; }
 };
@@ -110,17 +129,8 @@ inline bool operator>= (const Interpretation& a, const Interpretation& b) {
 }
 
 inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
-	if ( i.expr == nullptr ) return out << "<invalid interpretation>";
-	
-	out << "[" << *replace( i.env, i.type() ) << " / (" 
-		<< i.cost.unsafe << "," << i.cost.poly << ",";
-	if ( i.env ) {
-		out << i.env->cost.vars << ",";
-		if ( i.env->cost.assns ) { out << "-" << i.env->cost.assns; } else { out << "0"; }
-	} else { out << "0,0"; }
-	out << "," << i.cost.safe << ")]";
-	if ( i.env ) { out << *i.env; }
-	return out << " " << *i.expr;
+	i.write(out);
+	return out;
 }
 
 /// List of interpretations TODO just inline typedef

@@ -8,7 +8,7 @@
 class Args {
 public:
     /// Possible verbosity levels
-    enum class Verbosity { Quiet, Filtered, Default, Verbose };
+    enum class Verbosity { Quiet, Filtered, Testing, Default, Verbose };
     /// Possible filter types
     enum class Filter { None, Invalid, Unambiguous, Resolvable };
 
@@ -61,7 +61,7 @@ private:
     bool is_flag( char f, char s, const char* l ) { return is_flag(f, s) || is_flag(f, l); }
 
     void usage( char* name ) {
-        std::cerr << "Usage: " << name << "[-vq] [--bench] [--filter (invalid|unambiguous|resolvable)] [ infile [ outfile ] ]" << std::endl;
+        std::cerr << "Usage: " << name << "[-vq | --test | --filter (invalid|unambiguous|resolvable)] [--bench] [ infile [ outfile ] ]" << std::endl;
         std::exit(1);
     }
 
@@ -82,6 +82,9 @@ public:
                 filter_ = Filter::None;
             } else if ( is_flag( f, 'q', "quiet" ) ) {
                 verbosity_ = Verbosity::Quiet;
+                filter_ = Filter::None;
+            } else if ( is_flag( f, "test" ) ) {
+                verbosity_ = Verbosity::Testing;
                 filter_ = Filter::None;
             } else if ( is_flag( f, "bench" ) ) {
                 bench_ = true;
@@ -127,6 +130,7 @@ public:
     Verbosity verbosity() const { return verbosity_; }
     bool verbose() const { return verbosity_ == Verbosity::Verbose; }
     bool quiet() const { return verbosity_ == Verbosity::Quiet; }
+    bool testing() const { return verbosity_ == Verbosity::Testing; }
     Filter filter() const { return filter_; }
     bool bench() const { return bench_; }
 };

@@ -2,14 +2,14 @@
 
 ## Next few days ##
 * Look at failing tests for top-down resolver
-  * higher poly-cost: `multi_type_var`
+  * higher poly-cost: `multi_type_var`, etc.
     * Looks like it's double-counting the cost of the #b assignment somehow
   * resolution failure (no conversion on type variable): `assertion`, `convert_amb`
   * resolution failure (tuple): `tuple`
-  * out-of-order env: `multi_type_var`
-  * out-of-order alts: `convert_amb`
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly just take advantage of new Env as GC_Object
+* Write concise-output version of Interpretation printer (elides environment for concision and more comparable tests)
+* Re-write Makefile to make suffixed versions of the rp executables, consistent rp symlink
 * Handle multi-parameter tuple arguments in multi-arg top-down resolver
 
 ## Next few weeks ##
@@ -31,4 +31,5 @@
   * Consider not including assertion costs in cost of resolving parent expression 
     * i.e. if there is a unique consistent min-cost resolution for all the assertions, take it, but only represent it in the cost tuple as -(#assns).
     * May need to split -(#generic type specializations) into separate counter if you do this
+      * Nope, the count of nested assertions to satisfy assertion parameters should be ignored, just count 1 for each assertion parameter.
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)

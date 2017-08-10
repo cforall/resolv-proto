@@ -2,8 +2,8 @@
 
 cd `dirname "${BASH_SOURCE[0]}"`
 
-#ensure renumber works
-make --silent renumber
+#ensure renumber works (not needed with concise printing)
+#make --silent renumber
 
 tests=()
 if [ $# -eq 0 ]; then
@@ -18,7 +18,7 @@ fi
 
 for t in "${tests[@]}"; do
     printf "  %-16s" $t
-    ../rp $t.in | ./renumber > $t.test
+    ../rp --test $t.in > $t.test
     if [ -e $t.out ]; then
         diff $t.{out,test} > $t.diff
         if [ $? -eq 0 ]; then

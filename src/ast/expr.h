@@ -145,15 +145,12 @@ public:
 	const List<Expr>& args() const { return args_; }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
-		out << name_;
-		if ( style != ASTNode::Print::Concise ) {
-			out << "(";
-			for (auto& arg : args_) {
-				out << " ";
-				arg->write( out, style );
-			} 
-			out << " )";
-		}
+		out << name_ << "(";
+		for (auto& arg : args_) {
+			out << " ";
+			arg->write( out, style );
+		} 
+		out << " )";
 	}
 
 protected:
@@ -201,22 +198,18 @@ public:
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << func_->name();
-		if ( style != ASTNode::Print::InputStyle ) {
-			if ( ! func_->tag().empty() ) {
+		if ( style != ASTNode::Print::InputStyle && ! func_->tag().empty() ) {
 				out << "-" << func_->tag();
-			}
 		}
 		if ( style == ASTNode::Print::Default ) {
 			if ( forall_ ) { out << *forall_; }
 		}
-		if ( style != ASTNode::Print::Concise ) {
-			out << "(";
-			for (auto& arg : args_) {
-				out << " "; 
-				arg->write( out, style );
-			}
-			out << " )";
+		out << "(";
+		for (auto& arg : args_) {
+			out << " "; 
+			arg->write( out, style );
 		}
+		out << " )";
 	}
 	
 protected:

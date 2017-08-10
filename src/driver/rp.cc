@@ -42,16 +42,24 @@ int main(int argc, char **argv) {
 			out << "ERROR: no valid resolution for " << *e << std::endl;
 		};
 
-		on_ambiguous = [&out]( const Expr* e, List<Interpretation>::const_iterator i, 
-				List<Interpretation>::const_iterator end ) {
-			out << "ERROR: ambiguous resolution for " << *e << "\n"
-				<< "       candidates are:\n";
+		if ( args.testing() ) {
+			on_ambiguous = [&out]( const Expr* e, List<Interpretation>::const_iterator i, 
+					List<Interpretation>::const_iterator end ) {
+				out << "ERROR: ambiguous resolution for " << *e << std::endl;
+			};
+		} else {
+			on_ambiguous = [&out]( const Expr* e, List<Interpretation>::const_iterator i, 
+					List<Interpretation>::const_iterator end ) {
+				out << "ERROR: ambiguous resolution for " << *e << "\n"
+					<< "       candidates are:\n";
 
-			for(; i != end; ++i) {
-				out << "\n" << **i;
-			}
-			out << std::endl;
-		};
+				for(; i != end; ++i) {
+					out << "\n";
+					(*i)->write( out, ASTNode::Print::Default );
+				}
+				out << std::endl;
+			};
+		}
 
 		on_unbound = [&out]( const Expr* e, const List<TypeClass>& cs ) {
 			out << "ERROR: unbound type variables in " << *e << ":";
@@ -90,6 +98,19 @@ int main(int argc, char **argv) {
 		// loop without printing
 		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
 			resolve( *e );
+		}
+		end = std::clock();
+	} else if ( args.testing() ) {
+		start = std::clock();
+		// loop printing all interpretations concisely
+		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
+			out << "\n";
+			const Interpretation *i = resolve( *e );
+			if ( i->is_valid() ) {
+				i->write( out, ASTNode::Print::Concise );
+				out << std::endl;
+				*e = i->expr;
+			}
 		}
 		end = std::clock();
 	} else if ( args.filter() != Args::Filter::None ) {
