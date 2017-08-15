@@ -13,6 +13,8 @@
 #include "data/list.h"
 #include "data/mem.h"
 
+#include "resolver/cost.h"
+
 /// A resolver declaration
 class Decl : public ASTNode {
 public:
@@ -82,6 +84,9 @@ public:
 	const List<Type>& params() const { return params_; }
 	const Type* returns() const { return returns_; }
 	const Forall* forall() const { return forall_.get(); }
+
+	/// The cost of this function's forall clause, if any
+	Cost poly_cost() const { return forall_ ? cost_of( *forall_ ) : Cost::zero(); }
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		if ( style != ASTNode::Print::Concise ) {

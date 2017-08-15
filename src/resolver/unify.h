@@ -55,6 +55,7 @@ bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, Env*
     bindType( env, argClass, concParamType );
 
     ++cost.poly;  // poly-cost for global type variable binding
+    // ++cost.vars;
     return true;
 }
 
@@ -84,16 +85,23 @@ bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, Env*&
                 ++cost.poly;
                 return true;
             } else return false;
+        } else {
+            // make concrete type the new class representative
+            bindType( env, paramClass, argType );
+            ++cost.poly;
+            // ++cost.vars;
+            return true;
         }
-        // make concrete type the new class representative
-        bindType( env, paramClass, argType );
     } else if ( aid == typeof<PolyType>() ) {
         // add polymorphic type to type class
-        if ( ! bindVar( env, paramClass, as<PolyType>(argType) ) ) return false;
+        if ( bindVar( env, paramClass, as<PolyType>(argType) ) ) {
+            cost.poly += 2; // count binding from argument and to parameter
+            // ++cost.vars;
+            return true;
+        } else return false;
     } else assert(!"Unhandled argument type");
     
-    ++cost.poly;  // poly-cost for global type variable binding
-    return true;
+    return false; // unreachable
 }
 
 bool unify(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
@@ -127,6 +135,7 @@ bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env
         } else return false;
     } else if ( pid == typeof<PolyType>() ) {
         if ( unify( as<PolyType>(paramType), argType->types()[0], cost, env ) ) {
+            cost.poly += 1;
             cost.safe += argType->size() - 1;
             return true;
         } else return false;
@@ -144,6 +153,7 @@ bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env
         for ( unsigned i = argType->size(); i < tParam->size(); ++i ) {
             if ( const PolyType* pEl = as_safe<PolyType>(tParam->types()[i]) ) {
                 insertVar( env, pEl );
+                ++cost.poly;
             }
         }
 

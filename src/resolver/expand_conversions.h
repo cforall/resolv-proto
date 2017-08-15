@@ -145,13 +145,14 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 
 /// Attempts to bind a typeclass r to the concrete type conc in the current environment, 
 /// returning true if successful
-bool classBinds( ClassRef r, const Type* conc, Env*& env ) {
+bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
     // test for match if class already has a representative.
     // TODO this is a restriction to exact polymorphic type binding, but loosening it 
     //      would be non-trivial; [ or maybe I just call convertTo here... ]
     if ( r->bound ) return *r->bound == *conc;
     // otherwise make concrete class the new typeclass representative
     bindType( env, r, conc );
+    // ++cost.vars;
     return true;
 }
 
@@ -180,7 +181,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
         } else if ( tid == typeof<PolyType>() ) {
             // test for match if target typeclass already has representative
             ClassRef tclass = getClass( env, as<PolyType>(ttype) );
-            if ( classBinds( tclass, etype, env ) ) {
+            if ( classBinds( tclass, etype, env, cost ) ) {
                 ++cost.poly;
                 return expr;
             } else return nullptr;
@@ -197,7 +198,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
 
         if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() ) {
             // attempt to bind polymorphic return type to concrete paramter
-            if ( classBinds( eclass, ttype, env ) ) {
+            if ( classBinds( eclass, ttype, env, cost ) ) {
                 ++cost.poly;
                 return expr;
             } else return nullptr;

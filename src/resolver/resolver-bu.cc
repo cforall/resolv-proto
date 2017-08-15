@@ -46,7 +46,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		// skip functions returning no values, unless at top level
 		if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
 
-		Cost cost; // initialized to zero
+		Cost cost = func->poly_cost();
 		Env* env = Env::from( outEnv );
 		
 		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
@@ -88,7 +88,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 				continue;
 
 			// Environment for call bindings
-			Cost cost = arg->cost; // cost for this call
+			Cost cost = func->poly_cost() + arg->cost; // cost for this call
 			Env* env = Env::from( arg->env );
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
@@ -163,7 +163,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 				continue;
 			
 			// Environment for call bindings
-			Cost cost = combo.first;
+			Cost cost = func->poly_cost() + combo.first;
 			Env* env = nullptr; // initialized by unifyList()
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 

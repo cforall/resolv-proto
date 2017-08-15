@@ -75,7 +75,6 @@ class Env final : public GC_Object {
 
 public:
 	const Env* parent;       ///< Environment this inherits bindings from
-	EnvCost cost;            ///< Summed cost of the bindings in this environment
 
 	/// Finds the binding reference for this polytype, { nullptr, _ } for none such.
 	/// Updates the local map with the binding, if found.
@@ -101,23 +100,23 @@ private:
 		return false;
 	}
 
-	/// Resets the environment cost from direct calculation
-	void recost() {
-		SeenTypes seen{};
-		cost = EnvCost{};  // reset cost
+	// /// Resets the environment cost from direct calculation
+	// void recost() {
+	// 	SeenTypes seen{};
+	// 	cost = EnvCost{};  // reset cost
 
-		for (const Env* crnt = this; crnt; crnt = crnt->parent ) {
-			for ( const TypeClass& c : crnt->classes ) {
-				// skip seen typeclasses
-				if ( seenAny( seen, c ) ) continue;
-				// count bound variables
-				cost.vars += c.vars.size() - 1;
-				if ( c.bound ) ++cost.vars;
-			}
-			// count local type assertions
-			cost.assns += crnt->localAssns;
-		}
-	}
+	// 	for (const Env* crnt = this; crnt; crnt = crnt->parent ) {
+	// 		for ( const TypeClass& c : crnt->classes ) {
+	// 			// skip seen typeclasses
+	// 			if ( seenAny( seen, c ) ) continue;
+	// 			// count bound variables
+	// 			cost.vars += c.vars.size() - 1;
+	// 			if ( c.bound ) ++cost.vars;
+	// 		}
+	// 		// count local type assertions
+	// 		cost.assns += crnt->localAssns;
+	// 	}
+	// }
 
 	/// Inserts a new typeclass, consisting of a single var (should not be present).
 	void insert( const PolyType* v ) {
@@ -147,7 +146,6 @@ private:
 	void addToClass( std::size_t rid, const PolyType* v ) {
 		classes[ rid ].vars.push_back( v );
 		bindings[ v ] = { this, rid };
-		++cost.vars;
 	}
 
 	/// Makes cbound the bound of r in this environment, returning false if incompatible.
@@ -168,8 +166,6 @@ private:
 			// overlap
 			rc.vars.insert( rc.vars.end(), sc.vars.begin(), sc.vars.end() );
 			for ( const PolyType* v : sc.vars ) { bindings[v] = r; }
-			// note cost increase if needed (+1 for var-to-var binding, -1 if sc bound eliminated)
-			if ( ! sc.bound ) { ++cost.vars; }
 			// remove s from local class-list
 			std::size_t victim = classes.size() - 1;
 			if ( s.ind != victim ) {
@@ -237,35 +233,32 @@ public:
 
 	/// Constructs a brand new environment with a single class containing only var
 	Env( const PolyType* var ) 
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost()
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr)
 		{ insert( var ); }
 
 	/// Constructs a brand new environment with a single bound class
 	Env( ClassRef& r, const Type* sub = nullptr )
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost() {
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
 		copyClass(r);
 		classes.front().bound = sub;
-		recost();
 	}
 	
 	/// Constructs a brand new environment with a single class with an added type variable
 	Env( ClassRef& r, const PolyType* var )
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost() {
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
 		copyClass(r);
 		if ( ! bindings.count( var ) ) { addToClass(0, var); }
-		recost();
 	}
 	
 	/// Constructs a brand new environment with a single class
 	Env( ClassRef& r, std::nullptr_t )
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr), cost() {
+			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
 		copyClass(r);
-		recost();
 	}
 
 	/// Shallow copy, just sets parent of new environment
 	Env( const Env& o )
-		: classes(), bindings(), assns(), localAssns(0), parent(o.getNonempty()), cost(o.cost) {}
+		: classes(), bindings(), assns(), localAssns(0), parent(o.getNonempty()) {}
 
 	/// Deleted to avoid the possibility of environment cycles.
 	Env& operator= ( const Env& o ) = delete;
@@ -319,7 +312,6 @@ public:
 	void bindType( ClassRef& r, const Type* sub ) {
 		if ( r.env != this ) { copyClass( r ); }
 		classes[ r.ind ].bound = sub;
-		++cost.vars;
 	}
 
 	/// Binds the type variable into to the given class; returns false if the 
@@ -342,7 +334,6 @@ public:
 	void bindAssertion( const FuncDecl* f, const TypedExpr* assn ) {
 		assns.emplace( f, assn );
 		++localAssns;
-		++cost.assns;
 	}
 
 	/// Merges the target environment with this one.
@@ -411,7 +402,6 @@ public:
 		// merge parents
 		if ( o.parent && ! merge( *o.parent, move(seen), false ) ) return false;
 		
-		recost();
 		return true;
 	}
 
@@ -553,9 +543,6 @@ inline bool merge( Env*& a, const Env* b ) {
 inline const Env* getNonempty( const Env* env ) {
 	return env ? env->getNonempty() : nullptr;
 }
-
-/// Gets cost, or zero cost if null
-inline EnvCost getCost( const Env* env ) { return env ? env->cost : EnvCost{}; }
 
 /// Returns child, flattened so that it doesn't inherit from parent.
 /// child should be a descendant of parent.

@@ -142,7 +142,7 @@ public:
 				} case 1: { // unique satisfying assertion: add to environment
 					const Interpretation* s = satisfying.front();
 					merge( env, s->env );
-					cost += s->cost;
+					// ++cost.spec;
 					bindAssertion( env, asn, s->expr );
 					break;
 				} default: { // multiple satisfying assertions: defer evaluation
@@ -173,7 +173,7 @@ public:
 		for ( const Interpretation* alt : e->alts() ) {
 			const TypedExpr* alt_expr = alt->expr;
 			const TypedExpr* alt_bak = alt_expr;
-			Cost alt_cost = cost + alt->cost;
+			Cost alt_cost = Cost::zero();
 			Env* alt_env = Env::from( env );
 			// skip alternatives that can't be resolved in the current environment
 			if ( ! merge( alt_env, alt->env ) ) {
@@ -211,11 +211,10 @@ public:
 			return true;
 		}
 
-		cost = min_alts[0]->cost;
-
 		// unique min disambiguates expression
 		if ( min_alts.size() == 1 ) {
-			merge( env, min_alts[0]->env );
+			env = min_alts[0]->env;
+			// ++cost.spec;
 			r = min_alts.front()->expr;
 			return true;
 		}
@@ -240,26 +239,25 @@ public:
 		interpretation_env_coster costs;
 		auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
 		if ( minPos == compatible.begin() ) {  // unique min-cost
-			// NOTE env is a parent of minPos->first, so we can't just set 
-			//      env = minPos->first, but need to merge in the child parts
-			// TODO write flatten( env, parent ) -> new_env method for this case
-			merge( env, minPos->first );
-			cost += costs.get( *minPos );
+			env = minPos->first;
+			// cost.spec += deferIds.size(); // count assertions bound in this combination
 			for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 				bindAssertion( env, deferIds[i], minPos->second[i]->expr );
 			}
 		} else {  // ambiguous min-cost assertion matches
 			List<Interpretation> alts;
-			Cost alt_cost = cost + costs.get( *minPos );
+			Cost alt_cost = costs.get( *minPos );
+			// cost.spec += deferIds.size();
 			auto it = compatible.begin();
-			do {
+			while (true) {
 				// build an interpretation for each compatible min-cost assertion binding
 				Env* alt_env = it->first;
 				for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 					bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
 				}
 				alts.push_back( new Interpretation{ r, alt_env, copy(alt_cost) } );
-			} while ( it != minPos );
+				if ( it == minPos ) break; else ++it;
+			}
 			r = new AmbiguousExpr{ r, r->type(), move(alts) };
 		}
 

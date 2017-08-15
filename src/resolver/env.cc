@@ -19,7 +19,6 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	if ( r->bound == nullptr ) {
 		if ( r.env != this ) { copyClass(r); }
 		classes[r.ind].bound = cbound;
-		++cost.vars;
 		return true;
 	} else {
 		return *r->bound == *cbound;

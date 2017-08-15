@@ -86,12 +86,7 @@ struct Interpretation : public GC_Object {
 			return;
 		}
 	
-		out << "[" << *replace( env, type() ) << " / (" << cost.unsafe << "," << cost.poly << ",";
-		if ( env ) {
-			out << env->cost.vars << ",";
-			if ( env->cost.assns ) { out << "-" << env->cost.assns; } else { out << "0"; }
-		} else { out << "0,0"; }
-		out << "," << cost.safe << ")]";
+		out << "[" << *replace( env, type() ) << " / " << cost << "]";
 		if ( style == ASTNode::Print::Default && env != nullptr ) { out << *env; }
 		out << " ";
 		expr->write(out, style);
@@ -104,10 +99,7 @@ protected:
 /// Orders two interpretations by cost
 inline comparison compare(const Interpretation& a, const Interpretation& b) {
 	comparison c;
-	if ( (c = compare(a.cost.unsafe, b.cost.unsafe)) != 0 ) return c;
-	if ( (c = compare(a.cost.poly, b.cost.poly)) != 0 ) return c;
-	if ( (c = compare(getCost(a.env), getCost(b.env))) != 0 ) return c;
-	if ( (c = compare(a.cost.safe, b.cost.safe)) != 0 ) return c;
+	if ( (c = compare(a.cost, b.cost)) != 0 ) return c;
 	return compare(a.argCost, b.argCost);
 }
 

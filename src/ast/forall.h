@@ -7,6 +7,8 @@
 #include "data/gc.h"
 #include "data/mem.h"
 
+#include "resolver/cost.h"
+
 class FuncDecl;
 class PolyType;
 
@@ -54,5 +56,10 @@ public:
 	/// true iff no variables or assertions
 	bool empty() const { return vars.empty() && assns.empty(); }
 };
+
+/// Generates the polymorphism cost of this forall clause in terms of type variables and assertions
+inline Cost cost_of( const Forall& f ) {
+	return { 0, 0, (Cost::Element)f.variables().size(), (Cost::Element)f.assertions().size(), 0 };
+}
 
 std::ostream& operator<< (std::ostream&, const Forall&);
