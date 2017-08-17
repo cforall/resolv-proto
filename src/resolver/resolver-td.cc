@@ -65,7 +65,7 @@ template<typename Funcs>
 InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs, 
                                  const FuncExpr* expr, const Env* env, 
                                  Resolver::Mode resolve_mode = Resolver::ALL_NON_VOID, 
-								 ClassRef bound = {} ) {
+								 const PolyType* boundType = nullptr ) {
 	InterpretationList results{};
 	
 	for ( const FuncDecl* func : funcs ) {
@@ -93,20 +93,10 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 		}
 
 		// make new environment for child resolution, binding function return type
-		Cost rCost;
+		Cost rCost = func->poly_cost();
 		Env* rEnv = Env::from(env);
-		if ( bound ) {
-			// TODO account for tuple targets here
-			if ( const PolyType* rPoly = as_safe<PolyType>(rType) ) {
-				if ( ! bindVar( rEnv, bound, rPoly ) ) continue;
-			} else {
-				if ( bound->bound ) {
-					if ( ! unify( bound->bound, rType, rCost, rEnv ) ) continue;
-				} else {
-					bindType( rEnv, bound, rType );
-				}
-			}
-			++rCost.poly;
+		if ( boundType ) {
+			if ( ! unify( boundType, rType, rCost, rEnv ) ) continue;
 		}
 
 		switch( expr->args().size() ) {
@@ -216,7 +206,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 /// `bound` if a valid ref
 InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, 
                               const FuncExpr* expr, const Type* targetType, 
-							  const Env* env, ClassRef bound = {} ) {
+							  const Env* env, const PolyType* boundType = nullptr ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
 	
@@ -225,12 +215,13 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
-					resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, bound );
+					resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, boundType );
 			if ( sResults.empty() ) continue;
 
 			const Type* keyType = it.key();
 			bool trunc = keyType->size() > targetType->size();
-			Cost sCost = trunc ? Cost::from_safe( keyType->size() - targetType->size() ) : Cost{};
+			Cost sCost = Cost::zero();
+			if ( trunc ) { sCost += Cost::from_safe( keyType->size() - targetType->size() ); }
 			for ( const Interpretation* i : sResults ) {
 				const TypedExpr* sExpr = trunc ? new TruncateExpr{ i->expr, targetType } : i->expr;
 				results.push_back( new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
@@ -245,15 +236,14 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 			for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 				// results for all the functions with that type
 				InterpretationList sResults = resolveToAny(
-					resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, bound );
+					resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, boundType );
 				if ( sResults.empty() ) continue;
 
 				// cast and perhaps truncate expressions to match result type
 				const Type* keyType = it.key();
 				bool trunc = keyType->size() > conv.from->type->size();
-				Cost sCost = trunc
-					? conv.cost + Cost::from_safe( keyType->size() - targetType->size() )
-					: conv.cost;
+				Cost sCost = conv.cost;
+				if ( trunc ) { sCost += Cost::from_safe( keyType->size() - targetType->size() ); }
 				for ( const Interpretation* i : sResults ) {
 					const TypedExpr* sExpr = new CastExpr{ i->expr, &conv };
 					if ( trunc ) {
@@ -266,7 +256,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 		}
 	}
 
-	// Ditto above for anything with a polymorphic return type, +(0,1,0) cost
+	// Ditto above for anything with a polymorphic return type
 	auto polys = funcIndex.get_poly_maps( targetType );
 	// skip exact concrete match
 	if ( polys.begin() != polys.end() && polys.begin().is_concrete() ) { ++polys; }
@@ -276,13 +266,14 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
-				resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, bound );
+				resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, boundType );
 			if ( sResults.empty() ) continue;
 
 			// truncate expressions to match result type
 			unsigned n = targetType->size();
 			bool trunc = keyType->size() > n;
-			Cost sCost = trunc ? Cost::from_safe( n - targetType->size() ) : Cost{};
+			Cost sCost = Cost::zero();
+			if ( trunc ) { sCost += Cost::from_safe( n - targetType->size() ); }
 			for ( const Interpretation* i : sResults ) {
 				const TypedExpr* sExpr = trunc ? new TruncateExpr{ i->expr, n } : i->expr;
 				results.push_back( new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
@@ -335,9 +326,9 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 			Env* rEnv = Env::from( env );
 			ClassRef pClass = getClass( rEnv, pTarget );
 			return ( pClass->bound )
-				? resolveTo( *this, withName(), funcExpr, pClass->bound, rEnv, pClass )
+				? resolveTo( *this, withName(), funcExpr, pClass->bound, rEnv, pTarget )
 				: resolveToAny( *this, withName(), funcExpr, rEnv, 
-						is<VoidType>(targetType) ? TOP_LEVEL : ALL_NON_VOID, pClass );
+						is<VoidType>(targetType) ? TOP_LEVEL : ALL_NON_VOID, pTarget );
 		} else {
 			// monomorphic return; look for matching options
 			return resolveTo( *this, withName(), funcExpr, targetType, env );
