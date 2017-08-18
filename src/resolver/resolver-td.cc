@@ -38,7 +38,7 @@ struct ArgPack {
 	
 	/// Update ArgPack with new interpretation for next arg
 	ArgPack(const ArgPack& old, const Interpretation* i)
-		: env( Env::from(i->env) ), cost(old.cost + i->cost), argCost(old.argCost + i->cost), 
+		: env( Env::from(i->env) ), cost(old.cost + i->cost), argCost(old.argCost + i->argCost), 
 		  args(old.args), crnt(nullptr), on_last(0), next(old.next) {
 		if ( old.crnt ) { args.push_back(old.crnt); }
 		args.push_back(i->expr);
@@ -129,7 +129,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						continue;
 					
 					results.push_back(
-						new Interpretation{ call, sEnv, move(sCost), move(sub->cost) } );
+						new Interpretation{ call, sEnv, move(sCost), move(sub->argCost) } );
 				}
 			} break;
 			default: {
@@ -189,7 +189,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						continue;
 					
 					results.push_back(
-						new Interpretation{ call, combo.env, move(cCost), move(combo.cost) } );
+						new Interpretation{ call, combo.env, move(cCost), move(combo.argCost) } );
 				}
 			} break;
 		}

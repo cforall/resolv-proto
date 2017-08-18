@@ -86,7 +86,7 @@ struct Interpretation : public GC_Object {
 			return;
 		}
 	
-		out << "[" << *replace( env, type() ) << " / " << cost << "]";
+		out << "[" << *replace( env, type() ) << " / " << cost /*<< ":" << argCost*/ << "]";
 		if ( style == ASTNode::Print::Default && env != nullptr ) { out << *env; }
 		out << " ";
 		expr->write(out, style);
