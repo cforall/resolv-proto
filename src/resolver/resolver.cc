@@ -28,7 +28,7 @@ public:
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	id_src = 0;  // initialize type variable IDs
 
-	InterpretationList results = resolve( expr, nullptr, Resolver::TOP_LEVEL );
+	InterpretationList results = resolve( expr, nullptr, Mode::top_level() );
 	
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {

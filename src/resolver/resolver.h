@@ -10,6 +10,7 @@
 
 #include "ast/expr.h"
 #include "ast/type.h"
+#include "data/cast.h"
 #include "data/mem.h"
 
 /// Effect to run on invalid interpretation; argument is the expression which 
@@ -45,18 +46,39 @@ public:
 	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound )
 		: conversions( conversions ), funcs( funcs ), id_src(0),
 		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
-	
-	/// Mode for type conversions
-	enum Mode {
-		NO_CONVERSIONS,  ///< Do not expand interpretations or allow void interpretations
-		TOP_LEVEL,       ///< Do not expand interpretations; allow void interpretations
-		ALL_NON_VOID     ///< Expand interpretations to all non-void types
+
+	/// Flags for interpretation mode
+	class Mode {
+		constexpr Mode(bool ec, bool av, bool ca)
+			: expand_conversions(ec), allow_void(av), check_assertions(ca) {}
+	public:
+		/// Should interpretations be expanded by their conversions? [true]
+		const bool expand_conversions;
+		/// Should interpretations with void type be allowed? [false]
+		const bool allow_void;
+		/// Should assertions be checked? [false]
+		const bool check_assertions;
+
+		/// Default flags
+		constexpr Mode() : expand_conversions(true), allow_void(false), check_assertions(false) {}
+
+		/// Flags for top-level resolution
+		static constexpr Mode top_level() { return { false, true, true }; }
+
+		/// Turn off expand_conversions
+		Mode& without_conversions() { as_non_const(expand_conversions) = false; return *this; }
+		/// Turn on allow_void
+		Mode& with_void() { as_non_const(allow_void) = true; return *this; }
+		/// Conditionally turn on allow_void
+		Mode& with_void_if( bool av ) { as_non_const(allow_void) = av; return *this; }
+		/// Turn on check_assertions
+		Mode& with_assertions() { as_non_const(check_assertions) = true; return *this; }
 	};
 
 	/// Recursively resolve interpretations subject to `env`, expanding conversions if 
 	/// not at the top level. May return ambiguous interpretations, but otherwise will 
 	/// not return invalid interpretations.
-	InterpretationList resolve( const Expr* expr, const Env* env, Mode resolve_mode = ALL_NON_VOID );
+	InterpretationList resolve( const Expr* expr, const Env* env, Mode resolve_mode = {} );
 	
 	/// Resolves `expr` as `targetType`, subject to `env`. 
 	/// Returns all interpretations (possibly ambiguous).

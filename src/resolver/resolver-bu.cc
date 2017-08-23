@@ -44,7 +44,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 	// attempt to match functions to arguments
 	for ( const FuncDecl* func : withNParams() ) {
 		// skip functions returning no values, unless at top level
-		if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) continue;
+		if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
 		Cost cost = func->poly_cost();
 		Env* env = Env::from( outEnv );
@@ -52,9 +52,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
 
 		// check type assertions if at top level
-		if ( resolve_mode == Resolver::TOP_LEVEL ) {
-			if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
-		}
+		if ( resolve_mode.check_assertions && ! resolveAssertions( resolver, call, cost, env ) ) 
+			continue;
 		
 		// no interpretation with zero arg cost
 		results.push_back( new Interpretation{ call, env, move(cost) } );
@@ -84,8 +83,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 		// attempt to match functions to arguments
 		for ( const FuncDecl* func : withNParams() ) {
 			// skip functions returning no values, unless at top level
-			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) 
-				continue;
+			if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
 			// Environment for call bindings
 			Cost cost = func->poly_cost() + arg->cost; // cost for this call
@@ -109,9 +107,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 					new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(forall) };
 
 				// check type assertions if at top level
-				if ( resolve_mode == Resolver::TOP_LEVEL ) {
-					if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
-				}
+				if ( resolve_mode.check_assertions 
+					 && ! resolveAssertions( resolver, call, cost, env ) ) continue;
 
 				// create new interpretation for resolved call
 				results.push_back( new Interpretation{ call, env, cost, copy(arg->cost) } );
@@ -159,8 +156,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		// attempt to match functions to arguments
 		for ( const FuncDecl* func : withNParams() ) {
 			// skip functions returning no values unless at top level
-			if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) 
-				continue;
+			if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 			
 			// Environment for call bindings
 			Cost cost = func->poly_cost() + combo.first;
@@ -176,9 +172,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 				new CallExpr{ func, argsFrom( combo.second ), move(forall) };
 
 			// check type assertions if at top level
-			if ( resolve_mode == Resolver::TOP_LEVEL ) {
-				if ( ! resolveAssertions( resolver, call, cost, env ) ) continue;
-			}
+			if ( resolve_mode.check_assertions && ! resolveAssertions( resolver, call, cost, env ) ) 
+				continue;
 			
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation{ call, env, move(cost), move(combo.first) } );
@@ -248,7 +243,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 		}
 	} else assert(!"Unsupported expression type");
 	
-	if ( resolve_mode == ALL_NON_VOID ) {
+	if ( resolve_mode.expand_conversions ) {
 		expandConversions( results, conversions );
 	}
 	
@@ -257,6 +252,6 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
 	                                          const Env* env ) {
-	Mode resolve_mode = is<VoidType>(targetType) ? TOP_LEVEL : NO_CONVERSIONS;
+	Mode resolve_mode = Mode{}.without_conversions().with_void_if( is<VoidType>(targetType) );
 	return convertTo( targetType, resolve( expr, env, resolve_mode ), conversions );
 }

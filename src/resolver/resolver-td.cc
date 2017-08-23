@@ -46,6 +46,8 @@ struct ArgPack {
 	}
 };
 
+
+
 /// key type for argument cache
 using ArgKey = std::pair<const Expr*, const Env*>;
 
@@ -64,14 +66,13 @@ namespace std {
 template<typename Funcs>
 InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs, 
                                  const FuncExpr* expr, const Env* env, 
-                                 Resolver::Mode resolve_mode = Resolver::ALL_NON_VOID, 
+                                 Resolver::Mode resolve_mode = {}, 
 								 const PolyType* boundType = nullptr ) {
 	InterpretationList results{};
 	
 	for ( const FuncDecl* func : funcs ) {
 		// skip void-returning functions unless at top level
-		if ( resolve_mode != Resolver::TOP_LEVEL && func->returns()->size() == 0 ) 
-			continue;
+		if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
 		// skip functions without enough parameters
 		if ( func->params().size() < expr->args().size() ) continue;
@@ -106,9 +107,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					new CallExpr{ func, List<TypedExpr>{}, move(rForall), rType };
 				
 				// check assertions if at top level
-				if ( resolve_mode == Resolver::TOP_LEVEL 
-				     && ! resolveAssertions( resolver, call, rCost, rEnv ) ) 
-					continue;
+				if ( resolve_mode.check_assertions 
+					 && ! resolveAssertions( resolver, call, rCost, rEnv ) ) continue;
 				
 				results.push_back( new Interpretation{ call, rEnv, move(rCost) } );
 			} break;
@@ -124,9 +124,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					Env* sEnv = Env::from( sub->env );
 					
 					// check assertions if at top level
-					if ( resolve_mode == Resolver::TOP_LEVEL 
-					     && ! resolveAssertions( resolver, call, sCost, sEnv ) )
-						continue;
+					if ( resolve_mode.check_assertions 
+						 && ! resolveAssertions( resolver, call, sCost, sEnv ) ) continue;
 					
 					results.push_back(
 						new Interpretation{ call, sEnv, move(sCost), move(sub->argCost) } );
@@ -195,7 +194,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 		}
 	}
 
-	if ( resolve_mode == Resolver::ALL_NON_VOID ) {
+	if ( resolve_mode.expand_conversions ) {
 		expandConversions( results, resolver.conversions );
 	}
 
@@ -215,7 +214,8 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
-					resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, boundType );
+					resolver, it.get(), expr, env, Resolver::Mode{}.without_conversions(), 
+					boundType );
 			if ( sResults.empty() ) continue;
 
 			const Type* keyType = it.key();
@@ -236,7 +236,8 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 			for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 				// results for all the functions with that type
 				InterpretationList sResults = resolveToAny(
-					resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, boundType );
+					resolver, it.get(), expr, env, Resolver::Mode{}.without_conversions(), 
+					boundType );
 				if ( sResults.empty() ) continue;
 
 				// cast and perhaps truncate expressions to match result type
@@ -266,7 +267,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
-				resolver, it.get(), expr, env, Resolver::NO_CONVERSIONS, boundType );
+				resolver, it.get(), expr, env, Resolver::Mode{}.without_conversions(), boundType );
 			if ( sResults.empty() ) continue;
 
 			// truncate expressions to match result type
@@ -328,7 +329,7 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 			return ( pClass->bound )
 				? resolveTo( *this, withName(), funcExpr, pClass->bound, rEnv, pTarget )
 				: resolveToAny( *this, withName(), funcExpr, rEnv, 
-						is<VoidType>(targetType) ? TOP_LEVEL : ALL_NON_VOID, pTarget );
+						Mode{}.with_void_if( is<VoidType>(targetType) ), pTarget );
 		} else {
 			// monomorphic return; look for matching options
 			return resolveTo( *this, withName(), funcExpr, targetType, env );
