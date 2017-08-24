@@ -94,9 +94,14 @@ public:
 	}
 
 private:
+	/// marks a type as seen; true iff the type has already been marked
+	static bool markedSeen( SeenTypes& seen, const PolyType* v ) {
+		return seen.insert( v ).second == false;
+	}
+	
 	/// true iff any of the types in c have been seen already; adds types in c to seen
-	static bool seenAny(SeenTypes& seen, const TypeClass& c) {
-		for ( const PolyType* v : c.vars ) if ( seen.insert( v ).second == false ) return true;
+	static bool seenAny( SeenTypes& seen, const TypeClass& c ) {
+		for ( const PolyType* v : c.vars ) if ( markedSeen( seen, v ) ) return true;
 		return false;
 	}
 
@@ -267,6 +272,9 @@ public:
 	/// If the given environment is null, so will be the new one.
 	static Env* from( const Env* env ) { return env ? new Env{ *env } : nullptr; }
 
+	/// Gets a nullptr for an unintialized environment
+	static constexpr Env* none() { return nullptr; }
+
 	/// Inserts a type variable if it doesn't already exist in the environment.
 	/// Returns false if already present.
 	bool insertVar( const PolyType* orig ) {
@@ -351,8 +359,7 @@ public:
 			ClassRef r{};  // typeclass in this environment
 
 			for ( i = 0; i < n; ++i ) {
-				// mark variable as seen; skip if already seen
-				if ( seen.insert( c.vars[i] ).second == false ) continue;
+				if ( markedSeen( seen, c.vars[i] ) ) continue;
 				// look for first existing bound variable
 				r = findRef( c.vars[i] );
 				if ( r ) break;
@@ -366,10 +373,8 @@ public:
 				for ( std::size_t j = 0; j < i; ++j ) addToClass( r.ind, c.vars[j] );
 				// merge subsequent variables into this class
 				while ( ++i < n ) {
-					// mark variable as seen; skip if already seen
-					if ( seen.insert( c.vars[i] ).second == false ) continue;
-					// copy unbound variables into this class, skipping ones already 
-					// bound to it
+					if ( markedSeen( seen, c.vars[i] ) ) continue;
+					// copy unbound variables into this class, skipping ones already bound to it
 					ClassRef rr = findRef( c.vars[i] );
 					if ( ! rr ) {
 						// unbound; safe to add
@@ -414,12 +419,9 @@ public:
 		for (const Env* crnt = this; crnt != p; crnt = crnt->parent) {
 			// loop through classes, copying those not previously seen
 			for ( unsigned i = 0; i < crnt->classes.size(); ++i ) {
-				bool add = true;
-				for ( const PolyType* v : crnt->classes[i].vars ) {
-					// skip class if already seen any included var
-					if ( seen.insert( v ).second == false ) { add = false; break; }
+				if ( ! seenAny( seen, crnt->classes[i] ) ) {
+					env->copyClass( ClassRef{ crnt, i } );
 				}
-				if ( add ) { env->copyClass( ClassRef{ crnt, i } ); }
 			}
 
 			// loop through assertions, copying any seen
@@ -451,10 +453,16 @@ inline const TypeClass& ClassRef::operator* () const {
 	return env->classes[ ind ];
 }
 
+/// Finds the typeclass for a given type variable, empty if no such type variable exists
+inline ClassRef findClass( const Env* env, const PolyType* pty ) {
+	if ( ! env ) return {};
+	return env->findRef( pty );
+}
+
 /// Gets the typeclass for a given type variable, inserting it if necessary.
-inline ClassRef getClass( Env*& env, const PolyType* orig ) {
+inline ClassRef getClass( Env*& env, const PolyType* pty ) {
 	if ( ! env ) { env = new Env{}; }
-	return env->getClass( orig );
+	return env->getClass( pty );
 }
 
 // TODO consider having replace return the first PolyType in a class as a unique representative

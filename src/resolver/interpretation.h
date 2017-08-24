@@ -125,7 +125,7 @@ inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 	return out;
 }
 
-/// List of interpretations TODO just inline typedef
+/// List of interpretations
 using InterpretationList = List<Interpretation>;
 
 /// Functor to extract the cost from an interpretation

@@ -18,7 +18,38 @@
 #include "ast/expr.h"
 #include "ast/type.h"
 #include "data/cast.h"
+#include "data/mem.h"
 #include "data/range.h"
+
+/// Resolves to an unbound type variable
+InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr, 
+	                                 const PolyType* targetType, const Env* env ) {
+	InterpretationList results;
+	for ( const Interpretation* i : resolver.resolve( expr, env ) ) {
+		// loop over subexpression results, binding result types to target type
+		Env* rEnv = Env::from( i->env );
+		ClassRef r = getClass( rEnv, targetType );
+		Cost rCost = i->cost;
+		const Type* rType = i->type();
+		auto rid = typeof(rType);
+		if ( rid == typeof<ConcType>() || rid == typeof<NamedType>() ) {
+			if ( r->bound ) {
+				// skip incompatibly-bound results
+				if ( *rType != *r->bound ) continue;
+			}
+			bindType( rEnv, r, rType );
+			++rCost.poly;
+		} else if ( rid == typeof<PolyType>() ) {
+			// skip incompatibly-bound results
+			if ( ! bindVar( rEnv, r, as<PolyType>(rType) ) ) continue;
+			rCost.poly += 2;
+		} else continue; // skip results that aren't atomic types TODO maybe truncate tuples
+
+		// build new result with updated environment
+		results.push_back( new Interpretation{ i->expr, rEnv, rCost, copy(i->argCost) } );
+	}
+	return results;
+}
 
 /// State to iteratively build a top-down match of expressions to arguments
 struct ArgPack {
@@ -45,8 +76,6 @@ struct ArgPack {
 		++next;
 	}
 };
-
-
 
 /// key type for argument cache
 using ArgKey = std::pair<const Expr*, const Env*>;
@@ -183,7 +212,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					Cost cCost = rCost + combo.cost;
 					
 					// check assertions if at top level
-					if ( resolve_mode == Resolver::TOP_LEVEL
+					if ( resolve_mode.check_assertions
 					     && ! resolveAssertions( resolver, call, cCost, combo.env ) )
 						continue;
 					
@@ -208,6 +237,10 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 							  const Env* env, const PolyType* boundType = nullptr ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
+	// replace target by concrete target if polymorphic
+	if ( boundType ) {
+		targetType = replace( env, boundType );
+	}
 	
 	// For any type (or tuple that has the target type as a prefix)
 	if ( const TypeMap<FuncList>* matches = funcIndex.get( targetType ) ) {
@@ -289,7 +322,11 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
                                       Resolver::Mode resolve_mode ) {
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
-		return InterpretationList{ new Interpretation{ as<VarExpr>(expr), Env::from(env) } };
+		InterpretationList results{ new Interpretation{ as<VarExpr>(expr), Env::from(env) } };
+		if ( resolve_mode.expand_conversions ) {
+			expandConversions( results, conversions );
+		}
+		return results;
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>(expr);
 		// find candidates with this function name, skipping if none
@@ -305,6 +342,15 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType,
                                               const Env* env ) {
+	// if the target type is polymorphic and unbound, expand out all conversion options
+	const PolyType* pTarget = as_safe<PolyType>(targetType);
+	if ( pTarget ) {
+		ClassRef pClass = findClass( env, pTarget );
+		if ( !(pClass && pClass->bound) ) {
+			return resolveToUnbound( *this, expr, pTarget, env );
+		}
+	}
+	
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
 		// convert leaf expression to given type
@@ -322,18 +368,25 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 		auto withName = funcs.find( funcExpr->name() );
 		if ( withName == funcs.end() ) return InterpretationList{};
 
-		if ( const PolyType* pTarget = as_safe<PolyType>(targetType) ) {
-			// polymorphic return; look for any option if unbound, bind to polytype
-			Env* rEnv = Env::from( env );
-			ClassRef pClass = getClass( rEnv, pTarget );
-			return ( pClass->bound )
-				? resolveTo( *this, withName(), funcExpr, pClass->bound, rEnv, pTarget )
-				: resolveToAny( *this, withName(), funcExpr, rEnv, 
-						Mode{}.with_void_if( is<VoidType>(targetType) ), pTarget );
-		} else {
-			// monomorphic return; look for matching options
-			return resolveTo( *this, withName(), funcExpr, targetType, env );
-		}
+		return resolveTo( *this, withName(), funcExpr, targetType, env, pTarget );
+
+		// if ( const PolyType* pTarget = as_safe<PolyType>(targetType) ) {
+		// 	// polymorphic return; look for any option if unbound, bind to polytype
+		// 	ClassRef pClass = findClass( env, pTarget );
+		// 	if ( pClass && pClass->bound ) {
+		// 		// resolve to bound type if target is bound
+		// 		return resolveTo( *this, withName(), funcExpr, pClass->bound, env, pTarget );
+		// 	} else {
+		// 		// if target is unbound, bind to any type
+		// 		return resolveToUnbound( *this, expr, pTarget, env );
+		// 	}
+		// 	// return ( pClass && pClass->bound )
+		// 	// 	? resolveTo( *this, withName(), funcExpr, pClass->bound, env, pTarget )
+		// 	// 	: resolveToAny( *this, withName(), funcExpr, env, Mode{}, pTarget );
+		// } else {
+		// 	// monomorphic return; look for matching options
+		// 	return resolveTo( *this, withName(), funcExpr, targetType, env );
+		// }
 	} else assert(!"Unsupported expression type");
 
 	return {};

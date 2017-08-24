@@ -8,6 +8,7 @@
   * resolution failure (tuple): `tuple`
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly just take advantage of new Env as GC_Object
+  * audit uses of `Env::from` and trim cases where they're not actually modified
 * Re-write Makefile to make suffixed versions of the rp executables, consistent rp symlink
 * Handle multi-parameter tuple arguments in multi-arg top-down resolver
 
