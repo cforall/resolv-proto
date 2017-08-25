@@ -214,7 +214,6 @@ public:
 		// unique min disambiguates expression
 		if ( min_alts.size() == 1 ) {
 			env = min_alts[0]->env;
-			// ++cost.spec;
 			r = min_alts.front()->expr;
 			return true;
 		}

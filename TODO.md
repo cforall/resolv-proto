@@ -2,9 +2,6 @@
 
 ## Next few days ##
 * Look at failing tests for top-down resolver
-  * higher poly-cost: `multi_type_var`, etc.
-    * Looks like it's double-counting the cost of the #b assignment somehow
-  * resolution failure (no conversion on type variable): `assertion`, `convert_amb`
   * resolution failure (tuple): `tuple`
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly just take advantage of new Env as GC_Object
@@ -26,7 +23,6 @@
 * maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
 
 ## Indeterminate Future ##
-* Refine cost model
-  * Look at cases in `convert_amb`
+* Refine cost model -- look at cases in `convert_amb`
 * Possibly change mapped assertion value to an Interpretation from a TypedExpr
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)

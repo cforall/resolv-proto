@@ -31,7 +31,7 @@ struct Interpretation : public GC_Object {
 	
 	/// Fieldwise copy-constructor
 	Interpretation( const TypedExpr* expr, const Env* env, const Cost& cost, const Cost& argCost )
-		: expr(expr), env(Env::from( env )), cost(cost), argCost(argCost) {}
+		: expr(expr), env( Env::from(env) ), cost(cost), argCost(argCost) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
 		using std::swap;

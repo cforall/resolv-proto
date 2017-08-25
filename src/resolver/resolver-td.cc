@@ -46,7 +46,7 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 		} else continue; // skip results that aren't atomic types TODO maybe truncate tuples
 
 		// build new result with updated environment
-		results.push_back( new Interpretation{ i->expr, rEnv, rCost, copy(i->argCost) } );
+		results.push_back( new Interpretation{ i->expr, rEnv, move(rCost), copy(i->argCost) } );
 	}
 	return results;
 }
@@ -247,7 +247,8 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs,
 		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
-					resolver, it.get(), expr, env, Resolver::Mode{}.without_conversions(), 
+					resolver, it.get(), expr, env, 
+					Resolver::Mode{}.without_conversions().with_void_if( is<VoidType>(targetType) ), 
 					boundType );
 			if ( sResults.empty() ) continue;
 
@@ -369,24 +370,6 @@ InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targ
 		if ( withName == funcs.end() ) return InterpretationList{};
 
 		return resolveTo( *this, withName(), funcExpr, targetType, env, pTarget );
-
-		// if ( const PolyType* pTarget = as_safe<PolyType>(targetType) ) {
-		// 	// polymorphic return; look for any option if unbound, bind to polytype
-		// 	ClassRef pClass = findClass( env, pTarget );
-		// 	if ( pClass && pClass->bound ) {
-		// 		// resolve to bound type if target is bound
-		// 		return resolveTo( *this, withName(), funcExpr, pClass->bound, env, pTarget );
-		// 	} else {
-		// 		// if target is unbound, bind to any type
-		// 		return resolveToUnbound( *this, expr, pTarget, env );
-		// 	}
-		// 	// return ( pClass && pClass->bound )
-		// 	// 	? resolveTo( *this, withName(), funcExpr, pClass->bound, env, pTarget )
-		// 	// 	: resolveToAny( *this, withName(), funcExpr, env, Mode{}, pTarget );
-		// } else {
-		// 	// monomorphic return; look for matching options
-		// 	return resolveTo( *this, withName(), funcExpr, targetType, env );
-		// }
 	} else assert(!"Unsupported expression type");
 
 	return {};
