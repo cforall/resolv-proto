@@ -159,8 +159,8 @@ bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
 /// Replaces expression with the best conversion to the given type, updating cost and env 
 /// as needed. Returns nullptr for no such conversion; may update env and cost on such a 
 /// failure result.
-const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,                
-                            ConversionGraph& conversions, Env*& env, Cost& cost ) {
+const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, ConversionGraph& conversions, 
+                            Env*& env, Cost& cost, bool truncate = true ) {
     const Type* etype = expr->type();
     auto eid = typeof( etype );
     auto tid = typeof( ttype );
@@ -187,8 +187,10 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
             } else return nullptr;
         } else if ( tid == typeof<VoidType>() ) {
             // one safe conversion to truncate concrete type to Void
-            ++cost.safe;
-            return new TruncateExpr{ expr, ttype };
+            if ( truncate ) {
+                ++cost.safe;
+                return new TruncateExpr{ expr, ttype };
+            } else return expr;
         } else if ( tid == typeof<TupleType>() ) {
             // can't match tuples to non-tuple types
             return nullptr;
@@ -226,31 +228,61 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr,
         // target of lesser arity has safe cost of the number of elements trimmed
         switch (tn) {
         case 0: {
-            // truncate to void
-            cost.safe += en;
-            return new TruncateExpr{ expr, ttype };
+            if ( truncate ) {
+                // truncate to void
+                cost.safe += en;
+                return new TruncateExpr{ expr, ttype };
+            } else return expr;
         } case 1: {
             // truncate to first element
-            const TypedExpr* el = convertTo( ttype, new TupleElementExpr{ expr, 0 },
-                                             conversions, env, cost );
-            if ( ! el ) return nullptr;
-            cost.safe += en - 1;
-            return el;
+            if ( truncate ) {
+                const TypedExpr* el = 
+                    convertTo( ttype, new TruncateExpr{ expr, 1 }, conversions, env, cost );
+                if ( ! el ) return nullptr;
+                cost.safe += en - 1;
+                return el;
+            } else {
+                const TypedExpr* el0 = new TupleElementExpr{ expr, 0 };
+                const TypedExpr* el = convertTo( ttype, el0, conversions, env, cost );
+                if ( ! el ) return nullptr;
+                if ( el == el0 ) return expr;
+                
+                List<TypedExpr> els;
+                els.reserve( en );
+                els.push_back( el0 );
+                for (unsigned j = 1; j < en; ++j) {
+                    els.push_back( new TupleElementExpr{ expr, j } );
+                }
+                return new TupleExpr{ move(els) };
+            }
         } default: {
             // make tuple out of the appropriate prefix
             const TupleType* ttuple = as<TupleType>(ttype);
 
             List<TypedExpr> els;
-            els.reserve( ttuple->size() );
+            els.reserve( truncate ? tn : en );
+            bool converted = false;
             for ( unsigned j = 0; j < tn; ++j ) {
-                const TypedExpr* el = convertTo( ttuple->types()[j],
-                                                 new TupleElementExpr{ expr, j },
-                                                 conversions, env, cost );
+                const TypedExpr* elj = new TupleElementExpr{ expr, j };
+                const TypedExpr* el = convertTo( ttuple->types()[j], elj, conversions, env, cost );
                 if ( ! el ) return nullptr;
+                converted |= (el != elj);
                 els.push_back( el );
             }
-            cost.safe += en - tn;
-            return new TupleExpr{ move(els) };
+
+            if ( truncate ) {
+                cost.safe += en - tn;
+                if ( converted ) return new TupleExpr{ move(els) };
+                else return new TruncateExpr{ expr, tn };
+            } else {
+                if ( ! converted ) return expr;
+                
+                for (unsigned j = tn; j < en; ++j) {
+                    els.push_back( new TupleElementExpr{ expr, j } );
+                }
+                return new TupleExpr{ move(els) };
+            }
+            
         }}
     } else assert(!"Unhandled expression type");
 
