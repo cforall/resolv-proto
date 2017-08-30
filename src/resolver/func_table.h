@@ -23,7 +23,7 @@
 using FuncList = std::vector<FuncDecl*>;
 
 /// Backing storage for a set of function declarations with the same name indexed by return type
-#if defined RP_TOP_DOWN
+#if defined RP_MODE_TD
 	/// Wrapper for type_map with appropriate args for FlatMap
 	template<typename, typename V>
 	using TypeMap2 = TypeMap<V>;

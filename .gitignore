@@ -1,4 +1,6 @@
 /rp
+/rp-bu
+/rp-td
 /bench_gen
 /tests/renumber
 *.o
