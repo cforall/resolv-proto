@@ -36,12 +36,6 @@ else
 MODE = bu
 endif
 
-# RESOLVER_O = resolver-bu.o
-# ifdef TOP_DOWN
-# CXXFLAGS += -DRP_TOP_DOWN
-# RESOLVER_O = resolver-td.o
-# endif
-
 ifeq "${LAST_OPT};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG};${LAST_MODE}" "${OPT};${SORTED};${USER_CONVS};${DEBUG};${MODE}"
 .lastmakeflags:
 	@touch .lastmakeflags
