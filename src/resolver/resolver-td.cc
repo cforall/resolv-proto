@@ -80,12 +80,27 @@ struct ArgPack {
 		: env( Env::from(e) ), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(it) {}
 	
 	/// Update ArgPack with new interpretation for next arg
-	ArgPack(const ArgPack& old, const Interpretation* i)
+	ArgPack(const ArgPack& old, const Interpretation* i, unsigned leftover = 0)
 		: env( Env::from(i->env) ), cost(old.cost + i->cost), argCost(old.argCost + i->argCost), 
-		  args(old.args), crnt(nullptr), on_last(0), next(old.next) {
-		if ( old.crnt ) { args.push_back(old.crnt); }
-		args.push_back(i->expr);
+		  args(old.args), crnt(leftover ? i->expr : nullptr), on_last(leftover), next(old.next) {
+		if ( old.crnt ) args.push_back(old.crnt);
+		if ( on_last == 0 ) args.push_back(i->expr);
 		++next;
+	}
+
+	/// Update ArgPack with new binding for leftover arg portion
+	ArgPack(const ArgPack& old, Cost&& newCost, Env* newEnv, unsigned leftover)
+		: env(newEnv), cost(move(newCost)), argCost(old.argCost), args(old.args), 
+		  crnt(leftover ? old.crnt : nullptr), on_last(leftover), next(old.next) {
+		if ( on_last == 0 ) args.push_back(old.crnt);
+	}
+
+	/// Truncate crnt if applicable to exclude on_last, add to arguments
+	void finalize() {
+		if ( on_last > 0 ) {
+			args.push_back( new TruncateExpr{ crnt, crnt->type()->size() - on_last } );
+			crnt = nullptr;
+		}
 	}
 };
 
@@ -181,12 +196,27 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 				// Build match combos, one parameter at a time
 				for ( const Type* param : rParams ) {
+					assert(param->size() == 1 && "parameter list should be flattened");
 					// setup cache for parameters
 					std::unordered_map<ArgKey, InterpretationList> argCache{};
 					// find interpretations with this type
 					for ( ArgPack& combo : combos ) {
 						if ( combo.on_last > 0 ) {
-							// TODO: test matches for leftover combo args
+							// test matches for leftover combo args
+							const TupleType* cType = as_checked<TupleType>(combo.crnt->type());
+							unsigned cInd = cType->size() - combo.on_last;
+							const Type* crntType = cType->types()[ cInd ];
+							Cost cCost = combo.cost;
+							Env* cEnv = Env::from( combo.env );
+
+							if ( unify( param, crntType, cCost, cEnv ) ) {
+								// build new combo which consumes more arguments
+								nextCombos.emplace_back( 
+									combo, move(cCost), cEnv, combo.on_last - 1 );
+							}
+
+							// replace combo with truncated expression
+							combo.crnt = new TruncateExpr{ combo.crnt, cInd };
 						}
 						// skip combos with no arguments left
 						if ( combo.next == expr->args().end() ) continue;
@@ -202,9 +232,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						InterpretationList subs = cached->second;
 						// build new combos from interpretations
 						for ( const Interpretation* i : subs ) {
-							// TODO: handle multi-parameter args
-							// Build new ArgPack for this interpretation
-							nextCombos.emplace_back( combo, i );
+							// Build new ArgPack for this interpretation, noting leftovers
+							nextCombos.emplace_back( combo, i, i->type()->size() - 1 );
 						}
 					}
 					
@@ -219,6 +248,9 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 				for ( ArgPack& combo : combos ) {
 					// skip combos with leftover arguments
 					if ( combo.next != expr->args().end() ) continue;
+
+					// truncate any incomplete combos
+					combo.finalize();
 
 					// make interpretation for this combo
 					const TypedExpr* call = 
