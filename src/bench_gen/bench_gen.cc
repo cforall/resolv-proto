@@ -301,7 +301,7 @@ class BenchGenerator {
                             // generate list of parameters and returns
                             List<Type> parms( n_parms );
                             List<Type> rets( n_rets );
-                            unique_ptr<Forall> forall{ new Forall{name} };
+                            unique_ptr<Forall> forall{ new Forall{} };
                             for (unsigned i = 0; i < n_parms; ++i) {
                                 parms[i] = parms_and_rets[i].get( forall );
                             }
@@ -352,7 +352,7 @@ class BenchGenerator {
     /// Returns return type of the expression
     const Type* generate_expr( const Type* ty = nullptr ) {
         unique_ptr<Forall> forall;  ///< Local polymorphic variables
-        Env* env;                   ///< Environment to track consistent bindings
+        Env* env = nullptr;         ///< Environment to track consistent bindings
         const FuncDecl* decl;       ///< Function to call
         const Type* rtype;          ///< Return type of this function
 

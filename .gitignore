@@ -6,4 +6,3 @@
 *.o
 *.d
 .lastmakeflags
-/bench/

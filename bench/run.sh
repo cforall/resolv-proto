@@ -2,7 +2,7 @@
 
 cd `dirname "${BASH_SOURCE[0]}"`
 
-outdir="../bench"
+outdir="./out"
 if [ ! -d $outdir ]; then
     mkdir $outdir
 fi
