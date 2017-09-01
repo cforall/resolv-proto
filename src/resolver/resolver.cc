@@ -27,12 +27,14 @@ public:
 
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	id_src = 0;  // initialize type variable IDs
+	new_generation();  // set up new GC generation
 
 	InterpretationList results = resolve( expr, Env::none(), Mode::top_level() );
 	
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {
 		on_invalid( expr );
+		collect_young();
 		return Interpretation::make_invalid();
 	}
 
@@ -44,6 +46,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		// ambiguous if more than one min-cost interpretation
 		if ( min_pos != results.begin() ) {
 			on_ambiguous( expr, results.begin(), ++min_pos );
+			collect_young();
 			return Interpretation::make_invalid();
 		}
 	}
@@ -52,6 +55,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	
 	// handle ambiguous candidate from conversion expansion
 	if ( ResolvedExprInvalid{ on_ambiguous }( candidate->expr ) ) {
+		collect_young();
 		return Interpretation::make_invalid();
 	}
 
@@ -59,8 +63,10 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	List<TypeClass> unbound = getUnbound( candidate->env );
 	if ( ! unbound.empty() ) {
 		on_unbound( expr, unbound );
+		collect_young();
 		return Interpretation::make_invalid();
 	}
 	
+	collect_young( candidate );
 	return candidate;
 }

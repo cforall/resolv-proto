@@ -171,6 +171,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 				results.push_back( new Interpretation{ call, rEnv, move(rCost) } );
 			} break;
 			case 1: {
+				// TODO think about caching child resolutions across top-level parameters
+				
 				// single arg, accept and move up
 				InterpretationList subs = resolver.resolveWithType( 
 					expr->args().front(), Type::from( rParams ), rEnv );
@@ -374,7 +376,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 			}
 		}
 	}
-	// TODO think about caching child resolutions across top-level parameters
+	
 	return results;
 }
 

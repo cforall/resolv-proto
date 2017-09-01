@@ -1,10 +1,11 @@
 # TODO #
 
 ## Next few days ##
+* Investigate whether "bif" memory usage in TD resolver is bug or algorithmic failure
+  * Likely algorithmic failure, investigate caching argument values between function options
 * Benchmark top-down and bottom-up resolvers against each other
 
 ## Next few weeks ##
-* Look at caching argument calls between function resolutions in top-level resolver
 * Modify semantics of top-level resolution to resolve to `void`
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
   * Look at tuple truncations as conversions in expand_conversions
