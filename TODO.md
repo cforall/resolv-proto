@@ -24,3 +24,4 @@
 * Refine cost model -- look at cases in `convert_amb`
 * Possibly change mapped assertion value to an Interpretation from a TypedExpr
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)
+  * small-set optimization on TypeMap may also be a good idea

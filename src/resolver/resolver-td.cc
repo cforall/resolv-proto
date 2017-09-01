@@ -12,6 +12,7 @@
 #include "func_table.h"
 #include "interpretation.h"
 #include "resolve_assertions.h"
+#include "type_map.h"
 #include "unify.h"
 
 #include "ast/decl.h"
@@ -117,6 +118,36 @@ namespace std {
 	};
 }
 
+/// argument cache
+class ArgCache {
+	using KeyedMap = TypeMap< InterpretationList >;
+	std::unordered_map<ArgKey, KeyedMap> cache;
+
+public:
+	/// Looks up the interpretations in the cache, generating them if needed.
+	/// The generation function takes ty, e, and env as arguments and returns an InterpretationList
+	template<typename F>
+	InterpretationList& operator()( const Type* ty, const Expr* e, const Env* env, F gen ) {
+		// search for expression/environment pair
+		env = getNonempty( env );
+		ArgKey key{ e, env };
+		auto eit = cache.find( key );
+		if ( eit == cache.end() ) {
+			eit = cache.emplace_hint( eit, move(key), KeyedMap{} );
+		}
+
+		// find appropriately typed return value
+		KeyedMap& ecache = eit->second;
+		auto it = ecache.find( ty );
+		if ( it == ecache.end() ) {
+			// build if not found
+			it = ecache.insert( ty, gen( ty, e, env ) ).first;
+		}
+
+		return it.get();
+	}
+};
+
 InterpretationList resolveWithExtType( Resolver&, const Expr*, const Type*, const Env*, bool );
 
 /// Resolves a function expression with any return type, binding the result to `bound` if 
@@ -127,6 +158,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
                                  Resolver::Mode resolve_mode = {}, 
 								 const PolyType* boundType = nullptr ) {
 	InterpretationList results{};
+	ArgCache cached{};
 	
 	for ( const FuncDecl* func : funcs ) {
 		// skip void-returning functions unless at top level
@@ -171,11 +203,12 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 				results.push_back( new Interpretation{ call, rEnv, move(rCost) } );
 			} break;
 			case 1: {
-				// TODO think about caching child resolutions across top-level parameters
-				
 				// single arg, accept and move up
-				InterpretationList subs = resolver.resolveWithType( 
-					expr->args().front(), Type::from( rParams ), rEnv );
+				InterpretationList& subs = cached(
+					Type::from( rParams ), expr->args().front(), rEnv,
+					[&resolver]( const Type* ty, const Expr* e, const Env* env ) {
+						return resolver.resolveWithType( e, ty, env );
+					} );
 				for ( const Interpretation* sub : subs ) {
 					// make interpretation for this arg
 					const TypedExpr* call = 
@@ -188,7 +221,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						 && ! resolveAssertions( resolver, call, sCost, sEnv ) ) continue;
 					
 					results.push_back(
-						new Interpretation{ call, sEnv, move(sCost), move(sub->argCost) } );
+						new Interpretation{ call, sEnv, move(sCost), copy(sub->argCost) } );
 				}
 			} break;
 			default: {
@@ -199,8 +232,6 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 				// Build match combos, one parameter at a time
 				for ( const Type* param : rParams ) {
 					assert(param->size() == 1 && "parameter list should be flattened");
-					// setup cache for parameters
-					std::unordered_map<ArgKey, InterpretationList> argCache{};
 					// find interpretations with this type
 					for ( ArgPack& combo : combos ) {
 						if ( combo.on_last > 0 ) {
@@ -222,16 +253,12 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						}
 						// skip combos with no arguments left
 						if ( combo.next == expr->args().end() ) continue;
-						// Find interpretation for this argument
-						ArgKey key{ *combo.next, getNonempty( combo.env ) };
-						auto cached = argCache.find( key );
-						if ( cached == argCache.end() ) {
-							cached = argCache.emplace_hint( cached, move(key), 
-									resolveWithExtType(
-										resolver, *combo.next, param, getNonempty( combo.env ), 
-										false ) );
-						}
-						InterpretationList subs = cached->second;
+						// Find interpretations for this argument
+						InterpretationList& subs = cached(
+							param, *combo.next, getNonempty( combo.env ),
+							[&resolver]( const Type* ty, const Expr* e, const Env* env ) {
+								return resolveWithExtType( resolver, e, ty, env, false );
+							} );
 						// build new combos from interpretations
 						for ( const Interpretation* i : subs ) {
 							// Build new ArgPack for this interpretation, noting leftovers
