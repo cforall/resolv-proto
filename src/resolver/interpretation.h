@@ -19,19 +19,19 @@
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {
 	const TypedExpr* expr;  ///< Base expression for interpretation
-	Env* env;               ///< Type variables and assertions bound by this interpretation
+	const Env* env;         ///< Type variables and assertions bound by this interpretation
 	Cost cost;              ///< Overall cost of interpretation
 	Cost argCost;			///< Summed cost of the interpretation's arguments
 	
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0] and environment [default empty]
-	Interpretation( const TypedExpr* expr = nullptr, Env* env = nullptr, 
+	Interpretation( const TypedExpr* expr = nullptr, const Env* env = nullptr, 
 	                Cost&& cost = Cost{}, Cost&& argCost = Cost{} )
 		: expr(expr), env(env), cost(move(cost)), argCost(move(argCost)) {}
 	
 	/// Fieldwise copy-constructor
 	Interpretation( const TypedExpr* expr, const Env* env, const Cost& cost, const Cost& argCost )
-		: expr(expr), env( Env::from(env) ), cost(cost), argCost(argCost) {}
+		: expr(expr), env(env), cost(cost), argCost(argCost) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
 		using std::swap;

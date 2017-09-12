@@ -1,18 +1,7 @@
 # TODO #
 
 ## Next few days ##
-* Investigate whether "bif" memory usage in TD resolver is bug or algorithmic failure
-  * Likely algorithmic failure, investigate caching argument values between function options
-  * Initial caching experiments positive, look into including top-level cache in resolver to allow shared grandchild interpretations
-  * Look into loosening "Environment" restrictions on cache ... you want them for sibling interpretations, but but not for child, where you can just replace the target type according to the environment
-    * Cache hit data suggests that the hit ratio is fine, top-down just uses too much memory for this instance.
-  * Caching results (miss : hit (miss%))
-    * pre-bif         -- 45119 :    42550 (51%)
-    * bif (truncated) --  5146 : 12402771 ( 0.04%)
-  * Timing results
-    * pre-bif (td)          --  0.26s user, 0.06s system
-    * pre-bif (bu)          --  0.38s user, 0.02s system
-    * pre-bif (td;no-cache) --  0.89s user, 0.16s system
+* Investigate "bif" memory usage in TD resolver
 * Benchmark top-down and bottom-up resolvers against each other
 
 ## Next few weeks ##

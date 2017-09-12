@@ -13,3 +13,11 @@
 % /usr/bin/time -f "%U,%S,%e,%M" ../rp-bu -q no-bif.in
 38.24,3.32,41.60,9565580
 ```
+* `Env::from()` accounts for ~30% of memory usage for TD on both no-bif and bif cases.
+* Trimming some `Env::from()`:
+```
+% /usr/bin/time -f "%U,%S,%e,%M" ../rp-td -q no-bif.in             
+1.18,0.17,1.36,434396
+% /usr/bin/time -f "%U,%S,%e,%M" ../rp-bu -q no-bif.in
+39.69,3.37,43.09,9564556
+```

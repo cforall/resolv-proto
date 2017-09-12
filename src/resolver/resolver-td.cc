@@ -66,7 +66,7 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 
 /// State to iteratively build a top-down match of expressions to arguments
 struct ArgPack {
-	Env* env;                         ///< Current environment
+	const Env* env;                   ///< Current environment
 	Cost cost;                        ///< Current cost
 	Cost argCost;                     ///< Current argument-only cost
 	List<TypedExpr> args;             ///< List of current arguments
@@ -78,11 +78,11 @@ struct ArgPack {
 	
 	/// Initialize ArgPack with first argument iterator and initial environment
 	ArgPack(const List<Expr>::const_iterator& it, const Env* e) 
-		: env( Env::from(e) ), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(it) {}
+		: env(e), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(it) {}
 	
 	/// Update ArgPack with new interpretation for next arg
 	ArgPack(const ArgPack& old, const Interpretation* i, unsigned leftover = 0)
-		: env( Env::from(i->env) ), cost(old.cost + i->cost), argCost(old.argCost + i->argCost), 
+		: env(i->env), cost(old.cost + i->cost), argCost(old.argCost + i->argCost), 
 		  args(old.args), crnt(leftover ? i->expr : nullptr), on_last(leftover), next(old.next) {
 		if ( old.crnt ) args.push_back(old.crnt);
 		if ( on_last == 0 ) args.push_back(i->expr);
@@ -90,7 +90,7 @@ struct ArgPack {
 	}
 
 	/// Update ArgPack with new binding for leftover arg portion
-	ArgPack(const ArgPack& old, Cost&& newCost, Env* newEnv, unsigned leftover)
+	ArgPack(const ArgPack& old, Cost&& newCost, const Env* newEnv, unsigned leftover)
 		: env(newEnv), cost(move(newCost)), argCost(old.argCost), args(old.args), 
 		  crnt(leftover ? old.crnt : nullptr), on_last(leftover), next(old.next) {
 		if ( on_last == 0 ) args.push_back(old.crnt);
@@ -169,7 +169,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					const TypedExpr* call = 
 						new CallExpr{ func, List<TypedExpr>{ sub->expr }, copy(rForall), rType };
 					Cost sCost = rCost + sub->cost;
-					Env* sEnv = Env::from( sub->env );
+					const Env* sEnv = sub->env;
 					
 					// check assertions if at top level
 					if ( resolve_mode.check_assertions 
@@ -240,14 +240,15 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					const TypedExpr* call = 
 						new CallExpr{ func, move(combo.args), copy(rForall), rType };
 					Cost cCost = rCost + combo.cost;
+					const Env* cEnv = combo.env;
 					
 					// check assertions if at top level
 					if ( resolve_mode.check_assertions
-					     && ! resolveAssertions( resolver, call, cCost, combo.env ) )
+					     && ! resolveAssertions( resolver, call, cCost, cEnv ) )
 						continue;
 					
 					results.push_back(
-						new Interpretation{ call, combo.env, move(cCost), move(combo.argCost) } );
+						new Interpretation{ call, cEnv, move(cCost), move(combo.argCost) } );
 				}
 			} break;
 		}
@@ -366,7 +367,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
                                       Resolver::Mode resolve_mode ) {
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
-		InterpretationList results{ new Interpretation{ as<VarExpr>(expr), Env::from(env) } };
+		InterpretationList results{ new Interpretation{ as<VarExpr>(expr), env } };
 		if ( resolve_mode.expand_conversions ) {
 			expandConversions( results, conversions );
 		}

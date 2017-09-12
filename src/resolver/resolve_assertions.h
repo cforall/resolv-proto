@@ -28,20 +28,20 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		/// Current list of merged interpretations
 		InterpretationList crnt;
 		/// Stack of environments, to support backtracking
-		std::vector<Env*> envs;
+		std::vector<const Env*> envs;
 	public:
 		/// Outputs a pair consisting of the merged environment and the list of interpretations
-		using OutType = std::pair<Env*, InterpretationList>;
+		using OutType = std::pair<const Env*, InterpretationList>;
 
 		interpretation_env_merger( const Env* env ) : crnt{}, envs{} {
-			envs.push_back( Env::from( env ) );
+			envs.push_back( env );
 		}
 
 		ComboResult append( const Interpretation* i ) {
 			Env* env = Env::from( envs.back() );
 			if ( ! merge( env, i->env ) ) return ComboResult::REJECT_THIS;
 			crnt.push_back( i );
-			envs.push_back( env );
+			envs.push_back( getNonempty( env ) );
 			return ComboResult::ACCEPT;
 		}
 
@@ -213,7 +213,7 @@ public:
 
 		// unique min disambiguates expression
 		if ( min_alts.size() == 1 ) {
-			env = min_alts[0]->env;
+			env = Env::from( min_alts[0]->env );
 			r = min_alts.front()->expr;
 			return true;
 		}
@@ -238,8 +238,7 @@ public:
 		interpretation_env_coster costs;
 		auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
 		if ( minPos == compatible.begin() ) {  // unique min-cost
-			env = minPos->first;
-			// cost.spec += deferIds.size(); // count assertions bound in this combination
+			env = Env::from( minPos->first );
 			for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 				bindAssertion( env, deferIds[i], minPos->second[i]->expr );
 			}
@@ -250,7 +249,7 @@ public:
 			auto it = compatible.begin();
 			while (true) {
 				// build an interpretation for each compatible min-cost assertion binding
-				Env* alt_env = it->first;
+				Env* alt_env = Env::from( it->first );
 				for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 					bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
 				}
@@ -271,4 +270,13 @@ public:
 bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, Env*& env ) {
 	AssertionResolver assnResolver{ resolver, cost, env };
 	return assnResolver.mutate( call ) != nullptr;
+}
+
+/// Resolves assertions over const Env
+inline bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, 
+		const Env*& env) {
+	Env* mEnv = Env::from( env );
+	if ( ! resolveAssertions( resolver, call, cost, mEnv ) ) return false;
+	env = getNonempty( mEnv );
+	return true;
 }

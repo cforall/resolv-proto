@@ -47,7 +47,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
 		Cost cost = func->poly_cost();
-		Env* env = Env::from( outEnv );
+		const Env* env = outEnv;
 		
 		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
 
@@ -201,7 +201,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
 		// do nothing for expressions which are already typed
-		results.push_back( new Interpretation{ as<VarExpr>(expr), Env::from(env) } );
+		results.push_back( new Interpretation{ as<VarExpr>(expr), env } );
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>( expr );
 
