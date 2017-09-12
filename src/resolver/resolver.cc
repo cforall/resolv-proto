@@ -28,6 +28,9 @@ public:
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	id_src = 0;  // initialize type variable IDs
 	new_generation();  // set up new GC generation
+	#ifdef RP_MODE_TD
+	cached.clear();  // clear subexpression cache
+	#endif
 
 	InterpretationList results = resolve( expr, Env::none(), Mode::top_level() );
 	

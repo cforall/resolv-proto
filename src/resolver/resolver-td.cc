@@ -104,50 +104,6 @@ struct ArgPack {
 		}
 	}
 };
-
-/// key type for argument cache
-using ArgKey = std::pair<const Expr*, const Env*>;
-
-namespace std {
-	template<> struct hash<ArgKey> {
-		typedef ArgKey argument_type;
-		typedef std::size_t result_type;
-		result_type operator() (const argument_type& k) const {
-			return hash<const Expr*>{}(k.first) ^ hash<const Env*>{}(k.second);
-		}
-	};
-}
-
-/// argument cache
-class ArgCache {
-	using KeyedMap = TypeMap< InterpretationList >;
-	std::unordered_map<ArgKey, KeyedMap> cache;
-
-public:
-	/// Looks up the interpretations in the cache, generating them if needed.
-	/// The generation function takes ty, e, and env as arguments and returns an InterpretationList
-	template<typename F>
-	InterpretationList& operator()( const Type* ty, const Expr* e, const Env* env, F gen ) {
-		// search for expression/environment pair
-		env = getNonempty( env );
-		ArgKey key{ e, env };
-		auto eit = cache.find( key );
-		if ( eit == cache.end() ) {
-			eit = cache.emplace_hint( eit, move(key), KeyedMap{} );
-		}
-
-		// find appropriately typed return value
-		KeyedMap& ecache = eit->second;
-		auto it = ecache.find( ty );
-		if ( it == ecache.end() ) {
-			// build if not found
-			it = ecache.insert( ty, gen( ty, e, env ) ).first;
-		}
-
-		return it.get();
-	}
-};
-
 InterpretationList resolveWithExtType( Resolver&, const Expr*, const Type*, const Env*, bool );
 
 /// Resolves a function expression with any return type, binding the result to `bound` if 
@@ -158,7 +114,6 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
                                  Resolver::Mode resolve_mode = {}, 
 								 const PolyType* boundType = nullptr ) {
 	InterpretationList results{};
-	ArgCache cached{};
 	
 	for ( const FuncDecl* func : funcs ) {
 		// skip void-returning functions unless at top level
@@ -204,7 +159,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 			} break;
 			case 1: {
 				// single arg, accept and move up
-				InterpretationList& subs = cached(
+				InterpretationList& subs = resolver.cached(
 					Type::from( rParams ), expr->args().front(), rEnv,
 					[&resolver]( const Type* ty, const Expr* e, const Env* env ) {
 						return resolver.resolveWithType( e, ty, env );
@@ -254,8 +209,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						// skip combos with no arguments left
 						if ( combo.next == expr->args().end() ) continue;
 						// Find interpretations for this argument
-						InterpretationList& subs = cached(
-							param, *combo.next, getNonempty( combo.env ),
+						InterpretationList& subs = resolver.cached(
+							param, *combo.next, combo.env,
 							[&resolver]( const Type* ty, const Expr* e, const Env* env ) {
 								return resolveWithExtType( resolver, e, ty, env, false );
 							} );
@@ -323,7 +278,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
 					resolver, it.get(), expr, env, 
-					Resolver::Mode{}.without_conversions().with_void_if( is<VoidType>(targetType) ), 
+					Resolver::Mode{}.without_conversions().with_void_if(is<VoidType>(targetType)), 
 					boundType );
 			if ( sResults.empty() ) continue;
 
@@ -431,8 +386,8 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 
 /// Resolves expression with the target type, subject to env, optionally truncating result 
 /// expresssions.
-InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr, const Type* targetType, 
-	                                   const Env* env, bool truncate = true ) {
+InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,  
+		const Type* targetType, const Env* env, bool truncate = true ) {
 	// if the target type is polymorphic and unbound, expand out all conversion options
 	const PolyType* pTarget = as_safe<PolyType>(targetType);
 	if ( pTarget ) {
