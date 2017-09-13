@@ -358,7 +358,10 @@ class BenchGenerator {
 
         // get function declaration from functions with appropriate return type
         if ( ty == nullptr || ty == toplevel ) {
-            decl = random_in( funcs );
+            // find random function, not void-returning unless at top level
+            do {
+                decl = random_in( funcs );
+            } while ( ty == nullptr && decl->returns()->size() == 0 );
             forall = Forall::from( decl->forall() );
             rtype = decl->returns();
             // correct return type if a polymorphic type

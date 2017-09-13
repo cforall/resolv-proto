@@ -1,3 +1,16 @@
+## 13 Sept 2017 ##
+* Results from new cases -- `tuple_return` slightly in favour of BU, `more_poly_easy` greatly so:
+```
+% /usr/bin/time -f "%U,%S,%e,%M" ../rp-td -q tuple_return.in
+24.28,2.67,26.98,7009500
+% /usr/bin/time -f "%U,%S,%e,%M" ../rp-bu -q tuple_return.in
+12.72,2.27,15.03,5396704
+% /usr/bin/time -f "%U,%S,%e,%M" ../rp-td -q more_poly_easy.in
+27.23,1.67,28.93,4309532
+% /usr/bin/time -f "%U,%S,%e,%M" ../rp-bu -q more_poly_easy.in
+6.58,0.73,7.32,1864968
+```
+
 ## 12 Sept 2017 ##
 * TD Caching strategy seems generally effective:
   * pre-bif         -- 45119 :    42550 (51%)
@@ -21,3 +34,4 @@
 % /usr/bin/time -f "%U,%S,%e,%M" ../rp-bu -q no-bif.in
 39.69,3.37,43.09,9564556
 ```
+* `Env::from()` now down to ~20% of memory usage for TD

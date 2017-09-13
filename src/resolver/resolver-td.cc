@@ -142,7 +142,9 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 		Cost rCost = func->poly_cost();
 		Env* rEnv = Env::from(env);
 		if ( boundType ) {
-			if ( ! unify( boundType, rType, rCost, rEnv ) ) continue;
+			if ( const TupleType* trType = as_safe<TupleType>(rType) ) {
+				if ( ! unify( boundType, trType->types()[0], rCost, rEnv ) ) continue;
+			} else if ( ! unify( boundType, rType, rCost, rEnv ) ) continue;
 		}
 
 		switch( expr->args().size() ) {
