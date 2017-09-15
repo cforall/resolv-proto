@@ -1,8 +1,13 @@
 # TODO #
 
 ## Next few days ##
-* Investigate "bif" memory usage in TD resolver
-* Benchmark top-down and bottom-up resolvers against each other
+* Benchmark top-down and bottom-up resolvers against each other, attempt to characterize good and bad cases for each
+* Ideas:
+  * BU variant that uses something like the ArgPack structure to iteratively build a match, rather than pre-combined combos
+  * Investigate TD cache duplication over environments, may be the suspect for deep-nesting problems
+    * Maybe cache against null environment unless argument is basic type
+    * Maybe just don't cache against environment -- can you make lower environment independent?
+  * TD variant that builds a "filter set" of types to search for, avoids caching
 
 ## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void`

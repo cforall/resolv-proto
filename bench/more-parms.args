@@ -1,0 +1,2 @@
+n_parms: weighted 0.05 constant 0, 0.25 constant 1, 0.50 constant 2, 0.20 uniform 3 8
+p_nested_deeper: 0.25

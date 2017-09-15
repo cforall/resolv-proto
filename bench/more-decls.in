@@ -1,0 +1,2767 @@
+// n_decls: 2000
+// n_exprs: 750
+// n_overloads: weighted 0.5 uniform 2 120, 0.5 constant 1 [1,120]
+// n_rets: discrete 0.15 0.85 [0,1]
+// n_parms: discrete 0.05 0.35 0.55 0.03 0.01 0.01 [0,5]
+// n_poly_types: discrete 0.9 0.1 [0,1]
+// max_tries_for_unique: 40
+// p_new_type: 0.5
+// get_basic: weighted 0.375 uniform 0 2, 0.25 constant 3, 0.375 uniform 4 7 [0,7]
+// get_struct: uniform 0 25 [0,25]
+// p_nested_at_root: 0.06
+// p_nested_deeper: 0.3
+// p_unsafe_offset: 0.25
+// basic_offset: geometric 0.25 [0,4294967295]
+b 2 2
+#k d-o0
+2 d-o1
+3 d-o2
+#f d-o3
+d-o4 #f
+d-o5 6
+d-o6 #r
+d-o7 2
+d-o8 3
+d-o9 1
+d-o10 #l
+d-o11 #w
+d-o12 T
+#f d-o13 1
+0 d-o14 0
+#pp d-o15 #pp
+2 d-o16 #x
+#w d-o17 #l
+#z d-o18 #k
+3 d-o19 7
+#kk d-o20 5
+7 d-o21 6
+4 d-o22 #bb
+#v d-o23 #l
+3 d-o24 3
+0 d-o25 3
+#g d-o26 0
+#w d-o27 7
+#z d-o28 7
+7 d-o29 #kk
+#l d-o30 #y
+#nn d-o31 #nn
+#d d-o32 #d
+#t d-o33 #g
+#rr d-o34 #rr
+5 d-o35 2
+#b d-o36 #g
+#gg d-o37 #gg
+2 d-o38 1
+#f d-o39 7
+5 d-o40 3
+5 d-o41 4
+7 d-o42 #mm
+#pp d-o43 3
+#n d-o44 #n
+#t d-o45 #t
+3 d-o46 #k
+T d-o47 3
+5 d-o48 5
+d-o49 #ll #ll
+d-o50 2 2
+d-o51 3 #g
+d-o52 3 3
+d-o53 #bb 0
+d-o54 1 #mm
+d-o55 3 #ff
+d-o56 #f #f
+d-o57 7 7
+d-o58 6 7
+7 d-o59 1 3
+4 d-o60 5 4
+3 d-o61 3 #pp
+2 d-o62 2 #kk
+#rr d-o63 3 5
+#m d-o64 #nn #m
+#g d-o65 #z #w
+#g d-o66 #t #x
+#dd d-o67 1 1
+5 d-o68 #gg #gg
+#p d-o69 #p #p
+#r d-o70 #t #t
+3 d-o71 6 3
+2 d-o72 2 3
+#nn d-o73 #v #v
+#ff d-o74 #ff 0
+5 d-o75 #ff 5
+#bb d-o76 3 3
+#x d-o77 #pp #x
+4 d-o78 #mm #p
+1 d-o79 1 #b
+#t d-o80 #v #v
+6 d-o81 3 5
+5 d-o82 6 6
+#r d-o83 #r #r
+3 d-o84 3 3
+7 d-o85 7 #g
+3 d-o86 2 3
+2 d-o87 2 #dd
+3 d-o88 5 2
+#nn d-o89 #bb 2
+7 d-o90 #bb #nn
+#t d-o91 #bb 3
+#bb d-o92 2 #bb
+#p d-o93 #p 2
+#mm d-o94 #mm #kk
+4 d-o95 3 3
+#z d-o96 5 3
+2 d-o97 #x #g
+#r d-o98 #nn #m
+1 d-o99 4 4
+#mm d-o100 #p #mm
+#dd d-o101 2 #v
+#x d-o102 3 1
+3 d-o103 0 #kk
+#l d-o104 T 3
+6 d-o105 T 5
+0 d-o106 4 0
+T d-o107 #kk T
+7 d-o108 T 2
+#n d-o109 T #n
+#k d-o110 #f #k
+0 d-o111 7 1
+d-o112 0 #p #l
+d-o113 3 4 3
+#kk d-o114 #gg 1 #n
+2 d-o115 #rr #rr #rr
+#y d-o116 7 #y 7
+6 d-o117 6 6 3
+#n d-o118 #k #nn #f #l #p
+3 d-o119 5 3 5 #ll #ll
+#r f
+2 g #d #d
+#nn k-o0
+#ll k-o1
+6 k-o2
+2 k-o3
+k-o4 7
+#rr k-o5 #rr
+#f k-o6 5
+#r k-o7 #r
+#z k-o8 3
+4 k-o9 3
+3 k-o10 3
+#gg k-o11 3
+#g k-o12 #p
+#dd k-o13 #dd
+#t k-o14 #t
+1 k-o15 2
+#gg k-o16 #gg
+1 k-o17 1
+5 k-o18 7
+1 k-o19 5
+#d k-o20 #d
+#b k-o21 #g 2
+#z k-o22 #z #z
+#x k-o23 #b #ff
+4 k-o24 #bb 2
+7 k-o25 #v #v
+6 k-o26 #y 6
+2 k-o27 3 3
+#kk k-o28 #kk #kk
+#mm k-o29 #n #mm
+#d k-o30 1 #d
+7 k-o31 7 7
+#k k-o32 2 #r
+#gg k-o33 #gg #d
+#pp k-o34 4 #pp
+7 k-o35 3 #pp
+#f k-o36 #m #f
+3 k-o37 5 5
+5 k-o38 7 #v
+5 k-o39 5 #r
+#n k-o40 3 1
+3 k-o41 #m 4
+3 k-o42 2 4
+#mm k-o43 3 #mm
+7 k-o44 #y #v
+2 k-o45 2 #pp
+T k-o46 T T
+6 k-o47 #b #mm
+#b k-o48 #rr 5
+T k-o49 T 3
+3 k-o50 6 #gg
+3 k-o51 #f #f
+2 k-o52 3 4
+#v k-o53 2 #v
+k-o54 #z #z 7
+k-o55 #v #v #v
+2 k-o56 2 2 2 #rr #d
+l-o0
+3 l-o1
+l-o2 7
+l-o3 #l
+l-o4 #rr
+l-o5 1
+l-o6 #nn
+#m l-o7 3
+#nn l-o8 7
+#d l-o9 6
+6 l-o10 #x
+6 l-o11 3
+#w l-o12 #w
+#t l-o13 #t
+#f l-o14 2
+#l l-o15 0
+4 l-o16 4
+4 l-o17 3
+#bb l-o18 #bb
+0 l-o19 #nn
+#rr l-o20 #rr
+#dd l-o21 #dd
+#g l-o22 #f
+#ll l-o23 #ll
+5 l-o24 5
+1 l-o25 1
+3 l-o26 6
+#nn l-o27 #nn
+#bb l-o28 #x
+#pp l-o29 5
+#ff l-o30 #l
+3 l-o31 3
+4 l-o32 2
+#pp l-o33 #pp
+6 l-o34 6
+2 l-o35 #d
+2 l-o36 2
+4 l-o37 T
+#ff l-o38 #ff
+T l-o39 T
+l-o40 #d #y
+l-o41 0 1
+l-o42 1 1
+l-o43 1 #w
+l-o44 #kk #kk
+l-o45 T 5
+#nn l-o46 #nn #nn
+#ff l-o47 #x #g
+#d l-o48 #d #d
+#x l-o49 6 3
+#g l-o50 #mm #g
+3 l-o51 4 4
+0 l-o52 #ff 0
+5 l-o53 #l #p
+1 l-o54 #t 4
+5 l-o55 5 #b
+#f l-o56 #mm 3
+#f l-o57 0 #f
+#n l-o58 #w #t
+#f l-o59 #g #f
+#nn l-o60 #bb #bb
+#bb l-o61 1 1
+2 l-o62 #ll #ll
+#l l-o63 #rr #rr
+#g l-o64 3 #g
+5 l-o65 3 3
+#k l-o66 3 #k
+4 l-o67 #m 3
+3 l-o68 3 2
+#k l-o69 #p #p
+#p l-o70 5 2
+#b l-o71 3 4
+#v l-o72 #ll #y
+3 l-o73 #l 0
+5 l-o74 6 #g
+2 l-o75 #nn #x
+#b l-o76 6 6
+#gg l-o77 3 #g
+2 l-o78 6 6
+6 l-o79 2 2
+3 l-o80 6 3
+1 l-o81 0 0
+#rr l-o82 1 3
+1 l-o83 2 2
+#ll l-o84 #gg #g
+2 l-o85 #k #pp
+2 l-o86 0 2
+#rr l-o87 4 3
+1 l-o88 #k #k
+#mm l-o89 #mm #mm
+#rr l-o90 #kk #rr
+0 l-o91 6 #f
+T l-o92 T #mm
+#pp l-o93 #z 2
+3 l-o94 T #pp
+#ll l-o95 2 #ll
+#bb l-o96 2 #bb
+4 l-o97 #m 4
+3 l-o98 1 1
+T l-o99 #p T
+5 l-o100 #y #r
+#bb l-o101 5 #bb
+l-o102 0 #z 7
+#mm l-o103 #d #dd 1
+#x l-o104 #ff #m #ff
+#pp l-o105 #pp #pp #pp
+#f l-o106 #rr 3 #f
+#ll l-o107 #ll 2 #ll
+#mm l-o108 3 6 #mm
+2 l-o109 T T T
+T l-o110 #r #r T
+#k l-o111 #k #kk #k 3
+#gg l-o112 3 6 3 6 3
+m-o0
+#z m-o1
+4 m-o2
+m-o3 3
+m-o4 2
+3 m-o5 2
+2 m-o6 2
+3 m-o7 0
+m-o8 4 2
+m-o9 1 1
+#bb m-o10 #y 2
+#dd m-o11 #dd #p
+6 m-o12 6 6
+#x m-o13 #n 7
+#nn m-o14 #z 1
+#w m-o15 6 6
+4 m-o16 #ff 4
+#kk m-o17 #kk 0
+2 m-o18 7 3
+#ll m-o19 #ff #ff
+T m-o20 #dd #dd
+n-o0
+#t n-o1
+n-o2 6
+n-o3 7
+n-o4 1
+3 n-o5 3
+#b n-o6 #b
+0 n-o7 #l
+0 n-o8 1
+#t n-o9 #t
+#z n-o10 5
+#kk n-o11 3
+1 n-o12 1
+3 n-o13 #g
+0 n-o14 #t
+#n n-o15 #d
+1 n-o16 4
+7 n-o17 7
+#v n-o18 #v
+4 n-o19 2
+5 n-o20 #b
+0 n-o21 0
+1 n-o22 #l
+n-o23 3 3
+n-o24 #p #p
+n-o25 #z #rr
+n-o26 2 #d
+n-o27 #mm #kk
+n-o28 #v #w
+n-o29 6 0
+5 n-o30 3 5
+2 n-o31 0 #t
+#gg n-o32 #gg #m
+#pp n-o33 #z #w
+7 n-o34 #z 7
+2 n-o35 3 2
+5 n-o36 5 #g
+0 n-o37 1 #p
+7 n-o38 7 #t
+#pp n-o39 #p #p
+3 n-o40 #n #n
+#ff n-o41 0 #m
+#nn n-o42 6 3
+6 n-o43 6 #n
+#t n-o44 #n 7
+3 n-o45 5 3
+3 n-o46 7 #nn
+1 n-o47 0 2
+3 n-o48 0 #kk
+#x n-o49 0 1
+T n-o50 #t #t
+2 n-o51 4 6 7
+1 n-o52 7 1 1
+0 p #n #rr
+#w r 1 1
+#pp t-o0
+#n t-o1
+t-o2 #ff
+t-o3 3
+t-o4 6
+2 t-o5 3
+#nn t-o6 #nn
+3 t-o7 #x
+#y t-o8 #y
+4 t-o9 4
+#r t-o10 #f
+1 t-o11 6
+#k t-o12 #ll
+#p t-o13 0
+3 t-o14 3
+#gg t-o15 #gg
+#x t-o16 0
+7 t-o17 #n
+6 t-o18 6
+2 t-o19 0
+5 t-o20 5
+t-o21 #dd #dd
+t-o22 4 #f
+t-o23 #x #ff
+1 t-o24 1 5
+6 t-o25 6 0
+4 t-o26 7 2
+#r t-o27 2 #v
+#l t-o28 #l #n
+#dd t-o29 #dd #dd
+5 t-o30 5 1
+3 t-o31 0 0
+#x t-o32 #x 4
+1 t-o33 #nn 2
+0 t-o34 0 3
+3 t-o35 #gg 3
+#d t-o36 #d #d
+#dd t-o37 #y #p
+3 t-o38 3 #k
+6 t-o39 #v T
+#p t-o40 1 #p
+7 t-o41 T 0
+#g v 6 1
+#b w-o0
+6 w-o1
+w-o2 #r
+w-o3 5
+w-o4 #gg
+w-o5 3
+w-o6 #d
+w-o7 #b
+w-o8 #p
+#k w-o9 3
+5 w-o10 3
+#f w-o11 #mm
+#rr w-o12 #t
+1 w-o13 1
+0 w-o14 0
+#d w-o15 7
+#nn w-o16 #z
+7 w-o17 #nn
+3 w-o18 #dd
+2 w-o19 2
+#l w-o20 3
+3 w-o21 5
+6 w-o22 6
+#kk w-o23 1
+#m w-o24 7
+#n w-o25 #b
+2 w-o26 #pp
+#w w-o27 #pp
+3 w-o28 3
+#g w-o29 1
+7 w-o30 7
+#mm w-o31 3
+#b w-o32 #g
+T w-o33 T
+T w-o34 #ff
+w-o35 3 #k
+w-o36 #nn #nn
+w-o37 #m 2
+w-o38 3 #rr
+3 w-o39 #w #w
+3 w-o40 #k 2
+#d w-o41 #d #r
+#k w-o42 #kk #r
+2 w-o43 2 2
+#l w-o44 4 3
+#bb w-o45 #p #p
+3 w-o46 6 2
+#l w-o47 3 #f
+2 w-o48 1 2
+4 w-o49 #x 4
+0 w-o50 0 7
+2 w-o51 #k 2
+3 w-o52 3 2
+2 w-o53 #f #pp
+7 w-o54 4 7
+1 w-o55 #kk #x
+7 w-o56 #z 1
+#d w-o57 #d #d
+#ll w-o58 #nn #nn
+#v w-o59 #w #w
+#ll w-o60 #ll 2
+#t w-o61 #z 0
+2 w-o62 #t 2
+0 w-o63 4 4
+4 w-o64 #mm 4
+7 w-o65 #gg 0
+#y w-o66 #d #d
+2 w-o67 4 #l
+7 w-o68 7 3
+#dd w-o69 1 3
+#w w-o70 #ff 4
+#l w-o71 #d 5
+#y w-o72 #y 7
+#mm w-o73 #ff #ff
+2 w-o74 #v #v
+#x w-o75 6 #m
+#f w-o76 3 0
+#kk w-o77 6 #kk
+5 w-o78 5 #f
+#b w-o79 #mm #nn
+3 w-o80 3 3
+#nn w-o81 #nn #nn
+5 w-o82 T 5
+T w-o83 T 0
+2 w-o84 T T
+#w w-o85 3 3
+7 w-o86 #rr #rr 6
+#nn w-o87 #bb #y #nn
+6 w-o88 2 3 3
+w-o89 #n #b 0 #r 0
+x-o0
+#w x-o1
+#gg x-o2
+2 x-o3
+x-o4 #n
+x-o5 #y
+x-o6 5
+x-o7 #gg
+x-o8 #v
+5 x-o9 5
+#n x-o10 #r
+6 x-o11 #ff
+3 x-o12 1
+6 x-o13 6
+#ff x-o14 #ff
+4 x-o15 4
+7 x-o16 1
+#g x-o17 #g
+4 x-o18 3
+1 x-o19 1
+1 x-o20 3
+1 x-o21 #r
+#mm x-o22 #mm
+2 x-o23 #gg
+7 x-o24 0
+2 x-o25 2
+#dd x-o26 3
+#rr x-o27 #gg
+#dd x-o28 #dd
+#z x-o29 #l
+0 x-o30 0
+3 x-o31 3
+7 x-o32 #p
+#v x-o33 #v
+6 x-o34 #y
+#z x-o35 #z
+#x x-o36 2
+0 x-o37 #dd
+x-o38 6 6
+x-o39 #n #m
+x-o40 1 1
+x-o41 6 3
+x-o42 5 5
+x-o43 #g #g
+x-o44 4 4
+x-o45 #k 3
+x-o46 3 1
+x-o47 T T
+#nn x-o48 #v #v
+#ll x-o49 2 #ll
+0 x-o50 #z #z
+#g x-o51 #t #g
+3 x-o52 3 6
+#mm x-o53 #mm #mm
+6 x-o54 2 1
+#l x-o55 #l #rr
+5 x-o56 0 7
+#n x-o57 #n #t
+#p x-o58 3 1
+#nn x-o59 1 0
+2 x-o60 4 4
+1 x-o61 2 6
+1 x-o62 1 1
+0 x-o63 0 0
+2 x-o64 1 #r
+#mm x-o65 #ll 5
+#m x-o66 3 #m
+#nn x-o67 3 #nn
+0 x-o68 0 4
+#nn x-o69 #y #y
+#mm x-o70 #nn 3
+5 x-o71 2 2
+0 x-o72 6 2
+1 x-o73 6 6
+3 x-o74 3 #kk
+0 x-o75 0 7
+#p x-o76 #r #p
+6 x-o77 #mm #t
+#gg x-o78 #gg #w
+#nn x-o79 #nn #nn
+7 x-o80 3 5
+3 x-o81 3 3
+T x-o82 #nn #nn
+#y x-o83 #y #y
+3 x-o84 7 7
+x-o85 1 2 1
+5 x-o86 #w #k #bb
+5 x-o87 3 3 #z
+T x-o88 3 3 T
+x-o89 #mm #mm 1 3 3
+x-o90 #rr #rr #rr 4 7
+4 y 4 T
+2 z 2
+5 bab 2 2
+#y bad-o0
+2 bad-o1
+1 bad-o2
+#ff bad-o3
+bad-o4 #kk
+bad-o5 #n
+bad-o6 0
+bad-o7 #gg
+bad-o8 5
+bad-o9 1
+#r bad-o10 1
+2 bad-o11 #m
+#f bad-o12 #f
+2 bad-o13 3
+#r bad-o14 #r
+#w bad-o15 #w
+#kk bad-o16 #kk
+4 bad-o17 3
+3 bad-o18 5
+2 bad-o19 #f
+1 bad-o20 1
+#mm bad-o21 #ll
+0 bad-o22 2
+4 bad-o23 1
+1 bad-o24 7
+6 bad-o25 2
+3 bad-o26 #b
+3 bad-o27 #dd
+7 bad-o28 7
+#ll bad-o29 #ll
+#x bad-o30 4
+1 bad-o31 2
+#pp bad-o32 #kk
+#m bad-o33 #m
+#t bad-o34 5
+#t bad-o35 2
+0 bad-o36 3
+7 bad-o37 2
+0 bad-o38 #kk
+2 bad-o39 4
+#k bad-o40 #k
+T bad-o41 T
+#mm bad-o42 T
+1 bad-o43 #nn
+3 bad-o44 #bb
+1 bad-o45 T
+bad-o46 #g #g
+bad-o47 3 4
+bad-o48 2 #b
+bad-o49 #r 2
+bad-o50 7 #l
+bad-o51 3 #n
+bad-o52 0 #b
+bad-o53 2 2
+bad-o54 #mm 2
+bad-o55 5 4
+bad-o56 T T
+3 bad-o57 3 4
+#d bad-o58 1 4
+#g bad-o59 #g #g
+7 bad-o60 0 7
+#g bad-o61 #v #v
+3 bad-o62 #r 3
+2 bad-o63 #dd #z
+#pp bad-o64 6 6
+#ff bad-o65 0 1
+#rr bad-o66 #b 4
+#b bad-o67 #p #b
+#z bad-o68 #bb #x
+3 bad-o69 2 7
+#kk bad-o70 #kk #kk
+6 bad-o71 6 #b
+#v bad-o72 #f #v
+1 bad-o73 2 #n
+3 bad-o74 #y #v
+0 bad-o75 3 2
+2 bad-o76 #rr #rr
+#l bad-o77 #l #l
+4 bad-o78 4 4
+6 bad-o79 3 3
+#w bad-o80 4 6
+#nn bad-o81 #v #v
+#r bad-o82 #r #nn
+#ll bad-o83 #x #x
+1 bad-o84 3 3
+1 bad-o85 #nn 3
+2 bad-o86 5 5
+5 bad-o87 5 5
+#d bad-o88 4 4
+#d bad-o89 #b #b
+7 bad-o90 3 0
+3 bad-o91 3 3
+2 bad-o92 2 3
+#y bad-o93 #v #y
+#n bad-o94 3 #m
+#dd bad-o95 4 3
+3 bad-o96 #m 3
+#b bad-o97 #w #w
+5 bad-o98 #nn #nn
+#r bad-o99 #f #r
+#rr bad-o100 3 0
+4 bad-o101 3 3
+T bad-o102 T T
+1 bad-o103 T T
+#m bad-o104 6 #m
+1 bad-o105 #z #y
+3 bad-o106 4 3
+bad-o107 4 #dd 4
+#r bad-o108 #r #ff #v
+#w bad-o109 0 #pp 0
+0 bad-o110 #bb 3 3
+bad-o111 #nn 0 0 0
+#bb bad-o112 4 #pp #gg #gg
+0 bad-o113 1 3 #bb #l 3
+baf-o0 1
+4 baf-o1 4
+3 baf-o2 1
+2 baf-o3 2
+5 baf-o4 4
+1 baf-o5 2
+#gg baf-o6 #k #gg
+1 baf-o7 #t 3
+T baf-o8 #m T
+bag-o0 #ff
+bag-o1 #m
+#t bag-o2 #t
+#bb bag-o3 #p
+3 bag-o4 #n
+5 bag-o5 5
+3 bag-o6 #d
+3 bag-o7 5
+#bb bag-o8 #bb
+#ll bag-o9 3
+#n bag-o10 #n
+1 bag-o11 1
+#n bag-o12 #x
+#mm bag-o13 3
+4 bag-o14 4
+T bag-o15 3
+T bag-o16 4
+bag-o17 #y 3
+bag-o18 #kk #m
+bag-o19 3 3
+bag-o20 #l 0
+bag-o21 5 5
+bag-o22 5 T
+#d bag-o23 #d 6
+#dd bag-o24 #dd #dd
+#b bag-o25 #n 4
+1 bag-o26 #x 1
+1 bag-o27 2 #bb
+#d bag-o28 #d #x
+#z bag-o29 #z #w
+3 bag-o30 #pp #n
+#dd bag-o31 #gg #l
+#w bag-o32 #l #g
+#mm bag-o33 #f #d
+3 bag-o34 5 5
+#pp bag-o35 #pp #mm
+3 bag-o36 #dd 2
+#k bag-o37 #kk #k
+2 bag-o38 #g #k
+0 bag-o39 3 3
+0 bag-o40 0 0
+7 bag-o41 #y #mm
+#b bag-o42 #b #ff
+#ll bag-o43 #ll #ll
+3 bag-o44 3 3
+#t bag-o45 #t #t
+#v bag-o46 #v #v
+4 bag-o47 5 4
+#x bag-o48 T T
+#dd bag-o49 #pp #pp
+#gg bag-o50 T T
+bag-o51 0 0 #ff
+3 bag-o52 3 7 6 3
+#w bag-o53 3 3 3 3 #f
+1 bag-o54 3 5 1 5 1
+#nn bak 7
+3 bal 2
+0 bam 2 #l
+2 ban #p #z
+bap-o0
+6 bap-o1
+bap-o2 1
+#z bap-o3 #z
+7 bap-o4 7
+2 bap-o5 2
+5 bap-o6 5
+#z bap-o7 #ff
+bap-o8 #mm #mm
+bap-o9 2 3
+bap-o10 #x #ll
+#bb bap-o11 #l #l
+#m bap-o12 2 4
+3 bap-o13 1 1
+3 bap-o14 1 #pp
+2 bap-o15 3 7
+7 bap-o16 #f #f
+3 bap-o17 2 2
+#ll bap-o18 #ll #ll
+5 bap-o19 3 4
+3 bap-o20 1 3
+#k bap-o21 3 #f
+#ff bap-o22 #ff #ff
+0 bap-o23 5 0
+#t bap-o24 #v #t
+5 bap-o25 7 7
+7 bap-o26 3 3
+#t bap-o27 #mm #kk
+#ll bap-o28 #nn #nn
+#mm bap-o29 #rr 0 0
+#t bap-o30 #rr #mm #rr
+#z bar-o0
+2 bar-o1
+#y bar-o2
+#l bar-o3
+#kk bar-o4
+#ff bar-o5
+7 bar-o6
+0 bar-o7
+3 bar-o8
+#p bar-o9
+bar-o10 1
+bar-o11 #r
+bar-o12 #l
+bar-o13 #g
+bar-o14 #p
+bar-o15 3
+bar-o16 6
+bar-o17 #d
+#z bar-o18 #p
+3 bar-o19 #t
+#r bar-o20 #r
+4 bar-o21 0
+3 bar-o22 3
+5 bar-o23 #bb
+2 bar-o24 #y
+3 bar-o25 4
+#dd bar-o26 3
+#z bar-o27 #r
+#v bar-o28 #v
+#g bar-o29 5
+#t bar-o30 #nn
+7 bar-o31 1
+#gg bar-o32 #g
+0 bar-o33 0
+3 bar-o34 7
+#m bar-o35 #gg
+#g bar-o36 #y
+#kk bar-o37 1
+#pp bar-o38 #kk
+2 bar-o39 3
+#p bar-o40 #p
+7 bar-o41 7
+#b bar-o42 #g
+#k bar-o43 3
+1 bar-o44 #n
+5 bar-o45 #f
+2 bar-o46 T
+#nn bar-o47 T
+3 bar-o48 T
+T bar-o49 #gg
+T bar-o50 #k
+bar-o51 #x #x
+bar-o52 2 5
+bar-o53 #r #r
+bar-o54 #k 5
+bar-o55 #z #z
+bar-o56 #rr #r
+bar-o57 3 0
+bar-o58 #ff #ff
+bar-o59 3 3
+bar-o60 7 2
+bar-o61 #mm #p
+bar-o62 #p #pp
+bar-o63 #p T
+bar-o64 T T
+bar-o65 #r T
+bar-o66 6 #bb
+bar-o67 6 2
+3 bar-o68 3 2
+0 bar-o69 0 4
+2 bar-o70 2 0
+7 bar-o71 3 #f
+7 bar-o72 2 #mm
+#gg bar-o73 #t #bb
+6 bar-o74 #d #l
+#ff bar-o75 #r #pp
+#t bar-o76 2 #v
+3 bar-o77 7 #l
+#n bar-o78 #n 2
+1 bar-o79 2 3
+#v bar-o80 1 #k
+3 bar-o81 5 0
+#l bar-o82 #l #l
+#ff bar-o83 #x #x
+#g bar-o84 6 6
+3 bar-o85 3 3
+3 bar-o86 1 1
+3 bar-o87 #m #m
+0 bar-o88 0 0
+#pp bar-o89 #l #pp
+#v bar-o90 #y 2
+#nn bar-o91 #nn #nn
+#nn bar-o92 #d #d
+#pp bar-o93 4 #pp
+#d bar-o94 #d #d
+4 bar-o95 #dd 7
+0 bar-o96 4 3
+2 bar-o97 #ff 2
+#bb bar-o98 #bb #bb
+#bb bar-o99 #ff #b
+#f bar-o100 #d #d
+#r bar-o101 #r #r
+#rr bar-o102 #k #rr
+#dd bar-o103 T T
+#rr bar-o104 #v 5
+0 bar-o105 T 5
+7 bar-o106 #f #f
+#w bar-o107 0 0
+#m bar-o108 5 7 #m
+3 bar-o109 #b 7 7
+#z bar-o110 #d #p #dd
+6 bar-o111 #kk #kk 3
+1 bat-o0
+3 bat-o1
+6 bat-o2
+#nn bat-o3
+#g bat-o4
+bat-o5 #r
+3 bat-o6 3
+#ll bat-o7 #ll
+7 bat-o8 7
+#z bat-o9 #z
+0 bat-o10 0
+1 bat-o11 1
+2 bat-o12 0
+6 bat-o13 3
+4 bat-o14 4
+#z bat-o15 #bb
+7 bat-o16 #g
+#pp bat-o17 4
+3 bat-o18 #k
+#z bat-o19 4
+2 bat-o20 #y
+2 bat-o21 #m
+#v bat-o22 4
+7 bat-o23 3
+#dd bat-o24 #dd
+#x bat-o25 #z
+3 bat-o26 #n
+#f bat-o27 #f
+#pp bat-o28 #n
+#rr bat-o29 #ll
+T bat-o30 T
+bat-o31 T T
+#gg bat-o32 2 #l
+1 bat-o33 #p #p
+4 bat-o34 #ll #p
+1 bat-o35 1 3
+7 bat-o36 7 0
+#gg bat-o37 #z #r
+0 bat-o38 #g #z
+#x bat-o39 #x #r
+6 bat-o40 5 #v
+#dd bat-o41 3 #dd
+#t bat-o42 #v #v
+0 bat-o43 6 #dd
+4 bat-o44 4 6
+0 bat-o45 #d #d
+4 bat-o46 3 3
+#mm bat-o47 4 4
+6 bat-o48 #gg 3
+#ll bat-o49 #ll #gg
+#z bat-o50 T T
+#m bat-o51 1 #v 1
+3 bat-o52 #x #x #x
+#n bat-o53 #n #pp #g
+7 bat-o54 #pp 7 #mm #n #n
+1 bav 6 1
+2 baw-o0
+#l baw-o1
+baw-o2 #z
+#kk baw-o3 #gg
+0 baw-o4 2
+#bb baw-o5 3
+0 baw-o6 #pp
+baw-o7 #z #nn
+baw-o8 5 #d
+baw-o9 #gg #pp
+#mm baw-o10 1 7
+#d baw-o11 3 0
+#dd baw-o12 5 #dd
+4 baw-o13 3 1
+#l baw-o14 #kk 3
+#t baw-o15 #d #d
+7 baw-o16 7 6
+#l baw-o17 5 #l
+0 baw-o18 #rr 7
+3 baw-o19 3 #mm
+3 baw-o20 2 3
+6 baw-o21 6 #z
+6 baw-o22 6 6
+#w baw-o23 #k #ff
+0 baw-o24 0 T
+bax-o0
+4 bax-o1
+3 bax-o2
+#pp bax-o3
+bax-o4 #g
+bax-o5 #rr
+bax-o6 0
+#w bax-o7 1
+6 bax-o8 2
+4 bax-o9 4
+6 bax-o10 #dd
+7 bax-o11 #rr
+1 bax-o12 5
+4 bax-o13 0
+#ff bax-o14 3
+0 bax-o15 #b
+#kk bax-o16 #kk
+3 bax-o17 2
+3 bax-o18 3
+#nn bax-o19 3
+5 bax-o20 7
+#bb bax-o21 6
+#m bax-o22 3
+1 bax-o23 #z
+#rr bax-o24 #rr
+bax-o25 3 #kk
+bax-o26 7 0
+bax-o27 3 3
+bax-o28 #z T
+1 bax-o29 #z #z
+#p bax-o30 1 7
+#r bax-o31 #r 5
+4 bax-o32 #z #w
+#p bax-o33 #p 3
+3 bax-o34 5 #mm
+#bb bax-o35 3 3
+#n bax-o36 #g #y
+#pp bax-o37 6 6
+#n bax-o38 #x #x
+#bb bax-o39 #pp #ff
+#x bax-o40 #x #x
+6 bax-o41 #k 6
+1 bax-o42 #mm #pp
+#g bax-o43 #b #b
+1 bax-o44 2 1
+2 bax-o45 1 4
+0 bax-o46 0 #g
+#gg bax-o47 3 4
+#b bax-o48 7 2
+1 bax-o49 5 5
+#kk bax-o50 #z 3
+3 bax-o51 #pp #g
+#pp bax-o52 1 3
+4 bax-o53 0 #z
+0 bax-o54 0 #kk
+5 bax-o55 #mm 7
+3 bax-o56 6 7
+#pp bax-o57 3 1
+#b bax-o58 2 7
+#dd bax-o59 #b 6
+3 bax-o60 3 #n
+T bax-o61 #dd 6
+3 bax-o62 1 5
+#ll bax-o63 #nn #f #nn
+2 bax-o64 #nn 1 2
+2 bax-o65 3 #v 2
+#g bax-o66 #kk #z #y
+#nn bax-o67 3 #nn #y
+#m bax-o68 #r #r #dd #m
+bay-o0 1
+bay-o1 #bb
+6 bay-o2 3
+#z bay-o3 #n
+#y bay-o4 #y
+#x bay-o5 #m
+bay-o6 #x #x
+3 bay-o7 3 7
+2 bay-o8 #ll 1
+#pp bay-o9 2 5
+#l bay-o10 #f #l
+#x bay-o11 #x 0 #x
+baz-o0
+#bb baz-o1
+0 baz-o2
+baz-o3 5
+baz-o4 7
+baz-o5 2
+baz-o6 #v
+baz-o7 3
+baz-o8 1
+4 baz-o9 4
+0 baz-o10 #ll
+2 baz-o11 6
+1 baz-o12 4
+#gg baz-o13 #gg
+#v baz-o14 #z
+5 baz-o15 5
+#mm baz-o16 2
+#pp baz-o17 #rr
+#dd baz-o18 #dd
+1 baz-o19 1
+6 baz-o20 3
+#b baz-o21 #z
+0 baz-o22 0
+#k baz-o23 1
+5 baz-o24 7
+#k baz-o25 #l
+#d baz-o26 #gg
+#l baz-o27 #l
+6 baz-o28 6
+#n baz-o29 #n
+#g baz-o30 #nn
+0 baz-o31 #bb
+T baz-o32 T
+T baz-o33 #p
+4 baz-o34 #m
+baz-o35 #nn #pp
+baz-o36 6 6
+baz-o37 3 1
+baz-o38 #v 3
+baz-o39 #d #z
+baz-o40 2 3
+baz-o41 #nn #b
+#r baz-o42 #w #f
+#ff baz-o43 3 3
+7 baz-o44 #mm 5
+#y baz-o45 #y #y
+#f baz-o46 #g 3
+#g baz-o47 #y #y
+4 baz-o48 4 4
+#r baz-o49 #r 5
+3 baz-o50 7 6
+#k baz-o51 2 #y
+3 baz-o52 3 3
+#n baz-o53 #n 3
+4 baz-o54 4 1
+5 baz-o55 5 7
+7 baz-o56 #rr 7
+2 baz-o57 #t #w
+#dd baz-o58 #n #rr
+#kk baz-o59 #x #kk
+6 baz-o60 2 #g
+4 baz-o61 0 3
+0 baz-o62 4 7
+3 baz-o63 6 1
+#mm baz-o64 #mm #mm
+#y baz-o65 6 6
+#ll baz-o66 7 7
+3 baz-o67 3 #l
+#g baz-o68 0 6
+2 baz-o69 2 2
+#p baz-o70 #gg #p
+#nn baz-o71 0 #y
+#gg baz-o72 #f 3
+3 baz-o73 3 0
+2 baz-o74 #g 2
+#rr baz-o75 #w #rr
+#bb baz-o76 #w #kk
+3 baz-o77 2 7
+1 baz-o78 1 1
+#w baz-o79 #y #y
+3 baz-o80 1 #gg
+0 baz-o81 0 #w
+#nn baz-o82 7 6
+#rr baz-o83 #rr #rr
+0 baz-o84 3 0
+#n baz-o85 #l 0
+1 baz-o86 2 2
+2 baz-o87 0 5
+2 baz-o88 #v 2
+6 baz-o89 3 #r
+#k baz-o90 #g #k
+#dd baz-o91 #dd #dd
+T baz-o92 5 3
+#ff baz-o93 T T
+T baz-o94 T T
+7 baz-o95 3 T
+#pp baz-o96 #pp #dd
+baz-o97 1 #kk 7
+3 baz-o98 1 4 #ll 7 7
+2 baz-o99 #y 0 2 0 0
+#dd baz-o100 5 6 6 #mm #dd
+#dd baz-o101 7 4 #kk 3 3
+bib-o0
+#mm bib-o1
+#ff bib-o2
+#dd bib-o3
+bib-o4 #k
+bib-o5 0
+bib-o6 2
+bib-o7 3
+bib-o8 7
+bib-o9 5
+bib-o10 #kk
+#z bib-o11 #z
+7 bib-o12 3
+3 bib-o13 3
+6 bib-o14 #pp
+#ff bib-o15 #w
+#kk bib-o16 3
+#x bib-o17 #kk
+#kk bib-o18 #z
+1 bib-o19 0
+#d bib-o20 #d
+4 bib-o21 3
+5 bib-o22 1
+5 bib-o23 5
+#rr bib-o24 #rr
+#x bib-o25 #z
+#gg bib-o26 #w
+#ll bib-o27 0
+4 bib-o28 #ll
+T bib-o29 #t
+5 bib-o30 #kk
+T bib-o31 T
+T bib-o32 0
+#k bib-o33 2
+bib-o34 0 7
+bib-o35 #gg #gg
+bib-o36 #gg #ll
+6 bib-o37 #z 6
+4 bib-o38 #m 3
+#m bib-o39 #z #z
+#z bib-o40 7 3
+7 bib-o41 7 2
+#ll bib-o42 #ll #r
+5 bib-o43 3 3
+0 bib-o44 1 3
+#t bib-o45 #m 2
+#v bib-o46 #nn #v
+#pp bib-o47 0 #pp
+#gg bib-o48 #mm 6
+0 bib-o49 5 0
+#kk bib-o50 7 6
+#pp bib-o51 1 #m
+#ff bib-o52 #n #n
+#m bib-o53 0 0
+3 bib-o54 #f #m
+#mm bib-o55 #nn #nn
+#ff bib-o56 2 3
+#r bib-o57 7 #p
+2 bib-o58 1 3
+#d bib-o59 #d #n
+#kk bib-o60 #n #kk
+6 bib-o61 3 0
+0 bib-o62 0 0
+2 bib-o63 2 3
+#bb bib-o64 #bb #w
+3 bib-o65 #n 3
+#g bib-o66 #w #p
+#ll bib-o67 #ll #ll
+#k bib-o68 #k 4
+#ll bib-o69 #t 3
+#n bib-o70 #n #n
+5 bib-o71 #v #v
+5 bib-o72 5 5
+T bib-o73 T T
+#n bib-o74 7 0
+7 bib-o75 #t #t #t
+5 bib-o76 #y #y #y
+7 bib-o77 #b T T
+4 bib-o78 3 3 3 #bb 3
+#ff bid 3 6 #ff
+5 bif 5 #mm
+1 big-o0
+big-o1 1
+big-o2 6
+big-o3 #mm
+#nn big-o4 #nn
+4 big-o5 3
+6 big-o6 6
+#r big-o7 T
+#g big-o8 #g #p
+5 big-o9 5 #p
+2 big-o10 #ll #n
+1 big-o11 3 3
+#m big-o12 4 4
+T big-o13 T #z
+3 big-o14 #ll 3
+big-o15 #d #n 1
+#n big-o16 #n 6 3 7
+#r bik 0 5
+0 bil 5 3 3
+#g bim #l #l
+bin #rr 2
+bip-o0
+1 bip-o1
+3 bip-o2
+#r bip-o3
+6 bip-o4
+2 bip-o5
+#g bip-o6
+T bip-o7
+bip-o8 5
+bip-o9 4
+bip-o10 0
+bip-o11 2
+bip-o12 #w
+3 bip-o13 5
+#r bip-o14 2
+#f bip-o15 #ll
+#t bip-o16 #t
+6 bip-o17 2
+#v bip-o18 #bb
+6 bip-o19 4
+#b bip-o20 #dd
+1 bip-o21 6
+#p bip-o22 #p
+3 bip-o23 1
+#rr bip-o24 #rr
+#mm bip-o25 #b
+1 bip-o26 #l
+6 bip-o27 6
+#d bip-o28 #d
+7 bip-o29 7
+#k bip-o30 #r
+#r bip-o31 3
+2 bip-o32 #y
+4 bip-o33 #gg
+#m bip-o34 #g
+6 bip-o35 #d
+bip-o36 #y #y
+bip-o37 7 3
+bip-o38 #g 3
+bip-o39 #nn 4
+bip-o40 #ll #d
+bip-o41 #m #m
+bip-o42 #r #mm
+bip-o43 6 #ff
+7 bip-o44 #dd 1
+#d bip-o45 #n #r
+#b bip-o46 #r #r
+1 bip-o47 3 3
+5 bip-o48 7 5
+4 bip-o49 4 4
+#g bip-o50 #v #g
+#dd bip-o51 #dd #dd
+6 bip-o52 6 6
+3 bip-o53 #nn 3
+#n bip-o54 2 6
+4 bip-o55 #bb #ff
+#n bip-o56 0 3
+#z bip-o57 #gg #y
+#w bip-o58 2 2
+#l bip-o59 #l 3
+#p bip-o60 #p #p
+#p bip-o61 #v #v
+0 bip-o62 3 2
+5 bip-o63 6 #rr
+#ll bip-o64 4 2
+3 bip-o65 3 3
+7 bip-o66 2 0
+5 bip-o67 #l 2
+7 bip-o68 #y 4
+1 bip-o69 3 #nn
+#l bip-o70 4 6
+0 bip-o71 1 3
+#mm bip-o72 #mm #mm
+#p bip-o73 3 #p
+2 bip-o74 #b 2
+0 bip-o75 #p 4
+#z bip-o76 #z #z
+6 bip-o77 4 3
+3 bip-o78 0 3
+#gg bip-o79 #ff #w
+0 bip-o80 0 0
+#g bip-o81 #z #w
+#w bip-o82 #l #l
+#t bip-o83 #t #kk
+3 bip-o84 #p 3
+#z bip-o85 3 #z
+2 bip-o86 #f #f
+3 bip-o87 5 3
+1 bip-o88 #y #y
+6 bip-o89 6 3
+2 bip-o90 #b #rr
+4 bip-o91 #rr 7
+#v bip-o92 #v #w
+T bip-o93 #b 4
+#dd bip-o94 3 #w
+#x bip-o95 4 3
+#y bip-o96 3 T
+T bip-o97 #r 2
+bip-o98 7 1 2
+6 bip-o99 6 4 #n
+bip-o100 #n #n #n #n
+2 bip-o101 1 2 2 1
+#z bip-o102 #kk #p #t #t 3
+2 bir-o0
+3 bir-o1
+#d bir-o2
+#pp bir-o3
+bir-o4 0
+bir-o5 1
+bir-o6 5
+bir-o7 #v
+5 bir-o8 #d
+#m bir-o9 #dd
+5 bir-o10 #kk
+3 bir-o11 0
+#l bir-o12 #mm
+3 bir-o13 3
+1 bir-o14 0
+#ll bir-o15 1
+0 bir-o16 0
+2 bir-o17 #r
+#z bir-o18 3
+#t bir-o19 #t
+1 bir-o20 3
+4 bir-o21 3
+6 bir-o22 6
+#ff bir-o23 2
+0 bir-o24 3
+0 bir-o25 #y
+#kk bir-o26 1
+3 bir-o27 5
+#d bir-o28 2
+5 bir-o29 3
+#m bir-o30 #bb
+#t bir-o31 #x
+bir-o32 #k #b
+bir-o33 7 7
+bir-o34 7 #w
+bir-o35 #f #x
+bir-o36 #bb 3
+bir-o37 #t #t
+bir-o38 2 2
+#t bir-o39 #nn 0
+1 bir-o40 1 #bb
+3 bir-o41 6 3
+#b bir-o42 #b #d
+3 bir-o43 2 3
+6 bir-o44 6 6
+3 bir-o45 3 3
+#y bir-o46 3 3
+1 bir-o47 1 3
+5 bir-o48 #n 3
+#pp bir-o49 #pp #pp
+#v bir-o50 2 #k
+#y bir-o51 #g 4
+5 bir-o52 5 #x
+2 bir-o53 #n #kk
+#nn bir-o54 7 #nn
+#n bir-o55 #n #f
+#r bir-o56 0 5
+4 bir-o57 7 7
+#k bir-o58 #v #v
+#r bir-o59 1 #r
+#pp bir-o60 5 2
+#f bir-o61 #f #dd
+3 bir-o62 #x 7
+#v bir-o63 1 5
+#gg bir-o64 4 4
+#g bir-o65 T T
+7 bir-o66 7 7
+#pp bir-o67 3 3
+T bir-o68 T T
+3 bir-o69 T T
+T bir-o70 7 #y
+#t bir-o71 #t #y 2
+1 bit 1 #ff
+biv-o0
+3 biv-o1
+#p biv-o2
+biv-o3 3
+biv-o4 #y
+#r biv-o5 #y
+#l biv-o6 #r
+#ff biv-o7 #ff
+#y biv-o8 #y
+2 biv-o9 0
+#pp biv-o10 3
+4 biv-o11 4
+#mm biv-o12 #gg
+6 biv-o13 6
+#w biv-o14 #w
+7 biv-o15 #x
+#dd biv-o16 T
+biv-o17 #f 3
+biv-o18 5 0
+biv-o19 #z #ll
+7 biv-o20 7 7
+0 biv-o21 #k #ff
+#ll biv-o22 2 #ll
+#kk biv-o23 #dd #bb
+#y biv-o24 3 3
+3 biv-o25 #nn #nn
+7 biv-o26 #v #gg
+4 biv-o27 4 7
+#ff biv-o28 #k #z
+#t biv-o29 1 1
+6 biv-o30 0 0
+#g biv-o31 #g #g
+0 biv-o32 #r 6
+#ll biv-o33 7 #ll
+#y biv-o34 #v #k
+3 biv-o35 3 3
+#kk biv-o36 3 #kk
+#g biv-o37 #g #p
+6 biv-o38 #b #mm
+#dd biv-o39 #dd 7
+#y biv-o40 #y #y
+3 biv-o41 #kk 3
+0 biv-o42 0 6
+0 biv-o43 6 3
+#y biv-o44 7 #y
+#ff biv-o45 T #gg
+7 biv-o46 7 T
+T biv-o47 2 #r
+#m biv-o48 T 3
+#b biv-o49 #bb #bb #l #g
+#r biv-o50 7 2 #r 7 0
+#m biv-o51 #m #g #m #m #m
+2 biv-o52 #mm #mm 6 3 3
+biw-o0
+3 biw-o1
+#l biw-o2
+biw-o3 7
+#kk biw-o4 #r
+0 biw-o5 5
+3 biw-o6 3
+0 biw-o7 0
+T biw-o8 T
+#g biw-o9 T
+biw-o10 5 5
+biw-o11 #dd 1
+biw-o12 #l 1
+biw-o13 3 #z
+biw-o14 T T
+2 biw-o15 0 3
+2 biw-o16 5 4
+2 biw-o17 #v #b
+#w biw-o18 #w #w
+6 biw-o19 7 7
+1 biw-o20 1 1
+3 biw-o21 #gg #gg
+#g biw-o22 0 3
+4 biw-o23 4 4
+#y biw-o24 #t #t
+7 biw-o25 7 #p
+3 biw-o26 #f 1
+#k biw-o27 #n #k
+5 biw-o28 #mm 5
+1 biw-o29 #y 3
+#ff biw-o30 #ff #ff
+#w biw-o31 4 #ff
+4 biw-o32 6 #kk
+#mm biw-o33 5 #mm 5
+3 biw-o34 #b #x T
+T biw-o35 #m T T T T
+2 bix 6
+#d biy-o0 3
+0 biy-o1 1
+6 biy-o2 #k
+4 biy-o3 4
+#t biy-o4 3
+7 biy-o5 #v
+#d biy-o6 #mm
+3 biy-o7 1 #m
+#l biy-o8 1 1
+1 biy-o9 1 1
+#v biy-o10 #v #b
+4 biy-o11 7 4
+#f biy-o12 5 #f
+#bb biy-o13 2 #rr
+#f biy-o14 #f T
+5 biz-o0
+#x biz-o1
+7 biz-o2
+biz-o3 5
+biz-o4 #w
+biz-o5 #p
+biz-o6 #v
+6 biz-o7 #d
+1 biz-o8 1
+#n biz-o9 #rr
+3 biz-o10 #t
+3 biz-o11 7
+3 biz-o12 5
+3 biz-o13 3
+3 biz-o14 #g
+#z biz-o15 #z
+1 biz-o16 #t
+#f biz-o17 4
+1 biz-o18 2
+5 biz-o19 5
+#x biz-o20 2
+7 biz-o21 2
+#n biz-o22 1
+1 biz-o23 0
+#rr biz-o24 #rr
+#gg biz-o25 T
+biz-o26 2 #nn
+biz-o27 #kk #kk
+biz-o28 2 #x
+biz-o29 #ll 3
+biz-o30 #n #gg
+biz-o31 0 0
+#mm biz-o32 #kk #l
+6 biz-o33 6 6
+1 biz-o34 #b #m
+#g biz-o35 3 #p
+5 biz-o36 3 4
+#b biz-o37 #b 4
+#rr biz-o38 0 0
+#bb biz-o39 4 4
+5 biz-o40 #t 2
+#mm biz-o41 #mm 7
+#v biz-o42 #ff #v
+#dd biz-o43 5 1
+#nn biz-o44 #d #nn
+2 biz-o45 7 7
+#n biz-o46 2 2
+2 biz-o47 #pp #pp
+#ll biz-o48 #t 0
+1 biz-o49 3 #m
+4 biz-o50 2 0
+4 biz-o51 #kk 4
+#gg biz-o52 #ll #p
+1 biz-o53 3 1
+2 biz-o54 2 #mm
+#mm biz-o55 #r T
+2 biz-o56 T T
+0 biz-o57 T T
+#n biz-o58 #x #y #rr
+2 bob 3
+#x bod-o0
+#w bod-o1
+3 bod-o2 3
+#p bod-o3 2
+7 bod-o4 #bb #w
+#mm bod-o5 #mm 1
+7 bod-o6 7 7
+#pp bod-o7 #n #n
+#pp bod-o8 #l #v
+#x bod-o9 #ff #ff
+#x bod-o10 #r #r
+1 bod-o11 1 #n 1
+bof-o0 1
+bof-o1 6 3
+bof-o2 0 #ff
+7 bof-o3 4 0
+#r bof-o4 #r 2
+#bb bof-o5 #gg 3
+bof-o6 #z 3 #y
+bof-o7 5 4 0 0
+#bb bog-o0
+4 bog-o1
+bog-o2 #l
+bog-o3 #b
+0 bog-o4 0
+#mm bog-o5 #ff
+#pp bog-o6 #pp
+#bb bog-o7 0
+#g bog-o8 #g
+5 bog-o9 #bb
+#n bog-o10 7
+7 bog-o11 #t
+#bb bog-o12 #v
+#p bog-o13 #ff
+5 bog-o14 2
+#x bog-o15 #bb
+#b bog-o16 #b
+4 bog-o17 #bb
+3 bog-o18 3
+#dd bog-o19 #dd
+#ff bog-o20 4
+5 bog-o21 5
+#nn bog-o22 3
+bog-o23 #ll #mm
+bog-o24 #bb #bb
+bog-o25 0 6
+#y bog-o26 #ll #gg
+2 bog-o27 #z 2
+#x bog-o28 #x #x
+#dd bog-o29 4 6
+6 bog-o30 6 3
+3 bog-o31 2 2
+0 bog-o32 0 0
+#nn bog-o33 2 3
+#pp bog-o34 2 2
+#l bog-o35 6 #g
+4 bog-o36 #y 4
+1 bog-o37 4 1
+#pp bog-o38 #l #pp
+#ff bog-o39 #ff #ff
+#l bog-o40 #l 3
+5 bog-o41 0 5
+#pp bog-o42 #b #pp
+#d bog-o43 #d #d
+#p bog-o44 #p #m
+#kk bog-o45 6 7
+#l bog-o46 #l #l
+5 bog-o47 5 5
+#ff bog-o48 #bb #ff
+#g bog-o49 4 4
+2 bog-o50 #f 2
+#pp bog-o51 #pp #mm
+3 bog-o52 1 1
+#k bog-o53 3 #l
+5 bog-o54 3 3
+#r bog-o55 #r 3
+T bog-o56 #w #w
+3 bog-o57 3 3
+T bog-o58 T #mm
+#n bog-o59 #gg #rr 3
+1 bog-o60 1 4 1
+bog-o61 0 0 0 #gg
+7 bog-o62 1 0 7 1
+4 bog-o63 #w #kk #m 4
+#x bok-o0
+#k bok-o1
+#gg bok-o2
+bok-o3 #f
+bok-o4 0
+#ff bok-o5 #ff
+6 bok-o6 6
+2 bok-o7 #b
+#w bok-o8 7
+#p bok-o9 #d
+4 bok-o10 #rr
+5 bok-o11 3
+2 bok-o12 6
+#ll bok-o13 #nn
+#pp bok-o14 3
+#nn bok-o15 #nn
+#p bok-o16 #v
+3 bok-o17 6
+3 bok-o18 1
+3 bok-o19 3
+#p bok-o20 #l
+#dd bok-o21 6
+#z bok-o22 #k
+5 bok-o23 5
+3 bok-o24 #p
+#f bok-o25 #n
+#y bok-o26 4
+bok-o27 2 2
+bok-o28 #p #l
+bok-o29 2 0
+bok-o30 #w 3
+bok-o31 T T
+#rr bok-o32 #rr #rr
+#mm bok-o33 #mm 4
+6 bok-o34 #ll 6
+#l bok-o35 2 #d
+7 bok-o36 #mm #f
+#z bok-o37 #nn #nn
+2 bok-o38 5 #b
+#x bok-o39 #p 5
+1 bok-o40 1 1
+4 bok-o41 #p #p
+4 bok-o42 3 3
+1 bok-o43 5 5
+#m bok-o44 7 3
+3 bok-o45 6 2
+#m bok-o46 #dd #dd
+#t bok-o47 #t 3
+#pp bok-o48 4 4
+#t bok-o49 7 7
+3 bok-o50 5 #bb
+1 bok-o51 0 0
+6 bok-o52 6 3
+7 bok-o53 5 #kk
+#f bok-o54 #f #f
+#r bok-o55 0 1
+#l bok-o56 5 #l
+#l bok-o57 #bb #l
+#d bok-o58 #d #d
+3 bok-o59 3 1
+3 bok-o60 0 #mm
+2 bok-o61 3 #l
+0 bok-o62 #t 3
+3 bok-o63 #rr #rr
+#z bok-o64 #v 3
+#pp bok-o65 #pp #rr
+#y bok-o66 #z #ff
+#b bok-o67 #b #ll
+#pp bok-o68 #pp 3
+0 bok-o69 #rr #rr
+2 bok-o70 3 3
+#r bok-o71 #r #f
+#k bok-o72 #n 5
+5 bok-o73 #p #p
+3 bok-o74 3 #dd
+T bok-o75 2 #ff
+#l bok-o76 T T
+3 bok-o77 T #ll
+#p bok-o78 1 T
+#mm bok-o79 #ff #ff #ff
+3 bok-o80 #x 3 #mm
+#z bol-o0
+#d bol-o1
+bol-o2 #n
+bol-o3 3
+bol-o4 5
+bol-o5 #b
+bol-o6 2
+bol-o7 #pp
+7 bol-o8 #mm
+4 bol-o9 4
+#kk bol-o10 #kk
+5 bol-o11 5
+5 bol-o12 3
+#v bol-o13 #v
+7 bol-o14 3
+0 bol-o15 #f
+5 bol-o16 0
+0 bol-o17 #nn
+3 bol-o18 3
+#ff bol-o19 #t
+#l bol-o20 #gg
+6 bol-o21 0
+#y bol-o22 1
+#p bol-o23 #p
+#dd bol-o24 #ff
+#d bol-o25 3
+#n bol-o26 3
+#gg bol-o27 7
+#rr bol-o28 7
+T bol-o29 T
+T bol-o30 4
+bol-o31 #nn #g
+bol-o32 7 6
+bol-o33 #m #r
+bol-o34 7 3
+bol-o35 0 5
+3 bol-o36 3 #x
+2 bol-o37 #k #r
+#f bol-o38 2 1
+4 bol-o39 #l #l
+7 bol-o40 7 7
+6 bol-o41 #m 6
+2 bol-o42 2 0
+#m bol-o43 #bb #m
+3 bol-o44 3 2
+0 bol-o45 #t 4
+#z bol-o46 #z #z
+3 bol-o47 3 #d
+#m bol-o48 #mm #m
+0 bol-o49 #y 3
+#n bol-o50 #p 4
+1 bol-o51 #y 1
+3 bol-o52 0 #n
+#t bol-o53 #d 5
+#d bol-o54 #r #w
+5 bol-o55 3 1
+2 bol-o56 7 2
+#n bol-o57 #z #n
+#v bol-o58 #v #l
+3 bol-o59 4 4
+#d bol-o60 5 7
+#r bol-o61 #r #dd
+#nn bol-o62 5 #nn
+#kk bol-o63 2 #kk
+#t bol-o64 1 2
+5 bol-o65 3 #rr
+3 bol-o66 #ll 7
+3 bol-o67 7 3
+0 bol-o68 #kk #n
+#p bol-o69 #dd #dd
+T bol-o70 T T
+1 bol-o71 7 3
+T bol-o72 T 6
+#t bol-o73 #m #k 0
+5 bol-o74 5 #k 5
+#bb bol-o75 1 #k #k
+0 bol-o76 #nn #kk #p #kk
+#t bom #d #t
+#b bon #ff #b
+#nn bop
+4 bor 4
+3 bot-o0
+#g bot-o1
+6 bot-o2
+0 bot-o3
+#rr bot-o4
+bot-o5 #bb
+bot-o6 #d
+bot-o7 5
+bot-o8 #nn
+bot-o9 #dd
+bot-o10 #k
+#k bot-o11 #r
+#r bot-o12 #r
+#v bot-o13 5
+#n bot-o14 #nn
+2 bot-o15 5
+3 bot-o16 1
+#w bot-o17 #w
+7 bot-o18 #x
+4 bot-o19 4
+#mm bot-o20 #m
+2 bot-o21 4
+#w bot-o22 #y
+#bb bot-o23 #rr
+4 bot-o24 #x
+3 bot-o25 2
+0 bot-o26 1
+2 bot-o27 2
+7 bot-o28 2
+0 bot-o29 4
+0 bot-o30 0
+#m bot-o31 #m
+#m bot-o32 4
+#ff bot-o33 #ff
+T bot-o34 T
+#w bot-o35 #p
+bot-o36 #ff #ff
+bot-o37 #r #m
+bot-o38 #v #y
+bot-o39 6 #w
+bot-o40 3 0
+bot-o41 #nn #z
+bot-o42 #w 3
+6 bot-o43 #p #ll
+#kk bot-o44 6 6
+4 bot-o45 4 #ll
+#t bot-o46 3 1
+#x bot-o47 3 #x
+6 bot-o48 6 6
+4 bot-o49 4 4
+#nn bot-o50 5 #x
+4 bot-o51 #k #pp
+#y bot-o52 #n #t
+#kk bot-o53 5 5
+0 bot-o54 3 0
+4 bot-o55 4 3
+#bb bot-o56 #dd #dd
+#v bot-o57 #w #w
+7 bot-o58 7 #nn
+1 bot-o59 3 #g
+0 bot-o60 5 5
+#ll bot-o61 3 3
+3 bot-o62 5 2
+#nn bot-o63 3 5
+#mm bot-o64 #mm #mm
+4 bot-o65 2 #m
+#m bot-o66 1 #y
+2 bot-o67 2 2
+0 bot-o68 #r #pp
+#rr bot-o69 7 #rr
+#gg bot-o70 #b T
+bot-o71 #nn #gg #dd
+#k bot-o72 4 #k #dd
+2 bot-o73 4 2 1
+#rr bot-o74 #g 1 #l
+#rr bot-o75 3 #rr #rr
+#d bot-o76 5 5 #d #nn
+#p bov-o0
+#nn bov-o1
+bov-o2 5
+bov-o3 2
+bov-o4 7
+bov-o5 #gg
+bov-o6 #w
+bov-o7 #kk
+bov-o8 3
+#rr bov-o9 #rr
+1 bov-o10 3
+#r bov-o11 #r
+2 bov-o12 #k
+#bb bov-o13 3
+#l bov-o14 #l
+3 bov-o15 2
+3 bov-o16 3
+#r bov-o17 3
+#d bov-o18 #v
+T bov-o19 #ff
+#gg bov-o20 #ff #ff
+5 bov-o21 2 3
+7 bov-o22 #pp 7
+#f bov-o23 #f #f
+#x bov-o24 #w #w
+#t bov-o25 #t #t
+5 bov-o26 2 #t
+3 bov-o27 4 #f
+5 bov-o28 5 6
+#mm bov-o29 1 #ff
+#mm bov-o30 0 #f
+2 bov-o31 7 #n
+2 bov-o32 #p 3
+7 bov-o33 7 7
+4 bov-o34 #t 2
+1 bov-o35 4 7
+#r bov-o36 2 1
+7 bov-o37 4 #ff
+#ff bov-o38 #dd #dd
+6 bov-o39 3 6
+#z bov-o40 #z #z
+6 bov-o41 #f #f
+6 bov-o42 0 #rr
+#w bov-o43 #ll #n
+5 bov-o44 5 3
+2 bov-o45 2 2
+#nn bov-o46 #nn #nn
+0 bov-o47 #w 3
+2 bov-o48 3 T
+
+%%
+
+bad( -1 )
+bar( #v bib( 5 bip( baw( 0 #rr ) ) ) )
+bib( 7 )
+bip( 8 9 )
+l( #m 1 )
+bir( #g 4 )
+t( 6 bip( w( #ff ) n( 0 ) ) )
+bol( 3 #k #k )
+l( #ff 0 )
+d( 5 7 )
+w( 3 2 )
+d( 2 )
+bof( #r -3 )
+biw( 8 #z )
+biv( #y )
+bot( #w 7 )
+bod( 2 #n -2 )
+biv( bap( #z ) #ll )
+d( #bb )
+x( #nn 10 )
+big( 4 )
+bot( -2 )
+bar( )
+bov( 2 -4 )
+baz( k( bol( x( bol( #nn 9 ) #nn ) ) #v ) 2 )
+k( #dd )
+bal( 2 )
+bip( #rr d( 1 #pp ) )
+bib( #w )
+bol( #d 7 )
+bip( 4 bad( 1 l( #p n( 9 #g ) ) big( #bb #z ) bol( #l #l ) 6 ) -2 )
+bad( 2 )
+bay( #x 20 #x )
+bad( #kk #kk )
+bot( #b 3 )
+biw( -3 3 )
+bad( #f #r )
+bar( #p )
+bad( #r #ff #v )
+d( 11 )
+bog( 2 )
+bad( 2 )
+bov( #f #f )
+bov( 3 #rr )
+bol( 5 )
+bov( #dd #dd )
+d( #bb 6 )
+w( 7 2 )
+bat( 12 )
+bol( 7 2 )
+bok( #n )
+baz( 3 0 )
+w( #m 15 )
+baz( 4 )
+biv( 0 9 )
+bat( #r )
+l( 4 #ll )
+d( #f #f )
+bog( #r 10 )
+d( #p #p )
+bap( 5 bol( bax( #mm k( #pp #pp ) ) bib( 5 7 ) ) )
+bag( #ff )
+bad( #m 6 )
+bir( #pp #pp )
+l( n( -7 #p ) #g )
+bib( #ll )
+m( 5 )
+baz( #dd )
+bir( 3 #k )
+bar( 0 )
+bod( )
+big( 14 )
+bar( w( ) 0 )
+n( 3 0 )
+bad( baf( 15 ) )
+bip( 6 )
+baz( #mm 5 )
+baf( #m #rr )
+bad( #b -9 )
+bov( #w #w )
+bib( #rr )
+n( -1 )
+bok( 3 )
+t( )
+d( 6 #g )
+bot( 2 0 )
+bot( 5 6 #d #nn )
+bol( #n )
+bar( #k )
+bax( #kk bib( #z ) #y )
+n( #n #n )
+bar( #d #d )
+bir( 9 14 )
+x( #y #y )
+biv( 6 3 )
+baz( 1 15 )
+bat( #v #v )
+bog( #w m( bol( bax( #kk ) ) bir( l( #r #r #n ) 3 ) ) #m 2 )
+baz( baz( #w #rr ) 3 )
+bag( #dd #dd )
+bok( #k )
+bip( #t )
+bag( 4 )
+bov( 7 )
+bov( #v )
+l( #d #dd 1 )
+t( 2 4 )
+bib( 1 #pp )
+bol( 0 )
+bov( k( w( bir( bib( 7 ) bib( 5 7 ) ) biw( -3 bok( 6 ) ) ) 5 ) d( 8 ) )
+bip( 5 16 )
+bok( 16 3 )
+l( #d #d )
+bot( 6 9 )
+d( #z #w )
+bok( 9 #l )
+bag( #n 13 )
+big( )
+d( 11 16 )
+bar( #g )
+n( #z #rr )
+bol( 22 3 )
+baz( )
+bog( 13 3 )
+x( 4 )
+d( 5 )
+k( #g 6 )
+d( 8 5 )
+m( 5 6 )
+bog( 3 1 )
+biw( 5 #mm 13 )
+bib( 7 11 )
+k( #b #b )
+bad( 0 #n )
+bir( #t )
+d( 1 )
+bib( 0 n( 7 7 ) )
+t( #gg 4 )
+bar( )
+bay( #n )
+k( bax( #k bad( bov( #w 7 ) ) ) )
+w( -7 )
+bot( 0 )
+bat( #n )
+x( )
+bar( #kk )
+bok( 10 6 )
+bar( #m #m )
+biv( #dd #bb )
+biz( 12 #p )
+bad( bar( #k ) #x )
+bog( 8 )
+bol( 7 )
+d( #bb 3 )
+bar( 2 -3 )
+x( #ff )
+w( #t )
+bip( )
+d( #g )
+bay( #bb )
+bad( #w #w )
+bog( #ff #ff )
+k( #rr 14 )
+bag( #z #w )
+bib( 6 9 )
+bag( #d #x )
+x( 0 7 )
+bib( #z #z )
+bip( #w )
+bar( 6 7 #m )
+baz( 9 4 )
+k( 6 3 )
+baw( #pp )
+bib( 2 )
+bot( bol( #p ) #ll )
+bad( #b 4 )
+bog( 7 2 )
+x( 3 bol( #kk #kk ) )
+bar( 7 )
+bir( #kk )
+bot( #y )
+bok( -1 )
+x( 12 )
+w( #nn w( bib( #ff ) ) )
+d( 4 )
+bol( bir( 4 5 ) )
+bog( )
+d( #b 5 )
+baz( )
+w( #d #d )
+bar( 3 0 )
+d( 4 bib( 1 ) )
+bat( 9 biw( 7 #p ) )
+bix( 15 )
+bad( 10 #l )
+d( #v #v )
+t( 8 )
+d( #p #p )
+bay( #m )
+w( 10 )
+b( 6 2 )
+bog( 3 )
+l( 6 )
+bar( #f #f )
+bib( #b #ll #ll )
+l( #p #p )
+d( #d 2 )
+l( 4 14 )
+l( #m 4 )
+d( #t )
+t( -2 )
+d( 0 #kk )
+f( )
+d( 2 #kk )
+n( #v #w )
+bir( 2 )
+x( 5 14 )
+d( 9 )
+m( 3 )
+bad( )
+baf( 11 )
+k( 9 )
+biz( 15 )
+bog( #w #kk #m 6 )
+big( )
+t( 9 )
+n( 3 #d )
+l( #pp )
+bol( #x )
+bit( 1 #ff )
+n( #v )
+bip( -1 )
+bax( bal( -3 ) 3 )
+x( #ll 14 )
+l( 3 16 )
+biz( 2 )
+x( 8 d( #nn #m ) )
+bad( 2 )
+bot( 5 5 )
+bar( )
+bir( 4 4 )
+bar( #kk )
+bok( 19 )
+bag( 2 0 )
+bar( 9 )
+bip( 0 #w )
+bod( #n #n )
+l( #rr )
+bad( 2 #b )
+bol( bip( #r 2 ) )
+bir( 7 3 )
+baw( )
+bot( 12 )
+w( 3 )
+bib( 7 4 )
+baz( 7 9 )
+d( #pp )
+bov( 7 )
+baw( #gg )
+l( -8 5 )
+bag( #bb )
+biw( #v #b )
+bir( #b #d )
+bir( 0 )
+bar( 3 2 )
+bib( #n 3 )
+bip( #l 5 )
+w( 10 3 )
+x( 1 6 )
+bov( 5 3 )
+bar( 4 5 )
+baf( #m 3 )
+w( )
+l( 1 )
+bad( 3 )
+k( 13 2 )
+bib( 6 #p )
+w( )
+bib( l( 6 ) #m )
+bot( #k )
+x( #v )
+n( 4 #t )
+bov( #ff )
+bof( #r bog( biv( 5 bar( #r ) ) #w ) )
+bap( -11 -3 )
+bax( 1 #kk )
+l( 20 #k )
+bot( #mm #mm )
+k( 7 6 )
+bar( k( #k bar( 10 ) ) 4 )
+bot( #r )
+w( #f #pp )
+bad( 29 )
+bip( #v #v )
+bag( #l #g )
+d( 9 )
+bat( -4 8 )
+bod( 5 )
+bok( #n )
+biz( 6 )
+bok( #ff #ff #ff )
+biv( #y #gg )
+bok( bip( bip( biv( bok( 1 ) 5 #r 8 -6 ) bol( 13 2 ) ) g( bar( #k ) bov( #ff ) ) ) 5 )
+bat( #dd )
+bog( 0 1 7 #gg )
+bir( 5 #x )
+baz( #w #kk )
+baf( 4 )
+bad( #v #y )
+bar( 2 3 )
+bot( 16 5 )
+bib( 5 6 )
+l( #x )
+bov( #p 12 )
+d( #kk #nn )
+bol( 4 )
+bar( #ff w( bol( #mm ) bok( #t 1 ) ) )
+k( 7 #v )
+biy( #v )
+bar( 14 6 #m )
+biv( 3 #gg )
+bib( #n #kk )
+baz( 3 #r )
+bot( #nn )
+bax( 10 #mm )
+bov( 4 #t )
+biz( -8 #p )
+k( #z #z 22 )
+d( 5 )
+bad( 2 7 )
+k( #kk #kk )
+baz( 3 8 )
+bib( #kk )
+biv( #m #g #m #m #m )
+bol( #m #r )
+k( #n #mm )
+biv( 1 )
+l( #ff )
+x( 9 #nn )
+bax( 5 )
+w( 3 )
+l( #d #dd 4 )
+bog( 11 5 )
+baz( 6 8 )
+bol( 5 )
+biy( #v )
+x( 13 )
+x( 1 0 )
+bad( #bb 1 4 )
+w( 5 5 )
+biv( )
+biw( #b #x 3 )
+bax( #kk )
+x( bot( #dd ) )
+x( )
+baz( #v -1 )
+bot( #mm #mm )
+baz( #rr #rr )
+bar( #t )
+bar( bok( 9 ) )
+bap( 7 #pp )
+biz( #t 0 )
+baz( 0 8 )
+bir( #m bar( w( 2 ) bip( 5 -7 ) #m ) )
+bog( #w #kk #m 5 )
+n( )
+bar( #nn )
+bip( #v #g )
+bip( #b d( 8 5 ) )
+bar( 4 #pp )
+bav( 6 1 )
+bog( #b )
+l( -3 )
+w( 10 )
+bad( 11 8 #bb #l 1 )
+k( #m #f )
+bip( #g )
+bax( #dd )
+bad( 5 16 )
+bov( #w 3 )
+bar( #n 5 )
+bov( #w 4 )
+k( 3 #r )
+bad( -1 11 )
+n( 3 5 )
+bot( #rr )
+bad( 2 )
+m( 9 5 )
+l( 6 #f )
+bip( 7 #z )
+bad( 3 8 )
+bov( 5 )
+w( 5 )
+x( 3 3 )
+t( 2 )
+bad( #ll )
+l( 3 3 )
+k( 14 )
+baf( #t 9 )
+bol( bap( ) )
+t( #y )
+big( #ll #n )
+baz( -1 )
+bag( #d )
+bog( 8 5 )
+bat( #n )
+baz( #y 3 5 8 -1 )
+bir( 5 #x )
+k( 1 1 )
+w( 9 -2 )
+bar( 9 -1 )
+d( 2 -3 )
+t( #n )
+bir( #g 4 )
+bar( #ff #ff )
+bit( 1 #ff )
+bad( #v #v )
+big( 5 )
+bip( )
+bir( 0 )
+bip( #b )
+k( -3 )
+t( #l baz( #n ) )
+l( 2 5 6 12 baz( 7 ) )
+bot( #dd )
+bog( 7 #g )
+bad( 1 )
+l( #gg #g )
+bim( #l #l )
+bad( 8 #m )
+w( bot( #r ) )
+bir( #v #v )
+bok( #pp #rr )
+biv( 12 -3 )
+biy( #v #b )
+bax( #kk )
+x( 6 9 )
+d( #f )
+w( #t 5 )
+bov( #w baz( 6 2 ) )
+biz( )
+k( 4 #pp )
+k( 11 #gg )
+bar( #ff #b )
+bil( 5 10 3 )
+bar( 7 7 )
+bod( 3 )
+l( big( bol( #v ) ) #r 7 )
+k( #d )
+bok( #t 7 )
+bir( 1 8 )
+n( 3 3 )
+l( #p 7 )
+w( bax( d( 3 ) 12 ) d( #gg -2 #n ) )
+l( 1 3 )
+n( #t )
+bot( 6 3 )
+t( #l #n )
+bap( 6 )
+bot( bol( -1 #d ) #nn )
+d( -3 )
+l( 9 )
+bib( #rr )
+baw( #kk 4 )
+bad( #r 11 )
+biw( 10 #p )
+biy( 1 #f )
+bot( )
+biw( 6 6 )
+baf( -4 )
+w( #d #d )
+big( #g #p )
+bot( -3 )
+bag( #x )
+biv( #g #g )
+l( 1 )
+baw( 1 0 )
+bad( 3 3 )
+bad( 4 )
+bar( #l )
+bay( #n )
+biw( 7 0 )
+bol( 1 #n )
+k( #f #f )
+biz( 1 )
+bar( #p 2 )
+bok( 6 #b )
+bar( #d #d )
+bov( 3 )
+baz( #r 5 )
+bol( 1 biz( 0 ) )
+bar( #p )
+k( #b #ff )
+baz( 6 bip( bok( 6 #b ) ) )
+x( #v )
+w( #mm )
+baz( #y #y )
+baz( 8 9 1 #mm #dd )
+bot( 14 )
+bok( 6 6 )
+bad( #r )
+big( 6 #p )
+n( )
+bax( bok( bok( #l ) ) #mm )
+biv( 1 )
+bap( 4 n( 5 ) )
+bov( 3 )
+d( 6 #ff )
+bot( #m )
+d( 3 #b )
+bar( 3 )
+n( 9 )
+baz( #gg #p )
+n( 10 )
+bax( #r #r #dd #m )
+bol( #gg )
+bad( #kk )
+baz( bad( #w ) #f )
+bad( #kk )
+x( 5 #kk )
+bib( 7 7 )
+l( 3 )
+biz( #z )
+t( #x )
+l( #k #kk baz( #k ) 6 )
+x( 9 #r )
+biw( #dd 1 )
+bad( #n )
+w( 2 -1 )
+x( 6 3 )
+baz( 4 3 )
+bax( #g #y )
+bol( #pp )
+bot( )
+bib( #v #v )
+bip( 4 1 )
+biw( 6 9 )
+bok( )
+bat( #x #x #x )
+bol( 4 )
+bat( #d #d )
+bok( #ff )
+baz( #t #w )
+biw( -4 8 )
+biv( #y )
+l( 3 2 )
+bov( -1 8 )
+d( #d )
+baz( -2 -6 )
+w( 4 #l )
+l( #pp )
+bol( #pp )
+bar( 3 )
+bad( #v #v )
+biv( #f bat( bib( 1 #m ) bot( bag( 6 ) x( bok( 5 #kk ) bot( ) m( baz( bog( 8 13 ) ) #dd ) ) ) bat( #mm ) #n #n ) )
+l( 4 3 )
+bog( #pp )
+bad( 7 2 )
+x( #r )
+k( #rr )
+bok( #f #f )
+bax( #dd 11 )
+bog( 3 1 )
+x( 2 4 #z )
+baf( 4 )
+bat( #g )
+bad( 2 #n )
+biw( 3 4 )
+bov( 6 16 )
+bax( -7 #n )
+bip( 4 -1 )
+bib( 3 3 )
+w( 4 9 )
+bov( 2 #ff )
+l( #rr )
+bov( -1 )
+l( #y #r )
+k( #p )
+bib( 7 #p )
+bag( 3 )
+bog( 5 10 )
+k( bad( #rr #rr ) 5 )
+bog( #p #m )
+bad( #rr #rr )
+bar( #r #r )
+bir( 5 1 )
+n( bol( #gg baz( #gg ) ) #m )
+biy( 1 -1 )
+biy( bat( #g ) #f )
+bax( #dd 9 )
+biy( 0 #m )
+biw( )
+biv( #ff )
+l( #v )
+bat( 7 )
+bat( #g #z )
+bir( 2 )
+bol( 6 6 )
+bax( 3 )
+bir( 2 )
+bov( 18 #n )
+d( 5 #kk )
+l( biv( 1 ) )
+bax( 3 )
+bib( #f #m )
+d( 0 )
+bat( 2 )
+x( 2 )
+biw( #v #b )
+n( 8 #m )
+bov( #t 7 )
+bip( n( 15 7 3 ) )
+n( )
+w( 11 #rr )
+bax( 4 3 )
+bib( #y #y #y )
+bag( 4 #bb )
+x( 6 11 )
+bip( 10 1 5 )
+k( 0 9 )
+bap( 4 13 )
+bat( 3 )
+bib( 5 )
+bir( 7 3 )
+bax( -1 )
+biz( 4 3 )
+d( #f #f )
+n( 6 )
+l( 0 0 0 )
+k( 7 #pp )
+bol( 3 0 )
+bad( )
+biv( 5 6 )
+bok( 3 14 )
+x( 7 6 )
+f( )
+bot( )
+d( #f #f )
+bar( #r #r )
+x( #z baz( #z ) )
+biz( #mm 9 )
+biz( bad( #ff #ff ) #v )
+bax( #pp #g )
+bok( #x 6 #mm )
+baz( #y #y )
+k( #dd )
+bat( #p #p )
+biw( #b #x 7 )
+d( #mm )
+biv( 3 )
+bip( d( -26 0 ) #ff )
+bod( 2 )
+bip( #dd #dd )
+baz( #n )
+bol( #l #l )
+l( 7 3 )
+d( #gg #gg )
+bog( #x #x )
+k( #gg )
+bad( #kk )
+d( 2 #bb )
+bip( 6 8 4 4 )
+bar( #x #x )
+bot( 10 #nn )
+bap( 4 4 )
+bar( 16 )
+bax( #nn #f #nn )
+bol( #gg )
+bar( #g )
+bol( #n )
+bok( )
+m( 3 )
+bog( 3 5 )
+biz( 1 2 )
+t( 16 0 )
+bib( #b #mm #mm )
+w( 7 )
+bog( #bb )
+bax( 8 7 )
+bar( )
+bot( #y )
+w( #ff 5 )
+bip( #t #kk )
+baz( 6 )
+d( 4 )
+bar( 3 )
+bad( bol( #y bat( bog( #d bag( #d 6 ) ) #d ) ) 10 )
+bag( -23 #bb )
+bax( 0 #z )
+bov( 7 )
+w( )
+biw( 7 #kk )
+bad( 13 )
+bok( #l )
+bip( )
+bap( #mm #kk )
+x( #z )
+bat( 8 )
+biy( 5 #f )
+x( 3 0 )
+bod( #n #n )
+bib( )
+bax( #b #b )
+bir( 9 15 )
+w( 0 )
+baz( 4 )
+baz( #ll )
+biv( 4 3 )
+x( 1 #r )
+biz( d( 3 ) 4 )
+bar( 2 7 )
+x( 6 )
+w( 9 )
+bad( #f #r )
+bap( #rr #mm #rr )
+g( #d #d )
+x( #mm #t )
+bad( #r #nn )
+big( 7 )
+bad( #v #v )
+bip( 6 14 )
+d( 9 )
+baw( #z #nn )
+biz( #ll #p )
+baw( )
+bod( #bb #w )
+x( 1 1 )
+baz( #w #f )
+bov( #f #f )
+w( -1 6 )
+k( #t )
+w( #gg bag( 8 ) )
+bap( -1 7 )
+bax( 12 8 )
+bar( )
+biv( 4 )
+bot( #ff #ff )
+biv( 7 10 )
+d( 8 )
+bot( #w #w )
+t( #d #d )
+bip( )
+d( bot( bad( #v #v ) ) #m )
+w( #t 2 )
+bol( #r #dd )
+x( 9 )
+x( #rr #rr #rr 5 13 )
+biv( #g #p )
+bog( #l #pp )
+bat( 7 )

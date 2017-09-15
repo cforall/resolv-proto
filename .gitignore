@@ -3,6 +3,7 @@
 /rp-td
 /bench_gen
 /tests/renumber
+/bench/plots
 *.o
 *.d
 .lastmakeflags

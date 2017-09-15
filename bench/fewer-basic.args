@@ -1,0 +1,4 @@
+get_basic: weighted 0.325 uniform 1 2 0.35 constant 3 0.325 uniform 4 5
+get_struct: uniform 0 40
+p_unsafe_offset: 0.15
+basic_offset: geometric 0.15

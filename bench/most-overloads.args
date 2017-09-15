@@ -1,0 +1,2 @@
+n_overloads: weighted 0.25 constant 1, 0.10 uniform 2 6, 0.25 uniform 7 40, 0.40 uniform 41 150
+max_tries_for_unique: 40
