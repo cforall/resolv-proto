@@ -1,3 +1,8 @@
+## 20 Sept 2017 ##
+* Modified TD resolver to cache independently of environment, ran experimental tests
+* Needed to make `fewer-basic` and `deeper-nesting` even easier (same pattern as before for hard TD instances)
+* New TD otherwise unambiguously better
+
 ## 13-15 Sept 2017 ##
 * Results from today's benchmarks; BU generally wins
 ```

@@ -35,36 +35,21 @@ using AmbiguousEffect = std::function<void(const Expr*,
 using UnboundEffect = std::function<void(const Expr*, const List<TypeClass>&)>;
 
 #ifdef RP_MODE_TD
-/// key type for argument cache; combines expression with environment it was resolved in
-using ArgKey = std::pair<const Expr*, const Env*>;
-
-namespace std {
-	/// std::hash implementation for ArgKey
-	template<> struct hash<ArgKey> {
-		typedef ArgKey argument_type;
-		typedef std::size_t result_type;
-		result_type operator() (const argument_type& k) const {
-			return hash<const Expr*>{}(k.first) ^ hash<const Env*>{}(k.second);
-		}
-	};
-}
-
 /// argument cache; prevents re-calculation of shared subexpressions under same environment
 class ArgCache {
 	using KeyedMap = TypeMap< InterpretationList >;
-	std::unordered_map<ArgKey, KeyedMap> cache;
+	std::unordered_map<const Expr*, KeyedMap> tcache; // typed expression cache
+	std::unordered_map<const Expr*, InterpretationList> ucache; // untyped expression cache
 
 public:
-	/// Looks up the interpretations in the cache, generating them if needed.
-	/// The generation function takes ty, e, and env as arguments and returns an InterpretationList
+	/// Looks up the interpretations with a given type in the cache, generating them if needed.
+	/// The generation function takes ty and e as arguments and returns an InterpretationList
 	template<typename F>
-	InterpretationList& operator()( const Type* ty, const Expr* e, const Env* env, F gen ) {
-		// search for expression/environment pair
-		env = getNonempty( env );
-		ArgKey key{ e, env };
-		auto eit = cache.find( key );
-		if ( eit == cache.end() ) {
-			eit = cache.emplace_hint( eit, move(key), KeyedMap{} );
+	InterpretationList& operator() ( const Type* ty, const Expr* e, F gen ) {
+		// search for expression
+		auto eit = tcache.find( e );
+		if ( eit == tcache.end() ) {
+			eit = tcache.emplace_hint( eit, /*move(key),*/ e, KeyedMap{} );
 		}
 
 		// find appropriately typed return value
@@ -72,7 +57,7 @@ public:
 		auto it = ecache.find( ty );
 		if ( it == ecache.end() ) {
 			// build if not found
-			it = ecache.insert( ty, gen( ty, e, env ) ).first;
+			it = ecache.insert( ty, gen( ty, e ) ).first;
 //			std::cerr << 'm' << std::endl;
 //		} else {
 //			std::cerr << 'h' << std::endl;
@@ -81,8 +66,23 @@ public:
 		return it.get();
 	}
 
+	/// Looks up the untyped interpretations in the cache, generating them if needed.
+	/// The generation function takes e as an argument, and returns an InterpretationList
+	template<typename F>
+	InterpretationList& operator() ( const Expr* e, F gen ) {
+		// search for expression
+		auto it = ucache.find( e );
+		if ( it == ucache.end() ) {
+			it = ucache.emplace_hint( it, e, gen( e ) );
+		}
+		return it->second;
+	}
+
 	/// Clears the argument cache
-	void clear() { cache.clear(); }
+	void clear() {
+		tcache.clear();
+		ucache.clear();
+	}
 };
 #endif
 

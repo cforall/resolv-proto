@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+if [ "$#" -ne 1 ]; then
+	echo "usage: $0 <mode>" >&2
+	exit 1
+fi
+
+new=( out/$1-*.csv(om[1]) )
+old=( out/$1-*.csv(om[2]) )
+
+if [[ ! -d plots ]]; then mkdir plots; fi
+
+gnuplot -e "new='${new}'; old='${old}'; mode='$1'" gen_comp_plots.gp

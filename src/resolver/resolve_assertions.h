@@ -226,6 +226,9 @@ public:
 	const TypedExpr* mutate( const TypedExpr*& r ) {
 		(*this)( r, r );
 
+		// end early if no alternatives
+		if ( r == nullptr ) return nullptr;
+
 		// end early if no deferred assertions
 		if ( deferred.empty() ) return r;
 

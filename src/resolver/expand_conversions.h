@@ -152,7 +152,6 @@ bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
     if ( r->bound ) return *r->bound == *conc;
     // otherwise make concrete class the new typeclass representative
     bindType( env, r, conc );
-    // ++cost.vars;
     return true;
 }
 

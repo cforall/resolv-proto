@@ -27,10 +27,13 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 									 const PolyType* targetType, const Env* env, 
 									 bool truncate = true ) {
 	InterpretationList results;
-	for ( const Interpretation* i : resolver.resolve( expr, env ) ) {
+	InterpretationList& subs = resolver.cached( expr, 
+		[&resolver]( const Expr* e ) { return resolver.resolve( e, nullptr ); } );
+	for ( const Interpretation* i : subs ) {
 		// loop over subexpression results, binding result types to target type
 		const TypedExpr* rExpr = i->expr;
 		Env* rEnv = Env::from( i->env );
+		if ( ! merge( rEnv, env ) ) continue;
 		ClassRef r = getClass( rEnv, targetType );
 		Cost rCost = i->cost;
 
@@ -106,13 +109,20 @@ struct ArgPack {
 };
 InterpretationList resolveWithExtType( Resolver&, const Expr*, const Type*, const Env*, bool );
 
+/// Returns true if the first type element of rType unifyies with boundType (true if no bound type)
+bool unifyExt( const PolyType* boundType, const Type* rType, Cost& rCost, Env*& rEnv ) {
+	if ( ! boundType ) return true;
+	if ( const TupleType* trType = as_safe<TupleType>(rType) ) {
+		return unify( boundType, trType->types()[0], rCost, rEnv );
+	} else return unify( boundType, rType, rCost, rEnv );
+}
+
 /// Resolves a function expression with any return type, binding the result to `bound` if 
 /// a valid ref
 template<typename Funcs>
 InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs, 
                                  const FuncExpr* expr, const Env* env, 
-                                 Resolver::Mode resolve_mode = {}, 
-								 const PolyType* boundType = nullptr ) {
+                                 Resolver::Mode resolve_mode = {} ) {
 	InterpretationList results{};
 	
 	for ( const FuncDecl* func : funcs ) {
@@ -141,11 +151,6 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 		// make new environment for child resolution, binding function return type
 		Cost rCost = func->poly_cost();
 		Env* rEnv = Env::from(env);
-		if ( boundType ) {
-			if ( const TupleType* trType = as_safe<TupleType>(rType) ) {
-				if ( ! unify( boundType, trType->types()[0], rCost, rEnv ) ) continue;
-			} else if ( ! unify( boundType, rType, rCost, rEnv ) ) continue;
-		}
 
 		switch( expr->args().size() ) {
 			case 0: {
@@ -161,11 +166,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 			} break;
 			case 1: {
 				// single arg, accept and move up
-				InterpretationList& subs = resolver.cached(
-					Type::from( rParams ), expr->args().front(), rEnv,
-					[&resolver]( const Type* ty, const Expr* e, const Env* env ) {
-						return resolver.resolveWithType( e, ty, env );
-					} );
+				InterpretationList subs 
+					= resolver.resolveWithType( expr->args().front(), Type::from( rParams ), rEnv );
 				for ( const Interpretation* sub : subs ) {
 					// make interpretation for this arg
 					const TypedExpr* call = 
@@ -211,11 +213,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 						// skip combos with no arguments left
 						if ( combo.next == expr->args().end() ) continue;
 						// Find interpretations for this argument
-						InterpretationList& subs = resolver.cached(
-							param, *combo.next, combo.env,
-							[&resolver]( const Type* ty, const Expr* e, const Env* env ) {
-								return resolveWithExtType( resolver, e, ty, env, false );
-							} );
+						InterpretationList subs = 
+							resolveWithExtType( resolver, *combo.next, param, combo.env, false );
 						// build new combos from interpretations
 						for ( const Interpretation* i : subs ) {
 							// Build new ArgPack for this interpretation, noting leftovers
@@ -266,23 +265,17 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 /// Resolves a function expression with a fixed return type, binding the result to 
 /// `bound` if a valid ref
 InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, const FuncExpr* expr, 
-                              const Type* targetType, const Env* env, 
-							  const PolyType* boundType = nullptr, bool truncate = true ) {
+                              const Type* targetType, bool truncate = true ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
-	// replace target by concrete target if polymorphic
-	if ( boundType ) {
-		targetType = replace( env, boundType );
-	}
 	
 	// For any type (or tuple that has the target type as a prefix)
 	if ( const TypeMap<FuncList>* matches = funcIndex.get( targetType ) ) {
 		for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
-					resolver, it.get(), expr, env, 
-					Resolver::Mode{}.without_conversions().with_void_if(is<VoidType>(targetType)), 
-					boundType );
+					resolver, it.get(), expr, nullptr, 
+					Resolver::Mode{}.without_conversions().with_void_if(is<VoidType>(targetType)) );
 			if ( sResults.empty() ) continue;
 
 			const Type* keyType = it.key();
@@ -303,8 +296,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 			for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 				// results for all the functions with that type
 				InterpretationList sResults = resolveToAny(
-					resolver, it.get(), expr, env, Resolver::Mode{}.without_conversions(), 
-					boundType );
+					resolver, it.get(), expr, nullptr, Resolver::Mode{}.without_conversions() );
 				if ( sResults.empty() ) continue;
 
 				// cast and perhaps truncate expressions to match result type
@@ -347,7 +339,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
-				resolver, it.get(), expr, env, Resolver::Mode{}.without_conversions(), boundType );
+				resolver, it.get(), expr, nullptr, Resolver::Mode{}.without_conversions() );
 			if ( sResults.empty() ) continue;
 
 			// truncate expressions to match result type
@@ -391,11 +383,16 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 /// expresssions.
 InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,  
 		const Type* targetType, const Env* env, bool truncate = true ) {
+	Cost rCost;
+
 	// if the target type is polymorphic and unbound, expand out all conversion options
 	const PolyType* pTarget = as_safe<PolyType>(targetType);
 	if ( pTarget ) {
 		ClassRef pClass = findClass( env, pTarget );
-		if ( !pClass || !pClass->bound ) {
+		if ( pClass && pClass->bound ) {
+			targetType = pClass->bound;
+			++rCost.poly;
+		} else {
 			return resolveToUnbound( resolver, expr, pTarget, env, truncate );
 		}
 	}
@@ -404,7 +401,6 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 	if ( eid == typeof<VarExpr>() ) {
 		// convert leaf expression to given type
 		Env* rEnv = Env::from( env );
-		Cost rCost;
 		const TypedExpr* rExpr =
 			convertTo( targetType, as<VarExpr>(expr), resolver.conversions, rEnv, rCost, truncate );
 		// return expression if applicable
@@ -417,7 +413,23 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 		auto withName = resolver.funcs.find( funcExpr->name() );
 		if ( withName == resolver.funcs.end() ) return InterpretationList{};
 
-		return resolveTo( resolver, withName(), funcExpr, targetType, env, pTarget, truncate );
+		InterpretationList& subs = resolver.cached( targetType, funcExpr, 
+			[&resolver,&withName,truncate]( const Type* ty, const Expr* e ) {
+				return resolveTo( resolver, withName(), as<FuncExpr>(e), ty, truncate ); 
+			} );
+		if ( env == nullptr && rCost == Cost::zero() ) return subs;
+		
+		InterpretationList rSubs;
+		rSubs.reserve( subs.size() );
+		for ( const Interpretation* i : subs ) {
+			const Type* sType = i->type();
+			Env* sEnv = Env::from( env );
+			Cost sCost = is<PolyType>(sType) ? i->cost : rCost + i->cost;
+			if ( ! unifyExt( pTarget, sType, sCost, sEnv ) ) continue;
+			if ( ! merge( sEnv, i->env ) ) continue;
+			rSubs.push_back( new Interpretation{ i->expr, sEnv, move(sCost), copy(i->argCost) } );
+		}
+		return rSubs;
 	} else assert(!"Unsupported expression type");
 
 	return {}; // unreachable
