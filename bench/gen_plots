@@ -1,8 +1,10 @@
 #!/bin/zsh
 
-td=( out/td-*.csv(om[1]) )
 bu=( out/bu-*.csv(om[1]) )
+co=( out/co-*.csv(om[1]) )
+td=( out/td-*.csv(om[1]) )
+
 
 if [[ ! -d plots ]]; then mkdir plots; fi
 
-gnuplot -e "td='${td}'; bu='${bu}'" gen_plots.gp
+gnuplot -e "bu='${bu}'; co='${co}'; td='${td}'" gen_plots.gp

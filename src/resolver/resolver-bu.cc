@@ -4,6 +4,9 @@
 
 #include "resolver.h"
 
+#if defined RP_MODE_BU
+#include "arg_pack.h"
+#endif
 #include "cost.h"
 #include "env.h"
 #include "env_substitutor.h"
@@ -119,9 +122,122 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 	return results;
 }
 
-/// List of argument combinations
-typedef std::vector< std::pair<Cost, InterpretationList> > ComboList;
+#if defined RP_MODE_BU
+/// Unifies prefix of argument type with parameter type (required to be size 1)
+bool unifyFirst( const Type* paramType, const Type* argType, Cost& cost, Env*& env ) {
+	auto aid = typeof(argType);
+	if ( aid == typeof<VoidType>() ) {
+		return false;  // paramType size == 1
+	} else if ( aid == typeof<TupleType>() ) {
+		return unify(paramType, as<TupleType>(argType)->types()[0], cost, env );
+	} else {
+		return unify(paramType, argType, cost, env);
+	}
+}
 
+using ComboList = std::vector<InterpretationList>;
+
+template<typename Funcs>
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
+                               ComboList&& args, Resolver::Mode resolve_mode ) {
+	InterpretationList results{};
+
+	for ( const FuncDecl* func : funcs ) {
+		// skip void-returning functions unless at top level
+		if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
+
+		// skip functions without enough parameters
+		if ( func->params().size() < args.size() ) continue;
+
+		// generate forall and parameter types for forall
+		unique_ptr<Forall> rForall = Forall::from( func->forall(), resolver.id_src );
+		const Type* rType;
+		List<Type> rParams;
+		if ( rForall ) {
+			ForallSubstitutor m{ rForall.get() };
+			rType = m( func->returns() );
+			rParams = m( func->params() );
+		} else {
+			rType = func->returns();
+			rParams = func->params();
+		}
+
+		Cost rCost = func->poly_cost();
+
+		// iteratively build matches, one parameter at a time
+		std::vector<ArgPack> combos{ ArgPack{ nullptr } };
+		std::vector<ArgPack> nextCombos{};
+		for ( const Type* param : rParams ) {
+			assert(param->size() == 1 && "parameter list should be flattened");
+			// find interpretations with matching type
+			for ( ArgPack& combo : combos ) {
+				// test matches for leftover combo args
+				if ( combo.on_last > 0 ) {
+					const TupleType* cType = as_checked<TupleType>(combo.crnt->type());
+					unsigned cInd = cType->size() - combo.on_last;
+					const Type* crntType = cType->types()[ cInd ];
+					Cost cCost = combo.cost;
+					Env* cEnv = Env::from( combo.env );
+
+					if ( unify( param, crntType, cCost, cEnv ) ) {
+						// build new combo which consumes more arguments
+						nextCombos.emplace_back( combo, move(cCost), cEnv, combo.on_last - 1 );
+					}
+
+					// replace combo with truncated expression
+					combo.truncate();
+					//combo.crnt = new TruncateExpr{ combo.crnt, cInd };
+				}
+
+				// skip combos with no arguments left
+				if ( combo.next == args.size() ) continue;
+
+				// build new combos from matching interpretations
+				for ( const Interpretation* i : args[combo.next] ) {
+					Cost iCost = combo.cost + i->cost;
+					Env* iEnv = Env::from( combo.env );
+
+					// fail if cannot merge interpretation into combo
+					if ( ! merge( iEnv, i->env ) ) continue;
+					// fail if interpretation type does not match parameter
+					if ( ! unifyFirst( param, i->type(), iCost, iEnv ) ) continue;
+
+					// Build new ArgPack for this interpretation, noting leftovers
+					nextCombos.emplace_back( combo, i, move(iCost), iEnv, i->type()->size() - 1 );
+				}
+			}
+
+			// reset for next parameter
+			combos.swap( nextCombos );
+			nextCombos.clear();
+			// exit early if no combinations
+			if ( combos.empty() ) break;
+		}
+
+		// Validate matching combos, add to final result list
+		for ( ArgPack& combo : combos ) {
+			// skip combos with leftover arguments
+			if ( combo.next != args.size() ) continue;
+
+			// truncate any incomplete compbos
+			combo.truncate();
+
+			// make interpretation for this combo
+			const TypedExpr* call = new CallExpr{ func, move(combo.args), copy(rForall), rType };
+			Cost cCost = rCost + combo.cost;
+			const Env* cEnv = combo.env;
+			
+			// check assertions if at top level
+			if ( resolve_mode.check_assertions 
+				 && ! resolveAssertions( resolver, call, cCost, cEnv ) ) continue;
+			
+			results.push_back( new Interpretation{ call, cEnv, move(cCost), move(combo.argCost) } );
+		}
+	}
+
+	return results;
+}
+#elif defined RP_MODE_CO
 /// Create a list of argument expressions from a list of interpretations
 List<TypedExpr> argsFrom( const InterpretationList& is ) {
 	List<TypedExpr> args;
@@ -130,6 +246,9 @@ List<TypedExpr> argsFrom( const InterpretationList& is ) {
 	}
 	return args;
 }
+
+/// List of argument combinations
+using ComboList = std::vector< std::pair<Cost, InterpretationList> >;
 
 /// Return an interpretation for all matches between functions in funcs and 
 /// argument packs in combos
@@ -182,6 +301,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 	
 	return results;
 }
+#endif
 
 /// Combination validator that fails on ambiguous interpretations in combinations
 struct interpretation_unambiguous {
@@ -234,11 +354,15 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 					sub_results.push_back( move(sresults) );
 				}
 				
+#if defined RP_MODE_BU
+				results = matchFuncs( *this, withName(), move(sub_results), resolve_mode );
+#elif defined RP_MODE_CO
 				interpretation_unambiguous valid;
 				auto merged = unsorted_eager_merge<
 					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );
 				
 				results = matchFuncs( *this, withName(), move(merged), resolve_mode );
+#endif
 			} break;
 		}
 	} else assert(!"Unsupported expression type");

@@ -1,3 +1,8 @@
+## 21 Sept 2017 ##
+* Wrote new iterative version of BU
+  * orders of magnitude faster than old BU, now renamed to CO
+  * can sucessfully complete full test suite in original forms
+
 ## 20 Sept 2017 ##
 * Modified TD resolver to cache independently of environment, ran experimental tests
 * Needed to make `fewer-basic` and `deeper-nesting` even easier (same pattern as before for hard TD instances)

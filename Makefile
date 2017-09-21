@@ -32,8 +32,14 @@ endif
 
 ifeq "${MODE}" "td"
 CXXFLAGS += -DRP_MODE_TD
+MODE_OBJS = resolver-td.o
+else ifeq "${MODE}" "co"
+CXXFLAGS += -DRP_MODE_CO
+MODE_OBJS = resolver-bu.o
 else
 MODE = bu
+CXXFLAGS += -DRP_MODE_BU
+MODE_OBJS = resolver-bu.o
 endif
 
 ifeq "${LAST_OPT};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG};${LAST_MODE}" "${OPT};${SORTED};${USER_CONVS};${DEBUG};${MODE}"
@@ -61,7 +67,7 @@ $(BUILDDIR)/%.o : %.cc $(BUILDDIR)/%.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # rp objects
-OBJS = $(addprefix $(BUILDDIR)/, conversion.o env.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o resolver-$(MODE).o rp.o)
+OBJS = $(addprefix $(BUILDDIR)/, conversion.o env.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o $(MODE_OBJS) rp.o)
 
 # bench_gen objects
 BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o env.o expr.o forall.o forall_substitutor.o random_partitioner.o bench_gen.o)

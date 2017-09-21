@@ -36,7 +36,7 @@ using FuncList = std::vector<FuncDecl*>;
 	/// Backing storage for a set of function declarations with the same name indexed by 
 	/// return type
 	using FuncSubTable = FlatMap<const Type*, FuncList, ExtractReturn, TypeMap2>;
-#else
+#elif defined RP_MODE_BU || defined RP_MODE_CO
 	/// Functor to extract the number of parameters from a function declaration
 	struct ExtractNParams {
 		unsigned operator() (const FuncDecl* f) { return f->params().size(); }

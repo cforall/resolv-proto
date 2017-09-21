@@ -93,9 +93,9 @@ public:
 	FuncTable& funcs;              ///< Known function declarations
 	unsigned id_src;               ///< Source of type variable IDs
 
-	#ifdef RP_MODE_TD
+#ifdef RP_MODE_TD
 	ArgCache cached;               ///< Cached expression resolutions
-	#endif
+#endif
 	
 	InvalidEffect on_invalid;      ///< Effect to run on invalid interpretation
 	AmbiguousEffect on_ambiguous;  ///< Effect to run on ambiguous interpretation
@@ -104,9 +104,9 @@ public:
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
 	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound )
 		: conversions( conversions ), funcs( funcs ), id_src(0),
-		  #ifdef RP_MODE_TD
+#ifdef RP_MODE_TD
 		  cached(),
-		  #endif
+#endif
 		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
 
 	/// Flags for interpretation mode
