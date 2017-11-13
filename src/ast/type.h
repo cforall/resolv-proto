@@ -88,27 +88,49 @@ namespace std {
 	};
 }
 
-/// Represents a named concrete type
+/// Represents a named type; may be generic with parameters
 class NamedType : public Type {
 	std::string name_;
+	List<Type> params_;
 
 public:
 	typedef Type Base;
 
-	NamedType(const std::string& name_)	: name_(name_) {}
+	NamedType(const std::string& name_)	: name_(name_), params_() {}
+	NamedType(const std::string& name_, List<Type>&& params_) 
+		: name_(name_), params_(params_) {}
 
-	Type* clone() const override { return new NamedType( name_ ); }
+	Type* clone() const override { return new NamedType( name_, copy(params_) ); }
 
 	bool operator== (const NamedType& that) const {
-		return name_ == that.name_;
+		if ( name_ != that.name_ ) return false;
+		if ( params_.size() != that.params_.size() ) return false;
+		for ( unsigned i = 0; i < params_.size(); ++i ) {
+			if ( *params_[i] != *that.params_[i] ) return false;
+		}
+		return true;
 	}
 	bool operator!= (const NamedType& that) const { return !(*this == that); }
 
 	const std::string& name() const { return name_; }
+
+	const List<Type>& params() const { return params_; }
 	
 	unsigned size() const override { return 1; }
 
-	void write(std::ostream& out, ASTNode::Print) const override { out << "#" << name_; }
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		out << "#" << name_;
+		if ( ! params_.empty() ) {
+			out << "<";
+			auto it = params_.begin();
+			(*it)->write( out, style );
+			while ( ++it != params_.end() ) {
+				out << " ";
+				(*it)->write( out, style );
+			}
+			out << ">";
+		}
+	}
 
 protected:
 	bool equals(const Type& obj) const override {
@@ -117,7 +139,12 @@ protected:
 	}
 
 	std::size_t hash() const override {
-		return std::hash<std::string>{}( name_ );
+		auto h = std::hash<std::string>{}( name_ );
+		for ( const Type* p : params_ ) {
+			h <<= 1;
+			h |= std::hash<Type>{}( *p );
+		}
+		return h;
 	}
 };
 

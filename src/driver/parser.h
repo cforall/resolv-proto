@@ -21,7 +21,7 @@
 /// tag := <name>
 /// type := <conc_type> | <named_type> | <poly_type>
 /// conc_type := "-"?[0-9]+
-/// named_type := "#"[A-Za-z_][A-Za-z_0-9]*
+/// named_type := "#"[A-Za-z_][A-Za-z_0-9]*("<" <type> (" "<type>)* ">")?
 /// poly_type := [A-Z][a-z0-9]*
 /// NL := "\n" | "//" . ~ "\n" 
 ///

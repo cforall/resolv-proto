@@ -568,7 +568,7 @@ public:
 
     TypeMap<Value>* get( const NamedType* ty ) {
         auto it = nodes.find( TypeKey{ ty } );
-        return it == nodes.end() ? nullptr : it->second.get();
+        return it == nodes.end() ? nullptr : it->second->get( ty->params() );
     }
     const TypeMap<Value>* get( const NamedType* ty ) const {
         return as_non_const(this)->get( ty );
@@ -583,13 +583,7 @@ public:
     }
 
     TypeMap<Value>* get( const TupleType* ty ) {
-        // scan down trie as far as it matches
-        TypeMap<Value>* tm = this;
-        for ( unsigned i = 0; i < ty->size(); ++i ) {
-            tm = tm->get( ty->types()[i] );
-            if ( ! tm ) return nullptr;
-        }
-        return tm;
+        return get( ty->types() );
     }
     const TypeMap<Value>* get( const TupleType* ty ) const {
         return as_non_const(this)->get( ty );
@@ -612,6 +606,19 @@ public:
         return as_non_const(this)->get( ty );
     }
 
+    TypeMap<Value>* get( const List<Type>& tys ) {
+        // scan down trie as far as it matches
+        TypeMap<Value>* tm = this;
+        for ( unsigned i = 0; i < tys.size(); ++i ) {
+            tm = tm->get( tys[i] );
+            if ( ! tm ) return nullptr;
+        }
+        return tm;
+    }
+    const TypeMap<Value>* get( const List<Type>& tys ) const {
+        return as_non_const(this)->get( tys );
+    }
+
     /// Gets the value for the key for type T constructed from the given arguments
     template<typename T, typename... Args>
     TypeMap<Value>* get_as( Args&&... args ) {
@@ -620,7 +627,7 @@ public:
     }
     template<typename T, typename... Args>
     const TypeMap<Value>* get_as( Args&&... args ) const {
-        return as_non_const(this)->get( forward<Args>(args)... );
+        return as_non_const(this)->get_as<T>( forward<Args>(args)... );
     }
 
     /// Iterator for all non-exact matches of a type
@@ -797,8 +804,35 @@ public:
             r };
     }
 
+private:
+    /// Finds or fills type maps down a list of types, filling in backtrack list as it goes
+    TypeMap<Value>* fill_to( const List<Type>& ts, BacktrackList& rpre ) {
+        TypeMap<Value>* tm = this;
+        for ( unsigned i = 0; i < ts.size(); ++i ) {
+            TypeKey k{ ts[i] };
+            
+            auto it = tm->nodes.find( k );
+            if ( it == tm->nodes.end() ) {
+                // add new nodes as needed
+                if ( k.mode() == Poly ) {
+                    it = tm->nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
+                    tm->polys.emplace_back( 
+                        *k.key_for<PolyType>(), it->second.get() );
+                } else {
+                    it = tm->nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
+                }
+            }
+
+            rpre.emplace_back( it, tm );
+            tm = it->second.get();
+        }
+        return tm;
+    }
+
+public:
     template<typename V>
     std::pair<iterator, bool> insert( const NamedType* ty, V&& v ) {
+        BacktrackList rpre;
         bool r = false;
 
         TypeKey k = TypeKey{ ty };
@@ -806,14 +840,16 @@ public:
         if ( it == nodes.end() ) {
             it = nodes.emplace_hint( it, k, make_unique<TypeMap<Value>>() );
         }
-        if ( ! it->second->leaf ) {
-            it->second->set( ty, forward<V>(v) );
+
+        rpre.emplace_back( it, this );
+        TypeMap<Value>* tm = it->second->fill_to( ty->params(), rpre );
+
+        if ( ! tm->leaf ) {
+            tm->set( ty, forward<V>(v) );
             r = true;
         }
 
-        return { 
-            iterator{ Iter{ it->second.get(), BacktrackList{ Backtrack{ it, this } } } }, 
-            r };
+        return { iterator{ Iter{ tm, move(rpre) } }, r };
     }
 
     template<typename V>
@@ -841,26 +877,7 @@ public:
         BacktrackList rpre;
         bool r = false;
 
-        // scan down trie as far as it matches
-        TypeMap<Value>* tm = this;
-        for ( unsigned i = 0; i < ty->size(); ++i ) {
-            TypeKey k{ ty->types()[i] };
-            
-            auto it = tm->nodes.find( k );
-            if ( it == tm->nodes.end() ) {
-                // add new nodes as needed
-                if ( k.mode() == Poly ) {
-                    it = tm->nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
-                    tm->polys.emplace_back( 
-                        *k.key_for<PolyType>(), it->second.get() );
-                } else {
-                    it = tm->nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
-                }
-            }
-
-            rpre.emplace_back( it, tm );
-            tm = it->second.get();
-        }
+        TypeMap<Value>* tm = fill_to( ty->types(), rpre );
 
         if ( ! tm->leaf ) {
             tm->set( ty, forward<V>(v) );
@@ -913,7 +930,7 @@ public:
     size_type count( const NamedType* ty ) const {
         auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
-        return it.second->leaf ? 1 : 0;
+        return it.second->count( ty->params() );
     }
 
     size_type count( const PolyType* ty ) const {
@@ -923,15 +940,7 @@ public:
     }
 
     size_type count( const TupleType* ty ) const {
-        // scan down trie as far as it matches
-        TypeMap<Value>* tm = this;
-        for ( unsigned i = 0; i < ty->size(); ++i ) {
-            auto it = tm->nodes.find( TypeKey{ ty->types()[i] } );
-            if ( it == tm->nodes.end() ) return 0;
-
-            tm = it->second.get();
-        }
-        return tm->leaf ? 1 : 0;
+        return count( ty->types() );
     }
 
     size_type count( const Type* ty ) const {
@@ -946,6 +955,18 @@ public:
         
         assert(false);
         return 0;
+    }
+
+    size_type count( const List<Type>& tys ) const {
+        // scan down trie as far as it matches
+        TypeMap<Value>* tm = this;
+        for ( unsigned i = 0; i < tys.size(); ++i ) {
+            auto it = tm->nodes.find( TypeKey{ tys[i] } );
+            if ( it == tm->nodes.end() ) return 0;
+
+            tm = it->second.get();
+        }
+        return tm->leaf ? 1 : 0;
     }
 
 private:
@@ -966,9 +987,8 @@ private:
         auto it = as_non_const(nodes).find( TypeKey{ ty } );
         if ( it == as_non_const(nodes).end() ) return Iter{};
 
-        return it->second->leaf ?
-            Iter{ it->second.get(), BacktrackList{ Backtrack{ it, as_non_const(this) } } } :
-            Iter{};
+        return it->second->locate( ty->params(), 
+                BacktrackList{ Backtrack{ it, as_non_const(this) } } );
     }
 
     Iter locate( const PolyType* ty ) const {
@@ -980,19 +1000,19 @@ private:
             Iter{};
     }
 
-    Iter locate( const TupleType* ty ) const {
-        BacktrackList rpre;
+    Iter locate( const TupleType* ty ) const { return locate( ty->types() ); }
 
-        // scan down trie as far as it matches
+    /// Locates the typemap that matches the list of types, filling in rpre as it traverses.
+    /// Returns empty iterator if no match
+    Iter locate( const List<Type>& ts, BacktrackList&& rpre = BacktrackList{} ) const {
         TypeMap<Value>* tm = as_non_const(this);
-        for ( unsigned i = 0; i < ty->size(); ++i ) {
-            auto it = tm->nodes.find( TypeKey{ ty->types()[i] } );
+        for ( unsigned i = 0; i < ts.size(); ++i ) {
+            auto it = tm->nodes.find( TypeKey{ ts[i] } );
             if ( it == tm->nodes.end() ) return Iter{};
 
             rpre.emplace_back( it, tm );
             tm = it->second.get();
         }
-
         return tm->leaf ? Iter{ tm, move(rpre) } : Iter{};
     }
 

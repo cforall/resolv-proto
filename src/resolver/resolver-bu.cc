@@ -186,7 +186,6 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 
 					// replace combo with truncated expression
 					combo.truncate();
-					//combo.crnt = new TruncateExpr{ combo.crnt, cInd };
 				}
 
 				// skip combos with no arguments left

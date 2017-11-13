@@ -1,13 +1,7 @@
 # TODO #
 
 ## Next few days ##
-* Benchmark top-down and bottom-up resolvers against each other, attempt to characterize good and bad cases for each
-* Ideas:
-  * BU variant that uses something like the ArgPack structure to iteratively build a match, rather than pre-combined combos
-  * Investigate TD cache duplication over environments, may be the suspect for deep-nesting problems
-    * Maybe cache against null environment unless argument is basic type
-    * Maybe just don't cache against environment -- can you make lower environment independent?
-  * TD variant that builds a "filter set" of types to search for, avoids caching
+* Generic types in resolver prototype (right now I can't model pointers, which are a sort of generic type, and the exponential failure cases in the existing resolver need either pointers or generics to trigger)
 
 ## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void`
@@ -16,7 +10,6 @@
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly just take advantage of new Env as GC_Object
   * audit uses of `Env::from` and trim cases where they're not actually modified
-* Generic types in resolver prototype (right now I can't model pointers, which are a sort of generic type, and the exponential failure cases in the existing resolver need either pointers or generics to trigger)
 
 ## Next few months ##
 * more resolver algorithms (hybrid traversal orders, lazy evaluation, caching resolver queries, etc.)
@@ -29,3 +22,10 @@
 * Possibly change mapped assertion value to an Interpretation from a TypedExpr
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)
   * small-set optimization on TypeMap may also be a good idea
+* Ideas for improvements to TD resolver:
+  * Investigate TD cache duplication over environments, may be the suspect for deep-nesting problems
+    * Maybe cache against null environment unless argument is basic type
+    * Maybe just don't cache against environment -- can you make lower environment independent?
+  * TD variant that builds a "filter set" of types to search for, avoids caching
+
+

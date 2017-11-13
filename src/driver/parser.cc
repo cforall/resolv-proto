@@ -12,6 +12,7 @@
 #include "ast/type.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "data/option.h"
 #include "resolver/func_table.h"
 
 /// Parses a name (lowercase alphanumeric ASCII string starting with a 
@@ -77,8 +78,32 @@ bool parse_poly_type(char *&token, std::string& ret) {
 
 /// Parses a type name, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
-/// to types. token must not be null.  
-bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<Forall>& forall, List<Type>& out) {
+/// to types and polymorphic types according to forall. token must not be null.  
+bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<Forall>& forall, 
+	List<Type>& out);
+
+/// Parses an angle-bracket surrounded type list for the paramters of a generic named type
+bool parse_generic_params(char *&token, CanonicalTypeMap& types, unique_ptr<Forall>& forall, 
+		List<Type>& out) {
+	char *end = token;
+
+	if ( ! match_char(end, '<') ) return false;
+	match_whitespace(end);
+
+	if ( ! parse_type(end, types, forall, out) ) return false;
+
+	while ( match_whitespace(end) ) {
+		if ( ! parse_type(end, types, forall, out) ) break;
+	}
+
+	if ( ! match_char(end, '>') ) return false;
+
+	token = end;
+	return true;
+}
+
+bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<Forall>& forall, 
+		List<Type>& out) {
 	int t;
 	std::string n;
 
@@ -86,7 +111,9 @@ bool parse_type(char *&token, CanonicalTypeMap& types, unique_ptr<Forall>& foral
 		out.push_back( get_canon<ConcType>( types, t ) );
 		return true;
 	} else if ( parse_named_type(token, n) ) {
-		out.push_back( get_canon<NamedType>( types, n ) );
+		List<Type> params;
+		parse_generic_params( token, types, forall, params );
+		out.push_back( get_canon( types, n, move(params) ) );
 		return true;
 	} else if ( parse_poly_type(token, n) ) {
 		if ( ! forall ) { forall.reset( new Forall{} ); }
@@ -170,30 +197,60 @@ bool parse_decl(char *line, FuncTable& funcs, CanonicalTypeMap& types) {
 	return true;
 }
 
+/// Parses a concrete type name, returning true, appending the result into out, and 
+/// incrementing token if so. Concrete types will be canonicalized according 
+/// to types and polymorphic types forbidden. token must not be null.  
+bool parse_conc_type(char *&token, CanonicalTypeMap& types, List<Type>& out);
+
+/// Parses an angle-bracket surrounded type list for the paramters of a concrete generic named type
+bool parse_conc_generic_params(char *&token, CanonicalTypeMap& types, List<Type>& out) {
+	char *end = token;
+
+	if ( ! match_char(end, '<') ) return false;
+	match_whitespace(end);
+
+	if ( ! parse_conc_type(end, types, out) ) return false;
+
+	while ( match_whitespace(end) ) {
+		if ( ! parse_conc_type(end, types, out) ) break;
+	}
+
+	if ( ! match_char(end, '>') ) return false;
+
+	token = end;
+	return true;
+}
+
+bool parse_conc_type(char *&token, CanonicalTypeMap& types, List<Type>& out) {
+	int t;
+	std::string n;
+
+	if ( parse_int(token, t) ) {
+		out.push_back( get_canon<ConcType>( types, t ) );
+		return true;
+	} else if ( parse_named_type(token, n) ) {
+		List<Type> params;
+		parse_conc_generic_params( token, types, params );
+		out.push_back( get_canon( types, n, move(params) ) );
+		return true;
+	} else return false;
+}
+
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
 bool parse_subexpr( char *&token, List<Expr>& exprs, CanonicalTypeMap& types ) {
 	char *end = token;
 	
-	// Check for concrete type expression
-	int t;
-	if ( parse_int(end, t) ) {
-		const ConcType* ty = get_canon<ConcType>( types, t );
-		exprs.push_back( new VarExpr( ty ) );
-		token = end;
-		return true;
-	}
-	
-	std::string name;
-
-	// Check for named type expression
-	if ( parse_named_type(end, name) ) {
-		exprs.push_back( new VarExpr( get_canon<NamedType>( types, name ) ) );
+	// Check for a concrete type expression
+	List<Type> cty;
+	if ( parse_conc_type( end, types, cty ) ) {
+		exprs.push_back( new VarExpr( cty.front() ) );
 		token = end;
 		return true;
 	}
 	
 	// Check for function call
+	std::string name;
 	if ( ! parse_name(end, name) ) return false;
 	match_whitespace(end);
 	if ( ! match_char(end, '(') ) return false;

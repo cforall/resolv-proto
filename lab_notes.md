@@ -1,7 +1,52 @@
+## 10 Nov 2017 ##
+Ran Thierry's benchmark:
+
+New:
+```
+               array	0:01.46
+          attributes	0:02.13
+               empty	0:01.46
+          expression	0:01.52
+                  io	8:23.63
+             monitor	0:15.29
+           operators	0:01.52
+              thread	0:26.46
+              typeof	0:01.44
+```
+
+Old:
+```
+               array	0:01.51
+          attributes	0:02.10
+               empty	0:01.51
+          expression	0:01.56
+                  io	8:16.29
+             monitor	0:28.37
+           operators	0:01.69
+              thread	0:40.60
+              typeof	0:01.50
+```
+
+## 8 Nov 2017 ##
+Finished modifications to CFA-CC, timing results (note full rebuild of CFA-CC vs. partial rebuild in base case)
+```
+make -j 8 install            1380.64s user 22.90s system 488% cpu  4:47.20 total
+make -C src/tests all-tests  3797.68s user 14.80s system 453% cpu 14:00.15 total
+```
+* Lack of observable performance difference is really disappointing, though Thierry points out that the test suite deliberately includes some long-running tests.
+* Might be worth investigating if this is a memory-allocation issue (lots of clones in this algorithm, not so many in the prototype)
+
 ## 21 Sept 2017 ##
 * Wrote new iterative version of BU
   * orders of magnitude faster than old BU, now renamed to CO
   * can sucessfully complete full test suite in original forms
+
+Investigating same modification to CFA-CC, timing results (note that build timings include a variable number of modules rebuilt in CFA-CC)
+baseline:
+```
+make -j 8 install            1308.45s user 17.83s system 502% cpu  4:24.18 total
+make -C src/tests all-tests  3637.23s user 11.10s system 448% cpu 13:34.15 total
+```
 
 ## 20 Sept 2017 ##
 * Modified TD resolver to cache independently of environment, ran experimental tests
