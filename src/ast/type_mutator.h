@@ -15,6 +15,16 @@ class TypeMutator : public TypeVisitor<Self, const Type*> {
 public:
     using TypeVisitor<Self, const Type*>::visit;
 
+    bool visit( const NamedType* t, const Type*& r ) {
+        option<List<Type>> newTypes;
+        if ( ! mutateAll( this, t->params(), newTypes ) ) return false;
+        if ( newTypes ) {
+            // rebuild with new parameters
+            r = new NamedType{ t->name(), *move(newTypes) };
+        }
+        return true;
+    }
+
     bool visit( const TupleType* t, const Type*& r ) {
         option<List<Type>> newTypes;
         if ( ! mutateAll( this, t->types(), newTypes ) ) return false;

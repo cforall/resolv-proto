@@ -34,6 +34,14 @@ public:
     }
 
     /// Visits all children
+    bool visitChildren( const NamedType* t, T& r ) {
+        for ( const Type* tt : t->params() ) {
+            if ( ! visit( tt, r ) ) return false;
+        }
+        return true;
+    }
+
+    /// Visits all children
     bool visitChildren( const TupleType* t, T& r ) {
         for ( const Type* tt : t->types() ) {
             if ( ! visit( tt, r ) ) return false;
@@ -48,7 +56,7 @@ public:
     bool visit( const ConcType*, T& ) { return true; }
 
     /// Default implementation of visit
-    bool visit( const NamedType*, T& ) { return true; }
+    bool visit( const NamedType* t, T& r ) { return visitChildren( t, r ); }
     
     /// Default implmentation of visit
     bool visit( const PolyType*, T& ) { return true; }

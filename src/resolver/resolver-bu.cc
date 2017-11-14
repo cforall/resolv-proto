@@ -345,6 +345,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 			} break;
 			default: {
 				std::vector<InterpretationList> sub_results;
+				sub_results.reserve( funcExpr->args().size() );
 				for ( auto& sub : funcExpr->args() ) {
 					// break early if no subexpression results
 					InterpretationList sresults = resolve( sub, env );

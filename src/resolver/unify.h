@@ -18,12 +18,7 @@ using is_conc_or_named_type
 /// Tests if the first (parameter) type can be unified with the second (argument) type, 
 /// while respecting the global type environment, and accumulating costs for the  
 /// unification.
-bool unify( const ConcType*, const NamedType*, Cost&, Env*& ) { return false; }
-
-bool unify( const NamedType*, const ConcType*, Cost&, Env*& ) { return false; }
-
-template<typename T, typename = is_conc_or_named_type<T>>
-bool unify(const T*, const T*, Cost&, Env*&);
+bool unify(const Type*, const Type*, Cost&, Env*&);
 
 template<typename T, typename = is_conc_or_named_type<T>>
 bool unify(const T*, const PolyType*, Cost&, Env*&);
@@ -33,11 +28,24 @@ bool unify(const T*, const Type*, Cost&, Env*&);
 
 bool unify(const PolyType*, const Type*, Cost&, Env*&);
 
-bool unify(const Type*, const Type*, Cost&, Env*&);
+bool unify( const ConcType*, const NamedType*, Cost&, Env*& ) { return false; }
 
-template<typename T, typename>
-bool unify( const T* concParamType, const T* concArgType, Cost&, Env*&) {
-    return *concParamType == *concArgType;
+bool unify( const NamedType*, const ConcType*, Cost&, Env*& ) { return false; }
+
+bool unify( const ConcType* paramType, const ConcType* argType, Cost&, Env*& ) {
+    return *paramType == *argType;
+}
+
+bool unify( const NamedType* paramType, const NamedType* argType, Cost& cost, Env*& env ) {
+    // check name and parameter lists
+    if ( paramType->params().size() != argType->params().size()
+        || paramType->name() != argType->name() ) return false;
+    
+    // unify parameter lists
+    for ( unsigned i = 0; i < paramType->params().size(); ++i ) {
+        if ( ! unify( paramType->params(i), argType->params(i), cost, env ) ) return false;
+    }
+    return true;
 }
 
 template<typename T, typename>
@@ -55,7 +63,6 @@ bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, Env*
     bindType( env, argClass, concParamType );
 
     ++cost.poly;  // poly-cost for global type variable binding
-    // ++cost.vars;
     return true;
 }
 
@@ -89,14 +96,12 @@ bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, Env*&
             // make concrete type the new class representative
             bindType( env, paramClass, argType );
             ++cost.poly;
-            // ++cost.vars;
             return true;
         }
     } else if ( aid == typeof<PolyType>() ) {
         // add polymorphic type to type class
         if ( bindVar( env, paramClass, as<PolyType>(argType) ) ) {
             cost.poly += 2; // count binding from argument and to parameter
-            // ++cost.vars;
             return true;
         } else return false;
     } else assert(!"Unhandled argument type");

@@ -115,6 +115,8 @@ public:
 	const std::string& name() const { return name_; }
 
 	const List<Type>& params() const { return params_; }
+
+	const Type* params(unsigned i) const { return params_[i]; }
 	
 	unsigned size() const override { return 1; }
 

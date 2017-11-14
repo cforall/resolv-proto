@@ -1,3 +1,9 @@
+## 14 Nov 2017 ##
+Added generic parameters to unification, fixed visitor/mutator to properly traverse type parameters
+
+## 13 Nov 2017 ##
+Put in first draft of generic types; parses, in type_map, some tests work.
+
 ## 10 Nov 2017 ##
 Ran Thierry's benchmark:
 

@@ -1,0 +1,11 @@
+#int foo-i #ptr<#int>
+#float foo-f #ptr<#float>
+
+#ptr<T> addr T
+
+%%
+
+foo( #ptr<#int> )
+foo( #ptr<#float> )
+foo( addr(#int) )
+foo( addr(#float) )
