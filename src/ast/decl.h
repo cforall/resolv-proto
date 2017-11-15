@@ -7,11 +7,13 @@
 
 #include "ast.h"
 #include "forall.h"
+#include "spec_counter.h"
 #include "type.h"
 
-#include "data/cow.h"
+#include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "data/option.h"
 
 #include "resolver/cost.h"
 
@@ -86,7 +88,29 @@ public:
 	const Forall* forall() const { return forall_.get(); }
 
 	/// The cost of this function's forall clause, if any
-	Cost poly_cost() const { return forall_ ? cost_of( *forall_ ) : Cost::zero(); }
+	Cost poly_cost() const {
+		// zero poly cost if zero polymorphism
+		if ( forall_ == nullptr ) return Cost::zero();
+
+		SpecCounter count;
+		Cost k = cost_of( *forall_ );
+
+		// sum specialization costs for parameters
+		for ( const Type* p : params_ ) {
+			k.spec += count( p ).value_or( 0 );
+		}
+
+		// sum specialization costs for return values
+		if ( const TupleType* rt = as_safe<TupleType>(returns_) ) {
+			for ( const Type* r : rt->types() ) {
+				k.spec += count( r ).value_or( 0 );
+			}
+		} else {
+			k.spec += count( returns_ ).value_or( 0 );
+		}
+
+		return k;
+	}
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		if ( style != ASTNode::Print::Concise ) {

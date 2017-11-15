@@ -78,8 +78,7 @@ bool unifyExt( const PolyType* boundType, const Type* rType, Cost& rCost, Env*& 
 	} else return unify( boundType, rType, rCost, rEnv );
 }
 
-/// Resolves a function expression with any return type, binding the result to `bound` if 
-/// a valid ref
+/// Resolves a function expression with any return type
 template<typename Funcs>
 InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs, 
                                  const FuncExpr* expr, const Env* env, 
