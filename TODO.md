@@ -2,6 +2,7 @@
 
 ## Next few days ##
 * Generic types in resolver prototype (right now I can't model pointers, which are a sort of generic type, and the exponential failure cases in the existing resolver need either pointers or generics to trigger)
+  * Need to incorporate some sort of "contains check" for updated unification algorithm
 
 ## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void`

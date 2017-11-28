@@ -241,8 +241,13 @@ public:
 			: classes(), bindings(), assns(), localAssns(0), parent(nullptr)
 		{ insert( var ); }
 
+	/// Constructs a brand new environment with a single class
+	Env( ClassRef& r ) : classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
+		copyClass(r);
+	}
+
 	/// Constructs a brand new environment with a single bound class
-	Env( ClassRef& r, const Type* sub = nullptr )
+	Env( ClassRef& r, const Type* sub )
 			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
 		copyClass(r);
 		classes.front().bound = sub;

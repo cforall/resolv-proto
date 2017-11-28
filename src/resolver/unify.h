@@ -5,121 +5,130 @@
 #include "cost.h"
 #include "env.h"
 #include "interpretation.h"
+#include "type_unifier.h"
 
 #include "ast/type.h"
 #include "data/cast.h"
 #include "data/list.h"
 
-template<typename T>
-using is_conc_or_named_type 
-    = typename std::enable_if< std::is_same<T, ConcType>::value 
-                               || std::is_same<T, NamedType>::value >::type;
+// template<typename T>
+// using is_conc_or_named_type 
+//     = typename std::enable_if< std::is_same<T, ConcType>::value 
+//                                || std::is_same<T, NamedType>::value >::type;
 
-/// Tests if the first (parameter) type can be unified with the second (argument) type, 
-/// while respecting the global type environment, and accumulating costs for the  
-/// unification.
-bool unify(const Type*, const Type*, Cost&, Env*&);
+// /// Tests if the first (parameter) type can be unified with the second (argument) type, 
+// /// while respecting the global type environment, and accumulating costs for the  
+// /// unification.
+// bool unify(const Type*, const Type*, Cost&, Env*&);
 
-template<typename T, typename = is_conc_or_named_type<T>>
-bool unify(const T*, const PolyType*, Cost&, Env*&);
+// template<typename T, typename = is_conc_or_named_type<T>>
+// bool unify(const T*, const PolyType*, Cost&, Env*&);
 
-template<typename T, typename = is_conc_or_named_type<T>>
-bool unify(const T*, const Type*, Cost&, Env*&);
+// template<typename T, typename = is_conc_or_named_type<T>>
+// bool unify(const T*, const Type*, Cost&, Env*&);
 
-bool unify(const PolyType*, const Type*, Cost&, Env*&);
+// bool unify(const PolyType*, const Type*, Cost&, Env*&);
 
-bool unify( const ConcType*, const NamedType*, Cost&, Env*& ) { return false; }
+// bool unify( const ConcType*, const NamedType*, Cost&, Env*& ) { return false; }
 
-bool unify( const NamedType*, const ConcType*, Cost&, Env*& ) { return false; }
+// bool unify( const NamedType*, const ConcType*, Cost&, Env*& ) { return false; }
 
-bool unify( const ConcType* paramType, const ConcType* argType, Cost&, Env*& ) {
-    return *paramType == *argType;
-}
+// bool unify( const ConcType* paramType, const ConcType* argType, Cost&, Env*& ) {
+//     return *paramType == *argType;
+// }
 
-bool unify( const NamedType* paramType, const NamedType* argType, Cost& cost, Env*& env ) {
-    // check name and parameter lists
-    if ( paramType->params().size() != argType->params().size()
-        || paramType->name() != argType->name() ) return false;
+// bool unify( const NamedType* paramType, const NamedType* argType, Cost& cost, Env*& env ) {
+//     // check name and parameter lists
+//     if ( paramType->params().size() != argType->params().size()
+//         || paramType->name() != argType->name() ) return false;
     
-    // unify parameter lists
-    for ( unsigned i = 0; i < paramType->params().size(); ++i ) {
-        if ( ! unify( paramType->params(i), argType->params(i), cost, env ) ) return false;
-    }
-    return true;
-}
+//     // unify parameter lists
+//     for ( unsigned i = 0; i < paramType->params().size(); ++i ) {
+//         if ( ! unify( paramType->params(i), argType->params(i), cost, env ) ) return false;
+//     }
+//     return true;
+// }
 
-template<typename T, typename>
-bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, Env*& env) {
-    // locate type binding for parameter type
-    ClassRef argClass = getClass( env, polyArgType );
-    // test for match if class already has representative
-    if ( argClass->bound ) {
-        if ( unify( concParamType, argClass->bound, cost, env ) ) {
-            ++cost.poly;
-            return true;
-        } else return false;
-    }
-    // otherwise make concrete type the new class representative
-    bindType( env, argClass, concParamType );
+// template<typename T, typename>
+// bool unify(const T* concParamType, const PolyType* polyArgType, Cost& cost, Env*& env) {
+//     // locate type binding for parameter type
+//     ClassRef argClass = getClass( env, polyArgType );
+//     // test for match if class already has representative
+//     if ( argClass->bound ) {
+//         if ( unify( concParamType, argClass->bound, cost, env ) ) {
+//             ++cost.poly;
+//             return true;
+//         } else return false;
+//     }
+//     // otherwise make concrete type the new class representative
+//     bindType( env, argClass, concParamType );
 
-    ++cost.poly;  // poly-cost for global type variable binding
-    return true;
-}
+//     ++cost.poly;  // poly-cost for global type variable binding
+//     return true;
+// }
 
-template<typename T, typename>
-bool unify(const T* concParamType, const Type* argType, Cost& cost, Env*& env) {
-    auto aid = typeof(argType);
-    if ( aid == typeof<ConcType>() ) 
-        return unify( concParamType, as<ConcType>(argType), cost, env );
-    else if ( aid == typeof<NamedType>() )
-        return unify( concParamType, as<NamedType>(argType), cost, env );
-    else if ( aid == typeof<PolyType>() )
-        return unify( concParamType, as<PolyType>(argType), cost, env );
-    else assert(!"Unhandled argument type");
+// template<typename T, typename>
+// bool unify(const T* concParamType, const Type* argType, Cost& cost, Env*& env) {
+//     auto aid = typeof(argType);
+//     if ( aid == typeof<ConcType>() ) 
+//         return unify( concParamType, as<ConcType>(argType), cost, env );
+//     else if ( aid == typeof<NamedType>() )
+//         return unify( concParamType, as<NamedType>(argType), cost, env );
+//     else if ( aid == typeof<PolyType>() )
+//         return unify( concParamType, as<PolyType>(argType), cost, env );
+//     else assert(!"Unhandled argument type");
 
-    return false; // unreachable
-}
+//     return false; // unreachable
+// }
 
-bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, Env*& env) {
-    // locate type binding for parameter type
-    ClassRef paramClass = getClass( env, polyParamType );
+// bool unify(const PolyType* polyParamType, const Type* argType, Cost& cost, Env*& env) {
+//     // locate type binding for parameter type
+//     ClassRef paramClass = getClass( env, polyParamType );
 
-    auto aid = typeof(argType);
-    if ( aid == typeof<ConcType>() || aid == typeof<NamedType>() ) {
-        // test for match if class already has representative
-        if ( paramClass->bound ) {
-            if ( unify( paramClass->bound, argType, cost, env ) ) {
-                ++cost.poly;
-                return true;
-            } else return false;
-        } else {
-            // make concrete type the new class representative
-            bindType( env, paramClass, argType );
-            ++cost.poly;
-            return true;
-        }
-    } else if ( aid == typeof<PolyType>() ) {
-        // add polymorphic type to type class
-        if ( bindVar( env, paramClass, as<PolyType>(argType) ) ) {
-            cost.poly += 2; // count binding from argument and to parameter
-            return true;
-        } else return false;
-    } else assert(!"Unhandled argument type");
+//     auto aid = typeof(argType);
+//     if ( aid == typeof<ConcType>() || aid == typeof<NamedType>() ) {
+//         // test for match if class already has representative
+//         if ( paramClass->bound ) {
+//             if ( unify( paramClass->bound, argType, cost, env ) ) {
+//                 ++cost.poly;
+//                 return true;
+//             } else return false;
+//         } else {
+//             // make concrete type the new class representative
+//             bindType( env, paramClass, argType );
+//             ++cost.poly;
+//             return true;
+//         }
+//     } else if ( aid == typeof<PolyType>() ) {
+//         // add polymorphic type to type class
+//         if ( bindVar( env, paramClass, as<PolyType>(argType) ) ) {
+//             cost.poly += 2; // count binding from argument and to parameter
+//             return true;
+//         } else return false;
+//     } else assert(!"Unhandled argument type");
     
-    return false; // unreachable
-}
+//     return false; // unreachable
+// }
+
+// bool unify(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
+//     auto pid = typeof(paramType);
+//     if ( pid == typeof<ConcType>() ) 
+//         return unify( as<ConcType>(paramType), argType, cost, env );
+//     else if ( pid == typeof<NamedType>() )
+//         return unify( as<NamedType>(paramType), argType, cost, env );
+//     else if ( pid == typeof<PolyType>() )
+//         return unify( as<PolyType>(paramType), argType, cost, env );
+//     else assert(!"Unhandled parameter type");
+
+//     return false; // unreachable
+// }
 
 bool unify(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
-    auto pid = typeof(paramType);
-    if ( pid == typeof<ConcType>() ) 
-        return unify( as<ConcType>(paramType), argType, cost, env );
-    else if ( pid == typeof<NamedType>() )
-        return unify( as<NamedType>(paramType), argType, cost, env );
-    else if ( pid == typeof<PolyType>() )
-        return unify( as<PolyType>(paramType), argType, cost, env );
-    else assert(!"Unhandled parameter type");
-
-    return false; // unreachable
+    TypeUnifier unifier{ env, cost.poly };
+    if ( unifier( paramType, argType ) != nullptr ) {
+        env = unifier.env;
+        return true;
+    } else return false;
 }
 
 /// Unifies a tuple type with another type; may truncate the argument tuple to match

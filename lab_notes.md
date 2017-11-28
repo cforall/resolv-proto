@@ -1,3 +1,69 @@
+## 27-28 Nov 2017 ##
+* Work on new unification visitor
+  * Includes closest common type, recursive unification of NamedType
+
+## 23 Nov 2017 ##
+* Clean up ExplodedActual data structure (single env and cost)
+  * no effect in benchmark:
+```
+               array: 0:01.52
+          attributes: 0:02.14
+               empty: 0:01.50
+          expression: 0:01.57
+                  io: 7:45.13
+             monitor: 0:40.08
+           operators: 0:01.59
+              typeof: 0:01.49
+```
+
+## 22 Nov 2017 ##
+* Pre-explode tuple arguments in CFA-CC
+  * no effect in benchmark:
+```
+               array: 0:01.50
+          attributes: 0:02.20
+               empty: 0:01.54
+          expression: 0:01.59
+                  io: 8:01.16
+             monitor: 0:39.83
+           operators: 0:01.57
+              typeof: 0:01.49
+```
+
+## 21 Nov 2017 ##
+* Fix tuple errors on last CFA-CC refactor
+* Refactor ResolvExpr::AltList to std::vector from std::list; 
+  * need to fix castError test
+  * no effect in benchmark:
+```
+               array: 0:01.51
+          attributes: 0:02.19
+               empty: 0:01.55
+          expression: 0:01.57
+                  io: 8:18.95
+             monitor: 0:42.07
+           operators: 0:01.62
+              typeof: 0:01.51
+```
+
+## 20 Nov 2017 ##
+* Fix tuple errors on last CFA-CC refactor
+
+## 16-17 Nov 2017 ##
+* Worked on refactoring CFA-CC resolver to put less pressure on the memory allocator: 8% speeedup
+
+```
+               array	0:01.48
+          attributes	0:02.12
+               empty	0:01.48
+          expression	0:01.61
+                  io	7:46.44
+             monitor	0:29.56
+           operators	0:01.54
+              thread	0:41.33
+              typeof	0:01.45
+```
+
 ## 15 Nov 2017 ##
 * Count specialization costs for nested polymorphic types
 
