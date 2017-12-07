@@ -246,13 +246,10 @@ public:
 		copyClass(r);
 	}
 
-	/// Constructs a brand new environment with a single bound class
-	Env( ClassRef& r, const Type* sub )
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
-		copyClass(r);
-		classes.front().bound = sub;
-	}
-	
+	/// Heap-Constructs a brand new environment with a single bound class.
+	/// Returns nullptr if the class cannot be bound
+	static Env* make( ClassRef& r, const Type* sub );
+
 	/// Constructs a brand new environment with a single class with an added type variable
 	Env( ClassRef& r, const PolyType* var )
 			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
@@ -322,10 +319,8 @@ public:
 
 	/// Binds this class to the given type; class should be currently unbound.
 	/// May copy class into local scope; class should belong to this or a parent.
-	void bindType( ClassRef& r, const Type* sub ) {
-		if ( r.env != this ) { copyClass( r ); }
-		classes[ r.ind ].bound = sub;
-	}
+	/// Returns false if would create recursive loop
+	bool bindType( ClassRef& r, const Type* sub );
 
 	/// Binds the type variable into to the given class; returns false if the 
 	/// type variable is incompatibly bound.
@@ -352,7 +347,7 @@ public:
 	/// Merges the target environment with this one.
 	/// Returns false if fails, but does NOT roll back partial changes.
 	/// seen makes sure work isn't doubled for inherited bindings
-	bool merge( const Env& o, SeenTypes&& seen = SeenTypes{}, bool topLevel = true ) {
+	bool merge( const Env& o, SeenTypes&& seen = SeenTypes{} ) {
 		// Already compatible with o, by definition.
 		if ( inheritsFrom( o ) ) return true;
 		
@@ -410,7 +405,7 @@ public:
 		}
 
 		// merge parents
-		if ( o.parent && ! merge( *o.parent, move(seen), false ) ) return false;
+		if ( o.parent && ! merge( *o.parent, move(seen) ) ) return false;
 		
 		return true;
 	}
@@ -506,11 +501,12 @@ inline bool insertVar( Env*& env, const PolyType* orig ) {
 /// Adds the given substitution to this environment. 
 /// `r` should be currently unbound and belong to `env` or a parent.
 /// Creates a new environment if `env == null`
-inline void bindType( Env*& env, ClassRef& r, const Type* sub ) {
+inline bool bindType( Env*& env, ClassRef& r, const Type* sub ) {
 	if ( ! env ) {
-		env = new Env(r, sub);
+		env = Env::make(r, sub);
+		return env != nullptr;
 	} else {
-		env->bindType( r, sub );
+		return env->bindType( r, sub );
 	}
 }
 

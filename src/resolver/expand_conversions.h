@@ -9,6 +9,7 @@
 #include "env.h"
 #include "interpretation.h"
 #include "type_map.h"
+#include "type_unifier.h"
 
 #include "data/cast.h"
 #include "data/compare.h"
@@ -147,12 +148,15 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 /// returning true if successful
 bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
     // test for match if class already has a representative.
-    // TODO this is a restriction to exact polymorphic type binding, but loosening it 
-    //      would be non-trivial; [ or maybe I just call convertTo here... ]
-    if ( r->bound ) return *r->bound == *conc;
+    if ( r->bound ) {
+        TypeUnifier unification{ env, cost.poly };
+        conc = unification( r->bound, conc );
+        if ( conc == nullptr ) return false;
+        env = unification.env;
+        return true;
+    }
     // otherwise make concrete class the new typeclass representative
-    bindType( env, r, conc );
-    return true;
+    return bindType( env, r, conc );
 }
 
 /// Replaces expression with the best conversion to the given type, updating cost and env 

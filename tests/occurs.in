@@ -1,0 +1,9 @@
+// based on "occurs check" example on p. 26 of Richard's thesis
+
+f #fn< T #ptr<T> >
+#fn< #ptr<U> U > g
+
+%%
+
+// should fail to resolve
+f( g() )

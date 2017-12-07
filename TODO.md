@@ -2,7 +2,7 @@
 
 ## Next few days ##
 * Generic types in resolver prototype (right now I can't model pointers, which are a sort of generic type, and the exponential failure cases in the existing resolver need either pointers or generics to trigger)
-  * Need to incorporate some sort of "contains check" for updated unification algorithm
+  * Rewrite the mergeClasses() algorithm to have a public entry point, count cost
 
 ## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void`
@@ -19,6 +19,7 @@
 * maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
 
 ## Indeterminate Future ##
+* Look at Martelli (Bilson03p.39 cite. 25) for linear-space type representation, (ibid. cite. 4) for set operations on types
 * Refine cost model -- look at cases in `convert_amb`
 * Possibly change mapped assertion value to an Interpretation from a TypedExpr
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)

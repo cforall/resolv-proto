@@ -55,12 +55,11 @@ private:
 			// unbound class can just bind to concrete parameter
 			r = t;
 		}
-		// mark binding, changed target type; reacquire class in case of iterator invalidation
+		// mark binding, changed target type
 		changedTo = true;
 		++cost;
 		uc = getClass( env, u );  // reacquire in case of iterator invalidation
-		bindType( env, uc, r );
-		return true;
+		return bindType( env, uc, r );
 	}
 
 public:
@@ -182,13 +181,12 @@ public:
 				// unbound class can just be bound to concrete target
 				r = ut;
 			}
-			// mark binding, reaquire class in case of iterator invalidation
+			// mark binding
 			++cost;
-			pc = getClass( env, t );
-			bindType( env, pc, r );
-			return true;
+			pc = getClass( env, t );  // reaquire class in case of iterator invalidation
+			return bindType( env, pc, r );
 		} else if ( uid == typeof<PolyType>() ) {
-			// attempt to bind variable
+			// attempt to bind variable; this is the point that may invalidate iterators
 			if ( ! bindVar( env, pc, as<PolyType>(ut) ) ) {
 				r = nullptr;
 				return false;

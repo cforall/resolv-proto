@@ -178,7 +178,7 @@ public:
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << name_;
 		if ( id_ != 0 && style == ASTNode::Print::Default ) {
-			out << "<" << id_ << ">";
+			out << "." << id_;
 		}
 	}
 

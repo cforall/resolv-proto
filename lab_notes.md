@@ -1,3 +1,9 @@
+## 7 Dec 2017 ##
+* Implment occurs check and test case
+
+## 6 Dec 2017 ##
+* Poke at cost tracking for bindVar in unification visitor
+
 ## 27-28 Nov 2017 ##
 * Work on new unification visitor
   * Includes closest common type, recursive unification of NamedType

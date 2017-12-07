@@ -3,8 +3,11 @@
 
 #include "env.h"
 
+#include "cost.h"
 #include "interpretation.h"
 #include "env_substitutor.h"
+#include "occurs_in.h"
+#include "type_unifier.h"
 
 #include "ast/decl.h"
 #include "ast/type.h"
@@ -17,14 +20,29 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	if ( cbound == nullptr ) return true;
 
 	if ( r->bound == nullptr ) {
-		if ( r.env != this ) { copyClass(r); }
-		classes[r.ind].bound = cbound;
-		return true;
+		return bindType( r, cbound );
 	} else {
-		return *r->bound == *cbound;
-		// TODO possibly account for safe/unsafe conversions here; would need cost information in 
-		// environment.
+		// TODO not sure that I should ignore this cost...
+		Cost::Element cost = 0;
+		const Type* common = TypeUnifier{ this, cost }( r->bound, cbound );
+		if ( ! common ) return false;
+		// r->bound = common;  // TODO this is problematic; r may be moved
+		return true;
 	}
+}
+
+Env* Env::make( ClassRef& r, const Type* sub ) {
+	if ( OccursIn{ nullptr, r->vars }( sub ) ) return nullptr;
+	Env* env = new Env{ r };
+	env->classes.front().bound = sub;
+	return env;
+}
+
+bool Env::bindType( ClassRef& r, const Type* sub ) {
+	if ( OccursIn{ this, r->vars }( sub ) ) return false;
+	if ( r.env != this ) { copyClass( r ); }
+	classes[ r.ind ].bound = sub;
+	return true;
 }
 
 void Env::trace(const GC& gc) const {
