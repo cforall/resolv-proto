@@ -133,7 +133,6 @@ public:
 	/// Alias for const_iterator
 	using iterator = const_iterator;
 
-private:
 	/// returns an empty range for this graph
 	range<const_iterator> empty_range() const {
 		return { const_iterator{*this}, const_iterator{*this} };
@@ -144,17 +143,21 @@ private:
 		return { const_iterator{*this, ls.begin()}, const_iterator{*this, ls.end()} };
 	}
 
-public:
 	/// Returns a range containing all the conversions from ty
 	range<const_iterator> find_from( const Type* ty ) const {
 		auto it = nodes.find( ty );
 		return ( it == nodes.end() ) ? empty_range() : range_of( it->second.out );
 	}
 
-	/// Returns a list of all the conversions to ty
+	/// Returns a range containing all the conversions to ty
 	range<const_iterator> find_to( const Type* ty ) const {
 		auto it = nodes.find( ty );
 		return ( it == nodes.end() ) ? empty_range() : range_of( it->second.in );
+	}
+
+	/// Returns a range containing all the conversions involving types that match ty
+	range<TypeMap<ConversionNode>::MatchIter> find_matching( const Type* ty ) const {
+		return nodes.get_matching( ty );
 	}
 
 	/// Finds the conversion between two types (nullptr if not present)

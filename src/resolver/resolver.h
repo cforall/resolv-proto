@@ -49,7 +49,7 @@ public:
 		// search for expression
 		auto eit = tcache.find( e );
 		if ( eit == tcache.end() ) {
-			eit = tcache.emplace_hint( eit, /*move(key),*/ e, KeyedMap{} );
+			eit = tcache.emplace_hint( eit, e, KeyedMap{} );
 		}
 
 		// find appropriately typed return value
@@ -131,8 +131,10 @@ public:
 		Mode& without_conversions() { as_non_const(expand_conversions) = false; return *this; }
 		/// Turn on allow_void
 		Mode& with_void() { as_non_const(allow_void) = true; return *this; }
-		/// Conditionally turn on allow_void
-		Mode& with_void_if( bool av ) { as_non_const(allow_void) = av; return *this; }
+		/// Conditionally turn on allow_void if t is void
+		Mode& with_void_as( const Type* t ) {
+			as_non_const(allow_void) = is<VoidType>(t); return *this;
+		}
 		/// Turn on check_assertions
 		Mode& with_assertions() { as_non_const(check_assertions) = true; return *this; }
 	};

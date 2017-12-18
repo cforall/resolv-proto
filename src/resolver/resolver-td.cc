@@ -9,6 +9,7 @@
 #include "arg_pack.h"
 #include "cost.h"
 #include "env.h"
+#include "env_substitutor.h"
 #include "expand_conversions.h"
 #include "func_table.h"
 #include "interpretation.h"
@@ -18,6 +19,7 @@
 
 #include "ast/decl.h"
 #include "ast/expr.h"
+#include "ast/is_poly.h"
 #include "ast/type.h"
 #include "data/cast.h"
 #include "data/mem.h"
@@ -44,12 +46,7 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 		
 		auto rid = typeof(rType);
 		if ( rid == typeof<ConcType>() || rid == typeof<NamedType>() ) {
-			if ( r->bound ) {
-				// skip incompatibly-bound results
-				if ( *rType != *r->bound ) continue;
-			}
-			bindType( rEnv, r, rType );
-			++rCost.poly;
+			if ( ! classBinds( r, rType, rEnv, rCost ) ) continue;
 		} else if ( rid == typeof<PolyType>() ) {
 			// skip incompatibly-bound results
 			if ( ! bindVar( rEnv, r, as<PolyType>(rType) ) ) continue;
@@ -70,9 +67,8 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 
 InterpretationList resolveWithExtType( Resolver&, const Expr*, const Type*, const Env*, bool );
 
-/// Returns true if the first type element of rType unifyies with boundType (true if no bound type)
-bool unifyExt( const PolyType* boundType, const Type* rType, Cost& rCost, Env*& rEnv ) {
-	if ( ! boundType ) return true;
+/// Returns true if the first type element of rType unifyies with boundType
+bool unifyExt( const Type* boundType, const Type* rType, Cost& rCost, Env*& rEnv ) {
 	if ( const TupleType* trType = as_safe<TupleType>(rType) ) {
 		return unify( boundType, trType->types()[0], rCost, rEnv );
 	} else return unify( boundType, rType, rCost, rEnv );
@@ -223,8 +219,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 	return results;
 }
 
-/// Resolves a function expression with a fixed return type, binding the result to 
-/// `bound` if a valid ref
+/// Resolves a function expression with a fixed return type
 InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, const FuncExpr* expr, 
                               const Type* targetType, bool truncate = true ) {
 	InterpretationList results;
@@ -236,7 +231,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
 					resolver, it.get(), expr, nullptr, 
-					Resolver::Mode{}.without_conversions().with_void_if(is<VoidType>(targetType)) );
+					Resolver::Mode{}.without_conversions().with_void_as( targetType ) );
 			if ( sResults.empty() ) continue;
 
 			const Type* keyType = it.key();
@@ -318,6 +313,90 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 	return results;
 }
 
+InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs, 
+                                  const FuncExpr* expr, const Type* targetType, 
+								  bool truncate = true ) {
+	InterpretationList results;
+	const auto& funcIndex = funcs.index();
+
+	// For any function that matches the target type (any polymorphic variables should be unbound)
+	for ( const TypeMap<FuncList>& matches : funcIndex.get_matching( targetType ) ) {
+		for ( auto it = matches.begin(); it != matches.end(); ++it ) {
+			// results for all the functions with that type
+			InterpretationList sResults = resolveToAny(
+				resolver, it.get(), expr, nullptr, 
+				Resolver::Mode{}.without_conversions().with_void_as( targetType ) );
+			if ( sResults.empty() ) continue;
+
+			const Type* keyType = it.key();
+			bool trunc = truncate && keyType->size() > targetType->size();
+			Cost sCost = Cost::zero();
+			if ( trunc ) { sCost.safe += keyType->size() - targetType->size(); }
+			for ( const Interpretation* i : sResults ) {
+				const TypedExpr* sExpr = trunc ? new TruncateExpr{ i->expr, targetType } : i->expr;
+				results.push_back( new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
+			}
+		}
+	}
+
+	// Loop through conversions to types matching target type, repeating above
+	const auto& conversions = resolver.conversions;
+	for ( const TypeMap<ConversionNode>& convMatches : conversions.find_matching( targetType ) ) {
+		const ConversionNode* conv = convMatches.get();
+		if ( ! conv ) continue;  // skip matches for extensions of this type
+
+		// unify target type with conversion target
+		const Type* convTarget = conv->type;
+		Cost convCost = Cost::zero();
+		Env* convEnv = Env::none();
+		unify( targetType, convTarget, convCost, convEnv );
+
+		// loop through conversions to conversion target
+		for ( const Conversion& conv : conversions.range_of( conv->in ) ) {
+			const Type* fromType = conv.from->type;
+			// for any type (or tuple that has the conversion type as a prefix)
+			if ( const TypeMap<FuncList>* matches = funcIndex.get( fromType ) ) {
+				for ( auto it = matches->begin(); it != matches.end(); ++it ) {
+					// results for all functions with that type
+					InterpretationList sResults = resolveToAny(
+						resolver, it.get(), expr, convEnv, Resolver::Mode{}.without_conversions() );
+					if ( sResults.empty() ) continue;
+
+					// cast and perhaps truncate expressions to match result type
+					const Type* keyType = it.key();
+					unsigned kn = keyType->size(), cn = fromType->size();
+					bool trunc = truncate && kn > cn;
+					Cost sCost = convCost + conv.cost;
+					if ( trunc ) { sCost.safe += kn - cn; }
+					for ( const Interpretation* i : sResults ) {
+						const TypedExpr* sExpr = nullptr;
+						if ( trunc ) {
+							sExpr = new CastExpr{ new TruncateExpr{ i->expr, fromType }, &conv };
+						} else if ( kn > cn ) {
+							assert( cn == 1 && "multi-element conversions unsupported" );
+							List<TypedExpr> els;
+							els.reserve(kn);
+							els.push_back(
+								new CastExpr{ new TupleElementExpr{ i->expr, 0 }, &conv } );
+							for (unsigned j = 1; j < kn; ++j) {
+								els.push_back( new TupleElementExpr{ i->expr, j } );
+							}
+							sExpr = new TupleExpr{ move(els) };
+						} else {
+							sExpr = new CastExpr{ i->expr, &conv };
+						}
+
+						results.push_back(
+							new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
+					}
+				}
+			}
+		}
+	}
+
+	return results;
+}
+
 InterpretationList Resolver::resolve( const Expr* expr, const Env* env, 
                                       Resolver::Mode resolve_mode ) {
 	auto eid = typeof(expr);
@@ -346,17 +425,26 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 		const Type* targetType, const Env* env, bool truncate = true ) {
 	Cost rCost;
 
-	// if the target type is polymorphic and unbound, expand out all conversion options
-	const PolyType* pTarget = as_safe<PolyType>(targetType);
-	if ( pTarget ) {
-		ClassRef pClass = findClass( env, pTarget );
-		if ( pClass && pClass->bound ) {
-			targetType = pClass->bound;
-			++rCost.poly;
-		} else {
-			return resolveToUnbound( resolver, expr, pTarget, env, truncate );
-		}
+	// if the target type is partially polymorphic, attempt to make it concrete by the current 
+	// environment
+	CostedSubstitutor sub{ env, rCost.poly };
+	sub( targetType );
+	if ( is<PolyType>( targetType ) ) {
+		// only an unbound poly type would survive as the target
+		return resolveToUnbound( resolver, expr, as<PolyType>(targetType), env, truncate );
 	}
+
+	// // if the target type is polymorphic and unbound, expand out all conversion options
+	// const PolyType* pTarget = as_safe<PolyType>(targetType);
+	// if ( pTarget ) {
+	// 	ClassRef pClass = findClass( env, pTarget );
+	// 	if ( pClass && pClass->bound ) {
+	// 		targetType = pClass->bound;
+	// 		++rCost.poly;
+	// 	} else {
+	// 		return resolveToUnbound( resolver, expr, pTarget, env, truncate );
+	// 	}
+	// }
 
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
@@ -374,10 +462,16 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 		auto withName = resolver.funcs.find( funcExpr->name() );
 		if ( withName == resolver.funcs.end() ) return InterpretationList{};
 
-		InterpretationList& subs = resolver.cached( targetType, funcExpr, 
-			[&resolver,&withName,truncate]( const Type* ty, const Expr* e ) {
-				return resolveTo( resolver, withName(), as<FuncExpr>(e), ty, truncate ); 
-			} );
+		// pull resolutions from cache
+		InterpretationList& subs = sub.is_poly() ?
+			resolver.cached( targetType, funcExpr,
+				[&resolver,&withName,truncate]( const Type* ty, const Expr* e ) {
+					return resolveToPoly( resolver, withName(), as<FuncExpr>(e), ty, truncate );
+				} ) :
+			resolver.cached( targetType, funcExpr, 
+				[&resolver,&withName,truncate]( const Type* ty, const Expr* e ) {
+					return resolveTo( resolver, withName(), as<FuncExpr>(e), ty, truncate ); 
+				} );
 		if ( env == nullptr && rCost == Cost::zero() ) return subs;
 		
 		InterpretationList rSubs;
@@ -385,8 +479,8 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 		for ( const Interpretation* i : subs ) {
 			const Type* sType = i->type();
 			Env* sEnv = Env::from( env );
-			Cost sCost = is<PolyType>(sType) ? i->cost : rCost + i->cost;
-			if ( ! unifyExt( pTarget, sType, sCost, sEnv ) ) continue;
+			Cost sCost = is_poly(sType) ? i->cost : rCost + i->cost;
+			if ( sub.is_poly() && ! unifyExt( targetType, sType, sCost, sEnv ) ) continue;
 			if ( ! merge( sEnv, i->env ) ) continue;
 			rSubs.push_back( new Interpretation{ i->expr, sEnv, move(sCost), copy(i->argCost) } );
 		}

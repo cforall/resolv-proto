@@ -14,6 +14,7 @@
 
 #include "ast/forall.h"
 #include "ast/type.h"
+#include "ast/type_visitor.h"
 #include "data/cast.h"
 #include "data/collections.h"
 #include "data/list.h"
@@ -39,16 +40,21 @@ struct ConcKey {
 /// Key type for NamedType
 struct NamedKey {
     std::string name;
+    unsigned params;
     
-    NamedKey( const std::string& name ) : name(name) {}
-    NamedKey( const NamedType* nt ) : name( nt->name() ) {}
+    NamedKey( const std::string& name, List<Type>::size_type params )
+        : name(name), params(params) {}
+    NamedKey( const NamedType* nt ) : name( nt->name() ), params( nt->params().size() ) {}
 
-    const Type* value() const { return new NamedType{ name }; }
+    const Type* value() const { return new NamedType{ name, List<Type>( params, nullptr ) }; }
 
-    bool operator== (const NamedKey& o) const { return name == o.name; }
-    bool operator< (const NamedKey& o) const { return name < o.name; }
+    bool operator== (const NamedKey& o) const { return name == o.name && params == o.params; }
+    bool operator< (const NamedKey& o) const {
+        int c = name.compare(o.name);
+        return c < 0 || (c == 0 && params < o.params);
+    }
 
-    std::size_t hash() const { return std::hash<std::string>{}(name); }
+    std::size_t hash() const { return (std::hash<std::string>{}(name) << 1) ^ params; }
 };
 
 /// Key type for PolyType
@@ -184,7 +190,7 @@ public:
             init<NamedType>( as<NamedType>(t) );
         } else if ( tid == typeof<PolyType>() ) {
             init<PolyType>( as<PolyType>(t) );
-        } else assert(false && "Invalid key type");
+        } else assert(!"Invalid key type");
     }
 
     TypeKey( const ConcType* t ) { init<ConcType>( t ); }
@@ -315,6 +321,11 @@ public:
     /// Gets the key mode
     KeyMode mode() const { return key_type; }
 
+    /// Gets the number of children used by this key to complete the type
+    unsigned children() const {
+        return key_type == Named ? get<NamedKey>().params : 0;
+    }
+
     /// Gets the underlying key variant, or empty for mismatch
     template<typename T>
     option<typename key_info<T>::type> key_for() const {
@@ -326,6 +337,52 @@ public:
 struct KeyHash {
     std::size_t operator() ( const TypeKey& k ) const { return k.hash(); }
 };
+
+/// Key sequence representing a type
+using AtomList = std::vector<TypeKey>;
+
+/// Generates key sequence for a type
+template< typename OutIter = std::back_insert_iterator<AtomList> >
+class TypeAtoms : public TypeVisitor<TypeAtoms<OutIter>, OutIter> {
+public:
+	using Super = TypeVisitor<TypeAtoms<OutIter>, OutIter>;
+	using Super::visit;
+    using Super::visitChildren;
+
+	bool visit( const ConcType* t, OutIter& out ) {
+		*out++ = TypeKey{ t };
+		return true;
+	}
+
+	bool visit( const NamedType* t, OutIter& out ) {
+		*out++ = TypeKey{ t };
+		return visitChildren( t, out );
+	}
+
+	bool visit( const PolyType* t, OutIter& out ) {
+        *out++ = TypeKey{ t };
+        return true;
+    }
+
+    /// Visits the iterator provided by reference
+    OutIter& operator() ( const Type* t, OutIter& out ) {
+        visit( t, out );
+        return out;
+    }
+
+    /// Visits the iterator provided by move
+    OutIter operator() ( const Type* t, OutIter&& out ) {
+        visit( t, out );
+        return out;
+    }
+};
+
+/// Generates key sequence for a type
+static inline AtomList type_atoms( const Type* t ) {
+    AtomList out;
+    TypeAtoms<>{}( t, std::back_inserter( out ) );
+    return out;
+}
 
 /// A map from types to some value; lookup is done by structural decomposition on types.
 template<typename Value>
@@ -619,11 +676,19 @@ public:
         return as_non_const(this)->get( tys );
     }
 
+    /// Gets the value for the given type key
+    TypeMap<Value>* get( const TypeKey& key ) {
+        auto it = nodes.find( key );
+        return it == nodes.end() ? nullptr : it->second.get();
+    }
+    const TypeMap<Value>* get( const TypeKey& key ) const {
+        return as_non_const(this)->get( key );
+    }
+
     /// Gets the value for the key for type T constructed from the given arguments
     template<typename T, typename... Args>
     TypeMap<Value>* get_as( Args&&... args ) {
-        auto it = nodes.find( TypeKey::make<T>( forward<Args>(args)... ) );
-        return it == nodes.end() ? nullptr : it->second.get();
+        return get( TypeKey::make<T>( forward<Args>(args)... ) );
     }
     template<typename T, typename... Args>
     const TypeMap<Value>* get_as( Args&&... args ) const {
@@ -659,22 +724,12 @@ public:
 
         const Base* m;         ///< Current type map
         BacktrackList prefix;  ///< Backtracking stack for search
-        const Type* ty;        ///< Type to iterate
+        const AtomList atoms;  ///< Type keys to search
 
-        /// Gets the type atom at index j; j should be less than ty->size()
-        inline const Type* type_at(unsigned j) const {
-            switch ( ty->size() ) {
-            // return atom for void or concrete type
-            case 0: case 1: return ty;
-            // return tuple element otherwise
-            default: return as<TupleType>(ty)->types()[j];
-            }
-        }
-
-        /// Steps further into the type; ty should not be fully consumed
+        /// Steps further into the type; atoms should not be fully consumed
         inline bool push_prefix() {
             ListIter it = m->polys.begin();
-            if ( const Base* nm = m->get( type_at( prefix.size() ) ) ) {
+            if ( const Base* nm = m->get( atoms[prefix.size()] ) ) {
                 // look at concrete expansions of the current type
                 prefix.emplace_back( move(it), m );
                 m = nm;
@@ -690,6 +745,7 @@ public:
 
         /// Gets the next valid prefix state (or empty)
         inline void next_valid() {
+            restart:
             // back out to parent type if no sibling
             while ( ! prefix.empty() && prefix.back().next == prefix.back().base->polys.end() ) {
                 prefix.pop_back();
@@ -703,40 +759,36 @@ public:
             m = prefix.back().next->second;
             ++prefix.back().next;
             // fill tail back to end of prefix
-            unsigned n = ty->size();
-            while ( prefix.size() < n ) {
-                if ( ! push_prefix() ) {
-                    // backtrack again on dead-end prefix
-                    prefix.pop_back();
-                    next_valid();
-                    return;
-                }
+            while ( prefix.size() < atoms.size() ) {
+                if ( push_prefix() ) continue;
+                // backtrack again on dead-end prefix
+                prefix.pop_back();
+                goto restart;
             }
         }
 
     public:
-        PolyIter() : m(nullptr), prefix(), ty(nullptr) {}
+        PolyIter() : m(nullptr), prefix(), atoms() {}
 
-        PolyIter(const Base* b, const Type* t) : m(b), prefix(), ty(t) {
+        PolyIter(const Base* b, const Type* t) : m(b), prefix(), atoms(type_atoms(t)) {
             // scan initial prefix until it matches the target type
-            unsigned n = ty->size();
-            while ( prefix.size() < n ) {
-                if ( ! push_prefix() ) {
-                    // quit on dead-end base
-                    if ( prefix.empty() ) {
-                        m = nullptr;
-                        return;
-                    }
-                    // backtrack again on dead-end prefix
-                    prefix.pop_back();
-                    next_valid();
+            while ( prefix.size() < atoms.size() ) {
+                if ( push_prefix() ) continue; 
+                
+                // quit on dead-end base
+                if ( prefix.empty() ) {
+                    m = nullptr;
                     return;
                 }
+
+                // backtrack again on dead-end prefix
+                prefix.pop_back();
+                next_valid();
+                return;
             }
         }
 
         const Base& operator* () { return *m; }
-        
         const Base* operator-> () { return m; }
 
         PolyIter& operator++ () { next_valid(); return *this; }
@@ -746,7 +798,6 @@ public:
         explicit operator bool() const { return m != nullptr; }
 
         bool operator== (const PolyIter& o) const { return m == o.m; }
-
         bool operator!= (const PolyIter& o) const { return m != o.m; }
 
         /// true if currrent state only uses concrete types
@@ -762,6 +813,165 @@ public:
     /// have been switched with polymorphic bindings.
     range<PolyIter> get_poly_maps(const Type* ty) const {
         return { PolyIter{ this, ty }, PolyIter{} };
+    }
+
+    class MatchIter : public std::iterator<
+            std::forward_iterator_tag,
+            TypeMap<Value>,
+            long,
+            const TypeMap<Value>*,
+            const TypeMap<Value>&> {
+        using Base = TypeMap<Value>;                         ///< Underlying type map
+        using NodeIter = typename ConcMap::const_iterator;   ///< Conc-map iterator
+        using ListIter = typename PolyList::const_iterator;  ///< Poly-list iterator
+
+        /// Backtracking information for this iteration
+        struct Backtrack {
+            NodeIter nextConc;        ///< Next map key [end() for none such]
+            ListIter nextPoly;        ///< Next polymorphic type in this map [end() for none such]
+            const Base* base;         ///< Map containing current nodes
+            unsigned char atomsLeft;  ///< map atoms left in current search atom
+
+            Backtrack() = default;
+            Backtrack( ListIter&& it, const Base* b )
+                : nextConc(b->nodes.end()), nextPoly(move(it)), base(b), atomsLeft(0) {}
+            Backtrack( NodeIter&& it, const Base* b, unsigned char n ) 
+                : nextConc(move(it)), nextPoly(b->polys.end()), base(b), atomsLeft(n) {}
+            
+            bool operator== ( const Backtrack& o ) const {
+                return base == o.base && nextConc == o.nextConc && nextPoly == o.nextPoly;
+            }
+            bool operator!= ( const Backtrack& o ) const { return !(*this == o); }
+
+            /// true if there is a next sibling for this backtrack
+            bool has_next() const {
+                return nextConc != base->nodes.end() || nextPoly != base->polys.end();
+            }
+
+            /// get next base; requires a next sibling exists
+            const Base* get_next() const {
+                if ( nextConc != base->nodes.end() ) return nextConc->second.get();
+                else return nextPoly->second;
+            }
+
+            /// go to next sibling
+            void operator++ () {
+                if ( nextConc != base->nodes.end() ) ++nextConc;
+                else ++nextPoly;
+            }
+        };
+        using BacktrackList = std::vector<Backtrack>;
+
+        const Base* m;          ///< Current type map
+        BacktrackList prefix;   ///< Backtracking stack for search
+        const AtomList atoms;   ///< Type keys to search
+        AtomList::size_type i;  ///< Current atom
+
+        /// map atoms left to match search atom at i
+        unsigned char atoms_left() const { return prefix.empty() ? 0 : prefix.back().atomsLeft; }
+
+        /// Pops one atom from the backtracking stack
+        void pop_prefix() {
+            // pop backtracking node
+            prefix.pop_back();
+            // decrement search atom if at a boundary now
+            if ( ! atoms_left() ) --i;
+        }
+
+        /// Steps further into the type; search keys should not be fully consumed
+        bool push_prefix() {
+            unsigned char atomsLeft = atoms_left();
+
+            if ( atomsLeft == 0 ) {
+                // find node matching next atom
+                ++i;
+                ListIter it = m->polys.begin();
+                if ( atoms[i].mode() == Poly ) {
+                    // handle as incomplete atom
+                    atomsLeft = 1;
+                } else if ( const Base* nm = m->get( atoms[i] ) ) {
+                    // look at concrete expansions of the current atom
+                    prefix.emplace_back( move(it), m );
+                    m = nm;
+                    return true;
+                } else if ( it != m->polys.end() ) {
+                    // look at polymorphic expansions of current atom
+                    const Base* nm = it->second;
+                    prefix.emplace_back( move(++it), m );
+                    m = nm;
+                    return true;
+                } else return false;  // no elements matching this type
+            }
+            
+            // take any node to fill out atom (if exists)
+            if ( m->nodes.empty() ) return false;
+            NodeIter it = m->nodes.begin();
+            const Base* nm = it->second.get();
+            unsigned char na = atomsLeft + it->first.children() - 1;
+            prefix.emplace_back( move(++it), m, na );
+            m = nm;
+            return true;
+        }
+
+        /// Gets the next valid prefix state (or empty)
+        void next_valid() {
+            restart:
+            // back out to parent type if no sibling
+            while ( ! prefix.empty() && ! prefix.back().has_next() ) pop_prefix();
+            // check for end of iteration
+            if ( prefix.empty() ) {
+                m = nullptr;
+                return;
+            }
+            // go to sibling (guaranteed present)
+            m = prefix.back().get_next();
+            ++prefix.back();
+            // fill tail back to end of prefix
+            while ( i < atoms.size() ) {
+                if ( push_prefix() ) continue;
+                // backtrack again on dead-end prefix
+                pop_prefix();
+                goto restart;
+            }
+        }
+        
+    public:
+        MatchIter() : m(nullptr), prefix(), atoms(), i(0) {}
+
+        MatchIter(const Base* b, const Type* t) : m(b), prefix(), atoms(type_atoms(t)), i(0) {
+            // scan initial prefix until it matches the target type
+            while ( i < atoms.size() ) {
+                if ( push_prefix() ) continue;
+
+                // quit on dead-end base
+                if ( prefix.empty() ) {
+                    m = nullptr;
+                    return;
+                }
+
+                // backtrack again on dead-end prefix
+                pop_prefix();
+                next_valid();
+                return;
+            }
+        }
+
+        const Base& operator* () { return *m; }
+        const Base* operator-> () { return m; }
+
+        MatchIter& operator++ () { next_valid(); return *this; }
+        MatchIter operator++ (int) { auto tmp = *this; next_valid(); return tmp; }
+
+        /// true if not an end iterator
+        explicit operator bool() const { return m != nullptr; }
+
+        bool operator== (const MatchIter& o) const { return m == o.m; }
+        bool operator!= (const MatchIter& o) const { return m != o.m; }
+    };
+
+    /// Gets all type maps matching a given type, possibly with polymorphic replacement.
+    range<MatchIter> get_matching(const Type* ty) const {
+        return { MatchIter{ this, ty }, MatchIter{} };
     }
 
     /// Stores v in the leaf pointer

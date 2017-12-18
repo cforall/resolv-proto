@@ -1,5 +1,10 @@
+## 8 Dec 2017 ##
+* Work on fixing TypeMap::PolyIter for generic types
+
 ## 7 Dec 2017 ##
 * Implment occurs check and test case
+* Implement exponential failure case
+* Investigate why top-down algorithm fails on generic types
 
 ## 6 Dec 2017 ##
 * Poke at cost tracking for bindVar in unification visitor
@@ -76,9 +81,6 @@
 ## 14 Nov 2017 ##
 * Added generic parameters to unification, fixed visitor/mutator to properly traverse type parameters
 * Added basic generic test; works for BU, CO, not TD
-  * Look more closely at the `if ( pTarget )` block in `resolveWithExtType`
-  * The `polys` loop in `resolveTo` bears closer inspection as well
-  * The `*rType != *r->bound` check in `resolveToUnbound` is suspicious
 * Need to add pointer-type costing to function cost
 
 ## 13 Nov 2017 ##

@@ -1,0 +1,21 @@
+// Based on exponential failure case described on p.7 of Aaron's Comp II
+
+ctor-v #voidptr
+dtor-v #voidptr
+
+ctor-b #box<T> | ctor T | dtor T
+dtor-b #box<T> | ctor T | dtor T
+
+f-v #voidptr
+f-b #box<S> | ctor S | dtor S
+
+#voidptr conv-v #voidptr
+Any conv-b #voidptr
+
+Q make | ctor Q | dtor Q
+
+%%
+
+conv( #voidptr )
+f( make() )
+f( conv( #voidptr ) )

@@ -1,13 +1,21 @@
 # TODO #
 
 ## Next few days ##
-* Generic types in resolver prototype (right now I can't model pointers, which are a sort of generic type, and the exponential failure cases in the existing resolver need either pointers or generics to trigger)
-  * Rewrite the mergeClasses() algorithm to have a public entry point, count cost
+* Fix generic types in resolver prototype
+  * investigate why top-down fails last two generic cases
+    * Test integration of `resolveToPoly`
+  * refactoring (?):
+    * Rewrite the mergeClasses() algorithm to have a public entry point, count cost
+    * classBinds in `expand_conversions.h` should be merged in to TypeUnifier or something
+    * TypeUnifier should maybe take `env` by reference
+* Check why exponential failure case didn't fail
+  * possibily need to model user-defined implicit conversions instead of conv function
 
 ## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void`
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
   * Look at tuple truncations as conversions in expand_conversions
+  * Use Rob's semantics for tuples (just flatten to lists, maybe truncate at top-level)
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly just take advantage of new Env as GC_Object
   * audit uses of `Env::from` and trim cases where they're not actually modified

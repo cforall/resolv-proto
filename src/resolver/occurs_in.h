@@ -6,15 +6,18 @@
 #include "ast/type_visitor.h"
 #include "data/list.h"
 
+/// Checks if any of a list of forbidden variables occur in the expansion of a type in an 
+/// environment.
 class OccursIn : public TypeVisitor<OccursIn, bool> {
 	const Env* env;
 	const List<PolyType>& vars;
 
 public:
-	using Parent = TypeVisitor<OccursIn, bool>;
-	using Parent::visit;
-	using Parent::operator();
+	using Super = TypeVisitor<OccursIn, bool>;
+	using Super::visit;
+	using Super::operator();
 
+	OccursIn( const List<PolyType>& vars ) : env(nullptr), vars(vars) {}
 	OccursIn( const Env* env, const List<PolyType>& vars ) : env(env), vars(vars) {}
 
 	bool visit( const PolyType* t, bool& r ) {

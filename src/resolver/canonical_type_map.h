@@ -31,7 +31,7 @@ inline const T* get_canon(CanonicalTypeMap& m, Args&&... args) {
 
 /// Specialization for canonical types of generic named types
 inline const NamedType* get_canon(CanonicalTypeMap& m, const std::string& n, List<Type>&& ps) {
-    CanonicalTypeMap* mm = m.get_as<NamedType>( n );
+    CanonicalTypeMap* mm = m.get_as<NamedType>( n, ps.size() );
     if ( mm ) {
         mm = mm->get( ps );
         if ( mm ) {

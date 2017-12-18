@@ -10,6 +10,7 @@
 #include "interpretation.h"
 #include "type_map.h"
 #include "type_unifier.h"
+#include "unify.h"
 
 #include "data/cast.h"
 #include "data/compare.h"
@@ -147,16 +148,20 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 /// Attempts to bind a typeclass r to the concrete type conc in the current environment, 
 /// returning true if successful
 bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
-    // test for match if class already has a representative.
     if ( r->bound ) {
+        // test for match if class already has a representative.
         TypeUnifier unification{ env, cost.poly };
         conc = unification( r->bound, conc );
         if ( conc == nullptr ) return false;
         env = unification.env;
-        return true;
+    } else {
+        // make concrete class the new typeclass representative
+        if ( ! bindType( env, r, conc ) ) return false;
     }
-    // otherwise make concrete class the new typeclass representative
-    return bindType( env, r, conc );
+
+    // increment cost and return
+    ++cost.poly;
+    return true;
 }
 
 /// Replaces expression with the best conversion to the given type, updating cost and env 
@@ -171,8 +176,12 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
     if ( eid == typeof<ConcType>() || eid == typeof<NamedType>() ) {
         if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() ) {
             // check exact match
-            if ( *etype == *ttype ) return expr;
-
+            Cost k = cost;
+            if ( unify( etype, ttype, k, env ) ) {
+                cost = k;
+                return expr;
+            }
+            
             // check converted match
             if ( const Conversion* conv = conversions.find_between( etype, ttype ) ) {
                 cost += conv->cost;
@@ -184,10 +193,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
         } else if ( tid == typeof<PolyType>() ) {
             // test for match if target typeclass already has representative
             ClassRef tclass = getClass( env, as<PolyType>(ttype) );
-            if ( classBinds( tclass, etype, env, cost ) ) {
-                ++cost.poly;
-                return expr;
-            } else return nullptr;
+            return classBinds( tclass, etype, env, cost ) ? expr : nullptr;
         } else if ( tid == typeof<VoidType>() ) {
             // one safe conversion to truncate concrete type to Void
             if ( truncate ) {
@@ -203,10 +209,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
 
         if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() ) {
             // attempt to bind polymorphic return type to concrete paramter
-            if ( classBinds( eclass, ttype, env, cost ) ) {
-                ++cost.poly;
-                return expr;
-            } else return nullptr;
+            return classBinds( eclass, ttype, env, cost ) ? expr : nullptr;
         } else if ( tid == typeof<PolyType>() ) {
             // attempt to merge two typeclasses
             if ( bindVar( env, eclass, as<PolyType>(ttype) ) ) {

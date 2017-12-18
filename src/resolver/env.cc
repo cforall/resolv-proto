@@ -32,7 +32,7 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 }
 
 Env* Env::make( ClassRef& r, const Type* sub ) {
-	if ( OccursIn{ nullptr, r->vars }( sub ) ) return nullptr;
+	if ( OccursIn{ r->vars }( sub ) ) return nullptr;
 	Env* env = new Env{ r };
 	env->classes.front().bound = sub;
 	return env;
