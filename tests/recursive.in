@@ -1,0 +1,15 @@
+// ensures that recursive type assertions are supported
+
+f T | g T
+g S | h S
+h 1
+
+p T | q T
+q S | r S
+q 1
+r 1
+
+%%
+
+f( 1 )
+p( 1 )
