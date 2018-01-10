@@ -1,3 +1,24 @@
+## 9 Jan 2018 ##
+* Built new assertion resolver, seems to work
+
+## 8 Jan 2018 ##
+* Think about assertion resolution.
+  * New model doesn't change costs of overall expression based on cost of assertion resolution
+  * New model also says that any types left unbound until the assertions need to be bound, but won't specify the binding beyond what's constrained by the assertions -- ergo, what you bind these "auxiliary types" to doesn't really matter, as long as you can find a binding
+  * I *think* if we BFS the space of bindings, stopping when we find a concrete one (which should be min-cost), or at a fixed depth (for no ultimate binding) that that might work
+
+## 5 Jan 2018 ##
+* Investigate exponential failure case:
+  * for `f( make() )` case, does attempt assertion resolution on 
+    `f-b{ Q.1 => #box<S.4> }( make() => Q )`
+    * mutateAll on arguments seems to modify environment somewhere, as it should
+      * `{ Q.1 => #box<S.4>, [T.5, S.4, T.6] => ???, dtor Q.1 => dtor-b Q.1, ctor Q.1 => ctor-b Q.1 }`
+      * setting up the assertion satisfiers with variables of type `Q` seems sketchy
+    * attempts to resolve `ctor S.4` to `Void` (ditto `dtor`)
+      * and this is where the rabbit-trail breaks, line 135's `resolveWithType` does not attempt to 
+        resolve assertions
+    * working guess is it fails with unbound on `[T.5, S.4, T.6]` somewhere...
+
 ## 8 Dec 2017 ##
 * Work on fixing TypeMap::PolyIter for generic types
 

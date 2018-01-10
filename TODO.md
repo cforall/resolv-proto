@@ -1,18 +1,13 @@
 # TODO #
 
 ## Next few days ##
-* Fix generic types in resolver prototype
-  * investigate why top-down fails last two generic cases
-    * Test integration of `resolveToPoly`
-  * refactoring (?):
-    * Rewrite the mergeClasses() algorithm to have a public entry point, count cost
-    * classBinds in `expand_conversions.h` should be merged in to TypeUnifier or something
-    * TypeUnifier should maybe take `env` by reference
 * Check why exponential failure case didn't fail
   * possibily need to model user-defined implicit conversions instead of conv function
 
 ## Next few weeks ##
-* Modify semantics of top-level resolution to resolve to `void`
+* Investigate resolution order for assertions:
+  * immediate vs. top-level vs. post-sort
+* Modify semantics of top-level resolution to resolve to `void` (see `void` test case)
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
   * Look at tuple truncations as conversions in expand_conversions
   * Use Rob's semantics for tuples (just flatten to lists, maybe truncate at top-level)
@@ -37,5 +32,10 @@
     * Maybe cache against null environment unless argument is basic type
     * Maybe just don't cache against environment -- can you make lower environment independent?
   * TD variant that builds a "filter set" of types to search for, avoids caching
+* refactoring (?):
+  * Rewrite the mergeClasses() algorithm to have a public entry point, count cost
+  * classBinds in `expand_conversions.h` should be merged in to TypeUnifier or something
+  * TypeUnifier should maybe take `env` by reference
+  * `resolve_assertions` should maybe have a flag for "has ambiguous", and skip the resolution there
 
 

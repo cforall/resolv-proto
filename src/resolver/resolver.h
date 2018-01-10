@@ -89,9 +89,10 @@ public:
 /// State-tracking class for resolving expressions
 class Resolver {
 public:
-	ConversionGraph& conversions;  ///< Conversions between known types
-	FuncTable& funcs;              ///< Known function declarations
-	unsigned id_src;               ///< Source of type variable IDs
+	ConversionGraph& conversions;       ///< Conversions between known types
+	FuncTable& funcs;                   ///< Known function declarations
+	unsigned id_src;                    ///< Source of type variable IDs
+	unsigned max_recursive_assertions;  ///< Maximum recursive assertion depth
 
 #ifdef RP_MODE_TD
 	ArgCache cached;               ///< Cached expression resolutions
@@ -102,8 +103,10 @@ public:
 	UnboundEffect on_unbound;      ///< Effect to run on unbound type variables
 
 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
-	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound )
-		: conversions( conversions ), funcs( funcs ), id_src(0),
+	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound,
+			  unsigned max_recursive_assertions = 5 )
+		: conversions( conversions ), funcs( funcs ), id_src( 0 ), 
+		  max_recursive_assertions( max_recursive_assertions ), 
 #ifdef RP_MODE_TD
 		  cached(),
 #endif

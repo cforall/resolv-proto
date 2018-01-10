@@ -11,6 +11,7 @@
 
 #include "ast/expr.h"
 #include "ast/typed_expr_mutator.h"
+#include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "lists/filter.h"
@@ -78,14 +79,78 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		}
 	};
 
-	Resolver& resolver;       ///< Resolver to perform searches.
-	Cost& cost;               ///< Cost of accumulated bindings.
-	Env*& env;                ///< Environment to bind types and assertions into.
-	List<FuncDecl> deferIds;  ///< Assertions that cannot be bound at their own call
-	DeferList deferred;       ///< Available interpretations of deferred assertions
+	Resolver& resolver;        ///< Resolver to perform searches.
+	Cost& cost;                ///< Cost of accumulated bindings.
+	Env*& env;                 ///< Environment to bind types and assertions into.
+	List<FuncDecl> deferIds;   ///< Assertions that cannot be bound at their own call
+	DeferList deferred;        ///< Available interpretations of deferred assertions
+	List<FuncDecl> openAssns;  ///< Sub-assertions of bound assertions
+	unsigned recursion_depth;  ///< Depth of sub-assertions being bound
+	bool has_ambiguous;        ///< Expression tree has ambiguous subexpressions; fail fast
+
+	/// Resolves an assertion, returning false if no satisfying assertion, binding it if one, 
+	/// adding to the defer-list if more than one.
+	bool resolveAssertion( const FuncDecl* asn ) {
+		// generate FuncExpr for assertion
+		List<Expr> asnArgs;
+		asnArgs.reserve( asn->params().size() );
+		for ( const Type* pType : asn->params() ) {
+			asnArgs.push_back( new VarExpr( pType ) );
+		}
+		const FuncExpr* asnExpr = new FuncExpr{ asn->name(), move(asnArgs) };
+
+		// attempt to resolve assertion
+		InterpretationList satisfying = resolver.resolveWithType( asnExpr, asn->returns(), env );
+
+		switch ( satisfying.size() ) {
+			case 0: { // no satisfying assertions: return failure
+				return false;
+			} case 1: { // unique satisfying assertion: add to environment
+				const Interpretation* s = satisfying.front();
+				if ( bindRecursive( asn, s->expr ) ) {
+					merge( env, s->env );
+					return true;
+				} else {
+					return false;
+				}
+			} default: { // multiple satisfying assertions: defer evaluation
+				deferIds.push_back( asn );
+				deferred.push_back( move(satisfying) );
+				return true;
+			}
+		}
+	}
+
+	/// Binds an assertion to its resolved expression, adding recursive assertions to the open set. 
+	/// Returns false if resolved expression is ambiguous or contains assertions that would 
+	/// exceed maximum recursion depth, true otherwise.
+	bool bindRecursive( const FuncDecl* asn, const TypedExpr* rexpr ) {
+		// reject any assertion binding that isn't a call expression
+		const CallExpr* cexpr = as_safe<CallExpr>(rexpr);
+		if ( ! cexpr ) return false;
+		
+		// add recursive assertions to open set
+		if ( const Forall* rforall = cexpr->forall() ) {
+			const List<FuncDecl>& rassns = rforall->assertions();
+			
+			// reject if hit max recursion depth
+			if ( recursion_depth >= resolver.max_recursive_assertions && ! rassns.empty() )
+				return false;
+			
+			// add open assertions and variables
+			openAssns.insert( openAssns.end(), rassns.begin(), rassns.end() );
+			for ( const PolyType* v : rforall->variables() ) { insertVar( env, v ); }
+		}
+
+		// bind assertion
+		bindAssertion( env, asn, rexpr );
+		return true;
+	}
+
 public:
-	AssertionResolver( Resolver& resolver, Cost& cost, Env*& env )
-		: resolver(resolver), cost(cost), env(env), deferIds(), deferred() {}
+	AssertionResolver( Resolver& resolver, Cost& cost, Env*& env, unsigned depth = 1 )
+		: resolver(resolver), cost(cost), env(env), deferIds(), deferred(), openAssns(), 
+		  recursion_depth(depth), has_ambiguous(false) {}
 	
 	using TypedExprMutator<AssertionResolver>::visit;
 	using TypedExprMutator<AssertionResolver>::operator();
@@ -108,7 +173,6 @@ public:
 			}
 
 			// rebind to new forall clause if necessary
-			unique_ptr<Forall> forall = Forall::from( e->forall() );
 			// TODO should maybe run a ForallSubstitutor over the environment here...
 			ee = new CallExpr{ e->func(), *move(newArgs), Forall::from( e->forall() ) };
 		}
@@ -121,35 +185,9 @@ public:
 		
 		// bind assertions
 		for ( const FuncDecl* asn : ee->forall()->assertions() ) {
-			// generate FuncExpr for assertion
-			List<Expr> asnArgs;
-			asnArgs.reserve( asn->params().size() );
-			for ( const Type* pType : asn->params() ) {
-				asnArgs.push_back( new VarExpr( pType ) );
-			}
-			const FuncExpr* asnExpr = new FuncExpr{ asn->name(), move(asnArgs) };
-
-			// attempt to resolve assertion
-			// TODO this visitor should probably be integrated into the resolver; that 
-			//      way the defer-list of assertions can be iterated over at the top 
-			//      level and overly-deep recursive invocations can be caught.
-			InterpretationList satisfying = resolver.resolveWithType( asnExpr, asn->returns(), env );
-
-			switch ( satisfying.size() ) {
-				case 0: { // no satisfying assertions: return failure
-					r = nullptr;
-					return false;
-				} case 1: { // unique satisfying assertion: add to environment
-					const Interpretation* s = satisfying.front();
-					merge( env, s->env );
-					// ++cost.spec;
-					bindAssertion( env, asn, s->expr );
-					break;
-				} default: { // multiple satisfying assertions: defer evaluation
-					deferIds.push_back( asn );
-					deferred.emplace_back( move(satisfying) );
-					break;
-				}
+			if ( ! resolveAssertion( asn ) ) {
+				r = nullptr;
+				return false;
 			}
 		}
 
@@ -170,6 +208,7 @@ public:
 		// find all min-cost resolvable alternatives
 		bool changed = false;
 		List<Interpretation> min_alts;
+		bool local_ambiguous = false;
 		for ( const Interpretation* alt : e->alts() ) {
 			const TypedExpr* alt_expr = alt->expr;
 			const TypedExpr* alt_bak = alt_expr;
@@ -181,7 +220,7 @@ public:
 				continue;
 			}
 			// re-resolve alternative assertions under current environment
-			AssertionResolver alt_resolver{ resolver, alt_cost, alt_env };
+			AssertionResolver alt_resolver{ resolver, alt_cost, alt_env, recursion_depth };
 			alt_resolver.mutate( alt_expr );
 			if ( alt_expr != alt_bak ) { changed = true; }
 
@@ -193,12 +232,15 @@ public:
 				new Interpretation{ alt_expr, alt_env, move(alt_cost), copy(alt->argCost) };
 			if ( min_alts.empty() ) {
 				min_alts.push_back( new_alt );
+				local_ambiguous = alt_resolver.has_ambiguous;
 			} else switch ( compare( *new_alt, *min_alts[0] ) ) {
 			case lt:
 				min_alts.clear();
+				local_ambiguous = false;
 				// fallthrough
 			case eq:
 				min_alts.push_back( new_alt );
+				local_ambiguous |= alt_resolver.has_ambiguous;
 				break;
 			case gt:
 				break;
@@ -213,54 +255,75 @@ public:
 
 		// unique min disambiguates expression
 		if ( min_alts.size() == 1 ) {
-			env = Env::from( min_alts[0]->env );
+			env = Env::from( min_alts.front()->env );
 			r = min_alts.front()->expr;
+			has_ambiguous |= local_ambiguous;
 			return true;
 		}
 
 		// new ambiguous expression if changed
 		if ( changed ) { r = new AmbiguousExpr{ e->expr(), e->type(), move(min_alts) }; }
+		has_ambiguous = true;
 		return true;
 	}
 
 	const TypedExpr* mutate( const TypedExpr*& r ) {
 		(*this)( r, r );
 
-		// end early if no alternatives
-		if ( r == nullptr ) return nullptr;
+		// end early if ambiguous or failure, no need to resolve assertions
+		if ( has_ambiguous || r == nullptr ) return r;
 
-		// end early if no deferred assertions
-		if ( deferred.empty() ) return r;
+		do {
+			// attempt to disambiguate deferred assertion matches with additional information
+			if ( ! deferred.empty() ) {
+				auto compatible = 
+					filter_combos<const Interpretation*>( deferred, interpretation_env_merger{ env } );
+				if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
-		// attempt to disambiguate deferred assertion matches with additional information
-		auto compatible = 
-			filter_combos<const Interpretation*>( deferred, interpretation_env_merger{ env } );
-		if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
-
-		// sort deferred assertion matches by cost
-		interpretation_env_coster costs;
-		auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
-		if ( minPos == compatible.begin() ) {  // unique min-cost
-			env = Env::from( minPos->first );
-			for ( unsigned i = 0; i < deferIds.size(); ++i ) {
-				bindAssertion( env, deferIds[i], minPos->second[i]->expr );
-			}
-		} else {  // ambiguous min-cost assertion matches
-			List<Interpretation> alts;
-			Cost alt_cost = costs.get( *minPos );
-			// cost.spec += deferIds.size();
-			auto it = compatible.begin();
-			while (true) {
-				// build an interpretation for each compatible min-cost assertion binding
-				Env* alt_env = Env::from( it->first );
-				for ( unsigned i = 0; i < deferIds.size(); ++i ) {
-					bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
+				// sort deferred assertion matches by cost
+				interpretation_env_coster costs;
+				auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
+				if ( minPos == compatible.begin() ) {  // unique min-cost
+					env = Env::from( minPos->first );
+					for ( unsigned i = 0; i < deferIds.size(); ++i ) {
+						// fail if cannot bind assertion
+						if ( ! bindRecursive( deferIds[i], minPos->second[i]->expr ) ) {
+							return r = nullptr;
+						}
+					}
+				} else {  // ambiguous min-cost assertion matches
+					List<Interpretation> alts;
+					Cost alt_cost = costs.get( *minPos );
+					auto it = compatible.begin();
+					while (true) {
+						// build an interpretation for each compatible min-cost assertion binding
+						Env* alt_env = Env::from( it->first );
+						for ( unsigned i = 0; i < deferIds.size(); ++i ) {
+							bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
+						}
+						alts.push_back( new Interpretation{ r, alt_env, copy(alt_cost) } );
+						if ( it == minPos ) break; else ++it;
+					}
+					return r = new AmbiguousExpr{ r, r->type(), move(alts) };
 				}
-				alts.push_back( new Interpretation{ r, alt_env, copy(alt_cost) } );
-				if ( it == minPos ) break; else ++it;
+
+				deferred.clear();
 			}
-			r = new AmbiguousExpr{ r, r->type(), move(alts) };
-		}
+
+			if ( openAssns.empty() ) break;
+			List<FuncDecl> toSolve{};
+			toSolve.swap( openAssns );
+
+			// fail if assertions too deeply nested
+			++recursion_depth;
+			if ( recursion_depth > resolver.max_recursive_assertions ) return r = nullptr;
+
+			// bind recursive assertions
+			for ( const FuncDecl* asn : toSolve ) {
+				if ( ! resolveAssertion( asn ) ) return r = nullptr;
+			}
+
+		} while ( ! openAssns.empty() );
 
 		return r;
 	}
