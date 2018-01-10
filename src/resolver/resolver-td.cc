@@ -301,7 +301,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 			// truncate expressions to match result type
 			unsigned n = targetType->size();
 			bool trunc = truncate && keyType->size() > n;
-			Cost sCost = Cost::zero();
+			Cost sCost = Cost::from_poly(1);
 			if ( trunc ) { sCost.safe += keyType->size() - n; }
 			for ( const Interpretation* i : sResults ) {
 				const TypedExpr* sExpr = trunc ? new TruncateExpr{ i->expr, n } : i->expr;
@@ -356,7 +356,7 @@ InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs,
 			const Type* fromType = conv.from->type;
 			// for any type (or tuple that has the conversion type as a prefix)
 			if ( const TypeMap<FuncList>* matches = funcIndex.get( fromType ) ) {
-				for ( auto it = matches->begin(); it != matches.end(); ++it ) {
+				for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 					// results for all functions with that type
 					InterpretationList sResults = resolveToAny(
 						resolver, it.get(), expr, convEnv, Resolver::Mode{}.without_conversions() );

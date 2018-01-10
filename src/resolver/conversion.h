@@ -198,6 +198,7 @@ public:
 };
 
 using Conversion = ConversionGraph::Conversion;
+using ConversionNode = ConversionGraph::ConversionNode;
 
 /// Make a graph of conversions from an existing set of concrete types
 ConversionGraph make_conversions( CanonicalTypeMap& types );

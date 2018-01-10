@@ -1,8 +1,7 @@
 # TODO #
 
 ## Next few days ##
-* Check why exponential failure case didn't fail
-  * possibily need to model user-defined implicit conversions instead of conv function
+* Fix TD resolver
 
 ## Next few weeks ##
 * Investigate resolution order for assertions:
@@ -36,6 +35,5 @@
   * Rewrite the mergeClasses() algorithm to have a public entry point, count cost
   * classBinds in `expand_conversions.h` should be merged in to TypeUnifier or something
   * TypeUnifier should maybe take `env` by reference
-  * `resolve_assertions` should maybe have a flag for "has ambiguous", and skip the resolution there
 
 
