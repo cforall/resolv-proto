@@ -298,14 +298,17 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 				resolver, it.get(), expr, nullptr, Resolver::Mode{}.without_conversions() );
 			if ( sResults.empty() ) continue;
 
-			// truncate expressions to match result type
+			// truncate and unify expressions to match result type
 			unsigned n = targetType->size();
 			bool trunc = truncate && keyType->size() > n;
-			Cost sCost = Cost::from_poly(1);
-			if ( trunc ) { sCost.safe += keyType->size() - n; }
+			Cost sCost = trunc ? Cost::zero() : Cost::from_safe( keyType->size() - n );
 			for ( const Interpretation* i : sResults ) {
+				Env* iEnv = Env::from( i->env );
+				Cost iCost = i->cost;
+				if ( ! unify( targetType, i->type(), iCost, iEnv ) ) continue;
+
 				const TypedExpr* sExpr = trunc ? new TruncateExpr{ i->expr, n } : i->expr;
-				results.push_back( new Interpretation{ sExpr, i->env, i->cost + sCost, i->cost } );
+				results.push_back( new Interpretation{ sExpr, iEnv, iCost + sCost, i->cost } );
 			}
 		}
 	}

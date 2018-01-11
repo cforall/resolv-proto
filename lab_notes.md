@@ -1,5 +1,9 @@
-## 9 Jan 2018 ##
+## 11 Jan 2018 ##
+* Fixed second bug in TD resolver
+
+## 10 Jan 2018 ##
 * Built new assertion resolver, seems to work
+* Fixed one bug in TD resolver
 
 ## 8 Jan 2018 ##
 * Think about assertion resolution.
