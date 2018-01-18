@@ -11,26 +11,34 @@
 #include "data/cast.h"
 #include "data/mem.h"
 #include "data/option.h"
+#include "data/vector_map.h"
 #include "driver/parser_common.h"
+
+/// Kinds of types
+enum TypeKind { Conc, Compound, Poly, N_KINDS };
 
 /// Arguments to benchmark generator
 class Args {
-    option<def_random_engine> _engine;       ///< Underlying random engine, empty if uninitialized
-    option<unsigned> _seed;                  ///< Random seed engine is built off
-    option<unsigned> _n_decls;               ///< Number of declarations to generate
-    option<unsigned> _n_exprs;               ///< Number of top-level expressions to generate
-    unique_ptr<Generator> _n_overloads;      ///< Number of overloads to generate for each function
-    unique_ptr<Generator> _n_parms;          ///< Number of function parameters
-    unique_ptr<Generator> _n_rets;           ///< Number of function return types
-    unique_ptr<Generator> _n_poly_types;     ///< Number of polymorphic type parameters
-    option<unsigned> _max_tries_for_unique;  ///< Maximum number of tries for unique parameter list
-    option<double> _p_new_type;              ///< Probability of a parameter/return type being new
-    unique_ptr<Generator> _get_basic;        ///< Generates an index for a basic type
-    unique_ptr<Generator> _get_struct;       ///< Generates an index for a struct type
-    option<double> _p_nested_at_root;        ///< Probability that a parameter of a root-level expression will be nested
-    option<double> _p_nested_deeper;         ///< Probability that a parameter of a nested expression will be more deeply nested
-    option<double> _p_unsafe_offset;         ///< Probability that a basic type will match unsafely.
-    unique_ptr<Generator> _basic_offset;     ///< Magnitude of basic type offset.
+    option<def_random_engine> _engine;         ///< Underlying random engine, empty if uninitialized
+    option<unsigned> _seed;                    ///< Random seed engine is built off
+    option<unsigned> _n_decls;                 ///< Number of declarations to generate
+    option<unsigned> _n_exprs;                 ///< Number of top-level expressions to generate
+    unique_ptr<Generator> _n_overloads;        ///< Number of overloads to generate for each function
+    unique_ptr<Generator> _n_parms;            ///< Number of function parameters
+    unique_ptr<Generator> _n_rets;             ///< Number of function return types
+    unique_ptr<Generator> _n_poly_types;       ///< Number of polymorphic type parameters
+    option<unsigned> _max_tries_for_unique;    ///< Maximum number of tries for unique parameter list
+    option<double> _p_new_type;                ///< Probability of a parameter/return type being new
+    unique_ptr<Generator> _get_basic;          ///< Generates an index for a basic type
+    std::vector<unsigned> _with_struct_params; ///< [i] is the last struct index with i parameters
+    unique_ptr<Generator> _get_struct;         ///< Generates an index for a struct type
+    unique_ptr<Generator> _get_nested_struct;  ///< Generates an index for a nested struct type
+    option<double> _p_nested_at_root;          ///< Probability that a parameter of a root-level expression will be nested
+    option<double> _p_nested_deeper;           ///< Probability that a parameter of a nested expression will be more deeply nested
+    option<double> _p_unsafe_offset;           ///< Probability that a basic type will match unsafely.
+    unique_ptr<Generator> _basic_offset;       ///< Magnitude of basic type offset.
+    std::vector<double> _p_with_kind;          ///< Probabilities of drawing type of particular kind
+    unique_ptr<Generator> _get_kind;           ///< Gets a type kind
 
 public:
     /// Gets random engine, initializing from seed if needed.
@@ -101,11 +109,109 @@ public:
         return *_get_basic;
     }
 
+    std::vector<unsigned>& with_struct_params() {
+        if ( _with_struct_params.empty() ) {
+            _with_struct_params.reserve( 3 );
+            _with_struct_params[0] = 12;
+            _with_struct_params[1] = 21;
+            _with_struct_params[2] = 25;
+        }
+        return _with_struct_params;
+    }
+
+    /// gets the number of struct parameters for s
+    unsigned get_n_params( unsigned s ) {
+        auto& ps = with_struct_params();
+        for ( unsigned i = ps.size(); i > 0; --i ) {
+            if ( s > ps[i-1] ) return i;
+        }
+        return 0;
+    }
+
     Generator& get_struct() {
         if ( ! _get_struct ) {
-            _get_struct = make_unique<UniformRandomGenerator>( engine(), 0, 25 );
+            auto& ps = with_struct_params();
+            if( ps.size() == 1 ) {
+                _get_struct = make_unique<UniformRandomGenerator>( engine(), 0, ps[0] );
+            } else {
+                std::vector<double> struct_dists;
+                GeneratorList struct_gens;
+                struct_dists.reserve( ps.size() + 2 );
+                struct_gens.reserve( ps.size() + 2 );
+
+                struct_dists.push_back( 0.45 );
+                struct_gens.emplace_back( new UniformRandomGenerator{ engine(), 0, ps[0] } );
+
+                if ( ps[1] - ps[0] <= 2 ) {
+                    struct_dists.push_back( 0.54 );
+                    struct_gens.emplace_back( 
+                        new UniformRandomGenerator{ engine(), ps[0] + 1, ps[1] } );
+                } else {
+                    struct_dists.push_back( 0.28 );
+                    struct_gens.emplace_back( new ConstantGenerator{ ps[0] + 1 } );
+
+                    struct_dists.push_back( 0.24 );
+                    struct_gens.emplace_back( new ConstantGenerator{ ps[0] + 2 } );
+
+                    struct_dists.push_back( 0.02 );
+                    struct_gens.emplace_back( 
+                        new UniformRandomGenerator{ engine(), ps[0] + 3, ps[1] } );
+                }
+
+                for ( unsigned i = 2; i < ps.size(); ++i ) {
+                    struct_dists.push_back( 0.01 );
+                    struct_gens.emplace_back(
+                        new UniformRandomGenerator{ engine(), ps[i-1] + 1, ps[i] } );
+                }
+
+                _get_struct = make_unique<WeightedGenerator>( 
+                    engine(), struct_dists.begin(), struct_dists.end(), move(struct_gens) );
+            }
         }
         return *_get_struct;
+    }
+
+    Generator& get_nested_struct() {
+        if ( ! _get_nested_struct ) {
+            auto& ps = with_struct_params();
+            if( ps.size() == 1 ) {
+                _get_nested_struct = make_unique<UniformRandomGenerator>( engine(), 0, ps[0] );
+            } else {
+                std::vector<double> struct_dists;
+                GeneratorList struct_gens;
+                struct_dists.reserve( ps.size() + 2 );
+                struct_gens.reserve( ps.size() + 2 );
+
+                struct_dists.push_back( 0.945 );
+                struct_gens.emplace_back( new UniformRandomGenerator{ engine(), 0, ps[0] } );
+
+                if ( ps[1] - ps[0] <= 2 ) {
+                    struct_dists.push_back( 0.054 );
+                    struct_gens.emplace_back( 
+                        new UniformRandomGenerator{ engine(), ps[0] + 1, ps[1] } );
+                } else {
+                    struct_dists.push_back( 0.028 );
+                    struct_gens.emplace_back( new ConstantGenerator{ ps[0] + 1 } );
+
+                    struct_dists.push_back( 0.024 );
+                    struct_gens.emplace_back( new ConstantGenerator{ ps[0] + 2 } );
+
+                    struct_dists.push_back( 0.002 );
+                    struct_gens.emplace_back( 
+                        new UniformRandomGenerator{ engine(), ps[0] + 3, ps[1] } );
+                }
+
+                for ( unsigned i = 2; i < ps.size(); ++i ) {
+                    struct_dists.push_back( 0.001 );
+                    struct_gens.emplace_back(
+                        new UniformRandomGenerator{ engine(), ps[i-1] + 1, ps[i] } );
+                }
+
+                _get_nested_struct = make_unique<WeightedGenerator>( 
+                    engine(), struct_dists.begin(), struct_dists.end(), move(struct_gens) );
+            }
+        }
+        return *_get_nested_struct;
     }
 
     double p_nested_at_root() { return _p_nested_at_root.value_or( 0.06 ); }
@@ -119,6 +225,25 @@ public:
             _basic_offset = make_unique<GeometricRandomGenerator>( engine(), 0.25 );
         }
         return *_basic_offset;
+    }
+
+    std::vector<double>&  p_with_kind() {
+        if ( _p_with_kind.empty() ) {
+            _p_with_kind.push_back( 0.54 );
+            _p_with_kind.push_back( 0.36 );
+            _p_with_kind.push_back( 0.10 );
+        } else while ( _p_with_kind.size() < N_KINDS ) {
+            _p_with_kind.push_back( 0.0 );
+        }
+        return _p_with_kind;
+    }
+
+    Generator& get_kind() {
+        if ( ! _get_kind ) {
+            auto& ps = p_with_kind();
+            _get_kind = make_unique<DiscreteRandomGenerator>( engine(), ps.begin(), ps.end() );
+        }
+        return *_get_kind;
     }
 
 private:
@@ -142,7 +267,25 @@ private:
         }
     }
 
-    /// Assigns the unsigned from `line` into `val` if present, prints an error otherwise.
+    /// Assigns the unsigned array from `line` into `val` if present, prints an error otherwise.
+    /// Will not overwrite val.
+    static void read_unsigned_array( char* name, char* line, std::vector<unsigned>& val ) {
+        char* orig = line;
+        std::vector<unsigned> ret;
+        unsigned r;
+        while ( parse_unsigned( line, r ) ) {
+            ret.push_back( r );
+            match_whitespace( line );
+        }
+        if ( ! ret.empty() && is_empty( line ) ) {
+            if ( val.empty() ) val = move(ret);
+        } else {
+            std::cerr << "ERROR: Expected unsigned int array for " << name << ", got `"
+                      << orig << "'" << std::endl;
+        }
+    }
+
+    /// Assigns the decimal value from `line` into `val` if present, prints an error otherwise.
     /// Will not overwrite val.
     static void read_float( char* name, char* line, option<double>& val ) {
         char* orig = line;
@@ -153,6 +296,24 @@ private:
             if ( ! val ) val = ret;
         } else {
             std::cerr << "ERROR: Expected floating point for " << name << ", got `" 
+                      << orig << "'" << std::endl;
+        }
+    }
+
+    /// Assigns the decimal array from `line` into `val` if present, prints an error otherwise.
+    /// Will not overwrite val.
+    static void read_float_array( char* name, char* line, std::vector<double>& val ) {
+        char* orig = line;
+        std::vector<double> ret;
+        double r;
+        while ( parse_float( line, r ) ) {
+            ret.push_back( r );
+            match_whitespace( line );
+        }
+        if ( ! ret.empty() && is_empty( line ) ) {
+            if ( val.empty() ) val = move(ret);
+        } else {
+            std::cerr << "ERROR: Expected floating point array for " << name << ", got `"
                       << orig << "'" << std::endl;
         }
     }
@@ -263,7 +424,11 @@ private:
             read_float( name, line, _p_new_type );
         } else if ( is_flag( "get_basic", name ) ) {
             read_generator( name, line, _get_basic );
+        } else if ( is_flag( "with_struct_params", name ) ) {
+            read_unsigned_array( name, line, _with_struct_params );
         } else if ( is_flag( "get_struct", name ) ) {
+            read_generator( name, line, _get_struct );
+        } else if ( is_flag( "get_nested_struct", name ) ) {
             read_generator( name, line, _get_struct );
         } else if ( is_flag( "p_nested_at_root", name ) ) {
             read_float( name, line, _p_nested_at_root );
@@ -273,6 +438,8 @@ private:
             read_float( name, line, _p_unsafe_offset );
         } else if ( is_flag( "basic_offset", name ) ) {
             read_generator( name, line, _basic_offset );
+        } else if ( is_flag( "p_with_kind", name ) ) {
+            read_float_array( name, line, _p_with_kind );
         } else {
             std::cerr << "ERROR: Unknown argument `" << name << "'" << std::endl;
         }
@@ -360,8 +527,26 @@ namespace {
     };
 
     template<>
+    struct ArgTraits<std::vector<unsigned>> {
+        static void print(std::ostream& out, const std::vector<unsigned>& v ) {
+            if ( v.empty() ) return;
+            out << v[0];
+            for ( unsigned i = 1; i < v.size(); ++i ) { out << " " << v[i]; }
+        }
+    };
+
+    template<>
     struct ArgTraits<double> {
         static void print(std::ostream& out, double p ) { out << p; }
+    };
+
+    template<>
+    struct ArgTraits<std::vector<double>> {
+        static void print(std::ostream& out, const std::vector<double>& v ) {
+            if ( v.empty() ) return;
+            out << v[0];
+            for ( unsigned i = 1; i < v.size(); ++i ) { out << " " << v[i]; }
+        }
     };
 
     template<>

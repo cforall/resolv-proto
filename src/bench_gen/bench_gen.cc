@@ -27,40 +27,28 @@
 
 /// Generates a type
 struct TypeGen {
-    enum { None, Conc, Named, Poly } kind;
+    TypeKind kind;
     unsigned i;
 
-    TypeGen() : kind(None), i(0) {}
-    TypeGen( unsigned i ) : kind(None), i(i) {}
+    TypeGen() : kind(N_KINDS), i(0) {}
+    TypeGen( TypeKind k, unsigned i ) : kind(k), i(i) {}
 
     /// Generates a ConcType with the given index
-    static TypeGen conc(unsigned i) {
-        TypeGen t(i);
-        t.kind = Conc;
-        return t;
-    }
+    static TypeGen conc(unsigned i) { return TypeGen{ Conc, i }; }
 
     /// Generates a NamedType with the given index
-    static TypeGen named(unsigned i) {
-        TypeGen t(i);
-        t.kind = Named;
-        return t;
-    }
+    static TypeGen named(unsigned i) { return TypeGen{ Compound, i }; }
 
     /// Generates a PolyType with the given index
-    static TypeGen poly(unsigned i) {
-        TypeGen t(i);
-        t.kind = Poly;
-        return t;
-    }
+    static TypeGen poly(unsigned i) { return TypeGen{ Poly, i }; }
 
     /// Generates a new type of the underlying kind
     const Type* get( unique_ptr<Forall>& forall ) const {
         switch (kind) {
-        case None: return nullptr;
         case Conc: return new ConcType{ (int)i };
-        case Named: return new NamedType{ NameGen::get_lower( i ) };
+        case Compound: return new NamedType{ NameGen::get_lower( i ) };
         case Poly: return forall ? forall->add( NameGen::get_cap( i ) ) : nullptr;
+        case N_KINDS: return nullptr;
         default: assert(false); return nullptr;
         }
     }
@@ -87,19 +75,19 @@ struct TypeGen {
 /// List of type generators
 using GenList = std::vector<TypeGen>;
 
-/// Normalizes a vector of TypeGen such that all poly-types are in increasing order
-void normalize_poly( GenList& v ) {
-    std::unordered_map<unsigned, unsigned> polys;
-    for ( TypeGen& t : v ) {
-        if ( t.kind != TypeGen::Poly ) continue;
+// /// Normalizes a vector of TypeGen such that all poly-types are in increasing order
+// void normalize_poly( GenList& v ) {
+//     std::unordered_map<unsigned, unsigned> polys;
+//     for ( TypeGen& t : v ) {
+//         if ( t.kind != TypeGen::Poly ) continue;
 
-        auto it = polys.find( t.i );  // lookup replacement index
-        if ( it == polys.end() ) {    // assign consecutively if none found
-            it = polys.emplace_hint(it, t.i, polys.size() );
-        }
-        t.i = it->second;              // replace index
-    }
-}
+//         auto it = polys.find( t.i );  // lookup replacement index
+//         if ( it == polys.end() ) {    // assign consecutively if none found
+//             it = polys.emplace_hint(it, t.i, polys.size() );
+//         }
+//         t.i = it->second;              // replace index
+//     }
+// }
 
 template<typename T>
 void comment_print( const char* name, const T& x ) {
@@ -150,84 +138,183 @@ class BenchGenerator {
         comment_print( "max_tries_for_unique", a.max_tries_for_unique() );
         comment_print( "p_new_type", a.p_new_type() );
         comment_print( "get_basic", a.get_basic() );
+        comment_print( "with_struct_params", a.with_struct_params() );
         comment_print( "get_struct", a.get_struct() );
+        comment_print( "get_nested_struct", a.get_struct() );
         comment_print( "p_nested_at_root", a.p_nested_at_root() );
         comment_print( "p_nested_deeper", a.p_nested_deeper() );
         comment_print( "p_unsafe_offset", a.p_unsafe_offset() );
         comment_print( "basic_offset", a.basic_offset() );
+        comment_print( "p_with_kind", a.p_with_kind() );
+    }
+
+    /// gets a type from a chunk of a gen list
+    const Type* get_type( GenList::iterator& it, unique_ptr<Forall>& forall ) {
+        TypeGen& t = *it;
+        ++it;
+        
+        if ( t.kind != Compound ) return t.get( forall );
+        
+        unsigned n_params = a.get_n_params( t.i );
+        List<Type> params;
+        params.reserve( n_params );
+        for ( unsigned i = 0; i < n_params; ++i ) { params.push_back( get_type(it, forall) ); }
+
+        return new NamedType{ NameGen::get_lower( t.i ), move(params) };
+    }
+
+    /// Generate a type
+    void generate_type( GenList& out, unsigned n_poly, unsigned& i_poly, 
+            std::vector<unsigned>& basics, std::vector<GenList>& structs, 
+            bool nested = false ) {
+        switch( (TypeKind)a.get_kind()() ) {
+        case Conc: {
+            if ( basics.empty() || coin_flip( a.p_new_type() ) ) {
+                // select new basic type
+                unsigned new_basic;
+                do {
+                    new_basic = a.get_basic()();
+                } while ( std::find( basics.begin(), basics.end(), new_basic ) != basics.end() );
+                basics.push_back( new_basic );
+                out.push_back( TypeGen::conc( new_basic ) );
+            } else {
+                // repeat existing basic type
+                out.push_back( TypeGen::conc( random_in( basics ) ) );
+            }
+        } case Compound: {
+            if ( structs.empty() || coin_flip( a.p_new_type() ) ) {
+                // generate new struct type
+                GenList nout;
+                while(true) {
+                    unsigned new_struct = nested ? a.get_nested_struct()() : a.get_struct()();
+                    nout.push_back( TypeGen::named( new_struct ) );
+                    unsigned n_params = a.get_n_params( new_struct );
+
+                    if ( n_params == 0 ) {
+                        // done if no params and none matching yet
+                        if ( std::find( structs.begin(), structs.end(), nout ) != structs.end() )
+                            continue;
+                        else break;
+                    }
+
+                    // fill in parameters
+                    unsigned ni_poly = i_poly;
+                    std::vector<unsigned> nbasics = basics;
+                    std::vector<GenList> nstructs = structs;
+                    for ( unsigned p = 0; p < n_params; ++p ) {
+                        generate_type( nout, n_poly, ni_poly, nbasics, nstructs, true );
+                    }
+                    
+                    // retry if already used this struct
+                    if ( std::find( structs.begin(), structs.end(), nout ) != structs.end() )
+                        continue;
+                    
+                    // update parameters otherwise
+                    i_poly = ni_poly;
+                    basics.swap( nbasics );
+                    structs.swap( nstructs );
+                    break;
+                }
+                structs.push_back( nout );
+                out.insert( out.end(), nout.begin(), nout.end() );
+            } else {
+                // repeat existing struct type
+                const GenList& s = random_in( structs );
+                out.insert( out.end(), s.begin(), s.end() );
+            }
+        } case Poly: {
+            if ( n_poly == 0 ) {
+                // skip poly type if none to include
+                generate_type( out, n_poly, i_poly, basics, structs, nested );
+            } else if ( i_poly == 0 || ( i_poly < n_poly && coin_flip( a.p_new_type() ) ) ) {
+                // select new poly type
+                out.push_back( TypeGen::poly( i_poly++ ) );
+            } else {
+                // repeat existing poly type
+                out.push_back( TypeGen::poly( random( i_poly-1 ) ) );
+            }
+        } case N_KINDS: assert(!"Invalid type kind generated.");
+        }
     }
 
     /// Generate a parameter+return list
     void generate_parms_and_rets( GenList& parms_and_rets, 
             unsigned n_parms, unsigned n_rets, unsigned n_poly ) {
         
-        // partition the parameter and return lists between types
-        unsigned last_poly = 0;
-        unsigned last_basic = 0;
-        unsigned last_struct = 0;
-        if ( n_poly > 0 ) {
-            partition.get( n_parms + n_rets, { &last_poly, &last_basic, &last_struct } );
-        } else {
-            partition.get( n_parms + n_rets, { &last_basic, &last_struct } );
+        unsigned i_poly = 0;
+        std::vector<unsigned> basics;
+        std::vector<GenList> structs;
+
+        for ( unsigned i = 0; i < n_parms + n_rets; ++i ) {
+            generate_type( parms_and_rets, n_poly, i_poly, basics, structs );
         }
+        // // partition the parameter and return lists between types
+        // unsigned last_poly = 0;
+        // unsigned last_basic = 0;
+        // unsigned last_struct = 0;
+        // if ( n_poly > 0 ) {
+        //     partition.get( n_parms + n_rets, { &last_poly, &last_basic, &last_struct } );
+        // } else {
+        //     partition.get( n_parms + n_rets, { &last_basic, &last_struct } );
+        // }
 
-        // generate parameter and return lists to fit the partitioning
-        unsigned i = 0;
+        // // generate parameter and return lists to fit the partitioning
+        // unsigned i = 0;
 
-        // polymorphic parameters/returns
-        unsigned i_poly = 0;  // number of polymorphic types
-        if ( last_poly > 0 ) {
-            parms_and_rets.push_back( TypeGen::poly( i_poly++ ) );
-            for (++i; i < last_poly; ++i) {
-                if ( i_poly < n_poly && coin_flip( a.p_new_type() ) ) {
-                    // select new poly type
-                    parms_and_rets.push_back( TypeGen::poly( i_poly++ ) );
-                } else {
-                    // repeat existing poly type
-                    parms_and_rets.push_back( TypeGen::poly( random( i_poly-1 ) ) );
-                }
-            }
-        }
+        // // polymorphic parameters/returns
+        // unsigned i_poly = 0;  // number of polymorphic types
+        // if ( last_poly > 0 ) {
+        //     parms_and_rets.push_back( TypeGen::poly( i_poly++ ) );
+        //     for (++i; i < last_poly; ++i) {
+        //         if ( i_poly < n_poly && coin_flip( a.p_new_type() ) ) {
+        //             // select new poly type
+        //             parms_and_rets.push_back( TypeGen::poly( i_poly++ ) );
+        //         } else {
+        //             // repeat existing poly type
+        //             parms_and_rets.push_back( TypeGen::poly( random( i_poly-1 ) ) );
+        //         }
+        //     }
+        // }
 
-        // basic parameters/returns
-        std::vector<unsigned> basics;  // exisitng set of basic types
-        for (; i < last_basic; ++i) {
-            if ( basics.empty() || coin_flip( a.p_new_type() ) ) {
-                // select new basic type
-                unsigned new_basic;
-                do {
-                    new_basic = a.get_basic()();
-                } while ( std::find( basics.begin(), basics.end(), new_basic ) 
-                          != basics.end() );
-                basics.push_back( new_basic );
-                parms_and_rets.push_back( TypeGen::conc( new_basic ) );
-            } else {
-                // repeat existing basic type
-                parms_and_rets.push_back( TypeGen::conc( random_in( basics ) ) );
-            }
-        }
+        // // basic parameters/returns
+        // std::vector<unsigned> basics;  // exisitng set of basic types
+        // for (; i < last_basic; ++i) {
+        //     if ( basics.empty() || coin_flip( a.p_new_type() ) ) {
+        //         // select new basic type
+        //         unsigned new_basic;
+        //         do {
+        //             new_basic = a.get_basic()();
+        //         } while ( std::find( basics.begin(), basics.end(), new_basic ) 
+        //                   != basics.end() );
+        //         basics.push_back( new_basic );
+        //         parms_and_rets.push_back( TypeGen::conc( new_basic ) );
+        //     } else {
+        //         // repeat existing basic type
+        //         parms_and_rets.push_back( TypeGen::conc( random_in( basics ) ) );
+        //     }
+        // }
 
-        // struct parameters/returns
-        std::vector<unsigned> structs;  // exisitng set of struct types
-        for (; i < last_struct; ++i) {
-            if ( structs.empty() || coin_flip( a.p_new_type() ) ) {
-                // select new struct type
-                unsigned new_struct;
-                do {
-                    new_struct = a.get_struct()();
-                } while ( std::find( structs.begin(), structs.end(), new_struct ) 
-                          != structs.end() );
-                structs.push_back( new_struct );
-                parms_and_rets.push_back( TypeGen::named( new_struct ) );
-            } else {
-                // repeat existing struct type
-                parms_and_rets.push_back( TypeGen::named( random_in( structs ) ) );
-            }
-        }
+        // // struct parameters/returns
+        // std::vector<unsigned> structs;  // exisitng set of struct types
+        // for (; i < last_struct; ++i) {
+        //     if ( structs.empty() || coin_flip( a.p_new_type() ) ) {
+        //         // select new struct type
+        //         unsigned new_struct;
+        //         do {
+        //             new_struct = a.get_struct()();
+        //         } while ( std::find( structs.begin(), structs.end(), new_struct ) 
+        //                   != structs.end() );
+        //         structs.push_back( new_struct );
+        //         parms_and_rets.push_back( TypeGen::named( new_struct ) );
+        //     } else {
+        //         // repeat existing struct type
+        //         parms_and_rets.push_back( TypeGen::named( random_in( structs ) ) );
+        //     }
+        // }
 
-        // randomize list order
-        std::shuffle( parms_and_rets.begin(), parms_and_rets.end(), a.engine() );
-        normalize_poly( parms_and_rets );
+        // // randomize list order
+        // std::shuffle( parms_and_rets.begin(), parms_and_rets.end(), a.engine() );
+        // normalize_poly( parms_and_rets );
     }
 
     void print_decl( const FuncDecl& decl ) {
@@ -302,11 +389,12 @@ class BenchGenerator {
                             List<Type> parms( n_parms );
                             List<Type> rets( n_rets );
                             unique_ptr<Forall> forall{ new Forall{} };
+                            GenList::iterator it = parms_and_rets.begin();
                             for (unsigned i = 0; i < n_parms; ++i) {
-                                parms[i] = parms_and_rets[i].get( forall );
+                                parms[i] = get_type( it, forall );
                             }
                             for (unsigned i = 0; i < n_rets; ++i) {
-                                rets[i] = parms_and_rets[n_parms + i].get( forall );
+                                rets[i] = get_type( it, forall );
                             }
                             parms_and_rets.clear();
 

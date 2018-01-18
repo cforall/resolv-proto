@@ -1,11 +1,11 @@
 # TODO #
 
 ## Next few days ##
-* Fix TD resolver
-
-## Next few weeks ##
+* Upgrade fake code generator to produce assertions and generic types
 * Investigate resolution order for assertions:
   * immediate vs. top-level vs. post-sort
+
+## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void` (see `void` test case)
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
   * Look at tuple truncations as conversions in expand_conversions
@@ -27,6 +27,7 @@
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)
   * small-set optimization on TypeMap may also be a good idea
 * Ideas for improvements to TD resolver:
+  * `polys` loop in `resolveTo` should environmentally bind the target type to the poly type _before_ resolution (in lieu of after-the-fact unification)
   * Investigate TD cache duplication over environments, may be the suspect for deep-nesting problems
     * Maybe cache against null environment unless argument is basic type
     * Maybe just don't cache against environment -- can you make lower environment independent?

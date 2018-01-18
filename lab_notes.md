@@ -1,5 +1,9 @@
+## 12-18 Jan 2018 ##
+* Upgrade code analyzer and fake code generator to handle generic types
+
 ## 11 Jan 2018 ##
 * Fixed second bug in TD resolver
+* Started work on code analysis for generic types
 
 ## 10 Jan 2018 ##
 * Built new assertion resolver, seems to work
