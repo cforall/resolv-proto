@@ -112,9 +112,9 @@ public:
     std::vector<unsigned>& with_struct_params() {
         if ( _with_struct_params.empty() ) {
             _with_struct_params.reserve( 3 );
-            _with_struct_params[0] = 12;
-            _with_struct_params[1] = 21;
-            _with_struct_params[2] = 25;
+            _with_struct_params.push_back( 12 );
+            _with_struct_params.push_back( 21 );
+            _with_struct_params.push_back( 25 );
         }
         return _with_struct_params;
     }

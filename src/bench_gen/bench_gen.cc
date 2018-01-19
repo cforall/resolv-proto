@@ -181,6 +181,7 @@ class BenchGenerator {
                 // repeat existing basic type
                 out.push_back( TypeGen::conc( random_in( basics ) ) );
             }
+            break;
         } case Compound: {
             if ( structs.empty() || coin_flip( a.p_new_type() ) ) {
                 // generate new struct type
@@ -222,6 +223,7 @@ class BenchGenerator {
                 const GenList& s = random_in( structs );
                 out.insert( out.end(), s.begin(), s.end() );
             }
+            break;
         } case Poly: {
             if ( n_poly == 0 ) {
                 // skip poly type if none to include
@@ -233,6 +235,7 @@ class BenchGenerator {
                 // repeat existing poly type
                 out.push_back( TypeGen::poly( random( i_poly-1 ) ) );
             }
+            break;
         } case N_KINDS: assert(!"Invalid type kind generated.");
         }
     }
