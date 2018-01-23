@@ -39,6 +39,10 @@ class Args {
     unique_ptr<Generator> _basic_offset;       ///< Magnitude of basic type offset.
     std::vector<double> _p_with_kind;          ///< Probabilities of drawing type of particular kind
     unique_ptr<Generator> _get_kind;           ///< Gets a type kind
+    unique_ptr<Generator> _n_assns;            ///< Number of assertions for a given function
+    option<double> _p_all_poly_assn_param;     ///< Probability that all parameters of an assertion will be polymorphic
+    option<double> _p_all_poly_assn_return;    ///< Probability that all returns of an assertion will be polymorphic
+    option<double> _p_poly_assn_nested;        ///< Probability that a generic type in an assertion will exist, rather than being replaced by a nested poly-type
 
 public:
     /// Gets random engine, initializing from seed if needed.
@@ -246,6 +250,25 @@ public:
         return *_get_kind;
     }
 
+    Generator& n_assns() {
+        if ( ! _n_assns ) {
+            auto assn_dists = { 0.65, 0.25, 0.10 };
+            GeneratorList assn_gens(3);
+            assn_gens[0] = make_unique<ConstantGenerator>( 0 );
+            assn_gens[1] = make_unique<UniformRandomGenerator>( engine(), 1, 10 );
+            assn_gens[2] = make_unique<UniformRandomGenerator>( engine(), 11, 35 );
+            _n_assns =
+                make_unique<WeightedGenerator>( engine(), assn_dists, move(assn_gens) );
+        }
+        return *_n_assns;
+    }
+
+    double p_all_poly_assn_param() { return _p_all_poly_assn_param.value_or( 0.78 ); }
+
+    double p_all_poly_assn_return() { return _p_all_poly_assn_return.value_or( 0.34 ); }
+
+    double p_poly_assn_nested() { return _p_poly_assn_nested.value_or( 0.95 ); }
+
 private:
     /// Checks if `name` matches the provided flag
     static bool is_flag( const char* flag, char* name ) {
@@ -440,6 +463,14 @@ private:
             read_generator( name, line, _basic_offset );
         } else if ( is_flag( "p_with_kind", name ) ) {
             read_float_array( name, line, _p_with_kind );
+        } else if ( is_flag( "n_assns", name ) ) {
+            read_generator( name, line, _n_assns );
+        } else if ( is_flag( "p_all_poly_assn_param", name ) ) {
+            read_float( name, line, _p_all_poly_assn_param );
+        } else if ( is_flag( "p_all_poly_assn_return", name ) ) {
+            read_float( name, line, _p_all_poly_assn_return );
+        } else if ( is_flag( "p_poly_assn_nested", name ) ) {
+            read_float( name, line, _p_poly_assn_nested );
         } else {
             std::cerr << "ERROR: Unknown argument `" << name << "'" << std::endl;
         }

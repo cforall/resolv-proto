@@ -1,4 +1,7 @@
-## 12-18 Jan 2018 ##
+## 22-23 Jan 2018 ##
+* Upgrade fake code generator to generate assertions
+
+## 12-19 Jan 2018 ##
 * Upgrade code analyzer and fake code generator to handle generic types
 
 ## 11 Jan 2018 ##

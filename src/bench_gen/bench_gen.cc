@@ -18,7 +18,9 @@
 #include "ast/ast.h"
 #include "ast/decl.h"
 #include "ast/forall.h"
+#include "ast/mutator.h"
 #include "ast/type.h"
+#include "ast/type_mutator.h"
 #include "data/cast.h"
 #include "data/list.h"
 #include "data/mem.h"
@@ -75,19 +77,22 @@ struct TypeGen {
 /// List of type generators
 using GenList = std::vector<TypeGen>;
 
-// /// Normalizes a vector of TypeGen such that all poly-types are in increasing order
-// void normalize_poly( GenList& v ) {
-//     std::unordered_map<unsigned, unsigned> polys;
-//     for ( TypeGen& t : v ) {
-//         if ( t.kind != TypeGen::Poly ) continue;
+/// Partially-generated function declaration
+struct DeclPack {
+    std::string name;
+    std::string tag;
+    List<Type> parms;
+    List<Type> rets;
+    unique_ptr<Forall> forall;
 
-//         auto it = polys.find( t.i );  // lookup replacement index
-//         if ( it == polys.end() ) {    // assign consecutively if none found
-//             it = polys.emplace_hint(it, t.i, polys.size() );
-//         }
-//         t.i = it->second;              // replace index
-//     }
-// }
+    DeclPack(const std::string& name, const std::string& tag, List<Type>&& parms, 
+            List<Type>&& rets, unique_ptr<Forall>&& forall )
+            : name(name), tag(tag), parms(move(parms)), rets(move(rets)), forall(move(forall)) {}
+    
+    FuncDecl* unpack() && {
+        return new FuncDecl{ name, tag, move(parms), move(rets), move(forall) };
+    }
+};
 
 template<typename T>
 void comment_print( const char* name, const T& x ) {
@@ -146,6 +151,10 @@ class BenchGenerator {
         comment_print( "p_unsafe_offset", a.p_unsafe_offset() );
         comment_print( "basic_offset", a.basic_offset() );
         comment_print( "p_with_kind", a.p_with_kind() );
+        comment_print( "n_assns", a.n_assns() );
+        comment_print( "p_all_poly_assn_param", a.p_all_poly_assn_param() );
+        comment_print( "p_all_poly_assn_return", a.p_all_poly_assn_return() );
+        comment_print( "p_poly_assn_nested", a.p_poly_assn_nested() );
     }
 
     /// gets a type from a chunk of a gen list
@@ -164,7 +173,7 @@ class BenchGenerator {
     }
 
     /// Generate a type
-    void generate_type( GenList& out, unsigned n_poly, unsigned& i_poly, 
+    void generate_type( GenList& out/*, unsigned n_poly*/, unsigned& i_poly, 
             std::vector<unsigned>& basics, std::vector<GenList>& structs, 
             bool nested = false ) {
         switch( (TypeKind)a.get_kind()() ) {
@@ -203,7 +212,7 @@ class BenchGenerator {
                     std::vector<unsigned> nbasics = basics;
                     std::vector<GenList> nstructs = structs;
                     for ( unsigned p = 0; p < n_params; ++p ) {
-                        generate_type( nout, n_poly, ni_poly, nbasics, nstructs, true );
+                        generate_type( nout/*, n_poly*/, ni_poly, nbasics, nstructs, true );
                     }
                     
                     // retry if already used this struct
@@ -225,10 +234,10 @@ class BenchGenerator {
             }
             break;
         } case Poly: {
-            if ( n_poly == 0 ) {
+            /*if ( n_poly == 0 ) {
                 // skip poly type if none to include
                 generate_type( out, n_poly, i_poly, basics, structs, nested );
-            } else if ( i_poly == 0 || ( i_poly < n_poly && coin_flip( a.p_new_type() ) ) ) {
+            } else*/ if ( i_poly == 0 || /*( i_poly < n_poly &&*/ coin_flip( a.p_new_type() ) /*)*/ ) {
                 // select new poly type
                 out.push_back( TypeGen::poly( i_poly++ ) );
             } else {
@@ -242,83 +251,62 @@ class BenchGenerator {
 
     /// Generate a parameter+return list
     void generate_parms_and_rets( GenList& parms_and_rets, 
-            unsigned n_parms, unsigned n_rets, unsigned n_poly ) {
+            unsigned n_parms, unsigned n_rets/*, unsigned n_poly*/ ) {
         
         unsigned i_poly = 0;
         std::vector<unsigned> basics;
         std::vector<GenList> structs;
 
         for ( unsigned i = 0; i < n_parms + n_rets; ++i ) {
-            generate_type( parms_and_rets, n_poly, i_poly, basics, structs );
+            generate_type( parms_and_rets/*, n_poly*/, i_poly, basics, structs );
         }
-        // // partition the parameter and return lists between types
-        // unsigned last_poly = 0;
-        // unsigned last_basic = 0;
-        // unsigned last_struct = 0;
-        // if ( n_poly > 0 ) {
-        //     partition.get( n_parms + n_rets, { &last_poly, &last_basic, &last_struct } );
-        // } else {
-        //     partition.get( n_parms + n_rets, { &last_basic, &last_struct } );
-        // }
-
-        // // generate parameter and return lists to fit the partitioning
-        // unsigned i = 0;
-
-        // // polymorphic parameters/returns
-        // unsigned i_poly = 0;  // number of polymorphic types
-        // if ( last_poly > 0 ) {
-        //     parms_and_rets.push_back( TypeGen::poly( i_poly++ ) );
-        //     for (++i; i < last_poly; ++i) {
-        //         if ( i_poly < n_poly && coin_flip( a.p_new_type() ) ) {
-        //             // select new poly type
-        //             parms_and_rets.push_back( TypeGen::poly( i_poly++ ) );
-        //         } else {
-        //             // repeat existing poly type
-        //             parms_and_rets.push_back( TypeGen::poly( random( i_poly-1 ) ) );
-        //         }
-        //     }
-        // }
-
-        // // basic parameters/returns
-        // std::vector<unsigned> basics;  // exisitng set of basic types
-        // for (; i < last_basic; ++i) {
-        //     if ( basics.empty() || coin_flip( a.p_new_type() ) ) {
-        //         // select new basic type
-        //         unsigned new_basic;
-        //         do {
-        //             new_basic = a.get_basic()();
-        //         } while ( std::find( basics.begin(), basics.end(), new_basic ) 
-        //                   != basics.end() );
-        //         basics.push_back( new_basic );
-        //         parms_and_rets.push_back( TypeGen::conc( new_basic ) );
-        //     } else {
-        //         // repeat existing basic type
-        //         parms_and_rets.push_back( TypeGen::conc( random_in( basics ) ) );
-        //     }
-        // }
-
-        // // struct parameters/returns
-        // std::vector<unsigned> structs;  // exisitng set of struct types
-        // for (; i < last_struct; ++i) {
-        //     if ( structs.empty() || coin_flip( a.p_new_type() ) ) {
-        //         // select new struct type
-        //         unsigned new_struct;
-        //         do {
-        //             new_struct = a.get_struct()();
-        //         } while ( std::find( structs.begin(), structs.end(), new_struct ) 
-        //                   != structs.end() );
-        //         structs.push_back( new_struct );
-        //         parms_and_rets.push_back( TypeGen::named( new_struct ) );
-        //     } else {
-        //         // repeat existing struct type
-        //         parms_and_rets.push_back( TypeGen::named( random_in( structs ) ) );
-        //     }
-        // }
-
-        // // randomize list order
-        // std::shuffle( parms_and_rets.begin(), parms_and_rets.end(), a.engine() );
-        // normalize_poly( parms_and_rets );
     }
+
+    /// Replace polymorphic variables in a type with those bound to a different Forall
+    class ReplacePolyMutator : public TypeMutator<ReplacePolyMutator> {
+        def_random_engine& engine;
+        const Forall& forall;
+    public:
+        ReplacePolyMutator( def_random_engine& engine, const Forall& forall ) 
+            : engine(engine), forall(forall) {}
+
+        using TypeMutator<ReplacePolyMutator>::visit;
+
+        bool visit( const PolyType* t, const Type*& r ) {
+            r = ::random_in( engine, forall.variables() );
+            return true;
+        }
+    };
+
+    /// Replace type with (possibly nested) type bound to a different Forall
+    class ReplaceWithPolyMutator : public TypeMutator<ReplaceWithPolyMutator> {
+        def_random_engine& engine;
+        double p_nested;
+        const Forall& forall;
+    public:
+        ReplaceWithPolyMutator( def_random_engine& engine, double p_nested, const Forall& forall )
+            : engine(engine), p_nested(p_nested), forall(forall) {}
+        
+        using TypeMutator<ReplaceWithPolyMutator>::visit;
+
+        bool visit( const PolyType* t, const Type*& r ) {
+            r = ::random_in( engine, forall.variables() );
+            return true;
+        }
+
+        bool visit( const ConcType* t, const Type*& r ) {
+            r = ::random_in( engine, forall.variables() );
+            return true;
+        }
+
+        bool visit( const NamedType* t, const Type*& r ) {
+            if ( t->params().empty() || ! ::coin_flip( engine, p_nested ) ) {
+                r = ::random_in( engine, forall.variables() );
+                return true;
+            }
+            return TypeMutator<ReplaceWithPolyMutator>::visit( t, r );
+        }
+    };
 
     void print_decl( const FuncDecl& decl ) {
         const Type* rty = decl.returns();
@@ -337,14 +325,20 @@ class BenchGenerator {
             pty->write( std::cout, ASTNode::Print::InputStyle );
         }
 
-        std::cout << std::endl;
+        const Forall* forall = decl.forall();
+        if ( forall ) for ( const FuncDecl* asn : forall->assertions() ) {
+            std::cout << " | ";
+            print_decl( *asn );
+        }
     }
 
     /// Generate and print all the declarations
     void generate_decls() {
         unsigned n_decls = 0;
         unsigned i_name = 0;
+        std::vector<DeclPack> decls;
 
+        // generate assertion-less function decls
         while ( n_decls < a.n_decls() ) {
             // generate number of overloads with given name
             unsigned n_with_name = std::min( a.n_overloads()(), a.n_decls() - n_decls );
@@ -363,12 +357,13 @@ class BenchGenerator {
 
                     // used to ensure no duplicate functions
                     std::set<GenList> with_same_arity;
+                    unsigned n_same_kind = ret_overloads.second;
 
-                    for ( auto poly_overloads
-                          : weighted_partition( a.n_poly_types(), ret_overloads.second ) 
-                        ) {
-                        unsigned n_poly = poly_overloads.first;
-                        unsigned n_same_kind = poly_overloads.second;
+                    // for ( auto poly_overloads
+                    //       : weighted_partition( a.n_poly_types(), ret_overloads.second ) 
+                    //     ) {
+                    //     unsigned n_poly = poly_overloads.first;
+                    //     unsigned n_same_kind = poly_overloads.second;
 
                         GenList parms_and_rets;
                         parms_and_rets.reserve( n_parms + n_rets );
@@ -379,7 +374,7 @@ class BenchGenerator {
                             unsigned tries;
                             for (tries = 1; tries <= a.max_tries_for_unique(); ++tries) {
                                 generate_parms_and_rets( 
-                                    parms_and_rets, n_parms, n_rets, n_poly );
+                                    parms_and_rets, n_parms, n_rets/*, n_poly*/ );
                                 // done if found a unique decl with this arity
                                 if ( with_same_arity.insert( parms_and_rets ).second ) 
                                     break;
@@ -409,29 +404,82 @@ class BenchGenerator {
                                 tag = "o" + std::to_string( i_with_name );
                             }
 
-                            // store records of decl and print
-                            auto decl = new FuncDecl{ 
-                                name, tag, move(parms), move(rets), move(forall) };
-                            print_decl( *decl );
-
-                            funcs.push_back( decl );
-                            if ( rets.size() == 1 ) {
-                                auto rid = typeof( rets[0] );
-                                if ( rid == typeof<ConcType>() ) {
-                                    basic_funcs.push_back( decl );
-                                } else if ( rid == typeof<NamedType>() ) {
-                                    struct_funcs[ as<NamedType>( rets[0] )->name() ]
-                                        .push_back( decl );
-                                } else if ( rid == typeof<PolyType>() ) {
-                                    poly_funcs.push_back( decl );
-                                }
-                            }
+                            decls.emplace_back( name, tag, move(parms), move(rets), move(forall) );
 
                             ++n_decls;
                             ++i_with_name;
                         }
-                    }
+                    // }
                     done_arity:;
+                }
+            }
+        }
+
+        // generate assertions for function decls
+        for ( unsigned i = 0; i < decls.size(); ++i ) {
+            // skip monomorphic functions
+            if ( ! decls[i].forall ) continue;
+
+            // generate random number of assertions
+            unsigned n_assns = a.n_assns()();
+            for ( unsigned i_assn = 0; i_assn < n_assns; ++i_assn ) {
+                unsigned base_i;
+                do {
+                    base_i = random( decls.size() - 1 );
+                } while ( base_i == i );
+                const DeclPack& assn_base = decls[base_i];
+
+                List<Type> aparms;
+                List<Type> arets;
+                ReplacePolyMutator replace_poly{ a.engine(), *decls[i].forall };
+                ReplaceWithPolyMutator replace_with_poly{ 
+                    a.engine(), a.p_poly_assn_nested(), *decls[i].forall };
+
+                if ( ! assn_base.parms.empty() ) {
+                    aparms.push_back( replace_with_poly( assn_base.parms[0] ) );
+                    if ( coin_flip( a.p_all_poly_assn_param() ) ) {
+                        for ( unsigned j = 1; j < assn_base.parms.size(); ++j ) {
+                            aparms.push_back( replace_with_poly( assn_base.parms[j] ) );
+                        }
+                    } else {
+                        for ( unsigned j = 1; j < assn_base.parms.size(); ++j ) {
+                            aparms.push_back( replace_poly( assn_base.parms[j] ) );
+                        }
+                    }
+                }
+
+                if ( assn_base.parms.empty() || coin_flip( a.p_all_poly_assn_return() ) ) {
+                    for ( unsigned j = 0; j < assn_base.rets.size(); ++j ) {
+                        arets.push_back( replace_with_poly( assn_base.rets[j] ) );
+                    }
+                } else {
+                    for ( unsigned j = 0; j < assn_base.rets.size(); ++j ) {
+                        arets.push_back( replace_poly( assn_base.rets[j] ) );
+                    }
+                }
+
+                decls[i].forall->addAssertion( 
+                    new FuncDecl{ assn_base.name, move(aparms), move(arets) } );
+            }
+        }
+
+        // finish declarations.
+        for ( unsigned i = 0; i < decls.size(); ++i ) {
+            FuncDecl* decl = move(decls[i]).unpack();
+
+            print_decl( *decl );
+            std::cout << std::endl;
+
+            const Type* rty = decl->returns();
+            funcs.push_back( decl );
+            if ( rty->size() == 1 ) {
+                auto rid = typeof( rty );
+                if ( rid == typeof<ConcType>() ) {
+                    basic_funcs.push_back( decl );
+                } else if ( rid == typeof<NamedType>() ) {
+                    struct_funcs[ as<NamedType>( rty )->name() ].push_back( decl );
+                } else if ( rid == typeof<PolyType>() ) {
+                    poly_funcs.push_back( decl );
                 }
             }
         }
