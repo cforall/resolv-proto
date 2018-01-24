@@ -172,6 +172,8 @@ public:
 				// recursive call on bound type
 				bool oldChangedTo = changedTo;
 				changedTo = false;
+				auto guard = swap_in_scope( to, copy(ut) );
+				auto guard2 = swap_in_scope( toIt, TyIt{} );
 				r = Parent::operator()( pc->bound );
 				changedTo |= oldChangedTo;
 

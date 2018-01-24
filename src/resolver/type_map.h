@@ -82,7 +82,7 @@ struct PolyKey {
 };
 
 /// Variants of a key
-enum KeyMode { Conc, Named, Poly };
+enum class KeyMode { Conc, Named, Poly };
 
 /// Associates key type and enum with node type
 template<typename Ty>
@@ -91,19 +91,19 @@ struct key_info {};
 template<>
 struct key_info<ConcType> {
     typedef ConcKey type;
-    static constexpr KeyMode key = Conc;
+    static constexpr KeyMode key = KeyMode::Conc;
 };
 
 template<>
 struct key_info<NamedType> {
     typedef NamedKey type;
-    static constexpr KeyMode key = Named;
+    static constexpr KeyMode key = KeyMode::Named;
 };
 
 template<>
 struct key_info<PolyType> {
     typedef PolyKey type;
-    static constexpr KeyMode key = Poly;
+    static constexpr KeyMode key = KeyMode::Poly;
 };
 
 /// Variant key type for map
@@ -136,13 +136,13 @@ class TypeKey {
 
     void init_from( const TypeKey& o ) {
         switch ( o.key_type ) {
-        case Conc:
+        case KeyMode::Conc:
             init<ConcType>( o.get<ConcKey>() );
             break;
-        case Named:
+        case KeyMode::Named:
             init<NamedType>( o.get<NamedKey>() );
             break;
-        case Poly:
+        case KeyMode::Poly:
             init<PolyType>( o.get<PolyKey>() );
             break;
         }
@@ -150,13 +150,13 @@ class TypeKey {
 
     void init_from( TypeKey&& o ) {
         switch ( o.key_type ) {
-        case Conc:
+        case KeyMode::Conc:
             init<ConcType>( o.take<ConcKey>() );
             break;
-        case Named:
+        case KeyMode::Named:
             init<NamedType>( o.take<NamedKey>() );
             break;
-        case Poly:
+        case KeyMode::Poly:
             init<PolyType>( o.take<PolyKey>() );
             break;
         }
@@ -165,13 +165,13 @@ class TypeKey {
     /// Clears variant fields
     void reset() {
         switch ( key_type ) {
-        case Conc:
+        case KeyMode::Conc:
             get<ConcKey>().~ConcKey();
             break;
-        case Named:
+        case KeyMode::Named:
             get<NamedKey>().~NamedKey();
             break;
-        case Poly:
+        case KeyMode::Poly:
             get<PolyKey>().~PolyKey();
             break;
         }
@@ -220,13 +220,13 @@ public:
         if ( this == &o ) return *this;
         if ( key_type == o.key_type ) {
             switch( key_type ) {
-            case Conc:
+            case KeyMode::Conc:
                 get<ConcKey>() = o.get<ConcKey>();
                 break;
-            case Named:
+            case KeyMode::Named:
                 get<NamedKey>() = o.get<NamedKey>();
                 break;
-            case Poly:
+            case KeyMode::Poly:
                 get<PolyKey>() = o.get<PolyKey>();
                 break;
             }
@@ -242,13 +242,13 @@ public:
         if ( this == &o ) return *this;
         if ( key_type == o.key_type ) {
             switch( key_type ) {
-            case Conc:
+            case KeyMode::Conc:
                 get<ConcKey>() = o.take<ConcKey>();
                 break;
-            case Named:
+            case KeyMode::Named:
                 get<NamedKey>() = o.take<NamedKey>();
                 break;
-            case Poly:
+            case KeyMode::Poly:
                 get<PolyKey>() = o.take<PolyKey>();
                 break;
             }
@@ -265,11 +265,11 @@ public:
     /// Retrieves the underlying key
     const Type* get() const {
         switch ( key_type ) {
-        case Conc:
+        case KeyMode::Conc:
             return get<ConcKey>().value();
-        case Named:
+        case KeyMode::Named:
             return get<NamedKey>().value();
-        case Poly:
+        case KeyMode::Poly:
             return get<PolyKey>().value();
         default: assert(!"Invalid key type"); return nullptr;
         }
@@ -278,11 +278,11 @@ public:
     bool operator== ( const TypeKey& o ) const {
         if ( key_type != o.key_type ) return false;
         switch ( key_type ) {
-        case Conc:
+        case KeyMode::Conc:
             return get<ConcKey>() == o.get<ConcKey>();
-        case Named:
+        case KeyMode::Named:
             return get<NamedKey>() == o.get<NamedKey>();
-        case Poly:
+        case KeyMode::Poly:
             return get<PolyKey>() == o.get<PolyKey>();
         default: assert(!"Invalid key type"); return false;
         }
@@ -291,11 +291,11 @@ public:
     bool operator< ( const TypeKey& o ) const {
         if ( key_type != o.key_type ) return (int)key_type < (int)o.key_type;
         switch ( key_type ) {
-        case Conc:
+        case KeyMode::Conc:
             return get<ConcKey>() < o.get<ConcKey>();
-        case Named:
+        case KeyMode::Named:
             return get<NamedKey>() < o.get<NamedKey>();
-        case Poly:
+        case KeyMode::Poly:
             return get<PolyKey>() < o.get<PolyKey>();
         default: assert(!"Invalid key type"); return false;
         }
@@ -304,13 +304,13 @@ public:
     std::size_t hash() const {
         std::size_t h;
         switch ( key_type ) {
-        case Conc:
+        case KeyMode::Conc:
             h = get<ConcKey>().hash();
             break;
-        case Named:
+        case KeyMode::Named:
             h = get<NamedKey>().hash();
             break;
-        case Poly:
+        case KeyMode::Poly:
             h = get<PolyKey>().hash();
             break;
         default: assert(!"Invalid key type");
@@ -323,7 +323,7 @@ public:
 
     /// Gets the number of children used by this key to complete the type
     unsigned children() const {
-        return key_type == Named ? get<NamedKey>().params : 0;
+        return key_type == KeyMode::Named ? get<NamedKey>().params : 0;
     }
 
     /// Gets the underlying key variant, or empty for mismatch
@@ -886,7 +886,7 @@ public:
                 // find node matching next atom
                 ++i;
                 ListIter it = m->polys.begin();
-                if ( atoms[i].mode() == Poly ) {
+                if ( atoms[i].mode() == KeyMode::Poly ) {
                     // handle as incomplete atom
                     atomsLeft = 1;
                 } else if ( const Base* nm = m->get( atoms[i] ) ) {
@@ -1024,7 +1024,7 @@ private:
             auto it = tm->nodes.find( k );
             if ( it == tm->nodes.end() ) {
                 // add new nodes as needed
-                if ( k.mode() == Poly ) {
+                if ( k.mode() == KeyMode::Poly ) {
                     it = tm->nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
                     tm->polys.emplace_back( 
                         *k.key_for<PolyType>(), it->second.get() );
