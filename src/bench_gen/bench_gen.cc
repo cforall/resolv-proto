@@ -8,6 +8,7 @@
 #include <set>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "gen_args.h"
@@ -145,7 +146,7 @@ class BenchGenerator {
         comment_print( "n_rets", a.n_rets() );
         comment_print( "n_parms", a.n_parms() );
         comment_print( "n_poly_types", a.n_poly_types() );
-        comment_print( "max_tries_for_unique", a.max_tries_for_unique() );
+        comment_print( "max_tries", a.max_tries() );
         comment_print( "p_new_type", a.p_new_type() );
         comment_print( "get_basic", a.get_basic() );
         comment_print( "with_struct_params", a.with_struct_params() );
@@ -283,9 +284,25 @@ class BenchGenerator {
         def_random_engine& engine;
         double p_nested;
         const Forall& forall;
+        Env*& env;
+
+        // replaces t by a random type variable, returning false and setting r to nullptr 
+        // if that random type variable doesn't bind
+        bool replace( const Type* t, const Type*& r ) {
+            const PolyType* candidate = ::random_in( engine, forall.variables() );
+            Cost dummy;
+            if ( unify( candidate, t, dummy, env ) ) {
+                r = candidate;
+                return true;
+            } else {
+                r = nullptr;
+                return false;
+            }
+        }
     public:
-        ReplaceWithPoly( def_random_engine& engine, double p_nested, const Forall& forall )
-            : engine(engine), p_nested(p_nested), forall(forall) {}
+        ReplaceWithPoly(
+            def_random_engine& engine, double p_nested, const Forall& forall, Env*& env )
+            : engine(engine), p_nested(p_nested), forall(forall), env(env) {}
         
         using TypeMutator<ReplaceWithPoly>::visit;
 
@@ -295,14 +312,12 @@ class BenchGenerator {
         }
 
         bool visit( const ConcType* t, const Type*& r ) {
-            r = ::random_in( engine, forall.variables() );
-            return true;
+            return replace( t, r );
         }
 
         bool visit( const NamedType* t, const Type*& r ) {
             if ( t->params().empty() || ! ::coin_flip( engine, p_nested ) ) {
-                r = ::random_in( engine, forall.variables() );
-                return true;
+                return replace( t, r );
             }
             return TypeMutator<ReplaceWithPoly>::visit( t, r );
         }
@@ -408,14 +423,14 @@ class BenchGenerator {
 
                     for ( unsigned i_same_kind = 0; i_same_kind < n_same_kind; ++i_same_kind ) {
                         unsigned tries;
-                        for (tries = 1; tries <= a.max_tries_for_unique(); ++tries) {
+                        for (tries = 1; tries <= a.max_tries(); ++tries) {
                             generate_parms_and_rets( parms_and_rets, n_parms, n_rets );
                             // done if found a unique decl with this arity
                             if ( with_same_arity.insert( parms_and_rets ).second ) break;
                             parms_and_rets.clear();
                         }
                         // quit if too many tries
-                        if ( tries > a.max_tries_for_unique() ) break;
+                        if ( tries > a.max_tries() ) break;
 
                         // generate list of parameters and returns
                         List<Type> parms( n_parms );
@@ -454,24 +469,45 @@ class BenchGenerator {
 
             // generate random number of assertions
             unsigned n_assns = a.n_assns()();
-            for ( unsigned i_assn = 0; i_assn < n_assns; ++i_assn ) {
-                unsigned base_i;
-                do {
+            unsigned tries = 1;
+            unsigned max_tries = a.max_tries() * 2;
+            std::unordered_set<unsigned> decls_used;
+            decls_used.insert( i );
+            Env* env = nullptr;
+            for ( unsigned i_assn = 0; i_assn < n_assns && tries <= max_tries; ) {
+                // look for a declaration not already used in this assertion list or base
+                unsigned base_i = 0;
+                while( tries <= max_tries ) {
                     base_i = random( decls.size() - 1 );
-                } while ( base_i == i );
+                    if ( decls_used.insert( base_i ).second ) break;
+                    ++tries;
+                }
+                // fail if run out of tries
+                if ( tries > max_tries ) break;
+
                 const DeclPack& assn_base = decls[base_i];
 
                 List<Type> aparms;
                 List<Type> arets;
                 ReplacePoly replace_poly{ a.engine(), *decls[i].forall };
                 ReplaceWithPoly replace_with_poly{ 
-                    a.engine(), a.p_poly_assn_nested(), *decls[i].forall };
+                    a.engine(), a.p_poly_assn_nested(), *decls[i].forall, env };
 
                 if ( ! assn_base.parms.empty() ) {
-                    aparms.push_back( replace_with_poly( assn_base.parms[0] ) );
+                    const Type* rty = replace_with_poly( assn_base.parms[0] );
+                    if ( rty == nullptr ) {
+                        ++tries;
+                        goto retry_assn;
+                    }
+                    aparms.push_back( rty );
                     if ( coin_flip( a.p_all_poly_assn_param() ) ) {
                         for ( unsigned j = 1; j < assn_base.parms.size(); ++j ) {
-                            aparms.push_back( replace_with_poly( assn_base.parms[j] ) );
+                            rty = replace_with_poly( assn_base.parms[j] );
+                            if ( rty == nullptr ) {
+                                ++tries;
+                                goto retry_assn;
+                            }
+                            aparms.push_back( rty );
                         }
                     } else {
                         for ( unsigned j = 1; j < assn_base.parms.size(); ++j ) {
@@ -482,7 +518,12 @@ class BenchGenerator {
 
                 if ( assn_base.parms.empty() || coin_flip( a.p_all_poly_assn_return() ) ) {
                     for ( unsigned j = 0; j < assn_base.rets.size(); ++j ) {
-                        arets.push_back( replace_with_poly( assn_base.rets[j] ) );
+                        const Type* rty = replace_with_poly( assn_base.rets[j] );
+                        if ( rty == nullptr ) {
+                            ++tries;
+                            goto retry_assn;
+                        }
+                        arets.push_back( rty );
                     }
                 } else {
                     for ( unsigned j = 0; j < assn_base.rets.size(); ++j ) {
@@ -492,7 +533,8 @@ class BenchGenerator {
 
                 decls[i].forall->addAssertion( 
                     new FuncDecl{ assn_base.name, move(aparms), move(arets) } );
-            }
+                ++i_assn;
+            retry_assn:; }
         }
 
         // finish declarations.
@@ -555,7 +597,7 @@ class BenchGenerator {
             unsigned i = random( n_funcs - 1 );
             if ( i < conc_funcs.size() ) {
                 unsigned tries;
-                for ( tries = 1; tries <= a.max_tries_for_unique(); ++tries ) {
+                for ( tries = 1; tries <= a.max_tries(); ++tries ) {
                     decl = conc_funcs[ i ];
                     forall = Forall::from( decl->forall() );
                     rtype = forall ? 
@@ -572,7 +614,7 @@ class BenchGenerator {
                     }
                     break;
                 }
-                if ( tries > a.max_tries_for_unique() ) {
+                if ( tries > a.max_tries() ) {
                     // leaf expression if can't find compatible function
                     ReplaceWithConcrete{ *this, env }.mutate( ty );
                     std::cout << *ty;
@@ -632,62 +674,6 @@ class BenchGenerator {
                     } else assert(!"invalid concrete parameter type");
                 }
             }
-
-            // auto pid = typeof( pty );
-            // if ( pid == typeof<ConcType>() ) {
-            //     if ( nested ) {
-            //         // generate expression according to concrete type
-            //         generate_expr( pty );
-            //     } else {
-            //         // offset ConcType by random amount for leaf expression
-            //         int offset = a.basic_offset()();
-            //         if ( coin_flip( a.p_unsafe_offset() ) ) { offset *= -1; }
-
-            //         std::cout << ( as<ConcType>(pty)->id() + offset );
-            //     }
-            // } else if ( pid == typeof<NamedType>() ) {
-            //     if ( nested ) {
-            //         // generate expression according to concrete type
-            //         generate_expr( pty );
-            //     } else {
-            //         // exact match for named type
-            //         std::cout << *as<NamedType>(pty);
-            //     }
-            // } else if ( pid == typeof<PolyType>() ) {
-            //     // substitute type variable according to forall, and lookup
-            //     const PolyType* ppty = forall->get( as<PolyType>(pty)->name() );
-            //     ClassRef pr = getClass( env, ppty );
-
-            //     if ( nested ) {
-            //         if ( pr->bound ) {
-            //             // generate subexpression with the bound type
-            //             generate_expr( pr->bound );
-            //         } else {
-            //             // generate subexpression and bind type to return value
-            //             const Type* rty = generate_expr();
-            //             if ( const PolyType* prty = as_safe<PolyType>(rty) ) {
-            //                 // if this is a type variable, it will be fresh, because 
-            //                 // it doesn't have any information from the current scope
-            //                 bindVar( env, pr, prty );
-            //             } else {
-            //                 bindType( env, pr, rty );
-            //             }
-            //         }
-            //     } else {
-            //         if ( pr->bound ) {
-            //             // leaf expression with the bound type
-            //             std::cout << *pr->bound;
-            //         } else {
-            //             // generate random concrete type to bind to
-            //             const Type *aty = ( coin_flip() ? 
-            //                 TypeGen::conc( a.get_basic()() ) : 
-            //                 TypeGen::named( a.get_struct()() ) ).get();
-            //             bindType( env, pr, aty );
-
-            //             std::cout << *aty;
-            //         }
-            //     }
-            // } else assert(!"invalid parameter type");
         }
         std::cout << " )";
 

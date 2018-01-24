@@ -5,7 +5,7 @@
 // n_rets: discrete 0.15 0.85 [0,1]
 // n_parms: discrete 0.05 0.35 0.55 0.03 0.01 0.01 [0,5]
 // n_poly_types: discrete 0.9 0.1 [0,1]
-// max_tries_for_unique: 20
+// max_tries: 20
 // p_new_type: 0.5
 // get_basic: weighted 0.375 uniform 0 2, 0.25 constant 3, 0.375 uniform 4 7 [0,7]
 // with_struct_params: 12 21 25

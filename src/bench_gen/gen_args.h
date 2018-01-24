@@ -27,7 +27,7 @@ class Args {
     unique_ptr<Generator> _n_parms;            ///< Number of function parameters
     unique_ptr<Generator> _n_rets;             ///< Number of function return types
     unique_ptr<Generator> _n_poly_types;       ///< Number of polymorphic type parameters
-    option<unsigned> _max_tries_for_unique;    ///< Maximum number of tries for unique parameter list
+    option<unsigned> _max_tries;               ///< Maximum number of tries for unique parameter list
     option<double> _p_new_type;                ///< Probability of a parameter/return type being new
     unique_ptr<Generator> _get_basic;          ///< Generates an index for a basic type
     std::vector<unsigned> _with_struct_params; ///< [i] is the last struct index with i parameters
@@ -96,7 +96,7 @@ public:
         return *_n_poly_types;
     }
 
-    unsigned max_tries_for_unique() { return _max_tries_for_unique.value_or( 20 ); }
+    unsigned max_tries() { return _max_tries.value_or( 20 ); }
 
     double p_new_type() { return _p_new_type.value_or( 0.5 ); }
 
@@ -441,8 +441,8 @@ private:
             read_generator( name, line, _n_rets );
         } else if ( is_flag( "n_poly_types", name ) ) {
             read_generator( name, line, _n_poly_types );
-        } else if ( is_flag( "max_tries_for_unique", name ) ) {
-            read_unsigned( name, line, _max_tries_for_unique );
+        } else if ( is_flag( "max_tries", name ) ) {
+            read_unsigned( name, line, _max_tries );
         } else if ( is_flag( "p_new_type", name ) ) {
             read_float( name, line, _p_new_type );
         } else if ( is_flag( "get_basic", name ) ) {

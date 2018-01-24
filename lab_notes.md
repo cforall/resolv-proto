@@ -1,3 +1,7 @@
+## 24 Jan 2018 ##
+* Fix bug in type_unifier to work with new fake code
+* Modify bench_gen to generate more assertions that will match
+
 ## 22-23 Jan 2018 ##
 * Upgrade fake code generator to generate assertions
 
