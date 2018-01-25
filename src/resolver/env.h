@@ -160,11 +160,14 @@ private:
 	/// Merges s into r; returns false if fails due to contradictory bindings.
 	/// r should be local, but may be moved by the merging process; s should be non-null
 	bool mergeClasses( ClassRef& r, ClassRef s ) {
-		TypeClass& rc = classes[ r.ind ];
-		const TypeClass& sc = *s;
-
+		const PolyType* st = s->vars[0];  // to reacquire s when complete.
+		
 		// ensure bounds match
-		if ( ! mergeBound( r, sc.bound ) ) return false;
+		if ( ! mergeBound( r, s->bound ) ) return false;
+
+		TypeClass& rc = classes[ r.ind ];
+		s = findRef( st );
+		const TypeClass& sc = *s;
 
 		if ( s.env == this ) {
 			// need to merge two existing local classes -- guaranteed that vars don't 

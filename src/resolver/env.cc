@@ -22,11 +22,13 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	if ( r->bound == nullptr ) {
 		return bindType( r, cbound );
 	} else {
-		// TODO not sure that I should ignore this cost...
 		Cost::Element cost = 0;
+		const PolyType* rt = r->vars[0];  // save variable in this class
 		const Type* common = TypeUnifier{ this, cost }( r->bound, cbound );
 		if ( ! common ) return false;
-		// r->bound = common;  // TODO this is problematic; r may be moved
+		r = findRef( rt );  // reset ref to restored class
+		if ( r.env != this ) { copyClass( r ); }
+		as_non_const(*r).bound = common;  // specialize r's bound to common type
 		return true;
 	}
 }

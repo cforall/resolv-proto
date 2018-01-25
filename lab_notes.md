@@ -1,3 +1,6 @@
+## 25 Jan 2018 ##
+* Fix memory bug in Env
+
 ## 24 Jan 2018 ##
 * Fix bug in type_unifier to work with new fake code
 * Modify bench_gen to generate more assertions that will match
