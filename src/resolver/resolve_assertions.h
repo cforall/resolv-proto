@@ -307,6 +307,7 @@ public:
 					return r = new AmbiguousExpr{ r, r->type(), move(alts) };
 				}
 
+				deferIds.clear();
 				deferred.clear();
 			}
 

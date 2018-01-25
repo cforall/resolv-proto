@@ -276,7 +276,9 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
                 els.push_back( el );
             }
 
-            if ( truncate ) {
+            if ( en == tn ) {
+                return converted ? new TupleExpr{ move(els) } : expr;
+            } else if ( truncate ) {
                 cost.safe += en - tn;
                 if ( converted ) return new TupleExpr{ move(els) };
                 else return new TruncateExpr{ expr, tn };

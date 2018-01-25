@@ -1,5 +1,7 @@
 ## 25 Jan 2018 ##
-* Fix memory bug in Env
+* Fix memory bug in `Env`
+* Fix truncation bug in `expand_conversions`
+* Fixed segfault in `resolve_assertions` on `tuple-return`
 
 ## 24 Jan 2018 ##
 * Fix bug in type_unifier to work with new fake code
