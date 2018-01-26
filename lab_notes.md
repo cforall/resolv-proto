@@ -1,3 +1,7 @@
+## 26 Jan 2018 ##
+* Continue generating test cases
+* Fix segfault in `less-poly2`
+
 ## 25 Jan 2018 ##
 * Fix memory bug in `Env`
 * Fix truncation bug in `expand_conversions`

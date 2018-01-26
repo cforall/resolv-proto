@@ -17,18 +17,21 @@
 #include "data/mem.h"
 
 bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
-	if ( cbound == nullptr ) return true;
+	if ( cbound == nullptr ) return true;  // trivial if no type to bind to
 
-	if ( r->bound == nullptr ) {
+	if ( r->bound == nullptr ) {  // bind if no type in target class
 		return bindType( r, cbound );
-	} else {
+	} else if ( r->bound == cbound ) {  // shortcut for easy case
+		return true;
+	} else {  // attempt to structurally bind r->bound to cbound
 		Cost::Element cost = 0;
 		const PolyType* rt = r->vars[0];  // save variable in this class
-		const Type* common = TypeUnifier{ this, cost }( r->bound, cbound );
+		TypeUnifier tu{ this, cost };
+		const Type* common = tu( r->bound, cbound );
 		if ( ! common ) return false;
 		r = findRef( rt );  // reset ref to restored class
 		if ( r.env != this ) { copyClass( r ); }
-		as_non_const(*r).bound = common;  // specialize r's bound to common type
+		classes[ r.ind ].bound = common;  // specialize r's bound to common type
 		return true;
 	}
 }

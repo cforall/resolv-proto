@@ -166,7 +166,7 @@ private:
 		if ( ! mergeBound( r, s->bound ) ) return false;
 
 		TypeClass& rc = classes[ r.ind ];
-		s = findRef( st );
+		s = s.env->findRef( st );  // find in original environment so updates don't get lost
 		const TypeClass& sc = *s;
 
 		if ( s.env == this ) {
