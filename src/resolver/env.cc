@@ -17,6 +17,7 @@
 #include "data/mem.h"
 
 bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
+	dbg_verify();
 	if ( cbound == nullptr ) return true;  // trivial if no type to bind to
 
 	if ( r->bound == nullptr ) {  // bind if no type in target class
@@ -29,9 +30,10 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 		TypeUnifier tu{ this, cost };
 		const Type* common = tu( r->bound, cbound );
 		if ( ! common ) return false;
-		r = findRef( rt );  // reset ref to restored class
+		r = r.env->findRef( rt );  // reset ref to restored class
 		if ( r.env != this ) { copyClass( r ); }
 		classes[ r.ind ].bound = common;  // specialize r's bound to common type
+		dbg_verify();
 		return true;
 	}
 }

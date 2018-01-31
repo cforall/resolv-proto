@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <ostream>
@@ -15,6 +16,12 @@
 #include "data/gc.h"
 #include "data/list.h"
 #include "data/mem.h"
+
+#ifdef DBG
+	#define dbg_verify() verify()
+#else
+	#define dbg_verify()
+#endif
 
 class Env;
 class FuncDecl;
@@ -94,6 +101,41 @@ public:
 	}
 
 private:
+	void verify() const {
+		for ( unsigned ci = 0; ci < classes.size(); ++ci ) {
+			const TypeClass& tc = classes[ci];
+			for ( unsigned vi = 0; vi < tc.vars.size(); ++vi ) {
+				const PolyType* v = tc.vars[vi];
+
+				// check variable is properly bound in cache
+				const ClassRef& vr = bindings.at( v );
+				assert( vr.env == this && vr.ind == ci );
+
+				// check variables are unique in a class
+				for ( unsigned vj = vi + 1; vj < tc.vars.size(); ++vj ) {
+					assert(v != tc.vars[vj]);
+				}
+
+				// check variables are unique in an environment
+				for ( unsigned cj = ci + 1; cj < classes.size(); ++cj ) {
+					for ( const PolyType* u : classes[cj].vars ) {
+						assert(v != u);
+					}
+				}
+			}
+		}
+
+		// check cached bindings are still valid
+		for ( const auto& b : bindings ) {
+			assert( b.second.ind < b.second.env->classes.size() );
+			const TypeClass& bc = *b.second;
+			assert( std::count( bc.vars.begin(), bc.vars.end(), b.first ) );
+		}
+
+		// same for parent
+		if ( parent ) parent->verify();
+	}
+
 	/// marks a type as seen; true iff the type has already been marked
 	static bool markedSeen( SeenTypes& seen, const PolyType* v ) {
 		return seen.insert( v ).second == false;
@@ -132,19 +174,23 @@ private:
 	/// Copies a typeclass from a parent; r.first should not be this or null, and none of the 
 	/// members of the class should be bound directly in this. Updates r with the new location
 	void copyClass( ClassRef& r ) {
+		dbg_verify();
 		std::size_t i = classes.size();
 		classes.push_back( *r );
 		r = ClassRef{ this, i };
 		for ( const PolyType* v : classes[i].vars ) { bindings[v] = r; }
+		dbg_verify();
 	}
 
 	/// Copies a typeclass from a parent; r.first should not be this or null, and none of the 
 	/// members of the class should be bound directly in this.
 	void copyClass( ClassRef&& r ) {
+		dbg_verify();
 		std::size_t i = classes.size();
 		classes.push_back( *r );
 		r = ClassRef{ this, i };
 		for ( const PolyType* v : classes[i].vars ) { bindings[v] = r; }
+		dbg_verify();
 	}
 
 	/// Adds v to local class with id rid; v should not be bound in this environment.
@@ -166,7 +212,7 @@ private:
 		if ( ! mergeBound( r, s->bound ) ) return false;
 
 		TypeClass& rc = classes[ r.ind ];
-		s = s.env->findRef( st );  // find in original environment so updates don't get lost
+		s = s.env->findRef( st );  // find s in original env in case mergeBound invalidated
 		const TypeClass& sc = *s;
 
 		if ( s.env == this ) {
@@ -185,6 +231,7 @@ private:
 				// note that r has been moved to the old position of s
 				r.ind = s.ind;
 			}
+			dbg_verify();
 			return true;
 		}
 		
@@ -202,6 +249,7 @@ private:
 				if ( ! mergeClasses( r, rr ) ) return false;
 			}
 		}
+		dbg_verify();
 		return true;
 	}
 
@@ -360,9 +408,11 @@ public:
 			std::size_t n = c.vars.size();
 			std::size_t i;
 			ClassRef r{};  // typeclass in this environment
+			bool nonempty = false;  // cover corner case where all vars in class previously seen
 
 			for ( i = 0; i < n; ++i ) {
 				if ( markedSeen( seen, c.vars[i] ) ) continue;
+				nonempty = true;
 				// look for first existing bound variable
 				r = findRef( c.vars[i] );
 				if ( r ) break;
@@ -389,7 +439,7 @@ public:
 						if ( ! mergeClasses( r, rr ) ) return false;
 					}
 				}
-			} else {
+			} else if ( nonempty ) {
 				// no variables in this typeclass bound; just copy up
 				copyClass( ClassRef{ &o, ci } );
 				continue;

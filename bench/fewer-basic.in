@@ -1,0 +1,2274 @@
+// n_decls: 1500
+// n_exprs: 750
+// n_overloads: weighted 0.5 uniform 2 120, 0.5 constant 1 [1,120]
+// n_rets: discrete 0.15 0.85 [0,1]
+// n_parms: discrete 0.05 0.35 0.55 0.03 0.01 0.01 [0,5]
+// n_poly_types: discrete 0.9 0.1 [0,1]
+// max_tries: 20
+// p_new_type: 0.5
+// get_basic: weighted 0.375 uniform 0 2, 0.25 constant 3, 0.375 uniform 4 7 [0,7]
+// with_struct_params: 12 21 25
+// get_struct: uniform 0 40 [0,40]
+// get_nested_struct: uniform 0 40 [0,40]
+// p_nested_at_root: 0.06
+// p_nested_deeper: 0.3
+// p_unsafe_offset: 0.15
+// basic_offset: geometric 0.15 [0,4294967295]
+// p_with_kind: 0.54 0.36 0.1
+// n_assns: weighted 0.65 constant 0, 0.25 uniform 1 10, 0.1 uniform 11 35 [0,35]
+// p_all_poly_assn_param: 0.78
+// p_all_poly_assn_return: 0.34
+// p_poly_assn_nested: 0.95
+0 b #bb<#x<4>> 3
+d
+1 f T
+6 g-o0
+#p g-o1
+2 g-o2 4
+#zz<0 #n T> g-o3 3
+1 g-o4 3
+5 g-o5 1
+#dd<5> g-o6 5
+3 g-o7 3
+#y<0> g-o8 6
+1 g-o9 T
+1 g-o10 #tt<T #w 4>
+#m g-o11 #m
+7 g-o12 #lll<7 #f #p>
+0 g-o13 3
+#kkk<#n 7 7> g-o14 7
+2 g-o15 T
+g-o16 #rr<#g #g> #rr<#g #g>
+g-o17 T #m
+g-o18 3 0
+g-o19 1 1
+0 g-o20 #r 0
+#ww<#l #l T> g-o21 3 #ww<#l #l T> | bal #x<#d> #x<#d> | #p w T 3 | 4 bab #gg<2> 4 | #w bav #yy<2 5 #y<T>>
+2 g-o22 2 T
+4 g-o23 3 #dd<3>
+0 g-o24 T 0 | #fff<1 #w 1> bal T T | T n #bbb<#t #f #t> 3 3 3 #ppp<#bbb<#t #f #t> 4 #t> | bam #vv<T 3 3> | bay #mm<T T> #mm<T T>
+3 g-o25 3 T
+6 g-o26 #ppp<3 1 #v> #ppp<3 1 #v>
+3 g-o27 6 T
+3 g-o28 7 #kkk<3 T 4>
+3 g-o29 #mm<4 #t> 0
+#fff<6 3 #k> g-o30 3 6
+5 g-o31 5 5
+0 g-o32 4 3
+#m g-o33 6 #m
+#v g-o34 5 5
+#fff<7 #w 2> g-o35 7 7
+0 g-o36 #yy<3 3 7> 5
+3 g-o37 3 #nnn<2 4 3>
+0 g-o38 2 2
+1 g-o39 #z<3> 2
+3 g-o40 1 #g
+g-o41 4 4 4
+0 g-o42 T 3 3
+#v g-o43 0 1 1 T
+5 g-o44 #v #v 2 #p #fff<7 #p #w>
+7 k-o0
+T k-o1 | #k bav T | #xx<#l #v #t> ban | 4 bin #ppp<#f #w #f> 3 | baz #z<3> | #gg<3> m | bal #ppp<3 #m 6> | #nnn<0 0 0> r T 7 | T biw | T bab T | #zz<1 1 2> n #zz<1 1 2>
+#mmm<#b #b #n> k-o2
+k-o3 #yy<0 #g 0>
+T k-o4 0
+#mmm<6 #l 2> k-o5 0
+#r k-o6 #r
+3 k-o7 5
+T k-o8 3
+3 k-o9 #g
+#g k-o10 #g
+1 k-o11 #mmm<#n 1 T>
+0 k-o12 #nn<5 #y<#l>>
+2 k-o13 3
+6 k-o14 6
+1 k-o15 0
+#ppp<6 #g 6> k-o16 #ppp<6 #g 6>
+6 k-o17 3
+3 k-o18 3
+1 k-o19 6
+1 k-o20 #kkk<#n 1 #d>
+k-o21 #n 1
+k-o22 #gg<3> 3
+k-o23 0 #n
+k-o24 2 3
+k-o25 4 T
+k-o26 0 2
+#rr<6 T> k-o27 #rr<6 T> 1
+#f k-o28 3 #f
+3 k-o29 3 3
+3 k-o30 5 5
+6 k-o31 #dd<#t> 6
+0 k-o32 #fff<#l #l 5> 3
+#nn<3 #g> k-o33 #nn<3 #g> 3
+2 k-o34 #n T
+7 k-o35 #f #ff<7>
+#xx<#m 2 0> k-o36 T 2
+T k-o37 3 0
+2 k-o38 2 #l
+1 k-o39 1 1
+#bbb<6 6 3> k-o40 T #r
+#d k-o41 4 #d
+1 k-o42 #kkk<2 2 3> 3
+#fff<#r T #r> k-o43 7 1
+4 k-o44 4 4
+#zz<2 #g #g> k-o45 6 2
+7 k-o46 #lll<3 #y<#l> 7> 7
+0 k-o47 2 2
+T k-o48 7 7 | bir T | 7 big T | 5 bik #xx<#v 3 #v> T
+6 k-o49 #y<6> #dd<#d>
+2 k-o50 #ppp<T 1 #w> 2
+1 k-o51 3 3
+1 k-o52 3 #ddd<3 7 7>
+2 k-o53 T T
+6 k-o54 3 3
+#m k-o55 3 #m
+3 k-o56 4 #v
+0 k-o57 T 0 | #r big T #mmm<R 3 #t> | 2 big #kk<3> | #d bax #rr<#d 6> | 6 k #y<6> #dd<#d> | #mm<4 #f> bal T 6 4 | #m r #mmm<4 7 #m>
+4 k-o58 2 #ggg<2 T 5> #ggg<2 T 5>
+2 k-o59 3 3 #ww<#g T 2>
+0 k-o60 #l 4 #l 4
+T k-o61 4 #nnn<#k 1 5> 5 1 1
+3 l 3
+m-o0
+3 m-o1
+#gg<3> m-o2
+#mmm<T #r R> m-o3
+0 m-o4
+7 m-o5
+m-o6 1
+m-o7 #nnn<#p #p 4>
+m-o8 2
+m-o9 #ll<5>
+m-o10 #mm<0 0>
+2 m-o11 2
+#kk<7> m-o12 7
+4 m-o13 4
+T m-o14 #ww<#t 3 6>
+1 m-o15 1
+4 m-o16 #gg<#g>
+3 m-o17 0
+5 m-o18 5
+1 m-o19 3
+#p m-o20 #d
+7 m-o21 7
+0 m-o22 #kk<7>
+#bb<#l> m-o23 T
+#b m-o24 #pp<1 #b>
+#n m-o25 5
+#kk<#m> m-o26 2
+5 m-o27 #ww<3 3 T>
+#nnn<#x<#v> 7 1> m-o28 5
+T m-o29 #z<T>
+6 m-o30 3
+m-o31 4 3
+m-o32 1 T | r #ff<3> | 7 n #yy<0 T 7> | 2 bal #mm<#r #r> T | 3 bab #lll<5 #r 5> #lll<5 #r 5> | 3 bin #kk<0> T
+m-o33 1 3
+T m-o34 2 6
+1 m-o35 6 #p
+#tt<0 0 #m> m-o36 0 0
+2 m-o37 2 2
+4 m-o38 #f T
+4 m-o39 #t 0
+#z<#l> m-o40 #b T
+1 m-o41 #ddd<#r 1 1> 1
+0 m-o42 0 0
+2 m-o43 #z<2> 7
+4 m-o44 #r 7
+1 m-o45 3 #yy<#n 7 3>
+2 m-o46 #l #l
+#tt<#l T 6> m-o47 6 6
+T m-o48 #zz<#f T #f> 6
+#ll<1> m-o49 T 1
+#g m-o50 3 #kk<#g>
+#b m-o51 5 5
+#ww<#k 7 0> m-o52 #tt<7 7 7> #tt<7 7 7>
+3 m-o53 T #v | #b r #z<T> T | y #ddd<#b 4 T>
+4 m-o54 #vv<#b #t 4> 4
+2 m-o55 3 T
+0 m-o56 3 3
+3 m-o57 #p #z<3>
+2 m-o58 2 #pp<3 #k>
+#mmm<#k #w 4> m-o59 3 5
+#ggg<#w T #f> m-o60 #g 3
+2 m-o61 2 #n
+6 m-o62 #d 0
+#ww<#p T #w> m-o63 6 1
+#xx<#v 5 5> m-o64 #xx<#v 5 5> 0
+#d m-o65 #d 6
+#tt<#b #b #n> m-o66 3 6
+1 m-o67 #zz<7 7 3> 2 #zz<7 7 3>
+4 m-o68 #t 4 T
+5 m-o69 7 0 7 6 2
+2 m-o70 1 0 #p #ppp<3 #p #f> #y<T>
+R m-o71 3 T 3 #rr<5 5> #tt<6 0 6>
+n-o0
+0 n-o1
+1 n-o2
+T n-o3
+4 n-o4
+#ggg<#p 3 3> n-o5
+3 n-o6
+#bb<1> n-o7
+#p n-o8
+n-o9 0
+n-o10 6
+n-o11 3
+n-o12 1
+n-o13 #l
+0 n-o14 4
+3 n-o15 3
+#m n-o16 #tt<3 #w T> | bik #mm<#k #k> | #mmm<#ddd<T 1 T> 1 1> ban #ddd<T 1 T> | 7 bat T 3
+2 n-o17 #l
+#g n-o18 3
+#r n-o19 #ll<#r>
+3 n-o20 #m
+0 n-o21 2
+7 n-o22 #yy<0 T 7>
+6 n-o23 #n
+T n-o24 #m
+#w n-o25 #w
+2 n-o26 1
+4 n-o27 2
+7 n-o28 2
+#g n-o29 4
+T n-o30 1
+2 n-o31 T
+7 n-o32 7
+1 n-o33 #yy<#g 7 7>
+7 n-o34 T | #g n #kk<T> | #rr<T 0> bib | n
+#zz<1 1 2> n-o35 #zz<1 1 2>
+6 n-o36 6
+3 n-o37 #g
+T n-o38 #yy<#p 0 0>
+#ppp<0 #n 0> n-o39 0
+#v n-o40 #v
+3 n-o41 6
+#w n-o42 7
+#g n-o43 2
+6 n-o44 #dd<#v>
+6 n-o45 3
+2 n-o46 2
+#vv<7 5 7> n-o47 #vv<7 5 7>
+#g n-o48 #kk<#m>
+6 n-o49 T | #ddd<6 6 6> bav #ddd<T T T> | #bbb<#m #l #n> bil T | 3 big #y<#w> | #ww<#d 5 5> bab T | #v ban #fff<1 #v 6> | 3 bir #nnn<#p #p 3> | r | #y<4> big | #xx<#r 2 #t> bir T | #r bin #ggg<#r 3 1> | 7 n T
+#d n-o50 #d
+n-o51 3 3
+n-o52 7 T
+n-o53 2 #t
+n-o54 0 #l
+n-o55 #b 3
+n-o56 3 T
+0 n-o57 0 3
+#kkk<#v R R> n-o58 T T
+#w n-o59 0 #w
+2 n-o60 #v 3
+#x<3> n-o61 #x<T> T | #ggg<#p 3 3> n | #v biw T T | 1 bav #tt<7 0 #n> | #kk<4> n #kk<4> #kk<4> | #yy<6 #n #n> bin T 6 | bif #y<3> T
+#x<R> n-o62 T #x<R>
+#z<#n> n-o63 #z<#n> #z<#n>
+#dd<0> n-o64 T #dd<0> | big T #z<4> | #r n #ll<#r> | m #ll<5> | #n r #nn<#n T> | 2 big #ff<2> T | #gg<2> bir T #bb<3> | #xx<T #k T> bif T #xx<T #k T> | 7 bin #fff<6 6 #n> 0 | T bib #vv<0 0 0> 0
+7 n-o65 1 1
+6 n-o66 6 6
+T n-o67 5 T
+#bbb<#w #l T> n-o68 #f #f
+#rr<2 2> n-o69 2 2
+7 n-o70 #zz<#d 7 #v> T
+7 n-o71 3 #y<#w>
+T n-o72 2 2 | #vv<7 5 7> n #vv<7 5 7> | #dd<2> n T 7 | T r | bif T 7 | bib T #lll<T #d #d> | bif #y<3> T | bal #x<#d> #x<#d> | #yy<4 4 #t> bav #rr<4 #t> | #bb<#l> m T
+#pp<#b T> n-o73 #vv<0 #v 0> #b
+3 n-o74 #ddd<1 #p #k> #tt<#p 7 7>
+3 n-o75 3 T | 1 bay T | 0 bay T | #vv<T 1 1> bat | 6 bax T #xx<#f 1 #t> | bib #ddd<5 #g 5> | 4 bin #tt<#l 7 7> 4 | T bav | #fff<2 2 #mm<2 2>> bib #mm<2 2> 3
+2 n-o76 T 2 | #mmm<1 #n 6> r T | #rr<0 #t> bat T T | #zz<6 1 6> bal #zz<6 1 6> T | 4 bik #dd<T> T
+7 n-o77 #y<7> #y<7>
+#bb<#p> n-o78 2 7
+#w n-o79 #tt<4 4 T> 3
+#nn<T 4> n-o80 #mm<#t 7> #nn<T 4> | #gg<2> bir T #bb<T> | 7 g #lll<7 #f #p> | 0 bin T 3
+1 n-o81 #nnn<T 1 5> 0
+#k n-o82 0 0
+#v n-o83 1 1
+#dd<2> n-o84 7 7
+0 n-o85 #d 0
+#r n-o86 T 7
+#xx<#dd<T> #t 1> n-o87 #dd<T> T
+#ggg<4 4 1> n-o88 3 3
+7 n-o89 #kkk<#p 1 #v> 7
+3 n-o90 3 3
+2 n-o91 #f 2
+#g n-o92 7 7
+#kk<4> n-o93 #kk<4> #kk<4>
+0 n-o94 T 0
+5 n-o95 3 #lll<5 5 #p>
+T n-o96 #nnn<5 T #k> #nnn<5 T #k>
+3 n-o97 7 #nn<3 7>
+3 n-o98 5 #r
+#gg<6> n-o99 0 #gg<6>
+#kkk<T #r #r> n-o100 #kkk<T #r #r> 1 | #rr<T 0> bib | w #fff<4 3 2> T | 5 g T | #ddd<3 3 #t> bal #ddd<3 3 #t> T | 0 z T | #rr<4 4> bif #rr<4 4> #rr<4 4> | big | #xx<7 7 5> w #y<#r> #nn<7 #r>
+0 n-o101 2 T
+3 n-o102 T #k | y #fff<2 2 1> #fff<2 2 1> | #k bin T | #nn<T 4> n #mm<#t 7> #nn<T 4>
+#f n-o103 1 1
+#bb<2> n-o104 #bb<2> 2
+0 n-o105 1 T
+#ww<T 2 0> n-o106 #ww<T 2 0> 0 5
+#kk<7> n-o107 3 3 #kk<7>
+#zz<1 R 7> n-o108 T 5 5 | #ggg<#w T #f> m T 3 | 7 n #yy<0 T 7> | bab T | R r #mmm<4 7 #m> | T n R | 7 bat T 3
+3 n-o109 3 3 3 #ggg<2 3 2> 2
+1 n-o110 #bbb<#t #f #t> 3 3 3 #ppp<#bbb<#t #f #t> 4 #t>
+#v n-o111 #pp<3 1> #nn<#pp<3 1> #pp<3 1>> #bb<#w> #m 1
+0 p T
+r-o0
+5 r-o1
+#xx<0 0 #d> r-o2
+7 r-o3
+T r-o4
+3 r-o5
+2 r-o6
+#g r-o7
+r-o8 #ff<3>
+r-o9 0
+r-o10 7
+r-o11 3
+r-o12 #k
+r-o13 #pp<#v 5>
+r-o14 2
+r-o15 1
+r-o16 #rr<0 T>
+r-o17 5
+#mm<5 T> r-o18 5 | #kkk<7 2 #n> bib #ggg<0 T #w> | #nnn<2 5 3> bif T | 3 r T | bif | k #yy<0 #g 0> | 3 biw #y<3> 3 | #t bab #vv<7 #g #g> | T bal #ll<#x<T>> 0 | 2 bay #zz<#d #l #d> | bal #bb<7>
+#mmm<1 #n 6> r-o19 1
+#n r-o20 #n
+3 r-o21 #w
+2 r-o22 2
+3 r-o23 3
+3 r-o24 #ppp<3 T R>
+T r-o25 T
+T r-o26 7 | bab T | T bal T T | 3 bin #lll<0 0 #b> 0
+#vv<#d #r #w> r-o27 T
+1 r-o28 #vv<1 #d 1>
+#kkk<#g #g #t> r-o29 #f
+3 r-o30 0
+#ff<T> r-o31 4
+#tt<#y<3> T 3> r-o32 #tt<#y<3> T 3>
+#kkk<#r #p #p> r-o33 0
+2 r-o34 3
+6 r-o35 #ww<#p T 3>
+7 r-o36 T
+6 r-o37 5
+5 r-o38 7
+#rr<#m 4> r-o39 3
+#m r-o40 T | #b m T 5
+#f r-o41 #f
+#r r-o42 5
+#g r-o43 5
+1 r-o44 #ww<6 T 6>
+#m r-o45 #mmm<4 7 #m>
+5 r-o46 5
+1 r-o47 0
+#k r-o48 3
+#ww<7 #r #r> r-o49 #r
+1 r-o50 1
+#n r-o51 #nn<#n T> | #vv<#d #r #w> r T | 3 bav T | 0 g T 3 3 | #zz<6 #g 6> big T | T bay #nn<#f 3> | bir T
+3 r-o52 #k
+#lll<2 3 2> r-o53 3
+2 r-o54 6
+#r r-o55 #r
+4 r-o56 7
+4 r-o57 #zz<4 #b #b>
+T r-o58 5
+2 r-o59 #vv<3 #f 2>
+T r-o60 #ww<#v #v 5> | #ddd<2 3 #p> bin T #kk<#p> | #d bax #rr<#d 6> | #n r #nn<#n T>
+r-o61 3 3
+r-o62 #yy<#t 3 #t> #r
+r-o63 2 2
+r-o64 0 #mm<0 0>
+r-o65 #p 1
+r-o66 T 7
+r-o67 2 7
+r-o68 4 #rr<T 3>
+r-o69 6 3
+3 r-o70 #vv<#g T 4> 4
+3 r-o71 #fff<#d T 3> #d
+4 r-o72 4 6
+0 r-o73 3 #b
+#n r-o74 5 #mmm<3 #l #y<5>>
+#n r-o75 #nnn<#n T 3> #n
+1 r-o76 1 #b
+#ggg<0 #n #f> r-o77 5 6
+#ll<0> r-o78 3 3
+3 r-o79 #b 3
+#p r-o80 1 #z<#b>
+3 r-o81 0 #v
+4 r-o82 4 #bbb<#f 3 5>
+#w r-o83 #w T
+1 r-o84 1 T | 0 bib T | bal #ww<T 2 2> #ww<T 2 2>
+#ppp<3 3 T> r-o85 3 3
+#ww<#v 3 #t> r-o86 7 7
+#b r-o87 T R | #t ban T R T | 4 bag R 4 | 1 bal #x<0> #x<0> | biw T R | 0 n R | #ddd<1 #g T> w R | 2 bal #mm<#r #r> T | #t bal #fff<#t 0 0> 0 | R bav R | #ggg<3 3 T> bal | #tt<#y<3> T 3> r #tt<#y<3> T 3> | bib #ddd<5 #g 5> | #m bin #ddd<#m 6 6> #v | bir #fff<3 1 3> | 4 bal #tt<0 #t #t> | #kkk<7 2 #n> bib #ggg<0 T #w> | w T | #p w T 3 | bif #nnn<7 5 T> #nnn<7 5 T> | g #rr<#g #g> #rr<#g #g> | 3 big #y<#w> | 3 r #vv<#g T 4> 4 | #dd<#p> bit T | 1 bif #vv<1 1 #m> #vv<1 1 #m> | bam #vv<T 3 3>
+#kk<1> r-o88 1 #ll<#g>
+1 r-o89 #ggg<3 3 #g> #g
+6 r-o90 3 #y<#d>
+3 r-o91 #mmm<3 3 3> T
+#b r-o92 #z<#f> #f
+3 r-o93 7 5
+3 r-o94 #p #x<T>
+T r-o95 T 3
+#yy<T #v 3> r-o96 3 3
+#fff<#n #n T> r-o97 #z<#b> #b | m T | T bik #bb<4> T | #mm<4 #f> bal T 6 4 | 5 m #ww<3 3 T> | T bav | 0 bab T | bib T #lll<T #d #d> | 7 bib #ppp<T 4 #n>
+#r r-o98 #nnn<3 6 7> 5
+#nnn<0 0 0> r-o99 T 7
+5 r-o100 T 5 | 1 biv T T | #g n #kk<#m> | bir T #ddd<R #w 5> | 5 bav T 1 | #yy<4 4 #t> bav #rr<4 #t> | 0 bab #zz<#n #n #n> #n | biw #nnn<#v 1 #v> #nnn<#v 1 #v> | 7 bib #ppp<T 4 #n> | T n
+5 r-o101 5 3
+3 r-o102 1 1
+#yy<2 2 0> r-o103 0 #yy<2 2 0>
+6 r-o104 6 4
+#m r-o105 4 #yy<4 6 #d>
+#w r-o106 T #w
+1 r-o107 #tt<1 6 1> 6
+6 r-o108 0 6
+1 r-o109 #v #v
+T r-o110 #nnn<0 0 #b> 0 #nnn<0 0 #b>
+#ddd<2 T 3> r-o111 #ff<1> 2 2 T
+1 r-o112 T 1 0 1
+r-o113 3 6 3 2 #yy<0 #p 6>
+1 r-o114 4 5 T 3 #vv<#k #k #r> | 3 k T T | bir T
+6 r-o115 #x<6> 6 #rr<1 T> #x<6> #l | T bav T #n | #fff<#n #n T> r #z<#b> #b | #n r #nn<#n T> | 0 bin #bb<0> | bay #mm<#w #l> T | #kkk<T #r #r> n #kkk<T #r #r> 1 | bib T 2 | #x<3> n #x<T> T | #xx<#l #v #t> ban | 3 bay #ff<3> | bav T | 1 m #ddd<#r 1 1> 1 | #w bat #zz<3 0 #w> T | #ggg<5 #l 5> bab | #fff<6 6 3> bin #fff<6 #y<6> 2> | 7 bin #fff<6 6 #n> 0 | 2 bir #y<T> T | 5 bag #ff<5> #gg<3> | 7 bav #ggg<#p 7 7> #ggg<#p 7 7> | 0 bab T
+#v r-o116 3 3 0 7 6
+0 r-o117 #yy<4 1 1> #yy<4 1 1> 4 3 #yy<4 1 1>
+7 t #mmm<7 T #m>
+T v 3 6 | T bal #ww<T 1 1> | 0 bin T 3 | 5 m #ww<3 3 T> | 1 n #yy<#g 7 7> | #kkk<T #r #r> n #kkk<T #r #r> 1 | 0 k #nn<5 #y<#l>> | 0 p T | 7 n T | 0 b #bb<#x<T>> 3 | 5 bag #ff<5> #gg<3> | 3 bir #ww<5 6 #g> T | #lll<5 4 4> bab T 4 | #kkk<#v T T> n T T | 5 bin #zz<5 #p #p>
+#kk<T> w-o0 | 2 bay #mmm<2 2 #r> | #nn<3 #p> bab T | #v bag #dd<0> T #dd<0> | #kkk<#v T T> n T T | bir T | #t bat T T | T bav T | bal T T T | #zz<0 #n T> g T | #ppp<0 #k T> bat T T | #bb<1> n | 0 w #x<#w> | #rr<3 0> bib T | 7 big #ll<7> | 7 bay T #ppp<#p #k 3> | #bb<#l> m T | bir T #ddd<R #w 5> | #tt<2 #b #b> bib T T | 1 bin #dd<#l> #dd<#l> | biw T #ff<#d> | n T T
+#m w-o1
+5 w-o2
+7 w-o3
+2 w-o4
+0 w-o5
+3 w-o6
+w-o7 T | #w r T T | 3 bir #nnn<#p #p 3> | d | #ww<#d 5 5> bab T | #gg<#l> w T | 0 z T
+w-o8 #m
+w-o9 #lll<T #n 2> | 1 bif #vv<1 1 #m> #vv<1 1 #m> | 1 y #ggg<1 #p #l> #ppp<#r 6 #m> | 7 big #ll<7> | 1 bal T | 1 n #bbb<#t #f #t> 3 3 3 #ppp<#bbb<#t #f #t> 4 #t> | 6 bab #nn<#n 6> #z<#d> | T bif T | T big #mmm<3 T 1> | 5 big #tt<5 #p 5> T
+w-o10 0
+#l w-o11 5
+3 w-o12 3
+#nnn<4 #b 3> w-o13 1
+#v w-o14 T
+#kk<#n> w-o15 1
+#fff<7 2 7> w-o16 4
+1 w-o17 #z<#d>
+#mm<T 5> w-o18 5
+0 w-o19 0
+T w-o20 0
+3 w-o21 5
+7 w-o22 7
+5 w-o23 5
+T w-o24 #rr<5 5>
+#g w-o25 T
+0 w-o26 #b
+#dd<#d> w-o27 3
+4 w-o28 3
+7 w-o29 4
+0 w-o30 #x<#w>
+3 w-o31 #bb<#f>
+5 w-o32 3
+4 w-o33 0
+6 w-o34 T
+6 w-o35 6
+5 w-o36 6
+#ddd<1 #g T> w-o37 4
+3 w-o38 #rr<3 1>
+#w w-o39 5
+#m w-o40 #y<#b>
+5 w-o41 7
+#gg<#l> w-o42 T
+w-o43 #p #p
+w-o44 3 3
+w-o45 7 1
+w-o46 #ll<#t> 6
+w-o47 T 0 | #d bik T T | r #pp<#v 5> | 0 p T | #ppp<2 3 5> bab #ppp<2 3 5> | #gg<#l> w T | r T T | #y<0> bab T | 3 w T #f | #gg<2> bir T #bb<3> | T big T
+w-o48 6 #bbb<6 #r 1>
+w-o49 2 2
+w-o50 6 #nn<6 0>
+w-o51 #t T | T bir T T | T bal T | ban | T bal #ll<#v> 7 | bir #lll<#w 2 1> 2 | 5 bin T | bat #lll<3 #w 2> #nn<T 6> | #bbb<T 1 4> bay T | bab | #r big T #mmm<R 3 #t> | T biw #x<#l> 2
+w-o52 #fff<4 3 2> 1
+w-o53 #gg<3> T | #lll<3 3 3> bin T | #lll<5 4 4> bab T 4 | #fff<5 1 1> bir #fff<5 1 1> | T k | #kkk<#v R R> n T T | 2 big #kk<3>
+T w-o54 5 4 | #bb<T> bin T | T bat | bik | 6 r #ww<#p T 3> | r
+T w-o55 1 3
+6 w-o56 3 4
+#dd<1> w-o57 3 T | bab T T | bik #mm<#k #k> | T n T T | big #fff<5 2 7> T | T bat #rr<3 T> #b | #x<3> n #x<T> T | T bik #bb<4> T | 2 m T T
+#y<4> w-o58 #y<4> 3
+0 w-o59 3 2
+#t w-o60 #t T
+2 w-o61 5 0
+0 w-o62 T #gg<4> | #ww<7 #r #r> r T | bif #y<3> T | bab T 1 | 7 bal #xx<5 #n #t> | T bav | #bb<1> n | #ddd<6 6 6> bav #ddd<6 6 6> | #xx<#dd<T> #t 1> n #dd<T> T | w T | #zz<6 1 6> bal #zz<6 1 6> 1 | #r big T #mmm<R 3 #t> | ban | #mmm<#ddd<T 1 T> 1 1> ban #ddd<T 1 T>
+#fff<#d #d 0> w-o63 T 3
+3 w-o64 4 #gg<T> | 1 bav #tt<7 0 #n> | 3 bin #vv<5 T #r> | #kkk<7 2 #n> bib #ggg<0 T #w> | 0 bif #bb<6> | 2 n T | #d bax #rr<#d 6>
+#pp<3 2> w-o65 1 #ff<4>
+T w-o66 4 #n
+3 w-o67 #yy<2 3 #w> 4
+#z<0> w-o68 0 #z<0>
+7 w-o69 1 1
+3 w-o70 3 #pp<T T> | #g w T
+3 w-o71 0 2
+#yy<3 6 #ff<T>> w-o72 3 #ff<T> | T k | 2 bin #ppp<2 #t 2> #ppp<2 #t 2> | 4 r #zz<4 #b #b>
+#zz<#y<7> #y<7> #y<7>> w-o73 3 2
+R w-o74 5 T
+#k w-o75 1 #vv<#p 1 1>
+T w-o76 1 1
+0 w-o77 #w 0
+6 w-o78 6 6
+T w-o79 #k 3 | #y<7> bav T #y<7> | 3 bin #lll<0 0 #b> 0
+3 w-o80 #dd<#n> 0
+1 w-o81 1 T
+#d w-o82 1 T
+1 w-o83 1 4
+4 w-o84 T #ggg<4 7 #b>
+#p w-o85 T 3
+#xx<7 7 5> w-o86 #y<#r> #nn<7 #r>
+7 w-o87 #bb<T> 7
+T w-o88 6 #ff<7>
+2 w-o89 2 2
+T w-o90 4 4
+T w-o91 4 1
+3 w-o92 #t 3
+#bbb<5 #l 5> w-o93 #bbb<5 #l 5> #z<T>
+#k w-o94 #k T
+1 w-o95 #nnn<1 2 2> 1
+5 w-o96 #mmm<#g #g #g> 5
+1 w-o97 #w 1
+3 w-o98 7 #f
+0 w-o99 #vv<#n #n #n> 4
+6 w-o100 #fff<T #b #f> 6
+#ppp<#n 7 #f> w-o101 1 #vv<2 4 1>
+w-o102 5 6 T
+#kkk<#t 3 #m> w-o103 6 6 6
+#t w-o104 5 3 #rr<#t 3>
+7 w-o105 T #yy<#b 2 #t> 0 7
+#k w-o106 T 3 2 0 T
+#f x 4 T
+1 y-o0
+5 y-o1
+3 y-o2
+#d y-o3
+2 y-o4
+y-o5 #b
+y-o6 #ddd<#b 4 T>
+T y-o7 4 | 3 bin T | #rr<T 0> bib | 6 bab #xx<3 #y<3> 7> | #rr<5 3> bir #rr<5 3> #rr<5 3> | T bin T | bir T | 1 bak #yy<T #b #f> T | #ww<#k 7 0> m #tt<7 7 7> #tt<7 7 7>
+#w y-o8 3
+T y-o9 2 | #xx<7 5 5> bib T T | bib #ggg<#d #d 2>
+1 y-o10 1
+#g y-o11 2
+4 y-o12 #mmm<#d 5 4>
+y-o13 3 T | bab T T | #ddd<2 T 3> r #ff<1> T T T | 1 bat T | bib T | y #ddd<#b 4 T> | 1 bak #yy<T #b #f> T
+y-o14 #fff<2 2 1> #fff<2 2 1>
+0 y-o15 #ppp<0 #k #k> 0
+1 y-o16 #ggg<1 #p #l> #ppp<#r 6 #m>
+#vv<#r #w #n> y-o17 #n #vv<#r #w #n>
+4 y-o18 #ff<#f> 1
+R y-o19 3 #nnn<5 T 3>
+5 y-o20 5 3
+T y-o21 #z<0> #z<0> | T r T | 0 w T #gg<4> | #bb<#l> m T | #zz<1 1 2> n #zz<1 1 2> | 4 bav T #x<1> | 4 r #zz<4 #b #b> | 4 g T #dd<T> | 3 biw #y<T> T | T bib T T | #gg<2> bir T #bb<3> | 7 g #lll<7 #f #p>
+#nn<7 0> y-o22 7 #nn<7 0>
+0 y-o23 5 #gg<#l>
+#yy<3 #d 3> y-o24 3 0
+#fff<#fff<3 T 3> #d 6> y-o25 7 #fff<3 T 3>
+3 y-o26 3 #mmm<#g #g 3>
+0 z T
+bab-o0
+#ggg<#x<2> 3 5> bab-o1
+#ggg<5 #l 5> bab-o2
+5 bab-o3
+#ddd<#p 0 7> bab-o4
+bab-o5 T
+bab-o6 1
+bab-o7 0
+bab-o8 2
+#kkk<0 0 #b> bab-o9 #b
+#z<3> bab-o10 3
+1 bab-o11 #kk<T>
+0 bab-o12 0
+T bab-o13 4
+#gg<#k> bab-o14 1
+6 bab-o15 0
+#nn<3 #p> bab-o16 3
+4 bab-o17 4
+#ppp<2 3 5> bab-o18 #ppp<2 3 5>
+4 bab-o19 #t
+#t bab-o20 #vv<7 #g #g>
+7 bab-o21 0
+3 bab-o22 3
+2 bab-o23 0
+6 bab-o24 #xx<3 #y<3> 7>
+3 bab-o25 2
+#zz<0 7 0> bab-o26 7
+T bab-o27 T
+#x<4> bab-o28 4
+3 bab-o29 #rr<5 T>
+#w bab-o30 4
+2 bab-o31 2
+4 bab-o32 T | 6 bab #nn<#n 6> #z<#d> | T bal #ll<#v> 7 | r | #ll<6> bib #zz<#b 6 2> 2 | bav T | 0 n T T | ban | #ppp<0 #n 0> n T | 1 r #ww<6 T 6> | #xx<T #k T> bif T #xx<R #k T>
+#y<0> bab-o33 T
+#ww<#d 5 5> bab-o34 T | T bif | 5 bin #ggg<3 2 #n> | 1 bat T | #v w T | #ggg<#p 3 3> n | T bin | #m r #mmm<4 7 #m> | T r | m #nnn<#p #p 4> | 6 bir T 5 | #rr<#n T> bav T #rr<#n T> | 4 bal #tt<0 #t #t> | #vv<#g #n #g> bib #vv<#g #n #g> #vv<#g #n #g> | T ban #nn<0 #v> | 2 k #ppp<T 1 #w> T | 1 f T | 7 bin #x<#k>
+#ww<#l #g #w> bab-o35 #g
+0 bab-o36 T | #bb<#b> bin T | T big T | y #ddd<#b 4 T> | bin #bbb<2 #t 2> | #kkk<#d 2 T> bin | bat #fff<#k #k #k> T #kkk<3 3 3> | #mmm<#ddd<T 1 T> 1 1> ban #ddd<T 1 T>
+2 bab-o37 #vv<#p 2 #p>
+#n bab-o38 3
+T bab-o39 #d
+bab-o40 4 #g
+bab-o41 #mm<5 0> #zz<5 7 #m>
+bab-o42 2 2
+bab-o43 #g #g
+bab-o44 T 1
+bab-o45 0 T
+bab-o46 3 3
+bab-o47 #tt<3 #b 3> 4
+bab-o48 2 #ggg<2 #w #r>
+bab-o49 7 #d
+bab-o50 3 #gg<3>
+bab-o51 #v #x<#v>
+bab-o52 1 0
+#y<2> bab-o53 #k 2
+6 bab-o54 #k 0
+#lll<5 4 4> bab-o55 4 4
+6 bab-o56 #dd<2> #kk<#r>
+6 bab-o57 2 #yy<6 2 3>
+2 bab-o58 #yy<1 1 #b> 2
+#r bab-o59 #m #m
+0 bab-o60 #zz<#n #n #n> #n
+#bb<0> bab-o61 #r #p
+3 bab-o62 5 #bbb<5 5 4>
+4 bab-o63 #gg<2> 4
+T bab-o64 0 5 | #xx<7 7 5> w #y<#r> #nn<7 #r> | T m #zz<#f T #f> 6 | 1 g T | T bal | #kkk<#r #p #p> r T | 0 bat T 5 | 1 big #mmm<3 T 1> | 6 bib #tt<6 #l 6> T
+1 bab-o65 #ll<3> #ll<3>
+6 bab-o66 #nn<#n 6> #z<#d>
+7 bab-o67 2 2
+T bab-o68 3 1
+#x<#f> bab-o69 #x<#f> 0
+3 bab-o70 #lll<5 #r 5> #lll<5 #r 5>
+0 bab-o71 #fff<0 #m 0> 0
+1 bab-o72 #ddd<1 #p 3> 3
+#m bab-o73 2 T
+#tt<1 0 4> bab-o74 3 3
+#pp<5 2> bab-o75 T 2 #ll<#l> | 7 big T #xx<6 7 #k> | 3 m T | m #nnn<#p #p 4> | 2 bay #mmm<2 2 #r> | bab #mm<5 0> #zz<5 7 #m> | 1 g T | bib T #lll<T #d #d> | #g n #kk<#m> | 3 bat #ppp<3 #p #p> | #kkk<7 2 #n> bib #ggg<0 T #w>
+4 bab-o76 4 T 3
+bab-o77 T #ddd<#f #f T> 6 6
+bab-o78 4 #yy<T 4 #n> #nn<0 3> #n #k
+#lll<2 #w #w> bab-o79 3 3 3 7 7
+6 bad #vv<#m 6 T> 6 | 0 bir T T | #r biw T | T y T #nnn<5 T 3> | bib T #lll<T #d #d>
+#w baf 7 #w
+bag-o0 1
+bag-o1 5
+T bag-o2 T | #b r T T | #nnn<#n 0 0> bap T | T k T | 7 w #bb<T> 7 | T bib T T | 2 bin #ppp<2 #t 2> #ppp<2 #t 2> | 2 bab #vv<#p 2 #p> | #vv<#d #r #w> r T | #b bav #xx<1 6 6>
+1 bag-o3 3
+2 bag-o4 2
+bag-o5 1 #nn<0 3>
+5 bag-o6 #ff<5> #gg<3>
+#v bag-o7 T #dd<#v>
+4 bag-o8 4 4
+#mmm<#v 6 T> bag-o9 3 6 | #r bat #nnn<#r 7 T> #r | bib #rr<2 #g> #rr<2 #g> | baz #z<3> | #mmm<#b #b #n> k | #m ban #lll<#n #m 1> | #x<3> n #x<T> T
+#x<#r> bag-o10 1 1
+3 bag-o11 #k #k
+3 bag-o12 #x<#r> #x<#r>
+#v bag-o13 #dd<0> T #dd<0>
+1 bak #yy<T #b #f> T | #nnn<T #b T> bit T | bay #mm<#w #l> 2 | #d w T T | 7 bin T | T r | 3 r #ppp<3 T R>
+bal-o0
+0 bal-o1
+3 bal-o2
+#kk<0> bal-o3
+#ggg<3 3 T> bal-o4
+bal-o5 #ppp<3 #m 6>
+bal-o6 #bb<7>
+6 bal-o7 6
+3 bal-o8 T
+1 bal-o9 #m
+2 bal-o10 2
+4 bal-o11 6
+T bal-o12 2
+5 bal-o13 #v
+1 bal-o14 T | T r #ww<#v #v 5> | #y<0> bab T | T bav | #l bal #bbb<#l #f #g> | #kk<T> bay #rr<5 5> #rr<5 5> | 3 big #bb<#x<#d>> 2 | bib #rr<#l 2> | #x<5> bib | #xx<7 7 5> w #y<#r> #nn<7 #r> | 3 bal T
+#kk<3> bal-o15 #kk<3>
+0 bal-o16 #r
+T bal-o17 0
+#l bal-o18 #bbb<#l #f #g>
+5 bal-o19 3
+T bal-o20 1
+T bal-o21 3
+6 bal-o22 3
+1 bal-o23 1
+3 bal-o24 3
+#d bal-o25 4
+4 bal-o26 #tt<0 #t #t>
+#p bal-o27 #g
+#zz<5 3 #g> bal-o28 3
+3 bal-o29 #r
+0 bal-o30 0
+2 bal-o31 5
+7 bal-o32 #xx<5 #n #t>
+T bal-o33 #ww<T 1 1>
+bal-o34 #x<#d> #x<#d>
+bal-o35 6 2
+bal-o36 #ww<T 2 2> #ww<T 2 2>
+bal-o37 #g 3
+bal-o38 #f #mm<#f #f>
+1 bal-o39 #pp<#f 6> #pp<#f 6>
+6 bal-o40 4 #d
+0 bal-o41 #ll<#x<0>> 0
+#ddd<7 #p #p> bal-o42 T 7
+7 bal-o43 3 #bbb<#t 5 5>
+#zz<6 1 6> bal-o44 #zz<6 1 6> 1
+0 bal-o45 #v 2
+#fff<1 #w 1> bal-o46 1 T | 2 bat #kk<#d> | bar T #ww<#b #l 7> | T n #nnn<5 T #k> #nnn<5 T #k> | T big T 6 6 | #b bif #ggg<5 #d 7> | 0 bin T #z<0>
+7 bal-o47 1 7
+#t bal-o48 #fff<#t 0 0> 0
+6 bal-o49 T #gg<1>
+T bal-o50 #ll<#v> 7
+3 bal-o51 #bbb<T #l 3> R | 1 bat R | w T 0 | #gg<2> bir R #bb<3> | 5 g R | 3 r #mmm<3 3 3> R | #rr<0 #t> bat R 1 | #nnn<R #b S> bit T | #vv<#g #n #g> bib #vv<#g #n #g> #vv<#g #n #g> | R n #nnn<T 1 5> 0 | 2 biw #lll<#w 0 0> #lll<#w 0 0> | #ww<#d 5 5> bab R | R y #z<0> #z<0> | #r r #nnn<3 6 7> 5
+2 bal-o52 2 #mmm<#m 4 6>
+3 bal-o53 1 #dd<1>
+#pp<#b R> bal-o54 2 #zz<4 6 T> | T big T | T bab T | 2 bat T | 2 bab #vv<#p 2 #p> | #lll<#k 0 R> biw T | r | 3 bal #z<#n> #kk<#n> | 7 n #zz<#d 7 #v> R | #t biw R #x<#t>
+#p bal-o55 6 #p
+1 bal-o56 #mmm<#t 3 1> 2
+6 bal-o57 6 T
+#gg<4> bal-o58 1 1
+1 bal-o59 #x<0> #x<0>
+#ddd<3 3 #t> bal-o60 #ddd<3 3 #t> T
+#w bal-o61 4 5
+3 bal-o62 T #nn<#v 7>
+#vv<#v 7 0> bal-o63 T #l
+3 bal-o64 #nnn<1 1 1> 7
+T bal-o65 1 1
+2 bal-o66 #mm<#r #r> T | bav T T | #y<#v> big #y<#v> | bib #rr<#l 2> | #l bal #bbb<#l #f #g> | 3 big #ww<#r #r #t> | bav #nn<2 2> #mmm<#v 4 #ll<2>>
+#t bal-o67 #kkk<T #p #v> 4
+4 bal-o68 3 5
+0 bal-o69 #nn<4 0> #nn<4 0>
+R bal-o70 #l T
+1 bal-o71 3 #rr<0 3>
+3 bal-o72 #z<#n> #kk<#n>
+7 bal-o73 #lll<0 1 1> 3
+0 bal-o74 3 1
+#d bal-o75 1 #lll<4 1 #d>
+0 bal-o76 1 0
+0 bal-o77 #ww<1 #r #n> 1
+bal-o78 3 3 3
+#mm<4 #f> bal-o79 T 6 4 | 3 bay T T | #bb<1> n | 0 bav T | #m bav #bb<#m> | 3 ban T | 3 g T #nnn<2 4 3> | r | T bin T #bbb<#l 3 #v> | 1 k #kkk<#n 1 #d> | T big #lll<1 #t T> | 1 bal #mmm<#t 3 1> 2 | 7 bal #lll<0 1 1> T | 7 bal #xx<5 #n #t> | #rr<#g 7> bin T | 0 bat T #v | #nn<3 #g> k #nn<3 #g> T | T bal T #nn<#v 7> | #fff<#n #n T> r #z<#b> #b | #mm<#ppp<6 T 0> 0> big #ppp<6 T 0> | r #rr<0 T> | #xx<#l #v #t> ban
+bam #vv<T 3 3>
+ban-o0
+#xx<#l #v #t> ban-o1
+ban-o2 #m
+ban-o3 2
+ban-o4 7
+ban-o5 3
+#mmm<#ddd<T 1 T> 1 1> ban-o6 #ddd<T 1 T>
+T ban-o7 6 | T n T
+#ddd<3 3 #f> ban-o8 7
+#m ban-o9 #lll<#n #m 1>
+#v ban-o10 #fff<1 #v 6>
+7 ban-o11 7
+2 ban-o12 7
+3 ban-o13 3
+T ban-o14 #nn<0 #v>
+#d ban-o15 6
+#nnn<5 3 #d> ban-o16 5
+5 ban-o17 #t
+#ww<#f T 6> ban-o18 4
+ban-o19 5 5
+ban-o20 7 #p
+2 ban-o21 7 7
+#vv<5 #n #n> ban-o22 5 5
+R ban-o23 #nnn<#x<0> #x<0> #y<#r>> T | R bib T T | #ggg<#r 3 1> bin R | #m r T | 7 biw #ll<7> #ll<7> | 6 n R | 1 big #mm<1 #n> | 3 big #y<#w> | m | bal #bb<7> | #v n #pp<3 1> #nn<#pp<3 1> #pp<3 1>> #bb<#w> #m 1 | d | R bal #ww<T 1 1> | T bav R T | #mm<#ppp<6 T 0> 0> big #ppp<6 T 0> | bab | R bab #fff<0 #m 0> R
+2 ban-o24 3 2
+T ban-o25 #ppp<2 2 T> 2 | #xx<R #k T> bif T #xx<R #k T> | 0 bin #bb<0> | #ggg<#x<2> 3 5> bab | 4 bay T T | y #ddd<#b 4 T> | 3 r #mmm<3 3 3> T | bif #y<T> | 1 bav #tt<7 0 #n> | 0 z T
+7 ban-o26 7 1
+#mm<3 7> ban-o27 3 #mm<3 7>
+3 ban-o28 7 #zz<7 7 T>
+3 ban-o29 3 #rr<#v T> | 1 bal T | #mmm<T #r R> m | 3 big #dd<3> #dd<3> 3 4 3 | 1 r #vv<1 #d 1> | T bag T | #r bin #ggg<#r 3 1> | #y<#v> big #y<#v>
+7 ban-o30 6 #zz<7 6 #g>
+#v ban-o31 4 3
+4 ban-o32 #ddd<5 5 4> 7
+5 ban-o33 1 5
+7 ban-o34 3 5
+4 ban-o35 #k #k
+0 ban-o36 2 3
+#ggg<0 #r 5> ban-o37 6 3
+3 ban-o38 0 #dd<4>
+6 ban-o39 7 6
+6 ban-o40 T #k
+4 ban-o41 #ddd<#b #d 5> 6
+T ban-o42 #w 0 | #r bin #ggg<#r 3 1> | bab T | #y<0> bab T | #tt<#y<3> T 3> r #tt<#y<T> T T>
+#t ban-o43 #t T T
+#nnn<#n 0 0> bap 0
+bar T #ww<#b #l 7> | y #ddd<#b 4 T> | 7 bin #x<#k> | 3 bif #bb<T> #kkk<#bb<T> 3 #d> | r #pp<#v 5> | 7 big T | bik | 1 bav T #kkk<3 4 #f> | baz #z<3> | big T #z<4> | 7 n T | 7 n #y<7> #y<7> | 2 biw #lll<#w 0 0> #lll<#w 0 0> | bat #ff<T>
+2 bat-o0
+#vv<T 1 1> bat-o1
+T bat-o2
+bat-o3 1
+bat-o4 #ff<T> | #rr<0 #t> bat T T | 4 w T #ggg<4 7 #b> | #kkk<T #t 0> bib #kkk<T #t 0> 0 | #kkk<#v R R> n T T | T y | 0 k #nn<5 #y<#l>> | #w biw #dd<#w> 7 #w | bat #lll<3 #w 2> #nn<T 6> | bik #mm<#k #k> | T y #z<0> #z<0> | bir T #ddd<R #w 5> | #l bay #rr<#l 5> 0 | #x<5> bib
+bat-o5 5
+bat-o6 0
+#xx<#l 0 #l> bat-o7 7
+7 bat-o8 #ww<T #n 7> | #p w T T | #r bin #ggg<#r 3 1> | biw T #ff<#d> | bav T | #ggg<#d #d #n> big T | 3 k T T | #k r T | #y<4> w #y<4> T | w #gg<T> T | T bin #kk<0> T | 2 bal #mm<#r #r> T | 3 bin T #bbb<#l 3 #v> | T r #mmm<T T T> T | 3 bal #z<#n> #kk<#n> | #dd<1> w T T | #n r #nn<#n T> | #tt<#y<3> T 3> r #tt<#y<T> T T> | bib T 2 | bay T T 3 5 4 | 3 w #rr<3 1> | #vv<#g #n #g> bib #vv<#g #n #g> #vv<#g #n #g> | #w bav #yy<2 5 #y<T>> | #ww<#d 5 5> bab T | 7 biw #ll<7> #ll<7> | #yy<3 6 #ff<T>> w T #ff<T> | 1 m T #yy<#n 7 3> | #ppp<0 #k T> bat T T | #g m T #kk<#g>
+7 bat-o9 #r
+1 bat-o10 1
+3 bat-o11 #ppp<3 #p #p>
+T bat-o12 5
+7 bat-o13 3
+#b bat-o14 #w
+#w bat-o15 #w
+1 bat-o16 T | #z<T> n #z<T> #z<#n> | #x<#f> bab #x<#f> 0 | 1 r #ww<6 T 6> | bib #ddd<5 #g 5> | #xx<7 5 5> bib T #t | biw #xx<5 #r 5> | #k bav T | #ddd<#p 0 7> bab
+3 bat-o17 2
+2 bat-o18 #kk<#d>
+2 bat-o19 T | #vv<#g #n #g> bib #vv<#g #n #g> #vv<#g #n #g> | 1 bin #dd<#l> #dd<#l> | 1 g T | k #yy<0 #g 0> | 6 bab #nn<#n 6> #z<#d> | #y<4> big | T biw #ppp<3 #b 3> #ll<3> | bib T | #kk<4> n #kk<4> #kk<4> | #v ban #fff<1 #v 6> | g #rr<#g #g> #rr<#g #g> | T ban #nnn<#x<0> #x<0> #y<#r>> T
+T bat-o20 #r
+bat-o21 #lll<3 #w 2> #nn<T 6>
+bat-o22 5 3
+#rr<0 #t> bat-o23 T 1
+#mm<1 1> bat-o24 5 1
+#ppp<0 #k R> bat-o25 T T | R ban #lll<#n #m 1> | 3 bav T | #rr<5 3> bir #rr<5 3> #rr<5 3> | #bb<#l> m T | 2 bay #pp<3 3> #pp<3 3> | bab R #ddd<#f #f T> 6 6 | 7 bay #kk<#l> #kk<#l> | 3 r T T | #dd<T> bit #dd<1> #dd<1> | 3 bib R | 7 bin #x<#k>
+#w bat-o26 3 #ww<3 #w 3>
+#z<2> bat-o27 2 2
+3 bat-o28 5 5
+1 bat-o29 #l 3
+#gg<2> bat-o30 2 2
+3 bat-o31 T 3
+#w bat-o32 #zz<3 0 #w> T
+4 bat-o33 4 #w
+#k bat-o34 #m #x<0>
+#r bat-o35 #nnn<#r 7 T> #r
+#rr<#l 0> bat-o36 #rr<#l 0> 0
+0 bat-o37 0 5
+#mm<T #rr<2 2>> bat-o38 #rr<2 2> #rr<2 2>
+3 bat-o39 #dd<T> 3 | #nnn<#x<#v> 7 1> m T | 5 bax T | d | #dd<1> bit #dd<1> #dd<1> | biw T T | 1 bal #x<0> #x<0> | #bbb<5 #l 5> w #bbb<5 #l 5> #z<T> | #g w T | #ddd<#k 3 #f> bin T
+3 bat-o40 3 #v
+T bat-o41 #b 6
+1 bat-o42 T 2
+1 bat-o43 #v 1
+#t bat-o44 2 #l
+1 bat-o45 #x<T> 3
+R bat-o46 T 3 | #zz<#y<7> #y<7> #y<7>> w T 2 | #d bay #tt<0 3 0> R | 3 big #dd<R> #dd<3> 3 4 3 | 0 bin #bb<0> | R bal | #kkk<#d 2 T> bin | #mm<3 7> ban T #mm<3 7>
+T bat-o47 #rr<3 T> #b
+7 bat-o48 T 3
+#t bat-o49 3 3
+0 bat-o50 3 #v
+1 bat-o51 0 3
+#m bat-o52 #m 4
+3 bat-o53 4 #m
+3 bat-o54 4 T | #xx<1 5 #t> bav T T | 6 bad #vv<#m 6 T> T | 4 bay T T | 3 big #y<#w> | 1 n #yy<#g 7 7> | T biw #lll<4 #w T> | 5 bin #ggg<3 2 #n> | #gg<3> m | #g bin T | T bib T 6
+#k bat-o55 #z<#k> 6
+bat-o56 #fff<#k #k #k> 6 #kkk<3 3 3>
+#ddd<5 #p 5> bat-o57 3 #xx<5 3 #t> #xx<5 3 #t>
+#m bat-o58 0 T #lll<#k 4 #k>
+3 bat-o59 5 #r 6 2
+T bav-o0 | bab | T big T #y<3> | #vv<#g #n #g> bib #vv<#g #n #g> #vv<#g #n #g> | #xx<#dd<T> #t 1> n #dd<T> T | #v w T | bib #rr<2 #g> #rr<2 #g>
+2 bav-o1
+bav-o2 1
+bav-o3 3
+bav-o4 T | 0 w #vv<#n #n #n> 4
+bav-o5 #mm<3 T>
+6 bav-o6 6
+7 bav-o7 1
+2 bav-o8 2
+4 bav-o9 4
+T bav-o10 6
+0 bav-o11 0
+#fff<#p 4 #n> bav-o12 0
+0 bav-o13 7
+5 bav-o14 5
+4 bav-o15 #ff<3>
+#ddd<6 6 6> bav-o16 #ddd<6 6 6>
+#ll<#l> bav-o17 #lll<#l 1 4>
+5 bav-o18 #w
+0 bav-o19 3
+#w bav-o20 #yy<2 5 #y<T>>
+7 bav-o21 7
+#k bav-o22 #n
+#m bav-o23 #bb<#m>
+#r bav-o24 3
+3 bav-o25 3
+#b bav-o26 #xx<1 6 6>
+3 bav-o27 T
+T bav-o28 T
+#yy<4 4 #t> bav-o29 #rr<4 #t>
+T bav-o30 5
+#ww<2 #w 7> bav-o31 2
+1 bav-o32 #tt<7 0 #n>
+bav-o33 4 #n
+bav-o34 #nnn<T #f 1> 3
+bav-o35 6 #rr<#w 0>
+bav-o36 #nn<2 2> #mmm<#v 4 #ll<2>>
+bav-o37 T #r
+bav-o38 4 4
+bav-o39 #v 1
+bav-o40 T 2
+#vv<1 5 5> bav-o41 2 5
+2 bav-o42 #zz<2 #w 2> #z<#w>
+3 bav-o43 3 3
+T bav-o44 7 #ppp<7 6 3>
+1 bav-o45 T #kkk<3 4 #f>
+#rr<#n T> bav-o46 2 #rr<#n T> | T bav T | #v w T | #ww<#k 7 0> m #tt<7 7 7> #tt<7 7 7> | 3 bib #y<3> | 0 bif #bb<6> | #bbb<#nn<0 T> #g #nn<0 T>> bay #nn<0 T> #nn<0 T> | T bal #ww<T 1 1> | bir T | #mmm<T #r R> m | 4 bik #dd<T> T | bik #mm<#k #k> | 0 bif T #z<T> | bin #bbb<2 #t 2> | 3 r #ppp<3 T R>
+#d bav-o47 #w 1
+5 bav-o48 5 5
+4 bav-o49 2 6
+T bav-o50 3 3
+4 bav-o51 3 #x<1>
+3 bav-o52 T 3 | T big T #kkk<#n 1 1> | bif #y<T> | T bib | #vv<T T T> bat | 2 bay #pp<3 3> #pp<3 3> | 4 m #vv<#b #t 4> 4 | 1 big T | bat #lll<3 #w 2> #nn<T 6> | bif | 7 big T | #ff<#b> bir T
+1 bav-o53 T #l | T r | 0 n T T | T bin #dd<4> | 3 r T | 0 bir T T | 0 y #ppp<0 #k #k> T | #m bat T T #lll<#k 4 #k> | 1 bay T | bay T | bay #mm<1 1> #mm<1 1> | 0 bin #nnn<0 #n #r> | 0 bib T T | bib T | 5 w #mmm<#g #g #g> 5 | #fff<#p 4 #n> bav T | #zz<1 1 2> n #zz<1 1 2>
+5 bav-o54 2 5
+1 bav-o55 7 #ll<#b>
+#kkk<0 1 #g> bav-o56 #fff<1 #t #t> 1
+7 bav-o57 #vv<#d T #d> 7
+0 bav-o58 #ggg<#v 5 3> 2
+#gg<3> bav-o59 1 #y<1>
+#l bav-o60 #mm<#l T> 3
+R bav-o61 T #n
+#lll<7 #v #w> bav-o62 #k 7
+#pp<7 3> bav-o63 7 4
+R bav-o64 0 T
+#xx<1 5 #t> bav-o65 6 6
+#vv<3 6 #d> bav-o66 3 3
+#m bav-o67 #d T
+5 bav-o68 1 1
+3 bav-o69 #fff<3 3 3> 5
+#y<7> bav-o70 2 #y<7>
+T bav-o71 1 T
+0 bav-o72 4 1
+7 bav-o73 #ggg<#p 7 7> #ggg<#p 7 7>
+5 bav-o74 2 #rr<#b 2>
+bav-o75 0 T 7 | T big T #kkk<#n 1 1> | T bik #bb<4> T | T r T 1 0 1 | bib T | 2 bab #vv<#p 2 #p> | bib | 1 m #ddd<#r 1 1> 1 | #yy<4 4 #t> bav #rr<4 #t> | bav T | #pp<3 2> w T #ff<4> | T big T | #y<4> big | #mmm<#b #b #n> k
+#m bav-o76 3 3 #vv<T #m #m>
+#yy<0 5 7> bav-o77 #yy<0 5 7> 3 0 7
+3 bav-o78 7 7 T T 3
+baw T 7
+bax-o0 #gg<2>
+#d bax-o1 #rr<#d 6>
+5 bax-o2 5
+bax-o3 3 1
+7 bax-o4 0 #x<0>
+6 bax-o5 0 #xx<#f 1 #t>
+T bax-o6 2 6 #d
+5 bay-o0
+1 bay-o1
+bay-o2 #m
+bay-o3 4
+bay-o4 0
+T bay-o5 3 | #xx<#l #v #t> ban | T bav | 3 bib T 3 | r | T big T | 1 bir #ddd<#v 5 0> | #b r T T | T bib
+2 bay-o6 #mmm<2 2 #r>
+2 bay-o7 #zz<#d #l #d>
+#b bay-o8 #x<7>
+1 bay-o9 T
+#nnn<T 5 #k> bay-o10 5
+0 bay-o11 T
+5 bay-o12 #d
+#v bay-o13 1
+0 bay-o14 #tt<3 3 1>
+5 bay-o15 3
+0 bay-o16 #p
+T bay-o17 #nn<#f 3>
+3 bay-o18 #ff<3>
+#bbb<T 1 4> bay-o19 0
+3 bay-o20 3
+2 bay-o21 2
+0 bay-o22 0
+2 bay-o23 3
+#ff<#g> bay-o24 2
+5 bay-o25 6
+7 bay-o26 3
+bay-o27 6 6
+bay-o28 #mm<1 1> #mm<1 1>
+bay-o29 7 7
+bay-o30 6 T
+bay-o31 #mm<#w #l> 2
+bay-o32 5 3
+bay-o33 1 3
+#kk<T> bay-o34 #rr<5 5> #rr<5 5>
+7 bay-o35 3 #ppp<#p #k 3>
+#v bay-o36 #v 7
+3 bay-o37 3 3
+2 bay-o38 #pp<3 3> #pp<3 3>
+7 bay-o39 #kk<#l> #kk<#l>
+#x<5> bay-o40 5 T
+3 bay-o41 3 2
+#d bay-o42 #tt<0 3 0> T | #pp<5 2> bab T 2 #ll<#l> | T big T | 6 n #dd<#v> | #mm<#ppp<6 T 0> 0> big #ppp<6 T 0> | T r T | #m r T | bam #vv<T 3 3> | #yy<4 4 #t> bav #rr<4 #t>
+4 bay-o43 T T
+#g bay-o44 3 7
+T bay-o45 3 3
+0 bay-o46 #kkk<#p 4 3> #ll<3>
+1 bay-o47 #k #k
+#bb<#p> bay-o48 2 3
+#bbb<#nn<0 T> #g #nn<0 T>> bay-o49 #nn<0 T> #nn<0 T> | bay T 6 | ban | #m ban #lll<#n #m 1> | 7 bay #kk<#l> #kk<#l> | T n #dd<#v> | #rr<T 0> bib | bav #mm<3 T> | 1 bat T | bam #vv<T 3 3> | biw T T | #xx<#l #v #t> ban | 4 bin T 2 | #bb<#b> bin T | T ban #nnn<#x<0> #x<0> #y<#r>> T | #dd<0> n T #dd<0> | 7 big #ll<7> | 6 bal T
+#l bay-o50 #rr<#l 5> 0
+1 bay-o51 1 #ggg<2 T #k>
+6 bay-o52 6 T
+#lll<#p #p #p> bay-o53 2 7
+2 bay-o54 T 2 #y<2> 1
+bay-o55 3 T 3 5 4 | 0 k #nn<5 #y<#l>> | d | 7 bat T 3 | #dd<5> g T | 0 bab #zz<#n #n #n> #n | #ggg<5 #l 5> bab | T bav | 3 bab #lll<5 #r 5> #lll<5 #r 5> | #fff<6 6 3> bin #fff<6 #y<6> 2> | n | big T 0 | #bb<#l> m T
+baz #z<3>
+bib-o0
+#rr<T 0> bib-o1
+7 bib-o2
+0 bib-o3
+#x<5> bib-o4
+T bib-o5
+#n bib-o6
+bib-o7 #rr<#l 2>
+bib-o8 #ggg<#d #d 2>
+bib-o9 3
+bib-o10 T | #kk<T> bay #rr<5 5> #rr<5 5> | 3 biw T | bax #gg<2> | #ggg<5 #l 5> bab | T m #z<T> | bif #nnn<7 5 T> #nnn<7 5 T> | bal #ww<T 2 2> #ww<T 2 2> | 2 big #ff<2> T | 3 bib T #rr<T 0> | #kkk<#g #g #t> r T | #mmm<#ddd<T 1 T> 1 1> ban #ddd<T 1 T>
+bib-o11 2
+bib-o12 0
+bib-o13 #f
+bib-o14 #ddd<5 #g 5>
+bib-o15 #k
+4 bib-o16 4
+#v bib-o17 3
+2 bib-o18 1
+#vv<7 #l #r> bib-o19 5
+#pp<0 4> bib-o20 3
+T bib-o21 7 | #ff<#f> big T 7 | big #yy<#k 3 3> | m
+1 bib-o22 3
+6 bib-o23 2
+7 bib-o24 7
+#ppp<T 3 6> bib-o25 3 | bif T T | bib #ddd<5 #g 5>
+#r bib-o26 5
+3 bib-o27 T
+#rr<3 0> bib-o28 3
+0 bib-o29 #n
+#w bib-o30 #w
+#zz<7 #l #l> bib-o31 7
+2 bib-o32 2
+3 bib-o33 #y<3>
+T bib-o34 3
+3 bib-o35 7
+#y<2> bib-o36 #y<2>
+0 bib-o37 0
+#vv<5 #b 7> bib-o38 5
+1 bib-o39 1
+#mmm<3 #m 3> bib-o40 #ll<3>
+2 bib-o41 #ww<#f 0 3>
+#kkk<7 2 #n> bib-o42 #ggg<0 T #w>
+#vv<0 #v 3> bib-o43 #fff<7 T #p>
+7 bib-o44 T | T y | biw T T | bab #tt<3 #b 3> 4 | w #gg<3> T | 1 bal T | #bb<#l> m T | #rr<4 4> bif #rr<4 4> #rr<4 4> | 2 n T | 6 bal T #gg<1> | 1 bak #yy<T #b #f> T | bir #fff<3 1 3> | bab #mm<5 0> #zz<5 7 #m> | 7 n T | #ggg<5 #l 5> bab | 3 bab #rr<5 T>
+7 bib-o45 #ppp<T 4 #n>
+0 bib-o46 3
+#tt<4 #t #g> bib-o47 2
+bib-o48 0 4
+bib-o49 3 3
+bib-o50 6 2
+bib-o51 0 T
+bib-o52 T 2
+bib-o53 3 2
+bib-o54 T #lll<T #d #d>
+bib-o55 #rr<2 #g> #rr<2 #g>
+bib-o56 2 2
+bib-o57 5 #m
+T bib-o58 5 7 | #gg<T> bat T 2 | #kkk<0 1 #g> bav #fff<1 #t #t> 1 | 7 biw #ll<7> #ll<7> | 3 bin #vv<5 T #r> | bif #y<T> | #r big T #mmm<T 3 #t> | r T 7
+#nn<4 3> bib-o59 2 #nn<4 3>
+#nn<3 3> bib-o60 7 #nn<3 3>
+#k bib-o61 2 #nn<#k 1>
+2 bib-o62 #kkk<#w #w #v> #l
+#kk<T> bib-o63 #kk<T> 1 | #ggg<#p 3 3> n | 3 bif #bb<T> #kkk<#bb<T> 3 #d> | #ddd<3 3 #t> bal #ddd<3 3 #t> T
+4 bib-o64 4 3
+3 bib-o65 T #rr<T 0>
+6 bib-o66 #tt<6 #l 6> T
+7 bib-o67 7 #bb<7>
+3 bib-o68 5 1
+R bib-o69 T #p
+3 bib-o70 T 3
+T bib-o71 #vv<0 0 0> 0
+0 bib-o72 0 #l
+4 bib-o73 #p 4
+4 bib-o74 #ww<T #k 0> #ll<0>
+#kkk<T #t 0> bib-o75 #kkk<T #t 0> 0
+2 bib-o76 2 2
+#z<#v> bib-o77 3 3
+3 bib-o78 3 #yy<#n 3 5>
+T bib-o79 1 1 | 2 bay #pp<3 3> #pp<3 3> | #v big #lll<4 3 4> | #ppp<0 #k T> bat T T
+#tt<2 #b #b> bib-o80 3 T | 3 bir T #ppp<T 4 #w> | #bb<1> n | #nnn<T #b T> bit T | #bbb<#nn<0 T> #g #nn<0 T>> bay #nn<0 T> #nn<0 T>
+3 bib-o81 1 3
+6 bib-o82 #t #bbb<#d T T>
+0 bib-o83 5 1
+#ff<#d> bib-o84 #x<5> #m
+#fff<2 2 #mm<2 2>> bib-o85 #mm<2 2> 3
+#p bib-o86 2 #yy<T 2 #f>
+#v bib-o87 3 #pp<#v 3>
+4 bib-o88 #ff<1> 4
+5 bib-o89 #p #p
+#y<7> bib-o90 4 4
+3 bib-o91 3 T
+#kk<7> bib-o92 #k 3
+T bib-o93 #f 3 | n T
+7 bib-o94 7 T | T n T T | #tt<#y<3> T 3> r #tt<#y<3> T 3>
+3 bib-o95 0 #rr<#g 3>
+T bib-o96 6 6 | bab T 2 | 2 m T T | T bik #bb<4> T | 1 bif #vv<1 1 #m> #vv<1 1 #m> | 6 bab #nn<#n 6> #z<#d> | T bin #dd<4> | big T 0 | 0 bin T #z<0> | bax #gg<T> | #kkk<#d 2 T> bin
+1 bib-o97 T 5 | 2 n T 3 | #fff<5 1 1> bir #fff<5 1 1>
+#xx<7 5 5> bib-o98 T #t
+6 bib-o99 6 #bb<6>
+1 bib-o100 #k 2
+3 bib-o101 2 0
+0 bib-o102 0 0
+T bib-o103 3 T | 7 bib T T | T bib T | 3 bip #yy<3 1 6> | 6 w T | bif | 5 w T
+#ll<6> bib-o104 #zz<#b 6 2> 2
+#vv<#d 1 0> bib-o105 7 4
+#vv<#g #n #g> bib-o106 #vv<#g #n #g> #vv<#g #n #g>
+bib-o107 7 #z<1> 3
+6 bib-o108 #kkk<#t #b 1> 1 #mmm<3 #d 2>
+3 bib-o109 6 5 T
+1 bib-o110 #dd<#k> 7 T #n | #x<T> bab T | 1 bat T 2
+#fff<#r #r T> bib-o111 T 2 4 5 | #ggg<5 #l 5> bab | #n r T #mmm<3 #l #y<5>> | 1 bat T | bav #mm<3 T>
+3 bid 3 #gg<3> #gg<3> T | #lll<2 2 4> big T #lll<2 2 4> | #d bay #tt<0 3 0> T | #mm<T #rr<2 2>> bat #rr<2 2> #rr<2 2> | 1 k #kkk<#n 1 #d> | y T T | 1 k #kkk<2 2 3> T | T ban T | #gg<#l> w T | 3 big #y<#w> | #ddd<6 6 6> bav #ddd<6 6 6> | bay #mm<1 1> #mm<1 1>
+bif-o0
+2 bif-o1
+4 bif-o2
+bif-o3 6
+bif-o4 #y<T> | #v w T | 7 bav T | 1 r #vv<1 #d 1> | #xx<#g 2 #k> big T #xx<#g 2 #k> | r #rr<0 T> | 0 n T 0 | big | #xx<T #k T> bif T #xx<R #k T>
+0 bif-o5 #fff<T R 0>
+R bif-o6 #mmm<3 T 3>
+#f bif-o7 0
+1 bif-o8 #nnn<#t #d 3>
+1 bif-o9 T
+#y<6> bif-o10 #f
+#m bif-o11 #m
+#nnn<2 5 3> bif-o12 T | T r T #bbb<#f 3 5> | bif #y<3> T | T ban #nn<0 #v> | 5 bin #ggg<3 2 #n> | T bik #dd<T> 3 | 1 y #ggg<1 #p #l> #ppp<#r 6 #m> | 1 f T | T bib #vv<0 0 0> 0 | T bib T
+#fff<#v 4 4> bif-o13 1
+0 bif-o14 #bb<6>
+0 bif-o15 #f
+3 bif-o16 7
+1 bif-o17 0
+4 bif-o18 0
+4 bif-o19 #t
+#b bif-o20 #ggg<5 #d 7>
+#n bif-o21 3
+bif-o22 #nnn<7 5 T> #nnn<7 5 T>
+bif-o23 7 7
+bif-o24 #tt<3 7 T> 5 | #kkk<0 0 #b> bab T | #v ban #fff<1 #v 6> | #fff<6 6 3> bin #fff<6 #y<6> 2> | #kk<T> bay #rr<5 5> #rr<5 5> | 1 r #ww<6 T 6> | bab | #nn<3 #g> k #nn<3 #g> 3
+bif-o25 1 1
+bif-o26 #y<3> T | bav T T | bik | #m n #tt<3 #w T> | big T #z<4> | #kkk<#v T T> n T T | bif #y<T> | 3 biw #y<3> 3 | #nnn<0 0 0> r T 7
+bif-o27 3 3
+bif-o28 #l 0
+bif-o29 4 4
+#x<6> bif-o30 0 #kkk<#y<4> 4 4>
+3 bif-o31 #bb<T> #kkk<#bb<T> 3 #d>
+#ll<#p> bif-o32 #f 4
+0 bif-o33 3 3
+#xx<R #k T> bif-o34 T #xx<R #k T>
+T bif-o35 0 #lll<0 #p #p>
+T bif-o36 #ggg<1 #k T> #tt<3 #ggg<1 #k T> 1> | bat #fff<T T T> 6 #kkk<3 3 3> | 1 r #vv<1 #d 1> | #n bin T 3 | 6 n #dd<#v> | T r #ww<#v #v 5> | 0 bab T | #vv<7 5 7> n #vv<7 5 7> | #zz<1 R 7> n T 5 5 | 5 bin T | 7 big T | bib #ddd<5 #g 5>
+1 bif-o37 #vv<1 1 #m> #vv<1 1 #m>
+1 bif-o38 3 1
+2 bif-o39 #v T
+2 bif-o40 5 4
+#yy<#g 4 3> bif-o41 1 1
+#p bif-o42 #p 1
+3 bif-o43 #r 3
+0 bif-o44 T #z<T> | T r T | #b bav #xx<1 6 6> | bab T | #bbb<#nn<0 T> #g #nn<0 T>> bay #nn<0 T> #nn<0 T> | 2 bay #pp<3 3> #pp<3 3> | #v w T | big #yy<#k 3 3> | T y #z<0> #z<0>
+#nnn<#n 3 #n> bif-o45 5 4
+#nnn<#k 5 5> bif-o46 T #k
+0 bif-o47 #m #ggg<#d 5 6>
+4 bif-o48 0 4
+3 bif-o49 3 3
+2 bif-o50 2 2
+#mm<#b #b> bif-o51 3 2
+#d bif-o52 3 2
+#rr<4 4> bif-o53 #rr<4 4> #rr<4 4>
+bif-o54 T #ppp<3 #b T> 4
+1 bif-o55 #kk<4> 3 0
+bif-o56 6 T 6 #gg<#g> #ddd<6 6 6> | bin T | 0 bal #nn<4 0> #nn<4 0> | 7 bin #x<#k> | 7 bat #ww<T #n 7> | #kk<T> bib #kk<T> 1 | w #gg<T> T | 0 w #x<#w> | 3 bib #y<T> | 5 bal T | #v bag #dd<0> T #dd<0> | #zz<0 #n T> g T | 3 g T | T r | T big T | T r #ppp<T T T> | T ban #nn<0 #v> | #f bin T | 1 bal #x<0> #x<0> | bif
+big-o0
+4 big-o1
+#d big-o2
+#y<4> big-o3
+0 big-o4
+big-o5 0
+big-o6 #yy<#k 3 3>
+big-o7 6
+7 big-o8 T | #v bib T #pp<#v 3> | 0 k #nn<5 #y<#l>> | #kk<T> w | n T | bib #ggg<#d #d 2> | big #fff<5 2 7> T | bin T | #lll<#w 6 #w> bin #lll<#w 6 #w> 6 | #ppp<0 #k T> bat T T | #yy<3 6 #ff<T>> w T #ff<T> | 2 bib #kkk<#w #w #v> #l | T big T | 0 bin T T | 3 bay #ff<T> | #pp<0 4> bib T
+3 big-o9 #lll<1 #t T> | T m | w T | bav T T 7 | #xx<7 7 5> w #y<#r> #nn<7 #r> | #ggg<3 3 T> bal | 6 g #ppp<3 1 #v> #ppp<3 1 #v> | m #ll<5> | T n #yy<#p 0 0> | T k T | #xx<5 4 7> bin #ggg<#x<7> 0 #x<7>> T #x<7> | #x<T> n T #x<T> | T big T T | #bb<#b> bin T
+2 big-o10 #d
+#x<#v> big-o11 0
+#mm<#ppp<6 T 0> 0> big-o12 #ppp<6 T 0> | T r #ww<#v #v 5> | T k T | #kkk<#v T T> n T T | big #fff<5 2 7> T | #dd<T> big T T | bav T #r | #vv<T 1 1> bat
+1 big-o13 3
+3 big-o14 4
+2 big-o15 2
+1 big-o16 1
+2 big-o17 #kk<3>
+#y<#v> big-o18 #y<#v>
+1 big-o19 #mmm<3 T 1> | w T T | big T #z<4> | #ddd<3 3 #t> bal #ddd<3 3 #t> T | #bb<2> n #bb<T> T | #g y T | 2 bib T T | T bat | #ddd<7 #p #p> bal T 7 | #zz<1 1 2> n #zz<1 1 2> | #kkk<#v R R> n T T | bal #bb<7> | #m bab T T | #ppp<6 #g 6> k #ppp<6 #g 6>
+#ggg<#d #d #n> big-o20 3
+#yy<3 #g 3> big-o21 1
+3 big-o22 #ww<#r #r #t>
+#y<2> big-o23 2
+7 big-o24 #ll<7>
+#yy<0 #g #g> big-o25 6
+1 big-o26 #mm<1 #n>
+#v big-o27 2
+5 big-o28 7
+#t big-o29 0
+4 big-o30 4
+#tt<0 #v #v> big-o31 0
+3 big-o32 #y<#w>
+T big-o33 T
+#v big-o34 #lll<4 3 4>
+7 big-o35 #ddd<5 6 5>
+#xx<#m #n 2> big-o36 #n
+#ww<3 7 #b> big-o37 3
+3 big-o38 3
+#zz<6 #g 6> big-o39 6
+big-o40 4 #t
+big-o41 0 1
+big-o42 #yy<4 5 #v> 2
+big-o43 T 0 | T w T | T biw #ll<T> #ll<T> | T bat | 4 y #mmm<#d 5 4> | #dd<T> bin #dd<T> 3 | bik | 5 bag #ff<5> #gg<3>
+big-o44 3 4
+big-o45 T 5
+big-o46 3 3
+big-o47 T #z<4>
+big-o48 3 #t
+big-o49 #fff<5 2 7> T
+6 big-o50 #bb<T> 7 | T bat T | T bay | 1 bal #x<0> #x<0> | 0 p T | 1 bin #dd<#l> #dd<#l> | 6 bir #fff<6 5 7> #fff<6 5 7> | 3 bag #x<#r> #x<#r>
+3 big-o51 #bb<#x<#d>> 2
+2 big-o52 0 #ww<2 2 T>
+#ff<#f> big-o53 2 7
+3 big-o54 0 0
+#ddd<6 6 3> big-o55 #f 3
+T big-o56 7 #bbb<#r #b 7>
+1 big-o57 3 3
+T big-o58 7 7
+1 big-o59 #kk<3> 3
+#v big-o60 2 2
+#r big-o61 T #mmm<R 3 #t>
+#dd<T> big-o62 T 0 | 0 bay T | #t bab #vv<7 #g #g> | bar T #ww<#b #l 7> | #kkk<7 2 #n> bib #ggg<0 T #w> | 1 bal #pp<#f 6> #pp<#f 6> | #rr<5 3> bir #rr<5 3> #rr<5 3> | #nnn<R #b S> bit T | k #yy<0 #g 0> | T n #yy<#p 0 0>
+4 big-o63 4 T | #v biw T 6 | 1 bif #nnn<#t #d 3> | 3 bin #kk<0> T | #vv<7 5 7> n #vv<7 5 7> | m
+2 big-o64 2 #g
+1 big-o65 1 #kkk<#n 1 1>
+#xx<#g 2 #k> big-o66 1 #xx<#g 2 #k>
+T big-o67 #p #y<3> | #mm<T 5> w T | #r r #nnn<3 6 7> T | #rr<4 4> bif #rr<4 4> #rr<4 4> | T bav T | bat #ff<T> | 0 k T 0 | #ggg<3 3 T> bal | 4 bik #dd<T> T
+#pp<1 7> big-o68 #r #yy<3 #b 3>
+#k big-o69 0 1
+#k big-o70 7 3
+1 big-o71 T 3 | 4 bal #tt<0 #t #t> | 7 n T | T n #nnn<5 T #k> #nnn<5 T #k>
+T big-o72 3 #zz<3 #k 3>
+T big-o73 #b T | #nnn<T #b T> bit T | 1 r #vv<1 #d 1> | 3 bav T | 3 bib T | bal #ww<T 2 2> #ww<T 2 2> | #k bin T | bin #bbb<2 #t 2> | 4 bab T
+5 big-o74 #tt<5 #p 5> 1
+2 big-o75 #ff<2> T | T n | #ggg<#x<2> 3 5> bab | 3 n #ddd<1 #p #k> #tt<#p 7 7> | bik | 6 n T
+7 big-o76 T #pp<#f 3>
+7 big-o77 1 0
+R big-o78 T T
+6 big-o79 6 T | T bif | T biw T 4 | 7 big T | #lll<#k 0 T> biw T
+#k big-o80 #xx<2 T 2> 2
+4 big-o81 3 #ppp<7 5 #p>
+3 big-o82 #z<1> 1
+2 big-o83 #n #n
+7 big-o84 0 #xx<6 7 #k>
+2 big-o85 0 7
+#lll<2 2 4> big-o86 3 #lll<2 2 4>
+5 big-o87 T 5
+6 big-o88 6 #g
+3 big-o89 6 1
+0 big-o90 #ww<T 3 3> 4
+#w big-o91 3 #w
+7 big-o92 3 3
+#mm<1 2> big-o93 5 #mm<1 2>
+4 big-o94 4 #bb<3>
+3 big-o95 7 #f
+#fff<4 #v 4> big-o96 5 T
+T big-o97 T 6 6 | 7 n #zz<#d 7 #v> T | #n bin T 3 | T n #nnn<5 T #k> #nnn<5 T #k> | T bal #ll<#v> 7 | bab T #ddd<#f #f T> 6 6 | #w bav #yy<2 5 #y<T>> | 1 k T
+3 big-o98 1 6 T
+3 big-o99 #dd<3> #dd<3> 3 4 3
+bik-o0
+2 bik-o1
+4 bik-o2
+bik-o3 #mm<#k #k>
+7 bik-o4 7
+5 bik-o5 3
+bik-o6 3 #z<3>
+bik-o7 4 4
+bik-o8 4 0
+bik-o9 #x<3> 1
+2 bik-o10 #l 2
+#d bik-o11 7 T | T r | T bib T | 1 bir #ddd<#v 5 0> | baz #z<T> | ban T | 0 bin #bb<0> | T r T | T bib #y<T> | #gg<2> bir T #bb<T>
+#n bik-o12 #n #n
+R bik-o13 #bb<4> T | R n T T | #ggg<5 #l 5> bab | 7 biw #ll<7> #ll<7> | #kk<R> w | #zz<1 1 2> n #zz<1 1 2> | #x<3> n #x<T> R | 3 bin #x<3> #w #x<3> 3 | 1 w #z<#d> | bib #rr<#l 2> | #ppp<6 #g 6> k #ppp<6 #g 6> | 6 n #dd<#v> | w #lll<T #n 2> | 0 n T T | bif #nnn<7 5 T> #nnn<7 5 T>
+#pp<#g 3> bik-o14 5 6
+4 bik-o15 4 T
+3 bik-o16 0 5
+7 bik-o17 #b 3
+2 bik-o18 #v 2
+#bbb<#ll<1> 2 #ll<1>> bik-o19 #ll<1> 1
+#mmm<1 #w #w> bik-o20 1 T
+5 bik-o21 #xx<#v 3 #v> T
+#n bik-o22 T #t
+#n bik-o23 2 2
+1 bik-o24 2 #vv<3 3 T> | #d bik T T | bal #bb<T> | #m r #mmm<4 7 #m> | T big T T | T m #z<T> | T bav T #ppp<7 6 3> | bir T #ddd<R #w 5> | T bik #bb<4> T | 5 m T 0 7 6 2
+4 bik-o25 #dd<T> R
+2 bik-o26 0 1
+T bik-o27 #dd<4> 3
+#bbb<#m #l #n> bil 6
+7 bim #bb<T> #kkk<2 #bb<T> 0>
+3 bin-o0
+2 bin-o1
+#kkk<#d 2 T> bin-o2 | T ban #nn<0 #v> | 0 bay T | 2 k T T | bif #y<T>
+7 bin-o3
+bin-o4 3
+bin-o5 #kk<#d>
+bin-o6 0
+bin-o7 T
+bin-o8 #bb<7>
+bin-o9 #bbb<2 #t 2>
+bin-o10 1
+5 bin-o11 T
+T bin-o12 5
+3 bin-o13 3
+T bin-o14 #dd<4> | bab T | #zz<2 1 #g> bin #mm<#g #d> 6 | T bav T | #ddd<#k 3 #f> bin T | 2 bay #zz<#d #l #d> | bav T #r | #dd<#p> bit T
+#g bin-o15 6
+#lll<3 3 3> bin-o16 4
+5 bin-o17 #zz<5 #p #p>
+T bin-o18 2
+#r bin-o19 #ggg<#r 3 1>
+7 bin-o20 T
+#k bin-o21 T
+0 bin-o22 #nnn<0 #n #r>
+#rr<#g 7> bin-o23 3
+T bin-o24 7
+3 bin-o25 #p
+7 bin-o26 #x<#k>
+#bb<#b> bin-o27 T
+4 bin-o28 #d
+#g bin-o29 3
+#fff<6 6 3> bin-o30 #fff<6 #y<6> 2>
+1 bin-o31 1
+#f bin-o32 T
+0 bin-o33 #bb<0>
+T bin-o34 3
+#ddd<#k 3 #f> bin-o35 T | T big | bib #ddd<5 #g 5> | T w #rr<5 5>
+3 bin-o36 #vv<5 T #r> | #ff<#g> biw T 3 | 7 g #lll<7 #f #p>
+3 bin-o37 2
+#ggg<#r 3 1> bin-o38 0
+5 bin-o39 #ggg<3 2 #n>
+T bin-o40 T
+4 bin-o41 4
+0 bin-o42 5
+#l bin-o43 0
+bin-o44 3 2
+3 bin-o45 #lll<0 0 #b> 0
+#t bin-o46 #t 0
+1 bin-o47 3 6
+#f bin-o48 #kkk<#f 3 7> #f
+0 bin-o49 T #z<0> | 1 m T #yy<#n 7 3> | T bat T T | #nn<3 #g> k #nn<3 #g> T
+#ppp<T 3 #f> bin-o50 3 #ppp<T 3 #f>
+1 bin-o51 #y<4> 0
+#f bin-o52 #f 3
+1 bin-o53 2 #g
+#ddd<2 3 #p> bin-o54 2 #kk<#p>
+3 bin-o55 #kk<0> T | 1 biw T T | bab T T | 1 bif T | 2 bat T | bab T | 1 bib T | 2 bin T #dd<T> | #kk<0> bal | y #fff<2 2 1> #fff<2 2 1> | #b r #z<#f> #f | #mmm<1 #w #w> bik T T | #y<#v> big #y<#v> | #ppp<0 #k T> bat T T | 7 bib #ppp<T 4 #n> | #rr<6 T> k #rr<6 T> 1 | #v bag T #dd<#v> | #bbb<5 #l 5> w #bbb<5 #l 5> #z<T> | m #ll<5> | 3 w #bb<#f> | 4 w T #ggg<4 7 #b> | bib #rr<2 #g> #rr<2 #g> | T bat | T bav T #n
+4 bin-o56 T 2
+#k bin-o57 T #k
+T bin-o58 0 #x<6> | #kk<T> bal | #bb<1> n | w #gg<3> T | #bbb<#nn<0 T> #g #nn<0 T>> bay #nn<T T> #nn<T T> | #mm<#ppp<6 T 0> 0> big #ppp<6 T 0> | #t bab #vv<7 #g #g> | bab T T | 6 bit T T | 2 big #kk<3> | #xx<7 7 5> w #y<#r> #nn<7 #r>
+6 bin-o59 1 2
+#y<7> bin-o60 #y<7> 7
+4 bin-o61 #ppp<#f #w #f> 3
+2 bin-o62 #ppp<2 #t 2> #ppp<2 #t 2>
+T bin-o63 3 5 | #ddd<2 T 3> r #ff<T> 2 2 T | #kkk<T #r #r> n #kkk<T #r #r> 1 | 3 bif #bb<T> #kkk<#bb<T> 3 #d> | 1 bav T #kkk<3 4 #f> | #mm<#ppp<6 T 0> 0> big #ppp<6 T 0> | 7 g #lll<7 #f #p> | 7 bal #xx<5 #n #t> | bal #bb<7> | 3 bab #rr<5 T>
+5 bin-o64 #v #y<#v>
+#r bin-o65 2 #g
+#ww<2 0 3> bin-o66 6 5
+T bin-o67 1 1
+#zz<2 1 #g> bin-o68 #mm<#g #d> 6
+7 bin-o69 5 7
+#yy<6 #n #n> bin-o70 6 6
+T bin-o71 #m #k
+3 bin-o72 3 #bbb<#l 3 #v>
+#x<4> bin-o73 4 4
+5 bin-o74 5 7
+0 bin-o75 T 3 | 2 bir #y<T> T | T bib #ww<#f 0 3> | #fff<6 6 3> bin #fff<6 #y<6> 2> | #xx<R #k T> bif T #xx<R #k T> | m #mm<0 0> | #xx<#m 2 0> k T 2 | g T #m | 1 g #tt<T #w 4>
+#nnn<1 1 T> bin-o76 #m 1
+#zz<2 #v 2> bin-o77 2 2
+7 bin-o78 7 #v
+7 bin-o79 #fff<6 6 #n> 0
+#lll<#w 6 #w> bin-o80 #lll<#w 6 #w> 6
+#zz<#ww<1 2 T> 7 1> bin-o81 #ww<1 2 T> #y<7>
+#k bin-o82 2 3
+2 bin-o83 6 2
+T bin-o84 0 #nn<0 0> | #w bat T #ww<3 #w 3> | 3 bir #nnn<#p #p 3> | #kk<7> n T 3 #kk<7> | #p w T 3 | T bat T T | 3 bin #kk<0> T | 1 bif #vv<1 1 #m> #vv<1 1 #m> | 3 w T #pp<T T> | T big T T | 3 bav T T | #y<0> bab T
+3 bin-o85 0 #gg<3>
+3 bin-o86 #ggg<#n T 3> 1 | T r T | n T | #bb<#l> m T
+#gg<T> bin-o87 #g #g | 4 m T 0 | #nnn<T #b T> bit T | 1 k #mmm<#n 1 T> | 1 r #ww<6 T 6> | T biw | 1 bav T #l | #gg<2> bir T #bb<3> | 7 big #ll<7>
+#d bin-o88 #p 3
+5 bin-o89 1 5
+5 bin-o90 #xx<1 #k #k> 7
+5 bin-o91 4 3
+4 bin-o92 1 #b
+7 bin-o93 #fff<7 7 #p> 7
+4 bin-o94 #tt<#l 7 7> 4
+1 bin-o95 4 4
+2 bin-o96 1 #dd<T> | d | T bav T 3 | T m | T bay #nn<#f 3> | T big T T | 1 bif #vv<1 1 #m> #vv<1 1 #m> | 6 bal T | #ddd<6 6 6> bav #ddd<6 6 6> | 2 m T T | k #gg<T> T | T bin T #bbb<#l 3 #v> | 1 big #mmm<3 T 1> | #b bay #x<7>
+7 bin-o97 6 #gg<T>
+#m bin-o98 #ddd<#m 6 6> #v
+1 bin-o99 #dd<#l> #dd<#l>
+#n bin-o100 T 3
+6 bin-o101 6 T | T bib | #ddd<6 6 6> bav #ddd<6 6 6> | bif T T | g #rr<#g #g> #rr<#g #g> | #ww<#d 5 5> bab T
+#dd<T> bin-o102 #dd<T> 3
+#z<0> bin-o103 0 0
+6 bin-o104 #n 0
+7 bin-o105 #p 7
+7 bin-o106 3 #l
+0 bin-o107 1 1 3
+#xx<5 4 7> bin-o108 #ggg<#x<7> 0 #x<7>> 0 #x<7>
+1 bin-o109 3 #xx<T #t 3> #yy<2 5 0> | 0 y #ppp<0 #k #k> 0 | 4 m #gg<#g> | bal | #mm<T #rr<2 2>> bat #rr<2 2> #rr<2 2> | #mmm<#ddd<T 1 T> 1 1> ban #ddd<T 1 T> | #zz<6 1 6> bal #zz<6 1 6> 1 | #m bav #bb<#m> | #kk<4> n #kk<T> #kk<T> | 3 bir #nnn<#p #p 3> | 3 bab #lll<5 #r 5> #lll<5 #r 5>
+3 bin-o110 #x<3> #w #x<3> 3
+7 bin-o111 #z<3> #y<T> 3 3 #lll<3 #t 2>
+#zz<1 2 #xx<3 3 7>> bin-o112 5 #xx<3 3 7> 0 #zz<1 2 #xx<3 3 7>> 4
+3 bip #yy<3 1 6>
+bir-o0 2
+bir-o1 T
+bir-o2 #fff<3 1 3>
+bir-o3 3
+bir-o4 6
+bir-o5 7
+T bir-o6 7
+T bir-o7 6
+#fff<5 1 1> bir-o8 #fff<5 1 1>
+5 bir-o9 7
+3 bir-o10 #nnn<#p #p 3>
+0 bir-o11 0
+1 bir-o12 1
+6 bir-o13 #m
+1 bir-o14 #ddd<#v 5 0>
+#ff<#b> bir-o15 1
+#xx<#r 2 #t> bir-o16 6
+bir-o17 T #ddd<R #w 5>
+bir-o18 #lll<#w 2 1> 2
+6 bir-o19 T 5 | #kk<4> n #kk<4> #kk<4> | 3 big #lll<1 #t T> | bib #ggg<#d #d 2> | #bbb<#w #l T> n T T | #xx<T #k T> bif T #xx<R #k T> | T bag T | #xx<#dd<T> #t 1> n #dd<T> T | #ppp<2 3 5> bab #ppp<2 3 5>
+7 bir-o20 0 2
+#rr<5 3> bir-o21 #rr<5 3> #rr<5 3>
+1 bir-o22 #y<#n> 2
+#lll<#d #t 2> bir-o23 6 6
+3 bir-o24 3 #t
+6 bir-o25 #fff<6 5 7> #fff<6 5 7>
+2 bir-o26 3 2
+3 bir-o27 2 #ppp<T 4 #w>
+0 bir-o28 3 3
+2 bir-o29 #y<T> 2
+2 bir-o30 #kk<5> 5
+#gg<2> bir-o31 T #bb<3>
+#zz<#l 6 6> bir-o32 1 1
+#w bir-o33 1 1
+0 bir-o34 0 0
+3 bir-o35 #ww<5 6 #g> 4
+#dd<4> bir-o36 #w 4
+6 bir-o37 5 #fff<5 3 7>
+#dd<#p> bit-o0 T
+1 bit-o1 0
+3 bit-o2 #ppp<3 #t #t>
+#nnn<R #b S> bit-o3 T | T bav S | R bat R 3 | R bal S | #y<2> bib #y<2> | T bav T #n | 1 m R #yy<#n 7 3> | #vv<#d #r #w> r R
+3 bit-o4 4 #mmm<4 3 #v>
+#dd<1> bit-o5 #dd<1> #dd<1>
+6 bit-o6 0 0
+#n bit-o7 2 1
+1 bit-o8 6 #n
+0 bit-o9 1 0
+3 bit-o10 0 6
+4 bit-o11 #tt<#t 7 2> #t
+#nn<#b T> bit-o12 2 3 3 T T
+1 biv 1 1
+1 biw-o0
+T biw-o1 | T n T | #t bab #vv<7 #g #g> | 1 bab #kk<T> | #vv<0 #v 3> bib #fff<7 T #p>
+biw-o2 #xx<5 #r 5>
+biw-o3 #p
+biw-o4 4
+biw-o5 6
+biw-o6 0
+#lll<#k 0 T> biw-o7 4
+#r biw-o8 5
+3 biw-o9 T | 4 biw T T | bif #y<3> T | T r #ww<#v #v 5> | #xx<0 0 #d> r | #ww<#d 5 5> bab T | #m w #y<#b> | 3 bat T T | T r T | #kkk<#v T T> n T T | 0 big #ww<T 3 3> T | 1 bif T | bik T T | 7 bib T
+5 biw-o10 5
+4 biw-o11 5
+#r biw-o12 3
+6 biw-o13 6
+2 biw-o14 #t
+R biw-o15 #lll<4 #w T> | 3 big #lll<T R R> | 2 bav #zz<2 #w 2> #z<#w> | #gg<3> m | 6 bal T #gg<1> | #kkk<#v T T> n T R | 4 m #gg<#g> | bal #bb<7> | 1 w #nnn<1 2 2> 1 | T bal #pp<#f 6> #pp<#f 6> | #rr<4 4> bif #rr<4 4> #rr<4 4>
+3 biw-o16 2
+biw-o17 3 3
+biw-o18 3 #ff<#d>
+biw-o19 T R
+biw-o20 #nnn<#v 1 #v> #nnn<#v 1 #v>
+biw-o21 0 4
+biw-o22 #b #b
+biw-o23 3 #gg<#f>
+#ff<#g> biw-o24 3 3
+1 biw-o25 1 1
+3 biw-o26 3 4
+4 biw-o27 4 4
+#v biw-o28 T 6 | bab #mm<5 0> #zz<5 7 #m> | 7 bat #ww<T #n 7> | #xx<T #k T> bif T #xx<R #k T> | 7 bav #vv<#d T #d> 7 | #mmm<#b #b #n> k
+7 biw-o29 #ll<7> #ll<7>
+T biw-o30 #x<#l> 2
+5 biw-o31 6 6
+#mmm<3 6 T> biw-o32 #ggg<7 7 7> 2 | #b bav #xx<1 6 6> | #b bif #ggg<5 #d 7> | T bay #nn<#f 3> | 4 ban #ddd<#b #d 5> 6 | 3 n T #k | #ppp<#n 7 #f> w T #vv<2 4 1> | 0 bay #tt<3 3 1>
+2 biw-o33 #lll<#w 0 0> #lll<#w 0 0>
+0 biw-o34 #ppp<3 #b 3> #ll<3>
+#k biw-o35 7 #k
+3 biw-o36 3 #y<#w>
+#n biw-o37 #vv<3 #t 3> #t
+0 biw-o38 #l #l
+0 biw-o39 4 1
+#ll<#d> biw-o40 #b #b
+#t biw-o41 5 #x<#t>
+4 biw-o42 #ggg<#r 3 #k> 1
+#n biw-o43 2 2
+2 biw-o44 #l 2
+#m biw-o45 5 #xx<T 5 #m> | 6 r #x<6> 6 #rr<1 T> #x<6> #l | 3 bat #ppp<3 #p #p> | 1 bav T #kkk<3 4 #f> | 0 bif #fff<T R 0> | T big T T | T bay T T | 2 bab #vv<#p 2 #p> | T bab T | T k T #nnn<#k 1 5> 5 1 1 | #y<0> bab T | #g n #kk<#m> | 4 r T #bbb<#f 3 5> | #fff<7 2 7> w T | 1 f T | #n r #nn<#n T> | #xx<0 0 #d> r | 1 n #yy<#g 7 7>
+#g biw-o46 7 7
+T biw-o47 7 7 | T w | #xx<0 0 #d> r | 3 w #rr<3 1> | T bay #nn<#f 3> | #x<3> n #x<T> T | #ppp<6 #g 6> k #ppp<6 #g 6> | #fff<#n #n T> r #z<#b> #b | #gg<3> m
+3 biw-o48 #y<3> 3
+T biw-o49 7 0
+2 biw-o50 3 5 5
+#t biw-o51 0 3 1
+3 biw-o52 #ww<5 0 #f> 3 2
+#w biw-o53 #dd<#w> 7 #w
+
+%%
+
+k( #mmm<#n 1 3> )
+bif( 7 #lll<0 #p #p> )
+big( 6 3 )
+g( 2 1 )
+r( 12 )
+r( 7 )
+r( #yy<#t 3 #t> #r )
+baw( 5 8 )
+bal( #lll<0 1 1> 5 )
+bab( #ddd<1 #p 3> -1 )
+bay( #k #k )
+bib( )
+bik( bat( #r ) 2 )
+bib( )
+n( -7 )
+r( -10 #b )
+g( k( bab( #nn<#n 6> #z<#d> ) 18 ) #rr<#g #g> )
+bal( #bbb<1 #l 3> #mmm<#g #g 3> )
+bit( #x<5> )
+bib( 3 )
+bib( 3 )
+bat( n( bab( #yy<1 6 #k> 2 #ll<#l> ) 6 ) )
+bal( 6 )
+ban( 3 -3 )
+y( #mmm<#d 5 4> )
+m( #g 12 )
+w( 3 5 )
+bin( 7 )
+bav( 2 #l )
+biw( -2 10 )
+big( #nn<#t 2> #z<4> )
+k( -5 )
+r( bip( #yy<3 1 6> ) )
+bat( #nnn<#r 7 5> #r )
+n( #n )
+bat( 5 29 )
+bif( #tt<3 7 7> 6 )
+n( -4 #w )
+bal( #ww<5 2 2> #ww<5 2 2> )
+big( #bb<#x<#d>> 7 )
+g( n( bal( #ddd<3 3 #t> bav( #w ) ) #k ) -21 )
+bav( #d 0 )
+w( #w 3 )
+bay( 15 )
+w( #w 1 )
+bat( 13 2 )
+bit( #ppp<3 #t #t> )
+bav( 4 )
+bik( #bb<4> bif( 3 ) )
+bal( 22 #lll<4 1 #d> )
+bik( #l 3 )
+bav( 4 )
+bin( #kkk<#f 3 7> #f )
+bin( 4 -33 )
+bib( 7 #lll<7 #d #d> )
+big( -8 #kkk<#n 1 1> )
+biw( 5 bab( 4 ) )
+w( 10 )
+bal( 1 )
+w( 12 12 #rr<#t 3> )
+y( -13 )
+bib( 6 )
+bab( 0 )
+bal( 2 )
+big( 4 #xx<#g 2 #k> )
+bab( #tt<3 #b 3> k( #l 16 #l bin( -4 ) ) )
+n( 8 4 )
+bav( 10 )
+k( #ppp<6 #g 6> )
+bat( #rr<3 #b> #b )
+bat( #dd<#f> 14 )
+bin( )
+bal( )
+bab( 4 )
+biw( -3 7 )
+bal( bav( m( #ddd<#r 1 1> r( bib( #ppp<1 4 #n> ) 3 ) ) #ppp<7 6 3> ) )
+bab( 2 )
+big( )
+r( #rr<#v 1> 4 0 10 )
+big( 4 #lll<2 2 4> )
+bib( #kkk<#w #w #v> #l )
+big( #p #y<3> )
+n( #b 9 )
+bit( 12 )
+bib( 2 -1 )
+bay( bit( w( #t 17 ) #mmm<4 3 #v> ) 12 )
+r( 5 )
+bik( #xx<#v 3 #v> #p )
+r( bib( 6 ) #bbb<#f 3 5> )
+biw( #ggg<7 7 7> 6 )
+r( #tt<#y<3> 5 3> )
+bal( #ll<#v> 15 )
+bif( #nnn<#t #d 3> )
+bal( #x<#d> #x<#d> )
+bif( #y<3> 1 )
+biw( bin( bav( 4 ) ) 16 )
+bal( 27 #bbb<#t 5 5> )
+r( 2 )
+n( #v )
+g( 19 14 )
+bif( 3 )
+bik( #xx<#v 3 #v> 0 )
+m( 11 4 )
+bin( k( 13 4 ) )
+biw( #l 16 )
+bay( 11 )
+bin( 18 #l )
+biw( bik( 14 bax( #rr<#d 6> ) ) 17 )
+big( #lll<1 #t #k> )
+w( #w 4 )
+bab( 0 )
+bif( 11 4 )
+bat( 4 #v )
+bat( #w )
+bir( 3 8 )
+r( 0 5 5 7 16 )
+y( )
+bin( 3 )
+bab( 5 )
+bat( 2 )
+bir( bad( #vv<#m 6 5> 15 ) )
+n( #zz<#d 7 #v> 3 )
+bik( 2 #vv<3 3 #b> )
+bat( #ppp<3 #p #p> )
+n( #kkk<3 #r #r> -1 )
+n( #tt<4 4 #r> 5 )
+big( 2 9 )
+m( #z<#g> )
+bay( #tt<3 3 1> )
+bin( 8 )
+r( 4 #b )
+bik( )
+n( #vv<0 #v 0> bin( bax( 0 5 #d ) ) )
+r( )
+n( 12 )
+bir( #fff<5 1 1> )
+bab( 10 )
+bir( 12 #fff<5 3 7> )
+n( 8 -24 )
+bat( 0 3 )
+k( 3 5 )
+w( #b )
+m( 5 )
+bim( #bb<#n> #kkk<2 #bb<#n> 0> )
+bin( bin( 12 ) #kk<#p> )
+n( )
+big( #bb<2> 1 )
+m( 3 20 )
+n( #f 3 )
+bib( #kkk<#w #w #v> #l )
+bin( y( 11 #nnn<5 4 3> ) #y<7> )
+bib( 2 #yy<5 2 #f> )
+bir( 8 )
+w( 3 3 )
+bik( #v 3 )
+bab( 22 #gg<3> )
+big( )
+w( 14 )
+bav( )
+w( 6 )
+bib( 6 )
+bay( #nn<#f 3> )
+bin( 7 #xx<3 3 7> 20 #zz<1 2 #xx<3 3 7>> 18 )
+w( 5 3 )
+bal( )
+w( g( 7 #nnn<2 4 3> ) 17 )
+bin( )
+g( 17 #m )
+p( 7 )
+big( 7 #f )
+bib( 8 )
+bir( #fff<6 5 7> #fff<6 5 7> )
+bay( #pp<3 3> #pp<3 3> )
+bib( #p #p )
+bir( #w big( #ff<2> 4 ) )
+bik( )
+w( 6 2 )
+bay( #mm<#w #l> k( 12 ) )
+big( 16 )
+big( )
+bin( 18 20 )
+bib( )
+big( 12 #g )
+r( 10 biw( bib( 22 5 3 ) 22 ) )
+big( 43 12 )
+bay( )
+biw( big( 13 ban( #w 0 ) ) )
+bit( #ppp<3 #t #t> )
+big( #r #yy<3 #b 3> )
+r( #z<#b> #b )
+bir( -5 -28 )
+m( )
+bib( 8 17 )
+w( 3 #pp<#v #v> )
+bif( r( 22 ) 20 )
+w( 5 )
+bin( 1 )
+bay( #x<7> )
+bin( #y<4> -8 )
+bab( 0 )
+r( #k )
+r( #k )
+bir( 6 #ppp<3 4 #w> )
+bib( bin( ) )
+bib( #t #bbb<#d #v #v> )
+bav( 4 biw( 18 2 ) )
+r( #zz<#r #r #r> 14 )
+bib( g( 2 7 2 ) 0 )
+bab( 5 )
+bal( 4 #d )
+bal( 11 )
+bib( #kkk<#w #w #v> #l )
+bib( 8 #l )
+biw( -7 9 25 )
+bay( 6 #ppp<#p #k 3> )
+bir( #kk<5> g( n( n( #yy<0 3 7> ) #nn<3 7> ) #kkk<3 #b 4> ) )
+r( -10 )
+r( 3 7 15 1 )
+bav( 7 )
+bab( 3 )
+m( )
+bin( #x<#k> )
+big( #z<1> 6 )
+m( -7 )
+bag( 21 5 )
+bin( 4 2 )
+n( 7 )
+bib( #zz<#b 6 2> 5 )
+bit( #dd<1> #dd<1> )
+bay( 5 )
+bal( #z<#n> #kk<#n> )
+n( 7 )
+r( #f )
+big( bib( #zz<#b 6 2> 4 ) #pp<#f 3> )
+bal( 11 2 )
+bib( 2 5 )
+k( 13 6 )
+biw( 7 4 )
+r( 5 #bbb<#f 3 5> )
+n( #m )
+bab( 5 5 )
+w( 29 )
+k( bay( r( ) ) y( bit( bin( #ggg<#n 6 3> g( 4 #g ) ) ) ) )
+bab( 11 )
+bib( 11 )
+big( 3 )
+biw( #ggg<7 7 7> -1 )
+big( #kk<3> 5 )
+bav( 10 )
+bal( 3 #rr<0 3> )
+bin( #m 20 )
+bif( r( 6 5 0 3 ) 5 )
+bal( 7 #d )
+r( #mmm<4 7 #m> )
+bag( #ff<5> #gg<3> )
+big( 2 8 )
+bay( m( 6 0 3 big( #p #y<3> ) #tt<6 0 6> ) )
+bib( 5 #nn<#k 1> )
+r( #ff<1> 3 3 0 )
+m( 1 2 )
+r( -3 6 )
+bir( 5 #fff<5 3 7> )
+ban( bav( #r ) 8 )
+big( #n )
+m( )
+bab( 16 7 )
+ban( 2 )
+r( #ff<1> 7 -9 0 )
+bik( #mm<#k #k> )
+big( 7 )
+r( 18 )
+r( 5 )
+bin( #z<3> #y<#r> 5 m( big( 1 9 ) #v ) #lll<3 #t 2> )
+bib( #n )
+y( )
+bab( #g #g )
+bay( #rr<#l 5> 0 )
+bib( 0 5 )
+baw( #bb<#l> 8 )
+bif( #p 1 )
+w( #k 3 )
+bin( 5 )
+bav( 5 #l )
+bab( 1 )
+bib( 2 #z<1> 18 )
+bav( 3 )
+bab( 4 )
+w( )
+bav( #n )
+bib( #y<3> )
+m( 17 7 12 -2 4 )
+bat( #v 3 )
+bay( #v 27 )
+bag( #ppp<1 #f 3> )
+bir( 7 )
+ban( 3 #p )
+bir( 0 4 )
+bab( 13 #yy<6 2 3> )
+y( 27 0 )
+k( 1 )
+r( #r )
+n( 4 )
+big( 12 5 )
+bal( #kk<3> )
+biw( #vv<3 #t 3> #t )
+bat( n( bib( 3 #nnn<5 #v #k> ) #nnn<5 #v #k> ) 2 )
+bav( 10 )
+r( #yy<#t 3 #t> #r )
+r( )
+bib( #f )
+r( 7 #y<#d> )
+ban( #t )
+m( 15 )
+bab( 7 #gg<3> )
+bik( #n #n )
+r( 13 )
+y( #b )
+bik( #ll<1> 8 )
+bag( 6 )
+bin( 3 2 )
+n( 13 )
+bin( #t 6 )
+w( m( #z<#y<4>> ) 2 )
+bin( 5 10 )
+bib( #dd<#r> 5 )
+bav( 0 14 )
+w( 7 #n )
+w( #bb<#f> )
+k( )
+w( 10 bik( #dd<4> 3 ) )
+k( #lll<3 #y<#l> 7> 10 )
+n( 7 )
+big( m( ) )
+bav( 3 3 )
+bal( #kkk<#n #p #v> 12 )
+bib( 7 )
+bab( #x<#f> 2 )
+bik( #mm<#k #k> )
+bin( 14 bin( bif( 13 #lll<0 #p #p> ) 14 ) 1 #zz<1 2 #xx<3 3 7>> -18 )
+bir( #m )
+g( 7 20 )
+bav( #yy<0 5 7> 3 13 7 )
+bif( 18 5 )
+r( 6 n( bib( 16 #nn<3 3> ) ) )
+bib( 0 )
+bin( #kk<0> 6 )
+bir( 6 13 )
+bib( #ddd<5 #g 5> )
+k( 15 1 )
+bat( 4 1 )
+w( )
+m( #tt<7 7 7> #tt<7 7 7> )
+bav( #lll<#l 1 4> )
+bib( 14 #z<1> 17 )
+bal( 7 11 )
+bib( 2 1 5 15 )
+bat( 0 4 )
+ban( 4 #k )
+big( 4 #lll<2 2 4> )
+bin( 12 )
+w( #rr<5 5> )
+r( 6 )
+n( #nnn<5 #d #k> #nnn<5 #d #k> )
+k( )
+m( 4 )
+n( 4 4 )
+bab( #mm<5 0> #zz<5 7 #m> )
+w( 10 )
+bin( 4 2 )
+bat( r( 0 ) 6 )
+bif( 12 #kkk<#y<4> 4 4> )
+r( 7 7 )
+bay( #d )
+bib( 8 )
+bif( 9 21 )
+bib( 7 )
+y( 12 #fff<3 4 3> )
+r( #n )
+bif( bay( #mmm<2 2 #r> ) 20 )
+w( 1 2 )
+r( #nnn<0 0 #b> 17 #nnn<0 0 #b> )
+y( 4 )
+bay( 2 )
+bal( 12 #mmm<#m 4 6> )
+biw( 5 )
+biw( 1 )
+big( 5 #bb<3> )
+bat( #fff<#k #k #k> 9 #kkk<3 3 3> )
+bin( 13 14 )
+n( bay( 11 ) bir( 9 ) )
+bav( #xx<1 6 6> )
+n( )
+bir( 8 #fff<5 3 7> )
+n( #ll<#r> )
+bib( #kkk<#w #w #v> #l )
+r( -6 14 )
+bib( 18 #yy<#t 2 #f> )
+bav( 28 4 )
+bav( #ggg<#v 5 3> 10 )
+bal( #v r( ) )
+w( #lll<6 #n 2> )
+r( 6 )
+g( #tt<1 #w 4> )
+bab( 7 )
+m( #t 7 6 )
+r( 10 )
+bal( #zz<6 1 6> ban( #t ) )
+bif( #m #ggg<#d 5 6> )
+bir( #y<0> 5 )
+bif( 29 )
+r( 7 7 )
+bab( 12 )
+biw( 9 )
+y( 23 )
+bav( #ddd<3 3 3> )
+bin( #p k( #kkk<#n 1 #d> ) )
+bib( 5 9 )
+r( 8 )
+k( 0 6 )
+n( 36 )
+g( 0 5 )
+bav( #yy<2 5 #y<1>> )
+w( #w 0 )
+bat( 15 )
+bin( 12 5 )
+biw( 7 )
+w( -6 )
+y( #n bin( #dd<4> ) )
+bat( )
+r( 3 )
+r( )
+r( )
+big( )
+big( 7 )
+big( #bb<#v> 24 )
+n( 10 )
+w( #w 21 )
+bin( #ggg<#r 3 1> )
+k( 15 9 )
+bax( #rr<#d 6> )
+bib( w( #w 25 ) #k )
+bab( #b )
+bif( #kk<4> 6 7 )
+bir( -6 #ppp<#r 4 #w> )
+bib( 5 )
+v( 3 6 )
+m( #l )
+bib( 6 bay( bin( m( bik( y( 7 #nnn<5 2 3> ) -9 ) 8 ) 0 ) ) )
+w( )
+bal( 13 #p )
+big( #kk<3> 3 )
+bab( r( n( #kkk<#p 1 #v> 11 ) ) #m )
+big( 13 #ppp<7 5 #p> )
+bay( #v 3 )
+bat( #z<#k> 5 )
+w( 3 )
+bab( 6 #g )
+n( 13 13 )
+bay( y( #ggg<1 #p #l> #ppp<#r 6 #m> ) )
+bat( 2 3 #lll<#k 4 #k> )
+r( 9 )
+bay( 16 11 )
+big( 3 #z<4> )
+k( 12 #nnn<#k 1 5> 8 7 2 )
+y( 10 bal( #ll<#v> 13 ) )
+bir( 6 5 )
+bav( #w #kkk<3 4 #f> )
+bib( #ggg<#d #d 2> )
+n( )
+bin( bin( k( 7 7 ) ) )
+bin( -5 5 3 )
+w( 17 )
+big( 8 4 )
+big( 7 #xx<#g 2 #k> )
+n( 11 -4 )
+w( )
+k( )
+bav( #n )
+m( 12 #pp<3 #k> )
+big( #fff<5 2 7> 3 )
+bik( #l 6 )
+biv( -1 10 )
+ban( 1 )
+bal( bav( 19 39 bav( bir( bal( 12 n( 17 ) ) ) #ll<#b> ) 1 bal( #ww<3 1 1> ) ) )
+bib( 1 )
+bin( #n 3 )
+ban( 0 #dd<4> )
+w( 6 -10 )
+k( t( #mmm<7 0 #m> ) #ddd<3 7 7> )
+bay( 6 3 )
+bay( 1 )
+bin( #bbb<2 #t 2> )
+bib( 3 )
+bib( #kkk<#t #b 1> 3 #mmm<3 #d 2> )
+r( #p 3 )
+bif( 1 #kkk<#y<4> 4 4> )
+big( )
+r( 5 13 )
+big( -12 3 )
+bal( #nn<4 0> bib( bav( r( #ww<#v #v 5> ) ) 13 ) )
+bin( #m #k )
+n( #zz<#d 7 #v> 0 )
+ban( 23 #zz<7 6 #g> )
+bab( #ppp<2 3 5> )
+bav( 5 )
+bif( n( 6 bal( w( bav( k( #kkk<2 2 3> biw( 17 ) ) bin( -5 bat( 3 ) #yy<2 5 0> ) ) #ff<7> ) ) ) 15 )
+bib( #ppp<#y<2> 4 #n> )
+r( 5 )
+bib( bib( #kkk<#w #w #v> bib( 3 bin( #m bat( #r ) ) ) ) )
+bal( )
+k( 8 )
+m( 12 0 )
+biw( #nnn<#v 1 #v> #nnn<#v 1 #v> )
+m( #xx<#v 5 5> 7 )
+n( big( ban( #nnn<#x<0> #x<0> #y<#r>> 4 ) bal( #ww<1 #r #n> k( n( #nnn<#t 1 5> 5 ) ) ) ) 0 )
+ban( 9 )
+big( #d )
+big( 4 #ppp<7 5 #p> )
+bif( #f )
+bab( 5 )
+bib( 6 )
+w( 3 8 )
+r( 27 )
+r( #mmm<4 7 #m> )
+big( 11 #xx<#g 2 #k> )
+w( 9 8 )
+bag( #dd<0> 5 #dd<0> )
+biw( )
+bab( 0 #f )
+m( 6 8 )
+m( 15 -2 )
+bal( #nnn<1 1 1> ban( 26 #zz<7 7 #m> ) )
+bav( #bb<#m> )
+bal( #kkk<#k #p #v> 13 )
+bay( 3 )
+w( 3 #ggg<4 7 #b> )
+n( #l )
+big( 3 )
+n( #bb<2> bin( 10 5 ) )
+y( #ff<#f> 2 )
+n( 2 #gg<6> )
+n( 4 7 )
+n( r( #nnn<#n 0 3> #n ) )
+r( 1 #v )
+n( 17 )
+bab( #d )
+bif( 8 4 )
+big( w( bin( 7 ) ) )
+k( #mmm<#n 1 4> )
+biw( )
+bat( 0 -3 )
+big( 8 )
+w( 8 #vv<2 4 1> )
+w( )
+r( #fff<#d 4 3> #d )
+big( 4 #lll<2 2 4> )
+k( 3 5 )
+n( -13 big( 14 #bbb<#r #b 7> ) )
+bik( 14 #z<3> )
+w( 7 2 )
+bay( )
+biw( 0 )
+n( 2 )
+bal( 17 1 )
+bal( 6 6 )
+bat( #r )
+big( 15 )
+bin( 11 4 )
+bal( #m )
+k( 6 #ggg<2 #v 5> #ggg<2 #v 5> )
+biw( 8 6 )
+r( 22 5 )
+big( bal( bat( #r ) #nn<4 0> ) #xx<#g 2 #k> )
+big( 4 #lll<2 2 4> )
+bav( 13 7 )
+bal( 13 )
+k( #nn<5 #y<#l>> )
+bat( )
+bar( 7 #ww<#b #l 7> )
+m( #ww<3 3 2> )
+w( 7 0 )
+g( 5 )
+x( 7 4 )
+w( #t 7 )
+biw( 16 )
+w( 1 #gg<4> )
+bab( #vv<#p 2 #p> )
+biw( bal( #xx<5 #n #t> ) 5 6 )
+r( 0 12 )
+w( 2 #yy<#b 2 #t> 0 11 )
+bib( 31 15 )
+r( 17 #yy<4 6 #d> )
+bin( #x<3> #w bal( -14 6 ) 3 )
+g( 13 3 )
+n( 16 #nn<3 7> )
+bab( #v #x<#v> )
+g( 11 )
+bib( 14 #l )
+bav( #rr<4 #t> )
+big( #l 0 )
+m( 6 #kk<#g> )
+bib( #fff<7 2 #p> )
+bif( 23 10 )
+r( 7 )
+bav( #xx<1 6 6> )
+bav( 34 #n )
+big( -3 )
+ban( 5 )
+m( #ll<5> )
+bin( 14 #xx<3 3 7> 4 #zz<1 2 #xx<3 3 7>> 10 )
+bab( 10 5 )
+bir( #kk<5> 5 )
+n( #ddd<4 0 #d> #x<#r> )
+bay( )
+bin( 18 )
+ban( #t 6 11 )
+biw( 6 5 )
+bin( #kk<0> 2 )
+bar( 3 #ww<#b #l 7> )
+bib( #ff<#p> 4 )
+n( #kk<#m> )
+bag( 6 )
+g( #z<3> 7 )
+bal( 2 )
+k( 1 20 )
+bin( #kk<0> 4 )
+ban( #ddd<#b #d 5> 6 )
+w( -2 6 )
+bal( #bbb<7 #l 3> #xx<#v 2 3> )
+bav( #yy<2 5 #y<1>> )
+bin( #ggg<#n 3 3> 1 )
+biw( 6 11 )
+n( 13 6 )
+bab( 3 )
+bab( #dd<0> 11 #ll<#l> )
+ban( 3 7 )
+w( bin( #m ) #nn<6 0> )
+n( 7 8 )
+bav( #nnn<3 #f 1> 6 )
+bat( 5 #f )
+ban( 17 #zz<7 7 2> )
+bin( 4 )
+bal( 4 )
+bav( 11 #ll<#b> )
+biw( #ggg<7 7 7> 3 )
+bal( #bb<7> )
+w( #dd<#n> bal( 0 ) )
+r( bag( 4 ) #d )
+y( #fff<2 2 1> #fff<2 2 1> )
+bab( 4 )
+bab( 5 #bbb<5 5 4> )
+bik( 22 11 )
+w( 0 )
+bat( #ll<2> big( #ll<2> ) )
+bir( 8 )
+bal( )
+g( 3 6 )
+d( )
+bib( 27 )
+bax( #rr<#d 6> )
+bay( #x<7> )
+m( #r #v )
+bif( 25 big( 15 ) )
+bib( 8 )
+g( 14 #mmm<0 3 7> )
+w( 0 )
+m( #vv<#b #t 4> 2 )
+bav( 1 )
+r( #ww<#v #v 5> )
+g( #m )
+w( #y<#r> #nn<7 #r> )
+bab( #fff<0 #m 0> w( 5 7 ) )
+biw( 6 14 )
+t( #mmm<7 #g #m> )
+g( 3 #zz<#m 7 4> )
+g( #w )
+m( 4 7 )
+bin( 7 23 )
+big( #d )
+bab( #dd<2> #kk<#r> )
+bib( #k )
+n( #f 16 )
+bay( 8 11 )
+w( #t #ddd<3 6 #t> )
+bib( 16 #t )
+bal( #g )
+bin( #nnn<0 #n #r> )
+bif( #bb<6> )
+biw( #b #b )
+bab( )
+k( 9 2 )
+m( 2 7 )
+k( 9 )
+w( #p #p )
+bab( 1 )
+n( #m )
+bib( 4 5 )
+bav( 2 )
+bib( )
+bin( #f 3 )
+n( #mm<#t 7> #nn<#d 4> )
+bab( 22 #d )
+w( 13 7 )
+bab( 11 )
+m( )
+bay( #v 8 )
+g( #v #v 15 r( bib( ) g( w( #t 6 ) ) ) #fff<7 #p #w> )
+bib( -1 2 )
+ban( #nnn<#x<0> #x<0> #y<#r>> 3 )
+k( 23 3 )
+bag( big( #bb<1> 15 ) #nn<0 3> )
+bab( #d )
+w( 5 3 )
+bat( 10 6 )
+biw( #y<3> bir( 11 bab( #rr<5 1> ) ) )
+bib( 3 2 )
+big( #zz<3 3 3> 13 12 )
+k( #nn<3 #g> 3 )
+bay( 4 5 )
+ban( 21 #zz<7 6 #g> )
+bin( 13 #g )
+n( -3 )
+r( #b 8 )
+bif( #tt<3 7 0> g( big( 10 bib( #t #bbb<#d #r #r> ) ) #ppp<3 1 #v> ) )
+n( #f #f )
+bib( #tt<#l 1 1> #p )
+big( 14 bib( 6 8 ) )
+bal( #v )
+r( #yy<#t 3 #t> #r )
+bav( #nnn<#t #f 1> 28 )
+m( 5 )
+bin( 13 m( bin( ) 5 ) )
+big( #kk<3> bav( 2 13 ) )
+bav( #zz<5 #d 5> #kkk<3 4 #f> )
+bax( 15 )
+bib( #x<5> bat( 14 ) )
+n( #dd<#v> )
+bin( #m #k )
+big( #n #n )
+bal( #bbb<1 #l 3> 4 )
+k( 7 6 )
+bab( #m #m )
+n( -5 2 )
+bab( 12 )
+big( 12 )
+bav( biw( k( -17 9 ) ) #d )
+n( 10 n( #d 0 ) )
+bib( 4 #bb<7> )
+w( 6 #ff<4> )
+bal( 2 #l )

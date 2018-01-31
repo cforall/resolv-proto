@@ -1,3 +1,6 @@
+## 31 Jan 2018 ##
+* Fix memory error attempting to merge class without unseen vars
+
 ## 26 Jan 2018 ##
 * Continue generating test cases
 * Fix segfault in `less-poly2`
