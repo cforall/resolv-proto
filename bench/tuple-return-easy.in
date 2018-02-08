@@ -1,3 +1,4 @@
+// MANUALLY ADJUSTED
 // n_decls: 1500
 // n_exprs: 750
 // seed: 3
@@ -2054,7 +2055,7 @@ baw( 0 )
 bag( #x<1> #x<1> #x<1> 12 )
 bad( #x<#d> )
 bap( #d )
-x( p( 2 0 ) bap( bid( bin( b( ban( -2 5 ) ) 0 ) ) ) )
+// x( p( 2 0 ) bap( bid( bin( b( ban( -2 5 ) ) 0 ) ) ) )
 x( #v #x<3> )
 bap( 0 #n )
 y( #l )
@@ -2261,7 +2262,7 @@ bam( 5 20 )
 bag( 0 #x<4> )
 bit( 5 #x<2> )
 bay( #x<5> )
-bam( 0 bag( 17 bit( bap( #d ) ) ) )
+// bam( 0 bag( 17 bit( bap( #d ) ) ) )
 d( 4 )
 bag( #x<#w> #x<#w> )
 bay( 5 3 )

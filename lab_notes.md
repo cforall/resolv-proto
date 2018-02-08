@@ -1,3 +1,9 @@
+## 1 Feb 2018 ##
+* Modify bench-gen to discourage duplicate parameter lists
+* `tuple-return` has some memory usage issues
+  * maybe switch semantics to disallow truncation, more like CFA
+  * seems to be a memory leak somewhere in here; suspect there's something live through collect_young
+
 ## 31 Jan 2018 ##
 * Fix memory error attempting to merge class without unseen vars
 

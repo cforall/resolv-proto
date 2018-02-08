@@ -1,7 +1,6 @@
 # TODO #
 
 ## Next few days ##
-* Upgrade fake code generator to produce assertions and generic types
 * Investigate resolution order for assertions:
   * immediate vs. top-level vs. post-sort
 
@@ -10,6 +9,7 @@
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
   * Look at tuple truncations as conversions in expand_conversions
   * Use Rob's semantics for tuples (just flatten to lists, maybe truncate at top-level)
+    * Check if `tuple-return.in` has any better performance afterward
 * Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
   * possibly just take advantage of new Env as GC_Object
   * audit uses of `Env::from` and trim cases where they're not actually modified
