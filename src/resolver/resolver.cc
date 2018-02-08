@@ -2,6 +2,9 @@
 
 #include "env.h"
 #include "interpretation.h"
+#ifdef RP_RES_DEF
+#include "resolve_assertions.h"
+#endif
 
 #include "ast/expr.h"
 #include "ast/typed_expr_visitor.h"
@@ -28,7 +31,7 @@ public:
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	id_src = 0;  // initialize type variable IDs
 	new_generation();  // set up new GC generation
-#ifdef RP_MODE_TD
+#ifdef RP_DIR_TD
 	cached.clear();  // clear subexpression cache
 #endif
 
@@ -41,6 +44,41 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		return Interpretation::make_invalid();
 	}
 
+#ifdef RP_RES_DEF
+	// sort results by cost
+	std::sort( results.begin(), results.end(), ByValueCompare<Interpretation>{} );
+	
+	// search for cheapest resolvable candidate
+	InterpretationList candidates;
+	for ( unsigned i = 0; i < results.size(); ++i ) {
+		// break if already have cheaper candidate
+		if ( ! candidates.empty() && *candidates.front() < *results[i] ) break;
+
+		// check candidate assertion resolution
+		const Interpretation& r = *results[i];
+		const TypedExpr* rExpr = r.expr;
+		Env* rEnv = Env::from( r.env );
+		if ( resolveAssertions( *this, rExpr, rEnv ) ) {
+			candidates.push_back( new Interpretation{ rExpr, rEnv, r.cost, r.argCost } );
+		}
+	}
+
+	// quit if no such candidate
+	if ( candidates.empty() ) {
+		on_invalid( expr );
+		collect_young();
+		return Interpretation::make_invalid();
+	}
+
+	// ambiguous if more than one min-cost interpretation
+	if ( candidates.size() > 1 ) {
+		on_ambiguous( expr, candidates.begin(), candidates.end() );
+		collect_young();
+		return Interpretation::make_invalid();
+	}
+
+	const Interpretation* candidate = candidates.front();
+#else
 	if ( results.size() > 1 ) {
 		// sort min-cost results to beginning
 		InterpretationList::iterator min_pos = 
@@ -55,6 +93,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	}
 	
 	const Interpretation* candidate = results.front();
+#endif
 	
 	// handle ambiguous candidate from conversion expansion
 	if ( ResolvedExprInvalid{ on_ambiguous }( candidate->expr ) ) {

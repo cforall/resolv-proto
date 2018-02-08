@@ -115,8 +115,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					new CallExpr{ func, List<TypedExpr>{}, move(rForall), rType };
 				
 				// check assertions if at top level
-				if ( resolve_mode.check_assertions 
-					 && ! resolveAssertions( resolver, call, rCost, rEnv ) ) continue;
+				if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, rCost, rEnv ) ) ) continue;
 				
 				results.push_back( new Interpretation{ call, rEnv, move(rCost) } );
 			} break;
@@ -132,8 +131,8 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					const Env* sEnv = sub->env;
 					
 					// check assertions if at top level
-					if ( resolve_mode.check_assertions 
-						 && ! resolveAssertions( resolver, call, sCost, sEnv ) ) continue;
+					if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, sCost, sEnv ) ) ) 
+						continue;
 					
 					results.push_back(
 						new Interpretation{ call, sEnv, move(sCost), copy(sub->argCost) } );
@@ -201,8 +200,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					const Env* cEnv = combo.env;
 					
 					// check assertions if at top level
-					if ( resolve_mode.check_assertions
-					     && ! resolveAssertions( resolver, call, cCost, cEnv ) )
+					if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cCost, cEnv ) ) )
 						continue;
 					
 					results.push_back(

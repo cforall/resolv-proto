@@ -27,6 +27,7 @@ class Args {
     unique_ptr<Generator> _n_parms;            ///< Number of function parameters
     unique_ptr<Generator> _n_rets;             ///< Number of function return types
     unique_ptr<Generator> _n_poly_types;       ///< Number of polymorphic type parameters
+    option<double> _p_ret_overload;            ///< Probability of accepting an overload which only differs based on return type
     option<unsigned> _max_tries;               ///< Maximum number of tries for unique parameter list
     option<double> _p_new_type;                ///< Probability of a parameter/return type being new
     unique_ptr<Generator> _get_basic;          ///< Generates an index for a basic type
@@ -95,6 +96,8 @@ public:
         }
         return *_n_poly_types;
     }
+
+    double p_ret_overload() { return _p_ret_overload.value_or( 0.1 ); }
 
     unsigned max_tries() { return _max_tries.value_or( 20 ); }
 
@@ -441,6 +444,8 @@ private:
             read_generator( name, line, _n_rets );
         } else if ( is_flag( "n_poly_types", name ) ) {
             read_generator( name, line, _n_poly_types );
+        } else if ( is_flag( "p_ret_overload", name ) ) {
+            read_float( name, line, _p_ret_overload );
         } else if ( is_flag( "max_tries", name ) ) {
             read_unsigned( name, line, _max_tries );
         } else if ( is_flag( "p_new_type", name ) ) {

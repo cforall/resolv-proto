@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <map>
 #include <set>
 #include <type_traits>
 #include <unordered_map>
@@ -146,6 +147,7 @@ class BenchGenerator {
         comment_print( "n_rets", a.n_rets() );
         comment_print( "n_parms", a.n_parms() );
         comment_print( "n_poly_types", a.n_poly_types() );
+        comment_print( "p_ret_overload", a.p_ret_overload() );
         comment_print( "max_tries", a.max_tries() );
         comment_print( "p_new_type", a.p_new_type() );
         comment_print( "get_basic", a.get_basic() );
@@ -251,15 +253,19 @@ class BenchGenerator {
         }
     }
 
-    /// Generate a parameter+return list
-    void generate_parms_and_rets( GenList& parms_and_rets, unsigned n_parms, unsigned n_rets ) {
+    /// Generate a parameter and return lists
+    void generate_parms_and_rets( GenList& parms, GenList& rets, unsigned n_parms, unsigned n_rets ) {
         
         unsigned i_poly = 0;
         std::vector<unsigned> basics;
         std::vector<GenList> structs;
 
-        for ( unsigned i = 0; i < n_parms + n_rets; ++i ) {
-            generate_type( parms_and_rets, i_poly, basics, structs );
+        for ( unsigned i = 0; i < n_parms; ++i ) {
+            generate_type( parms, i_poly, basics, structs );
+        }
+
+        for ( unsigned i = 0; i < n_rets; ++i ) {
+            generate_type( rets, i_poly, basics, structs );
         }
     }
 
@@ -414,36 +420,52 @@ class BenchGenerator {
                     unsigned n_rets = ret_overloads.first;
 
                     // used to ensure no duplicate functions
-                    std::set<GenList> with_same_arity;
+                    std::multimap<GenList, GenList> with_same_arity;
                     unsigned n_same_kind = ret_overloads.second;
 
 
-                    GenList parms_and_rets;
-                    parms_and_rets.reserve( n_parms + n_rets );
-
+                    GenList parms, rets;
+                    parms.reserve( n_parms );
+                    rets.reserve( n_rets );
+                    
                     for ( unsigned i_same_kind = 0; i_same_kind < n_same_kind; ++i_same_kind ) {
                         unsigned tries;
                         for (tries = 1; tries <= a.max_tries(); ++tries) {
-                            generate_parms_and_rets( parms_and_rets, n_parms, n_rets );
-                            // done if found a unique decl with this arity
-                            if ( with_same_arity.insert( parms_and_rets ).second ) break;
-                            parms_and_rets.clear();
+                            generate_parms_and_rets( parms, rets, n_parms, n_rets );
+                            
+                            auto range = with_same_arity.equal_range( parms );
+                            if ( range.first == range.second 
+                                    || ( coin_flip( a.p_ret_overload() )
+                                        && std::find_if( range.first, range.second, 
+                                            [&rets]( const auto& pair ) { 
+                                                return pair.second == rets;
+                                            } ) == range.second ) ) {
+                                // found a unique parameter list or willing to overload on 
+                                // return list and no matching signature; record and break
+                                with_same_arity.emplace_hint( range.second, parms, rets );
+                                break;
+                            }
+                            
+                            parms.clear();
+                            rets.clear();
                         }
                         // quit if too many tries
                         if ( tries > a.max_tries() ) break;
 
                         // generate list of parameters and returns
-                        List<Type> parms( n_parms );
-                        List<Type> rets( n_rets );
+                        List<Type> parm_ts( n_parms );
+                        List<Type> ret_ts( n_rets );
                         unique_ptr<Forall> forall{ new Forall{} };
-                        GenList::iterator it = parms_and_rets.begin();
+                        GenList::iterator it = parms.begin();
                         for (unsigned i = 0; i < n_parms; ++i) {
-                            parms[i] = get_type( it, forall );
+                            parm_ts[i] = get_type( it, forall );
                         }
+                        it = rets.begin();
                         for (unsigned i = 0; i < n_rets; ++i) {
-                            rets[i] = get_type( it, forall );
+                            ret_ts[i] = get_type( it, forall );
                         }
-                        parms_and_rets.clear();
+                        parms.clear();
+                        rets.clear();
 
                         // replace forall with null if empty
                         if ( forall->empty() ) { forall.reset(); }
@@ -453,7 +475,8 @@ class BenchGenerator {
                             tag = "o" + std::to_string( i_with_name );
                         }
 
-                        decls.emplace_back( name, tag, move(parms), move(rets), move(forall) );
+                        decls.emplace_back( 
+                            name, tag, move(parm_ts), move(ret_ts), move(forall) );
 
                         ++n_decls;
                         ++i_with_name;

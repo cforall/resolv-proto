@@ -4,7 +4,7 @@
 
 #include "resolver.h"
 
-#if defined RP_MODE_BU
+#if defined RP_DIR_BU
 #include "arg_pack.h"
 #endif
 #include "cost.h"
@@ -54,9 +54,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		
 		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
 
-		// check type assertions if at top level
-		if ( resolve_mode.check_assertions && ! resolveAssertions( resolver, call, cost, env ) ) 
-			continue;
+		// check type assertions if necessary
+		if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cost, env ) ) ) continue;
 		
 		// no interpretation with zero arg cost
 		results.push_back( new Interpretation{ call, env, move(cost) } );
@@ -109,10 +108,9 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 				const TypedExpr* call = 
 					new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(forall) };
 
-				// check type assertions if at top level
-				if ( resolve_mode.check_assertions 
-					 && ! resolveAssertions( resolver, call, cost, env ) ) continue;
-
+				// check type assertions if necessary
+				if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cost, env ) ) ) continue;
+				
 				// create new interpretation for resolved call
 				results.push_back( new Interpretation{ call, env, cost, copy(arg->cost) } );
 			}
@@ -122,7 +120,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 	return results;
 }
 
-#if defined RP_MODE_BU
+#if defined RP_DIR_BU
 /// Unifies prefix of argument type with parameter type (required to be size 1)
 bool unifyFirst( const Type* paramType, const Type* argType, Cost& cost, Env*& env ) {
 	auto aid = typeof(argType);
@@ -226,9 +224,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			Cost cCost = rCost + combo.cost;
 			const Env* cEnv = combo.env;
 			
-			// check assertions if at top level
-			if ( resolve_mode.check_assertions 
-				 && ! resolveAssertions( resolver, call, cCost, cEnv ) ) continue;
+			// check type assertions if necessary
+			if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cCost, cEnv ) ) ) continue;
 			
 			results.push_back( new Interpretation{ call, cEnv, move(cCost), move(combo.argCost) } );
 		}
@@ -236,7 +233,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 
 	return results;
 }
-#elif defined RP_MODE_CO
+#elif defined RP_DIR_CO
 /// Create a list of argument expressions from a list of interpretations
 List<TypedExpr> argsFrom( const InterpretationList& is ) {
 	List<TypedExpr> args;
@@ -290,8 +287,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 				new CallExpr{ func, argsFrom( combo.second ), move(forall) };
 
 			// check type assertions if at top level
-			if ( resolve_mode.check_assertions && ! resolveAssertions( resolver, call, cost, env ) ) 
-				continue;
+			if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cost, env ) ) ) continue;
 			
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation{ call, env, move(cost), move(combo.first) } );
@@ -354,9 +350,9 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 					sub_results.push_back( move(sresults) );
 				}
 				
-#if defined RP_MODE_BU
+#if defined RP_DIR_BU
 				results = matchFuncs( *this, withName(), move(sub_results), resolve_mode );
-#elif defined RP_MODE_CO
+#elif defined RP_DIR_CO
 				interpretation_unambiguous valid;
 				auto merged = unsorted_eager_merge<
 					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );

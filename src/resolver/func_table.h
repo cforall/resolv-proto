@@ -23,7 +23,7 @@
 using FuncList = std::vector<FuncDecl*>;
 
 /// Backing storage for a set of function declarations with the same name indexed by return type
-#if defined RP_MODE_TD
+#if defined RP_DIR_TD
 	/// Wrapper for type_map with appropriate args for FlatMap
 	template<typename, typename V>
 	using TypeMap2 = TypeMap<V>;
@@ -36,7 +36,7 @@ using FuncList = std::vector<FuncDecl*>;
 	/// Backing storage for a set of function declarations with the same name indexed by 
 	/// return type
 	using FuncSubTable = FlatMap<const Type*, FuncList, ExtractReturn, TypeMap2>;
-#elif defined RP_MODE_BU || defined RP_MODE_CO
+#elif defined RP_DIR_BU || defined RP_DIR_CO
 	/// Functor to extract the number of parameters from a function declaration
 	struct ExtractNParams {
 		unsigned operator() (const FuncDecl* f) { return f->params().size(); }

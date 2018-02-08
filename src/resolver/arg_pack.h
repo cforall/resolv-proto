@@ -15,19 +15,19 @@ struct ArgPack {
 	List<TypedExpr> args;             ///< List of current arguments
 	const TypedExpr* crnt;            ///< Current expression being built (nullptr for on_last == 0)
 	unsigned on_last;                 ///< Number of unpaired type atoms on final arg
-#if defined RP_MODE_TD
+#if defined RP_DIR_TD
 	List<Expr>::const_iterator next;  ///< Next argument expression
-#elif defined RP_MODE_BU
+#elif defined RP_DIR_BU
 	unsigned next;                    ///< Next argument index
 #endif
 
 	ArgPack() = default;
 	
-	#if defined RP_MODE_TD
+	#if defined RP_DIR_TD
 	/// Initialize ArgPack with first argument iterator and initial environment
 	ArgPack(const List<Expr>::const_iterator& it, const Env* e) 
 		: env(e), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(it) {}
-	#elif defined RP_MODE_BU
+	#elif defined RP_DIR_BU
 	ArgPack(const Env* e)
 		:env(e), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(0) {}
 	#endif

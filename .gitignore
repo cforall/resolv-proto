@@ -1,7 +1,5 @@
 /rp
-/rp-bu
-/rp-co
-/rp-td
+/rp-*
 /bench_gen
 /tests/renumber
 /bench/plots

@@ -80,7 +80,6 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	};
 
 	Resolver& resolver;        ///< Resolver to perform searches.
-	Cost& cost;                ///< Cost of accumulated bindings.
 	Env*& env;                 ///< Environment to bind types and assertions into.
 	List<FuncDecl> deferIds;   ///< Assertions that cannot be bound at their own call
 	DeferList deferred;        ///< Available interpretations of deferred assertions
@@ -148,8 +147,8 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	}
 
 public:
-	AssertionResolver( Resolver& resolver, Cost& cost, Env*& env, unsigned depth = 1 )
-		: resolver(resolver), cost(cost), env(env), deferIds(), deferred(), openAssns(), 
+	AssertionResolver( Resolver& resolver, Env*& env, unsigned depth = 1 )
+		: resolver(resolver), env(env), deferIds(), deferred(), openAssns(), 
 		  recursion_depth(depth), has_ambiguous(false) {}
 	
 	using TypedExprMutator<AssertionResolver>::visit;
@@ -212,7 +211,6 @@ public:
 		for ( const Interpretation* alt : e->alts() ) {
 			const TypedExpr* alt_expr = alt->expr;
 			const TypedExpr* alt_bak = alt_expr;
-			Cost alt_cost = Cost::zero();
 			Env* alt_env = Env::from( env );
 			// skip alternatives that can't be resolved in the current environment
 			if ( ! merge( alt_env, alt->env ) ) {
@@ -220,7 +218,7 @@ public:
 				continue;
 			}
 			// re-resolve alternative assertions under current environment
-			AssertionResolver alt_resolver{ resolver, alt_cost, alt_env, recursion_depth };
+			AssertionResolver alt_resolver{ resolver, alt_env, recursion_depth };
 			alt_resolver.mutate( alt_expr );
 			if ( alt_expr != alt_bak ) { changed = true; }
 
@@ -229,7 +227,7 @@ public:
 
 			// keep min-cost alternatives
 			Interpretation* new_alt = 
-				new Interpretation{ alt_expr, alt_env, move(alt_cost), copy(alt->argCost) };
+				new Interpretation{ alt_expr, alt_env, move(alt->cost), copy(alt->argCost) };
 			if ( min_alts.empty() ) {
 				min_alts.push_back( new_alt );
 				local_ambiguous = alt_resolver.has_ambiguous;
@@ -334,16 +332,15 @@ public:
 /// and type/assertion bindings in cost and env, respectively. Returns whether all 
 /// assertions can be consistently bound at a unique minimum cost; may mutate call to 
 /// disambiguate ambiguous expressions.
-bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, Env*& env ) {
-	AssertionResolver assnResolver{ resolver, cost, env };
+inline bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Env*& env ) {
+	AssertionResolver assnResolver{ resolver, env };
 	return assnResolver.mutate( call ) != nullptr;
 }
 
 /// Resolves assertions over const Env
-inline bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, Cost& cost, 
-		const Env*& env) {
+inline bool resolveAssertions( Resolver& resolver, const TypedExpr*& call, const Env*& env ) {
 	Env* mEnv = Env::from( env );
-	if ( ! resolveAssertions( resolver, call, cost, mEnv ) ) return false;
+	if ( ! resolveAssertions( resolver, call, mEnv ) ) return false;
 	env = getNonempty( mEnv );
 	return true;
 }

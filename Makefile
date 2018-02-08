@@ -1,5 +1,4 @@
-OPT ?= -O2
-CXXFLAGS ?= $(OPT) -ggdb --std=c++14 -Wall -Wno-unused-function
+CXXFLAGS ?= -ggdb --std=c++14 -Wall -Wno-unused-function
 DEPFLAGS = -MMD -MP
 MAKEFILE_NAME = ${firstword ${MAKEFILE_LIST}}
 
@@ -18,6 +17,12 @@ all : rp bench_gen
 # handle make flags
 -include .lastmakeflags
 
+ifdef DEBUG
+CXXFLAGS += -O0 -DRP_DEBUG
+else
+CXXFLAGS += -O2
+endif
+
 ifdef SORTED
 CXXFLAGS += -DRP_SORTED
 endif
@@ -26,32 +31,37 @@ ifdef USER_CONVS
 CXXFLAGS += -DRP_USER_CONVS
 endif
 
-ifdef DEBUG
-CXXFLAGS += -DRP_DEBUG
-endif
-
-ifeq "${MODE}" "td"
-CXXFLAGS += -DRP_MODE_TD
-MODE_OBJS = resolver-td.o
-else ifeq "${MODE}" "co"
-CXXFLAGS += -DRP_MODE_CO
-MODE_OBJS = resolver-bu.o
+ifeq "${DIR}" "td"
+CXXFLAGS += -DRP_DIR_TD
+DIR_OBJS = resolver-td.o
+else ifeq "${DIR}" "co"
+CXXFLAGS += -DRP_DIR_CO
+DIR_OBJS = resolver-bu.o
 else
-MODE = bu
-CXXFLAGS += -DRP_MODE_BU
-MODE_OBJS = resolver-bu.o
+DIR = bu
+CXXFLAGS += -DRP_DIR_BU
+DIR_OBJS = resolver-bu.o
 endif
 
-ifeq "${LAST_OPT};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DEBUG};${LAST_MODE}" "${OPT};${SORTED};${USER_CONVS};${DEBUG};${MODE}"
+ifeq "${RES}" "def"
+CXXFLAGS += -DRP_RES_DEF
+else ifeq "${RES}" "imm"
+CXXFLAGS += -DRP_RES_IMM
+else
+RES = top
+CXXFLAGS += -DRP_RES_TOP
+endif
+
+ifeq "${LAST_DEBUG};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DIR};${LAST_RES}" "${DEBUG};${SORTED};${USER_CONVS};${DIR};${RES}"
 .lastmakeflags:
 	@touch .lastmakeflags
 else
 .lastmakeflags: clean
-	@echo "LAST_OPT=${OPT}" > .lastmakeflags
+	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
 	@echo "LAST_SORTED=${SORTED}" >> .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
-	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
-	@echo "LAST_MODE=${MODE}" >> .lastmakeflags
+	@echo "LAST_DIR=${DIR}" >> .lastmakeflags
+	@echo "LAST_RES=${RES}" >> .lastmakeflags
 endif
 
 # rewrite object generation to auto-determine dependencies, run prebuild
@@ -67,7 +77,7 @@ $(BUILDDIR)/%.o : %.cc $(BUILDDIR)/%.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # rp objects
-OBJS = $(addprefix $(BUILDDIR)/, conversion.o env.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o $(MODE_OBJS) rp.o)
+OBJS = $(addprefix $(BUILDDIR)/, conversion.o env.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o $(DIR_OBJS) rp.o)
 
 # bench_gen objects
 BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o env.o expr.o forall.o forall_substitutor.o random_partitioner.o bench_gen.o)
@@ -75,8 +85,8 @@ BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o env.o expr.o forall.o forall_substit
 ${OBJS} ${BENCH_OBJS} : ${MAKEFILE_NAME}
 
 rp : $(OBJS)
-	$(COMPILE.cc) -o rp-$(MODE) $^ $(LDFLAGS)
-	ln -sf rp-$(MODE) rp
+	$(COMPILE.cc) -o rp-$(DIR)-$(RES) $^ $(LDFLAGS)
+	ln -sf rp-$(DIR)-$(RES) rp
 
 bench_gen : $(BENCH_OBJS)
 	$(COMPILE.cc) -o bench_gen $^ $(LDFLAGS)
