@@ -144,14 +144,21 @@ public:
 		static constexpr Mode top_level() { return { false, true, true }; }
 
 		/// Turn off expand_conversions
-		Mode& without_conversions() { as_non_const(expand_conversions) = false; return *this; }
+		Mode&& without_conversions() && {
+			as_non_const(expand_conversions) = false; 
+			return move(*this);
+		}
 		/// Conditionally turn on allow_void if t is void
-		Mode& with_void_as( const Type* t ) {
-			as_non_const(allow_void) = is<VoidType>(t); return *this;
+		Mode&& with_void_as( const Type* t ) && {
+			as_non_const(allow_void) = is<VoidType>(t);
+			return move(*this);
 		}
 #if defined RP_RES_IMM
 		// Turn off check assertions
-		Mode& without_assertions() { as_non_const(check_assertions) = false; return *this; }
+		Mode&& without_assertions() && {
+			as_non_const(check_assertions) = false;
+			return move(*this);
+		}
 #endif
 	};
 
