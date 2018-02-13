@@ -17,7 +17,7 @@
 #include "data/list.h"
 #include "data/mem.h"
 
-#ifdef RP_DEBUG
+#if defined RP_DEBUG && RP_DEBUG >= 1
 	#define dbg_verify() verify()
 #else
 	#define dbg_verify()

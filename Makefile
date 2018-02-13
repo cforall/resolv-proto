@@ -16,9 +16,16 @@ all : rp bench_gen
 
 # handle make flags
 -include .lastmakeflags
+LAST_DIR ?= bu
+LAST_RES ?= def
 
-ifdef DEBUG
-CXXFLAGS += -O0 -DRP_DEBUG
+# Debug Levels: #
+# 0. Just -O0
+# 1. -O0 and memory verification
+# 2. -O0, memory verification and trace printing
+
+ifdef DBG
+CXXFLAGS += -O0 -DRP_DEBUG=${DBG}
 else
 CXXFLAGS += -O2
 endif
@@ -31,33 +38,37 @@ ifdef USER_CONVS
 CXXFLAGS += -DRP_USER_CONVS
 endif
 
+DIR ?= ${LAST_DIR}
 ifeq "${DIR}" "td"
 CXXFLAGS += -DRP_DIR_TD
 DIR_OBJS = resolver-td.o
 else ifeq "${DIR}" "co"
 CXXFLAGS += -DRP_DIR_CO
 DIR_OBJS = resolver-bu.o
-else
-DIR = bu
+else ifeq "${DIR}" "bu"
 CXXFLAGS += -DRP_DIR_BU
 DIR_OBJS = resolver-bu.o
+else
+$(error invalid DIR ${DIR})
 endif
 
+RES ?= ${LAST_RES}
 ifeq "${RES}" "def"
 CXXFLAGS += -DRP_RES_DEF
 else ifeq "${RES}" "imm"
 CXXFLAGS += -DRP_RES_IMM
-else
-RES = top
+else ifeq "${RES}" "top"
 CXXFLAGS += -DRP_RES_TOP
+else
+$(error invalid RES ${RES})
 endif
 
-ifeq "${LAST_DEBUG};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DIR};${LAST_RES}" "${DEBUG};${SORTED};${USER_CONVS};${DIR};${RES}"
+ifeq "${LAST_DBG};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DIR};${LAST_RES}" "${DBG};${SORTED};${USER_CONVS};${DIR};${RES}"
 .lastmakeflags:
 	@touch .lastmakeflags
 else
 .lastmakeflags: clean
-	@echo "LAST_DEBUG=${DEBUG}" >> .lastmakeflags
+	@echo "LAST_DBG=${DBG}" >> .lastmakeflags
 	@echo "LAST_SORTED=${SORTED}" >> .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
 	@echo "LAST_DIR=${DIR}" >> .lastmakeflags

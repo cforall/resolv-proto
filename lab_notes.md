@@ -1,5 +1,6 @@
 ## 13 Feb 2018 ##
 * debug immediate assertion resolution order
+* change makefile to default to previous version of DIR, RES, error if invalid value provided
 
 ## 12 Feb 2018 ##
 * Added immediate assertion resolution order

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-#ifdef RP_DEBUG
+#if defined RP_DEBUG && RP_DEBUG >= 2
 
 #define DBG(...) std::cerr << "\t" << __FILE__ << ":" << __LINE__ << " " << __VA_ARGS__ << std::endl
 
