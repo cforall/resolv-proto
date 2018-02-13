@@ -35,12 +35,19 @@ for a in "$@"; do
     esac
 done
 
-# if no modes/tests set, set defaults
+# if no modes/tests set, set defaults (all modes currently compiled / all tests, skipping non-easy)
 if [ ${#modes[@]} -eq 0 ]; then
-    modes=(td bu)
+    for m in ../rp-*; do
+        modes+=(${m#../rp-}) # trim prefix from mode
+    done
 fi
 if [ ${#tests[@]} -eq 0 ]; then
-    tests=(default-easy default2-easy tuple-return less-poly-easy less-poly2-easy more-poly-easy fewer-basic-easier fewer-overloads-easy fewer-overloads2 more-overloads-easy most-overloads-easy long-tail-overloads-easy fewer-parms more-parms-easier shallower-nesting deeper-nesting-easier fewer-decls more-decls-easy more-decls2-easy)
+    for f in *.in; do
+        t=`basename $f .in`
+        if [ ! -f $t-easy.in ]; then  # skip tests that needed to be nerfed
+            tests+=($t)
+        fi
+    done
 fi
 
 for m in "${modes[@]}"; do
@@ -52,12 +59,3 @@ for m in "${modes[@]}"; do
         /usr/bin/time -f ",%U,%S,%e,%M" ../rp-$m -q $t.in 2>&1 | tee -a $outfile
     done
 done
-
-#outname="$outdir/test-`date +%y%m%d%H%M`-`git log -1 --format=%h`"
-# outfile="${outname}.csv"
-# echo '"test","user(s)","sys(s)","wall(s)","max-mem(KB)"' | tee $outfile
-
-# for t in "${tests[@]}"; do
-#     printf "\"%s\"" $t | tee -a $outfile
-#     /usr/bin/time -f ",%U,%S,%e,%M" ../rp -q $t.in 2>&1 | tee -a $outfile
-# done
