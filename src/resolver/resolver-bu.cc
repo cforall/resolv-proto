@@ -371,6 +371,10 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
 	                                          const Env* env ) {
+#if defined RP_RES_IMM
+	Mode resolve_mode = Mode{}.without_conversions().with_void_as( targetType ).without_assertions();
+#else
 	Mode resolve_mode = Mode{}.without_conversions().with_void_as( targetType );
+#endif
 	return convertTo( targetType, resolve( expr, env, resolve_mode ), conversions );
 }

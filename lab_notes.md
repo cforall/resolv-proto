@@ -1,5 +1,6 @@
 ## 13 Feb 2018 ##
 * debug immediate assertion resolution order
+  * Error was that resolveWithType shouldn't have assertion resolution, and I'd flipped the default too thoroughly
 * change makefile to default to previous version of DIR, RES, error if invalid value provided
 
 ## 12 Feb 2018 ##

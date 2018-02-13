@@ -22,8 +22,6 @@
 // check on match_funcs for necessity of doing resolution
 #if defined RP_RES_DEF
 #define RP_ASSN_CHECK(expr) false
-#elif defined RP_RES_IMM
-#define RP_ASSN_CHECK(expr) (expr)
 #else
 #define RP_ASSN_CHECK(expr) resolve_mode.check_assertions && (expr)
 #endif
@@ -43,7 +41,7 @@ using AmbiguousEffect = std::function<void(const Expr*,
 /// has unbound type variables and the unbound typeclasses.
 using UnboundEffect = std::function<void(const Expr*, const List<TypeClass>&)>;
 
-#ifdef RP_DIR_TD
+#if defined RP_DIR_TD
 /// argument cache; prevents re-calculation of shared subexpressions under same environment
 class ArgCache {
 	using KeyedMap = TypeMap< InterpretationList >;
@@ -103,7 +101,7 @@ public:
 	unsigned id_src;                    ///< Source of type variable IDs
 	unsigned max_recursive_assertions;  ///< Maximum recursive assertion depth
 
-#ifdef RP_DIR_TD
+#if defined RP_DIR_TD
 	ArgCache cached;               ///< Cached expression resolutions
 #endif
 	
@@ -116,7 +114,7 @@ public:
 			  unsigned max_recursive_assertions = 5 )
 		: conversions( conversions ), funcs( funcs ), id_src( 0 ), 
 		  max_recursive_assertions( max_recursive_assertions ), 
-#ifdef RP_DIR_TD
+#if defined RP_DIR_TD
 		  cached(),
 #endif
 		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
@@ -134,21 +132,27 @@ public:
 		const bool check_assertions;
 
 		/// Default flags
-		constexpr Mode() : expand_conversions(true), allow_void(false), check_assertions(false) {}
+		constexpr Mode() : expand_conversions(true), allow_void(false), 
+#if defined RP_RES_IMM
+			check_assertions(true) 
+#else
+			check_assertions(false)
+#endif
+			{}
 
 		/// Flags for top-level resolution
 		static constexpr Mode top_level() { return { false, true, true }; }
 
 		/// Turn off expand_conversions
 		Mode& without_conversions() { as_non_const(expand_conversions) = false; return *this; }
-		/// Turn on allow_void
-		Mode& with_void() { as_non_const(allow_void) = true; return *this; }
 		/// Conditionally turn on allow_void if t is void
 		Mode& with_void_as( const Type* t ) {
 			as_non_const(allow_void) = is<VoidType>(t); return *this;
 		}
-		/// Turn on check_assertions
-		Mode& with_assertions() { as_non_const(check_assertions) = true; return *this; }
+#if defined RP_RES_IMM
+		// Turn off check assertions
+		Mode& without_assertions() { as_non_const(check_assertions) = false; return *this; }
+#endif
 	};
 
 	/// Recursively resolve interpretations subject to `env`, expanding conversions if 
