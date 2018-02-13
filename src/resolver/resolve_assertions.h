@@ -86,6 +86,9 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	List<FuncDecl> openAssns;  ///< Sub-assertions of bound assertions
 	unsigned recursion_depth;  ///< Depth of sub-assertions being bound
 	bool has_ambiguous;        ///< Expression tree has ambiguous subexpressions; fail fast
+#if defined RP_RES_IMM
+	bool do_recurse;           ///< Should the visitor recurse over the whole tree?
+#endif
 
 	/// Resolves an assertion, returning false if no satisfying assertion, binding it if one, 
 	/// adding to the defer-list if more than one.
@@ -146,44 +149,65 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		return true;
 	}
 
+	AssertionResolver( AssertionResolver& o, Env*& env )
+		: resolver(o.resolver), env(env), deferIds(), deferred(), openAssns(),
+		  recursion_depth(o.recursion_depth), has_ambiguous(false) 
+#if defined RP_RES_IMM
+		  , do_recurse(o.do_recurse)
+#endif
+		  {}
+
 public:
-	AssertionResolver( Resolver& resolver, Env*& env, unsigned depth = 1 )
+#if defined RP_RES_IMM
+	AssertionResolver( Resolver& resolver, Env*& env, bool recurse = false )
 		: resolver(resolver), env(env), deferIds(), deferred(), openAssns(), 
-		  recursion_depth(depth), has_ambiguous(false) {}
+		  recursion_depth(1), has_ambiguous(false), do_recurse(recurse) {}
+#else
+	AssertionResolver( Resolver& resolver, Env*& env )
+		: resolver(resolver), env(env), deferIds(), deferred(), openAssns(), 
+		  recursion_depth(1), has_ambiguous(false) {}
+#endif
 	
 	using TypedExprMutator<AssertionResolver>::visit;
 	using TypedExprMutator<AssertionResolver>::operator();
 
-	bool visit( const CallExpr* e, const TypedExpr*& r ) {
-		// recurse on children first
-		option<List<TypedExpr>> newArgs;
-		if ( ! mutateAll( this, e->args(), newArgs ) ) {
-			r = nullptr;
-			return false;
-		}
-
-		// rebuild node if appropriate
-		const CallExpr* ee = e;  // use ee instead of e after this block
-		if ( newArgs ) {
-			// trim expressions that lose any args
-			if ( newArgs->size() < e->args().size() ) {
+	bool visit( const CallExpr* e, const TypedExpr*& r ) {		
+#if defined RP_RES_IMM
+		if ( do_recurse ) {
+#endif
+			// recurse on children first
+			option<List<TypedExpr>> newArgs;
+			if ( ! mutateAll( this, e->args(), newArgs ) ) {
 				r = nullptr;
 				return false;
 			}
 
-			// rebind to new forall clause if necessary
-			// TODO should maybe run a ForallSubstitutor over the environment here...
-			ee = new CallExpr{ e->func(), *move(newArgs), Forall::from( e->forall() ) };
-		}
+			// rebuild node if appropriate
+			if ( newArgs ) {
+				// trim expressions that lose any args
+				if ( newArgs->size() < e->args().size() ) {
+					r = nullptr;
+					return false;
+				}
 
+				// rebind to new forall clause if necessary
+				// TODO should maybe run a ForallSubstitutor over the environment here...
+				e = new CallExpr{ e->func(), *move(newArgs), Forall::from( e->forall() ) };
+			}
+#if defined RP_RES_IMM
+			// skip re-resolving assertions if recursing back over the tree in immediate mode
+			r = e;
+			return true;
+		}
+#endif
 		// exit early if no assertions on this node
-		if ( ! ee->forall() ) {
-			r = ee;
+		if ( ! e->forall() ) {
+			r = e;
 			return true;
 		}
 		
 		// bind assertions
-		for ( const FuncDecl* asn : ee->forall()->assertions() ) {
+		for ( const FuncDecl* asn : e->forall()->assertions() ) {
 			if ( ! resolveAssertion( asn ) ) {
 				r = nullptr;
 				return false;
@@ -191,9 +215,9 @@ public:
 		}
 
 		// ensure all type variables exist in the environment
-		for ( const PolyType* v : ee->forall()->variables() ) { insertVar( env, v ); }
+		for ( const PolyType* v : e->forall()->variables() ) { insertVar( env, v ); }
 		
-		r = ee;
+		r = e;
 		return true;
 	}
 
@@ -218,7 +242,7 @@ public:
 				continue;
 			}
 			// re-resolve alternative assertions under current environment
-			AssertionResolver alt_resolver{ resolver, alt_env, recursion_depth };
+			AssertionResolver alt_resolver{ *this, alt_env };
 			alt_resolver.mutate( alt_expr );
 			if ( alt_expr != alt_bak ) { changed = true; }
 
@@ -234,7 +258,7 @@ public:
 			} else switch ( compare( *new_alt, *min_alts[0] ) ) {
 			case lt:
 				min_alts.clear();
-				local_ambiguous = false;
+				local_ambiguous = alt_resolver.has_ambiguous;
 				// fallthrough
 			case eq:
 				min_alts.push_back( new_alt );
@@ -268,8 +292,13 @@ public:
 	const TypedExpr* mutate( const TypedExpr*& r ) {
 		(*this)( r, r );
 
+#if defined RP_RES_IMM
+		// end early if failure, no need to resolve assertions
+		if ( r == nullptr ) return r;
+#else
 		// end early if ambiguous or failure, no need to resolve assertions
 		if ( has_ambiguous || r == nullptr ) return r;
+#endif
 
 		do {
 			// attempt to disambiguate deferred assertion matches with additional information
@@ -278,8 +307,34 @@ public:
 					filter_combos<const Interpretation*>( deferred, interpretation_env_merger{ env } );
 				if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
-				// sort deferred assertion matches by cost
 				interpretation_env_coster costs;
+#if defined RP_RES_IMM
+				if ( compatible.size() == 1 ) {  // unique set of compatible matches
+					env = Env::from( compatible.front().first );
+					for ( unsigned i = 0; i < deferIds.size(); ++i ) {
+						// fail if cannot bind assertion
+						if ( ! bindRecursive( deferIds[i], compatible.front().second[i]->expr ) ) {
+							return r = nullptr;
+						}
+					}
+				} else {
+					// keep all mutually compatible assertion matches
+					List<Interpretation> alts;
+					auto it = compatible.begin();
+					do {
+						// build an interpretation from each compatible assertion binding
+						Env* alt_env = Env::from( it->first );
+						Cost alt_cost;
+						for ( unsigned i = 0; i < deferIds.size(); ++i ) {
+							bindAssertion( alt_env, deferIds[i], it->second[i]->expr );
+							alt_cost += it->second[i]->cost;
+						}
+						alts.push_back( new Interpretation{ r, alt_env, move(alt_cost) } );
+					} while ( ++it != compatible.end() );
+					return r = new AmbiguousExpr{ r, r->type(), move(alts) };
+				}
+#else
+				// sort deferred assertion matches by cost
 				auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
 				if ( minPos == compatible.begin() ) {  // unique min-cost
 					env = Env::from( minPos->first );
@@ -304,7 +359,7 @@ public:
 					}
 					return r = new AmbiguousExpr{ r, r->type(), move(alts) };
 				}
-
+#endif
 				deferIds.clear();
 				deferred.clear();
 			}

@@ -1,0 +1,10 @@
+// derived from the issue in the current resolver where 
+// X& ?+=? (X&, int); does not satisfy an assertion T& ?+=? (T&, one_t)
+
+#ty add #ty 2
+
+T inc T | T add T 1
+
+%%
+
+inc( #ty )

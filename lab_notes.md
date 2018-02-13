@@ -1,3 +1,13 @@
+## 13 Feb 2018 ##
+* debug immediate assertion resolution order
+
+## 12 Feb 2018 ##
+* Added immediate assertion resolution order
+
+## 8 Feb 2018 ##
+* Added deferred assertion resolution order
+  * Initial timing results positive, completes all resolution tasks without exceeding RAM boundaries, even `tuple-return`
+
 ## 1 Feb 2018 ##
 * Modify bench-gen to discourage duplicate parameter lists
 * `tuple-return` has some memory usage issues

@@ -49,16 +49,15 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		// skip functions returning no values, unless at top level
 		if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
-		Cost cost = func->poly_cost();
 		const Env* env = outEnv;
 		
 		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
 
 		// check type assertions if necessary
-		if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cost, env ) ) ) continue;
+		if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, env ) ) ) continue;
 		
 		// no interpretation with zero arg cost
-		results.push_back( new Interpretation{ call, env, move(cost) } );
+		results.push_back( new Interpretation{ call, env, func->poly_cost() } );
 	}
 	
 	return results;
@@ -109,7 +108,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 					new CallExpr{ func, List<TypedExpr>{ arg->expr }, move(forall) };
 
 				// check type assertions if necessary
-				if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cost, env ) ) ) continue;
+				if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, env ) ) ) continue;
 				
 				// create new interpretation for resolved call
 				results.push_back( new Interpretation{ call, env, cost, copy(arg->cost) } );
@@ -221,13 +220,13 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 
 			// make interpretation for this combo
 			const TypedExpr* call = new CallExpr{ func, move(combo.args), copy(rForall), rType };
-			Cost cCost = rCost + combo.cost;
 			const Env* cEnv = combo.env;
 			
 			// check type assertions if necessary
-			if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cCost, cEnv ) ) ) continue;
+			if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cEnv ) ) ) continue;
 			
-			results.push_back( new Interpretation{ call, cEnv, move(cCost), move(combo.argCost) } );
+			results.push_back( new Interpretation{ 
+				call, cEnv, rCost + combo.cost, move(combo.argCost) } );
 		}
 	}
 
@@ -287,7 +286,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 				new CallExpr{ func, argsFrom( combo.second ), move(forall) };
 
 			// check type assertions if at top level
-			if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cost, env ) ) ) continue;
+			if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, env ) ) ) continue;
 			
 			// create new interpretation for resolved call
 			results.push_back( new Interpretation{ call, env, move(cost), move(combo.first) } );

@@ -2,7 +2,7 @@
 
 #include "env.h"
 #include "interpretation.h"
-#ifdef RP_RES_DEF
+#if defined RP_RES_DEF || defined RP_RES_IMM
 #include "resolve_assertions.h"
 #endif
 
@@ -31,7 +31,7 @@ public:
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	id_src = 0;  // initialize type variable IDs
 	new_generation();  // set up new GC generation
-#ifdef RP_DIR_TD
+#if defined RP_DIR_TD
 	cached.clear();  // clear subexpression cache
 #endif
 
@@ -44,7 +44,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		return Interpretation::make_invalid();
 	}
 
-#ifdef RP_RES_DEF
+#if defined RP_RES_DEF || defined RP_RES_IMM
 	// sort results by cost
 	std::sort( results.begin(), results.end(), ByValueCompare<Interpretation>{} );
 	
@@ -58,7 +58,12 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		const Interpretation& r = *results[i];
 		const TypedExpr* rExpr = r.expr;
 		Env* rEnv = Env::from( r.env );
-		if ( resolveAssertions( *this, rExpr, rEnv ) ) {
+#if defined RP_RES_IMM
+		AssertionResolver assnDisambiguator{ *this, rEnv, true };  // disambiguates by assertions
+		if ( assnDisambiguator.mutate( rExpr ) != nullptr ) {
+#else
+		if ( resolveAssertions( *this, rExpr, rEnv ) ) {  // deferred resolution
+#endif
 			candidates.push_back( new Interpretation{ rExpr, rEnv, r.cost, r.argCost } );
 		}
 	}
