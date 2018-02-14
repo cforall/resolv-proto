@@ -1,8 +1,10 @@
 // derived from the issue in the current resolver where 
 // X& ?+=? (X&, int); does not satisfy an assertion T& ?+=? (T&, one_t)
 
+// ty ?+=? (ty, int);
 #ty add #ty 2
 
+// forall(dtype T | {T& ?+=? (T&, one_t);})
 T inc T | T add T 1
 
 %%

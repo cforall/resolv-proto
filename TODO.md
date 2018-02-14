@@ -1,8 +1,7 @@
 # TODO #
 
 ## Next few days ##
-* Investigate resolution order for assertions:
-  * immediate vs. top-level vs. post-sort
+* Double check on immediate-resolution ambiguities...
 
 ## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void` (see `void` test case)

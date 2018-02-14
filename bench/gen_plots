@@ -1,10 +1,21 @@
 #!/bin/zsh
 
-bu=( out/bu-*.csv(om[1]) )
-co=( out/co-*.csv(om[1]) )
-td=( out/td-*.csv(om[1]) )
+#grab modes from arguments
+if [ $# -eq 0 ]; then 
+	# grabs all CSVs in output directory, strips prefix and suffix, then keeps unique
+	modes=(`ls out/*.csv | sed -e 's/^out\/[[:digit:]]*-[[:alnum:]]*-//' -e 's/\.csv$//' | sort -u`)
+else
+	modes=("$@")
+fi
 
+# read most recent output file for each mode
+files=()
+for m in "${modes[@]}"; do
+	files+=( out/*-$m.csv(om[1]) )
+done
 
+# ensure plots directory exists
 if [[ ! -d plots ]]; then mkdir plots; fi
 
-gnuplot -e "bu='${bu}'; co='${co}'; td='${td}'" gen_plots.gp
+# generate plots
+gnuplot -e "n=${#modes[@]}; files='$files'; labels='$modes'" gen_plots.gp

@@ -52,7 +52,7 @@ fi
 
 for m in "${modes[@]}"; do
     printf "\n== $m ==\n"
-    outfile="$outdir/$m-$vercode.csv"
+    outfile="$outdir/$vercode-$m.csv"
     echo '"test","user(s)","sys(s)","wall(s)","max-mem(KB)"' | tee $outfile
     for t in "${tests[@]}"; do
         printf "\"%s\"" $t | tee -a $outfile
