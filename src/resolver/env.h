@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <ostream>
 #include <string>
@@ -100,42 +99,25 @@ public:
 		return {};
 	}
 
+	/// true iff t occurs in vars, recursively expanded according to env
+	static bool occursIn( const Env* env, const List<PolyType>& vars, const Type* t );
+
+	/// true iff t occurs in vars
+	static bool occursIn( const List<PolyType>& vars, const Type* t );
+
+	/// true iff t occurs in var, recursively expanded according to env
+	static inline bool occursIn( const Env* env, const PolyType* var, const Type* t ) {
+		return occursIn( env, List<PolyType>{ var }, t );
+	}
+
+	/// true iff t occurs in var
+	static inline bool occursIn( const PolyType* var, const Type* t ) {
+		return occursIn( List<PolyType>{ var }, t );
+	}
+
 private:
 #if defined RP_DEBUG && RP_DEBUG >= 1
-	void verify() const {
-		for ( unsigned ci = 0; ci < classes.size(); ++ci ) {
-			const TypeClass& tc = classes[ci];
-			for ( unsigned vi = 0; vi < tc.vars.size(); ++vi ) {
-				const PolyType* v = tc.vars[vi];
-
-				// check variable is properly bound in cache
-				const ClassRef& vr = bindings.at( v );
-				assert( vr.env == this && vr.ind == ci );
-
-				// check variables are unique in a class
-				for ( unsigned vj = vi + 1; vj < tc.vars.size(); ++vj ) {
-					assert(v != tc.vars[vj]);
-				}
-
-				// check variables are unique in an environment
-				for ( unsigned cj = ci + 1; cj < classes.size(); ++cj ) {
-					for ( const PolyType* u : classes[cj].vars ) {
-						assert(v != u);
-					}
-				}
-			}
-		}
-
-		// check cached bindings are still valid
-		for ( const auto& b : bindings ) {
-			assert( b.second.ind < b.second.env->classes.size() );
-			const TypeClass& bc = *b.second;
-			assert( std::count( bc.vars.begin(), bc.vars.end(), b.first ) );
-		}
-
-		// same for parent
-		if ( parent ) parent->verify();
-	}
+	void verify() const;
 #endif
 
 	/// marks a type as seen; true iff the type has already been marked
@@ -197,8 +179,10 @@ private:
 
 	/// Adds v to local class with id rid; v should not be bound in this environment.
 	void addToClass( std::size_t rid, const PolyType* v ) {
+		dbg_verify();
 		classes[ rid ].vars.push_back( v );
 		bindings[ v ] = { this, rid };
+		dbg_verify();
 	}
 
 	/// Makes cbound the bound of r in this environment, returning false if incompatible.
@@ -212,8 +196,12 @@ private:
 		
 		// ensure bounds match
 		if ( ! mergeBound( r, s->bound ) ) return false;
-
+		
 		TypeClass& rc = classes[ r.ind ];
+
+		// ensure occurs check not violated
+		if ( occursIn( this, s->vars, rc.bound ) ) return false;
+
 		s = s.env->findRef( st );  // find s in original env in case mergeBound invalidated
 		const TypeClass& sc = *s;
 
@@ -242,7 +230,7 @@ private:
 		for ( const PolyType* v : sc.vars ) {
 			ClassRef rr = findRef( v );
 			if ( ! rr || rr == s ) {
-				// not bound or bound in target class in parent; can safely add to r
+				// not bound or bound in target class in parent; can safely add to r if no cycle
 				addToClass( r.ind, v );
 			} else if ( rr == r ) {
 				// already in class; do nothing
@@ -301,7 +289,12 @@ public:
 
 	/// Heap-Constructs a brand new environment with a single bound class.
 	/// Returns nullptr if the class cannot be bound
-	static Env* make( ClassRef& r, const Type* sub );
+	static Env* make( ClassRef& r, const Type* sub ) {
+		if ( occursIn( r->vars, sub ) ) return nullptr;
+		Env* env = new Env{ r };
+		env->classes.front().bound = sub;
+		return env;
+	}
 
 	/// Constructs a brand new environment with a single class with an added type variable
 	Env( ClassRef& r, const PolyType* var )
@@ -373,7 +366,12 @@ public:
 	/// Binds this class to the given type; class should be currently unbound.
 	/// May copy class into local scope; class should belong to this or a parent.
 	/// Returns false if would create recursive loop
-	bool bindType( ClassRef& r, const Type* sub );
+	bool bindType( ClassRef& r, const Type* sub ) {
+		if ( occursIn( this, r->vars, sub ) ) return false;
+		if ( r.env != this ) { copyClass( r ); }
+		classes[ r.ind ].bound = sub;
+		return true;
+	}
 
 	/// Binds the type variable into to the given class; returns false if the 
 	/// type variable is incompatibly bound.
@@ -385,7 +383,8 @@ public:
 			// merge variable's existing class into this one
 			return mergeClasses( r, vr );
 		} else {
-			// add unbound variable to class
+			// add unbound variable to class if no cycle
+			if ( occursIn( this, var, classes[r.ind].bound ) ) return false;
 			addToClass( r.ind, var );
 			return true;
 		}
@@ -423,9 +422,11 @@ public:
 			if ( i < n ) {
 				// attempt to merge bound into r
 				if ( ! mergeBound( r, c.bound ) ) return false;
+				// make sure that occurs check is not violated
+				if ( occursIn( this, c.vars, r->bound ) ) return false;
 				// merge previous variables into this class
 				if ( r.env != this ) { copyClass( r ); }
-				for ( std::size_t j = 0; j < i; ++j ) addToClass( r.ind, c.vars[j] );
+				for ( std::size_t j = 0; j < i; ++j ) { addToClass( r.ind, c.vars[j] ); }
 				// merge subsequent variables into this class
 				while ( ++i < n ) {
 					if ( markedSeen( seen, c.vars[i] ) ) continue;
@@ -546,7 +547,7 @@ inline const Type* replace( const Env* env, const Type* ty ) {
 /// Returns false if the variable was already there.
 inline bool insertVar( Env*& env, const PolyType* orig ) {
 	if ( ! env ) {
-		env = new Env( orig );
+		env = new Env{ orig };
 		return true;
 	} else {
 		return env->insertVar( orig );
@@ -569,7 +570,8 @@ inline bool bindType( Env*& env, ClassRef& r, const Type* sub ) {
 /// returns false if incompatible binding.
 inline bool bindVar( Env*& env, ClassRef& r, const PolyType* var ) {
 	if ( ! env ) {
-		env = new Env(r, var);
+		if ( Env::occursIn( var, r->bound ) ) return false;
+		env = new Env{r, var};
 		return true;
 	} else {
 		return env->bindVar( r, var );

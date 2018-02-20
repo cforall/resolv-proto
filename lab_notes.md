@@ -1,6 +1,7 @@
 ## 20 Feb 2018 ##
 * Switched asserts over to `unreachable`/`assume` in `debug.h`
-* Updated easy versions of inputs to be handled by `td-def`
+* Update easy versions of inputs to be handled by `td-def`
+* Fix bug in occurs check (wasn't checking on all variable adds, got `T => #x<T>`)
 
 ## 14-16 Feb 2018 ##
 * update testing scripts, generate tests

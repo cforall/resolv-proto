@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-#if defined NASSERT
+#if defined NDEBUG
 #define unreachable(msg) __builtin_unreachable()
 #define assume(cond,msg) if (!(cond)) __builtin_unreachable()
 #else

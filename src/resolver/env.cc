@@ -1,4 +1,3 @@
-#include <cassert>
 #include <string>
 
 #include "env.h"
@@ -15,6 +14,14 @@
 #include "data/cast.h"
 #include "data/gc.h"
 #include "data/mem.h"
+
+bool Env::occursIn( const Env* env, const List<PolyType>& vars, const Type* t ) {
+	return OccursIn{ env, vars }( t );
+}
+
+bool Env::occursIn( const List<PolyType>& vars, const Type* t ) {
+	return OccursIn{ vars }( t );
+}
 
 bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	dbg_verify();
@@ -38,19 +45,51 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	}
 }
 
-Env* Env::make( ClassRef& r, const Type* sub ) {
-	if ( OccursIn{ r->vars }( sub ) ) return nullptr;
-	Env* env = new Env{ r };
-	env->classes.front().bound = sub;
-	return env;
-}
+#if defined RP_DEBUG && RP_DEBUG >= 1
+#include <cassert>
 
-bool Env::bindType( ClassRef& r, const Type* sub ) {
-	if ( OccursIn{ this, r->vars }( sub ) ) return false;
-	if ( r.env != this ) { copyClass( r ); }
-	classes[ r.ind ].bound = sub;
-	return true;
+void Env::verify() const {
+	for ( unsigned ci = 0; ci < classes.size(); ++ci ) {
+		const TypeClass& tc = classes[ci];
+
+		// check variable uniqueness
+		for ( unsigned vi = 0; vi < tc.vars.size(); ++vi ) {
+			const PolyType* v = tc.vars[vi];
+
+			// check variable is properly bound in cache
+			const ClassRef& vr = bindings.at( v );
+			assert( vr.env == this && vr.ind == ci );
+
+			// check variables are unique in a class
+			for ( unsigned vj = vi + 1; vj < tc.vars.size(); ++vj ) {
+				assert(v != tc.vars[vj]);
+			}
+
+			// check variables are unique in an environment
+			for ( unsigned cj = ci + 1; cj < classes.size(); ++cj ) {
+				for ( const PolyType* u : classes[cj].vars ) {
+					assert(v != u);
+				}
+			}
+		}
+
+		// check occurs check not subverted
+		if ( tc.bound ) {
+			assert( ! occursIn( this, tc.vars, tc.bound ) );
+		}
+	}
+
+	// check cached bindings are still valid
+	for ( const auto& b : bindings ) {
+		assert( b.second.ind < b.second.env->classes.size() );
+		const TypeClass& bc = *b.second;
+		assert( std::count( bc.vars.begin(), bc.vars.end(), b.first ) );
+	}
+
+	// same for parent
+	if ( parent ) parent->verify();
 }
+#endif
 
 void Env::trace(const GC& gc) const {
 	for ( const TypeClass& entry : classes ) {
