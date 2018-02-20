@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cassert>
 #include <vector>
 
 #include "resolver.h"
@@ -165,7 +164,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		std::vector<ArgPack> combos{ ArgPack{ nullptr } };
 		std::vector<ArgPack> nextCombos{};
 		for ( const Type* param : rParams ) {
-			assert(param->size() == 1 && "parameter list should be flattened");
+			assume(param->size() == 1, "parameter list should be flattened");
 			// find interpretations with matching type
 			for ( ArgPack& combo : combos ) {
 				// test matches for leftover combo args
@@ -360,7 +359,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 #endif
 			} break;
 		}
-	} else assert(!"Unsupported expression type");
+	} else unreachable("Unsupported expression type");
 	
 	if ( resolve_mode.expand_conversions ) {
 		expandConversions( results, conversions );

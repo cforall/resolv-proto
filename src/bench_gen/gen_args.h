@@ -9,6 +9,7 @@
 #include "rand.h"
 
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/mem.h"
 #include "data/option.h"
 #include "data/vector_map.h"
@@ -617,9 +618,7 @@ namespace {
                     out << ", " << ws[i] << " ";
                     print( out, *gs[i] );
                 }
-            } else {
-                assert(false && "unknown generator type");
-            }
+            } else unreachable("unknown generator type");
         }
     };
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 
 #include "expr.h"
 
 #include "data/cast.h"
+#include "data/debug.h"
 #include "resolver/interpretation.h"
 
 /// Visitor for typed expressions. 
@@ -33,7 +33,7 @@ public:
         else if ( tid == typeof<AmbiguousExpr>() )
             return as<Self>(this)->visit( as<AmbiguousExpr>(e), r );
 
-        assert(false);
+        unreachable("invalid typed expression");
         return false;
     }
 

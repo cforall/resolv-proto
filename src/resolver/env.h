@@ -101,6 +101,7 @@ public:
 	}
 
 private:
+#if defined RP_DEBUG && RP_DEBUG >= 1
 	void verify() const {
 		for ( unsigned ci = 0; ci < classes.size(); ++ci ) {
 			const TypeClass& tc = classes[ci];
@@ -135,6 +136,7 @@ private:
 		// same for parent
 		if ( parent ) parent->verify();
 	}
+#endif
 
 	/// marks a type as seen; true iff the type has already been marked
 	static bool markedSeen( SeenTypes& seen, const PolyType* v ) {

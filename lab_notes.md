@@ -1,6 +1,15 @@
+## 20 Feb 2018 ##
+* Switched asserts over to `unreachable`/`assume` in `debug.h`
+* Updated easy versions of inputs to be handled by `td-def`
+
+## 14-16 Feb 2018 ##
+* update testing scripts, generate tests
+* fixed `td-imm` variant; same error as `bu-imm` variant from before
+* fixed `td-def` variant; off-by-one error in `MatchIter::push_prefix`
+
 ## 13 Feb 2018 ##
 * debug immediate assertion resolution order
-  * Error was that resolveWithType shouldn't have assertion resolution, and I'd flipped the default too thoroughly
+  * Error was that `resolveWithType` shouldn't have assertion resolution, and I'd flipped the default too thoroughly
 * change makefile to default to previous version of DIR, RES, error if invalid value provided
 
 ## 12 Feb 2018 ##

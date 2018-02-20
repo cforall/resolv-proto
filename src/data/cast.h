@@ -1,9 +1,10 @@
 #pragma once
 // Various more-ergonomic cast wrappers for dealing with types by const pointer
 
-#include <cassert>
 #include <typeinfo>
 #include <typeindex>
+
+#include "debug.h"
 
 /// Gets the unique identifier for a type
 template<typename T>
@@ -40,14 +41,14 @@ const D* as_safe( const B* p ) { return is<D>(p) ? as<D>(p) : nullptr; }
 /// Converts to a pointer to D, asserting if not a pointer to D
 template<typename D, typename B>
 D* as_checked( B* p ) {
-    if ( ! is<D>(p) ) assert(false);
+    assume( is<D>(p), "checked cast failed" );
     return as<D>(p);
 }
 
 /// Converts to a pointer to const D, asserting if not a pointer to D
 template<typename D, typename B>
 const D* as_checked( const B* p ) {
-    if ( ! is<D>(p) ) assert(false);
+    assume( is<D>(p), "checked cast failed" );
     return as<D>(p);
 }
 

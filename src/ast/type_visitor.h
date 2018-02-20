@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 
 #include "type.h"
 
 #include "data/cast.h"
+#include "data/debug.h"
 
 /// Visitor for types.
 /// Uses curiously-recurring template pattern for static dispatch of visit overloads
@@ -29,7 +29,7 @@ public:
         else if ( tid == typeof<TupleType>() )
             return as<Self>(this)->visit( as<TupleType>(t), r );
 
-        assert(false);
+        unreachable("invalid Type type");
         return false;
     }
 

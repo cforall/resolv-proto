@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -17,6 +16,7 @@
 #include "ast/type_visitor.h"
 #include "data/cast.h"
 #include "data/collections.h"
+#include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "data/option.h"
@@ -190,7 +190,7 @@ public:
             init<NamedType>( as<NamedType>(t) );
         } else if ( tid == typeof<PolyType>() ) {
             init<PolyType>( as<PolyType>(t) );
-        } else assert(!"Invalid key type");
+        } else unreachable("Invalid key type");
     }
 
     TypeKey( const ConcType* t ) { init<ConcType>( t ); }
@@ -271,7 +271,7 @@ public:
             return get<NamedKey>().value();
         case KeyMode::Poly:
             return get<PolyKey>().value();
-        default: assert(!"Invalid key type"); return nullptr;
+        default: unreachable("Invalid key type"); return nullptr;
         }
     } 
 
@@ -284,7 +284,7 @@ public:
             return get<NamedKey>() == o.get<NamedKey>();
         case KeyMode::Poly:
             return get<PolyKey>() == o.get<PolyKey>();
-        default: assert(!"Invalid key type"); return false;
+        default: unreachable("Invalid key type"); return false;
         }
     }
 
@@ -297,7 +297,7 @@ public:
             return get<NamedKey>() < o.get<NamedKey>();
         case KeyMode::Poly:
             return get<PolyKey>() < o.get<PolyKey>();
-        default: assert(!"Invalid key type"); return false;
+        default: unreachable("Invalid key type"); return false;
         }
     }
 
@@ -313,7 +313,7 @@ public:
         case KeyMode::Poly:
             h = get<PolyKey>().hash();
             break;
-        default: assert(!"Invalid key type");
+        default: unreachable("Invalid key type"); return 0;
         }
         return (h << 2) | (std::size_t)key_type;
     }
@@ -656,7 +656,7 @@ public:
         else if ( tid == typeof<VoidType>() ) return get( as<VoidType>(ty) );
         else if ( tid == typeof<PolyType>() ) return get( as<PolyType>(ty) );
         
-        assert(false);
+        unreachable("invalid type kind");
         return nullptr;
     }
     const TypeMap<Value>* get( const Type* ty ) const {
@@ -883,13 +883,13 @@ public:
             unsigned char atomsLeft = atoms_left();
 
             if ( atomsLeft == 0 ) {
-                // find node matching next atom
+                // find node matching current atom
                 ++i;
                 ListIter it = m->polys.begin();
-                if ( atoms[i].mode() == KeyMode::Poly ) {
+                if ( atoms[i-1].mode() == KeyMode::Poly ) {
                     // handle as incomplete atom
                     atomsLeft = 1;
-                } else if ( const Base* nm = m->get( atoms[i] ) ) {
+                } else if ( const Base* nm = m->get( atoms[i-1] ) ) {
                     // look at concrete expansions of the current atom
                     prefix.emplace_back( move(it), m );
                     m = nm;
@@ -1108,7 +1108,7 @@ public:
         else if ( tid == typeof<VoidType>() ) return insert( as<VoidType>(ty), forward<V>(v) );
         else if ( tid == typeof<PolyType>() ) return insert( as<PolyType>(ty), forward<V>(v) );
         
-        assert(false);
+        unreachable("invalid type kind");
         return { end(), false };
     }
     
@@ -1163,7 +1163,7 @@ public:
         else if ( tid == typeof<VoidType>() ) return count( as<VoidType>(ty) );
         else if ( tid == typeof<PolyType>() ) return count( as<PolyType>(ty) );
         
-        assert(false);
+        unreachable("invalid type kind");
         return 0;
     }
 
@@ -1255,7 +1255,7 @@ public:
         else if ( tid == typeof<VoidType>() ) return iterator{ locate( as<VoidType>(ty) ) };
         else if ( tid == typeof<PolyType>() ) return iterator{ locate( as<PolyType>(ty) ) };
         
-        assert(false);
+        unreachable("invalid type kind");
         return end();
     }
     const_iterator find( const Type* ty ) const {
@@ -1268,7 +1268,7 @@ public:
         else if ( tid == typeof<VoidType>() ) return const_iterator{ locate( as<VoidType>(ty) ) };
         else if ( tid == typeof<PolyType>() ) return const_iterator{ locate( as<PolyType>(ty) ) };
         
-        assert(false);
+        unreachable("invalid type kind");
         return end();
     }
 };

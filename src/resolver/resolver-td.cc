@@ -1,4 +1,3 @@
-#include <cassert>
 #include <functional>
 #include <vector>
 #include <unordered_map>
@@ -22,13 +21,14 @@
 #include "ast/is_poly.h"
 #include "ast/type.h"
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/mem.h"
 #include "data/range.h"
 
 /// Resolves to an unbound type variable
 InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr, 
 									 const PolyType* targetType, const Env* env, 
-									 bool truncate = true ) {
+									 Resolver::Mode resolve_mode = {} ) {
 	InterpretationList results;
 	InterpretationList& subs = resolver.cached( expr, 
 		[&resolver]( const Expr* e ) { return resolver.resolve( e, nullptr ); } );
@@ -54,7 +54,7 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 		} else continue; // skip results that aren't atomic types
 
 		// optionally truncate tuple expressions
-		if ( tType != nullptr && truncate ) {
+		if ( tType != nullptr && resolve_mode.truncate ) {
 			rExpr = new TruncateExpr{ rExpr, rType };
 			rCost.safe += tType->size() - 1;
 		}
@@ -65,7 +65,8 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 	return results;
 }
 
-InterpretationList resolveWithExtType( Resolver&, const Expr*, const Type*, const Env*, bool );
+InterpretationList resolveWithExtType( 
+	Resolver&, const Expr*, const Type*, const Env*, Resolver::Mode );
 
 /// Returns true if the first type element of rType unifyies with boundType
 bool unifyExt( const Type* boundType, const Type* rType, Cost& rCost, Env*& rEnv ) {
@@ -105,7 +106,6 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 		}
 
 		// make new environment for child resolution, binding function return type
-		Cost rCost = func->poly_cost();
 		Env* rEnv = Env::from(env);
 
 		switch( expr->args().size() ) {
@@ -115,27 +115,26 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					new CallExpr{ func, List<TypedExpr>{}, move(rForall), rType };
 				
 				// check assertions if at top level
-				if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, rCost, rEnv ) ) ) continue;
+				if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, rEnv ) ) ) continue;
 				
-				results.push_back( new Interpretation{ call, rEnv, move(rCost) } );
+				results.push_back( new Interpretation{ call, rEnv, func->poly_cost() } );
 			} break;
 			case 1: {
 				// single arg, accept and move up
-				InterpretationList subs 
-					= resolver.resolveWithType( expr->args().front(), Type::from( rParams ), rEnv );
+				InterpretationList subs = resolveWithExtType(
+					resolver, expr->args().front(), Type::from( rParams ), rEnv, resolve_mode );
 				for ( const Interpretation* sub : subs ) {
 					// make interpretation for this arg
 					const TypedExpr* call = 
 						new CallExpr{ func, List<TypedExpr>{ sub->expr }, copy(rForall), rType };
-					Cost sCost = rCost + sub->cost;
 					const Env* sEnv = sub->env;
 					
 					// check assertions if at top level
-					if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, sCost, sEnv ) ) ) 
+					if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, sEnv ) ) ) 
 						continue;
 					
-					results.push_back(
-						new Interpretation{ call, sEnv, move(sCost), copy(sub->argCost) } );
+					results.push_back( new Interpretation{ 
+						call, sEnv, func->poly_cost() + sub->cost, copy(sub->argCost) } );
 				}
 			} break;
 			default: {
@@ -145,7 +144,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 				// Build match combos, one parameter at a time
 				for ( const Type* param : rParams ) {
-					assert(param->size() == 1 && "parameter list should be flattened");
+					assume(param->size() == 1, "parameter list should be flattened");
 					// find interpretations with this type
 					for ( ArgPack& combo : combos ) {
 						// test matches for leftover combo args
@@ -164,13 +163,13 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 							// replace combo with truncated expression
 							combo.truncate();
-							//combo.crnt = new TruncateExpr{ combo.crnt, cInd };
 						}
 						// skip combos with no arguments left
 						if ( combo.next == expr->args().end() ) continue;
 						// Find interpretations for this argument
-						InterpretationList subs = 
-							resolveWithExtType( resolver, *combo.next, param, combo.env, false );
+						InterpretationList subs = resolveWithExtType( 
+							resolver, *combo.next, param, combo.env, 
+							copy(resolve_mode).without_truncation() );
 						// build new combos from interpretations
 						for ( const Interpretation* i : subs ) {
 							// Build new ArgPack for this interpretation, noting leftovers
@@ -196,15 +195,14 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 					// make interpretation for this combo
 					const TypedExpr* call = 
 						new CallExpr{ func, move(combo.args), copy(rForall), rType };
-					Cost cCost = rCost + combo.cost;
 					const Env* cEnv = combo.env;
 					
 					// check assertions if at top level
-					if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cCost, cEnv ) ) )
+					if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cEnv ) ) )
 						continue;
 					
-					results.push_back(
-						new Interpretation{ call, cEnv, move(cCost), move(combo.argCost) } );
+					results.push_back( new Interpretation{ 
+						call, cEnv, func->poly_cost() + combo.cost, move(combo.argCost) } );
 				}
 			} break;
 		}
@@ -219,7 +217,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 /// Resolves a function expression with a fixed return type
 InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, const FuncExpr* expr, 
-                              const Type* targetType, bool truncate = true ) {
+                              const Type* targetType, Resolver::Mode resolve_mode = {} ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
 	
@@ -229,11 +227,11 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny( 
 					resolver, it.get(), expr, nullptr, 
-					Resolver::Mode{}.without_conversions().with_void_as( targetType ) );
+					copy(resolve_mode).without_conversions().with_void_as( targetType ) );
 			if ( sResults.empty() ) continue;
 
 			const Type* keyType = it.key();
-			bool trunc = truncate && keyType->size() > targetType->size();
+			bool trunc = resolve_mode.truncate && keyType->size() > targetType->size();
 			Cost sCost = Cost::zero();
 			if ( trunc ) { sCost.safe += keyType->size() - targetType->size(); }
 			for ( const Interpretation* i : sResults ) {
@@ -250,13 +248,13 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 			for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 				// results for all the functions with that type
 				InterpretationList sResults = resolveToAny(
-					resolver, it.get(), expr, nullptr, Resolver::Mode{}.without_conversions() );
+					resolver, it.get(), expr, nullptr, copy(resolve_mode).without_conversions() );
 				if ( sResults.empty() ) continue;
 
 				// cast and perhaps truncate expressions to match result type
 				const Type* keyType = it.key();
 				unsigned kn = keyType->size(), cn = conv.from->type->size();
-				bool trunc = truncate && kn > cn;
+				bool trunc = resolve_mode.truncate && kn > cn;
 				Cost sCost = conv.cost;
 				if ( trunc ) { sCost.safe += kn - cn; }
 				for ( const Interpretation* i : sResults ) {
@@ -264,7 +262,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 					if ( trunc ) {
 						sExpr = new CastExpr{ new TruncateExpr{ i->expr, conv.from->type }, &conv };
 					} else if ( kn > cn ) {
-						assert( cn == 1 && "multi-element conversions unsupported" );
+						assume( cn == 1, "multi-element conversions unsupported" );
 						List<TypedExpr> els;
 						els.reserve( kn );
 						els.push_back( new CastExpr{ new TupleElementExpr{ i->expr, 0 }, &conv } );
@@ -293,12 +291,12 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
-				resolver, it.get(), expr, nullptr, Resolver::Mode{}.without_conversions() );
+				resolver, it.get(), expr, nullptr, copy(resolve_mode).without_conversions() );
 			if ( sResults.empty() ) continue;
 
 			// truncate and unify expressions to match result type
 			unsigned n = targetType->size();
-			bool trunc = truncate && keyType->size() > n;
+			bool trunc = resolve_mode.truncate && keyType->size() > n;
 			Cost sCost = trunc ? Cost::zero() : Cost::from_safe( keyType->size() - n );
 			for ( const Interpretation* i : sResults ) {
 				Env* iEnv = Env::from( i->env );
@@ -316,7 +314,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 
 InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs, 
                                   const FuncExpr* expr, const Type* targetType, 
-								  bool truncate = true ) {
+								  Resolver::Mode resolve_mode = {} ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
 
@@ -326,11 +324,11 @@ InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs,
 			// results for all the functions with that type
 			InterpretationList sResults = resolveToAny(
 				resolver, it.get(), expr, nullptr, 
-				Resolver::Mode{}.without_conversions().with_void_as( targetType ) );
+				copy(resolve_mode).without_conversions().with_void_as( targetType ) );
 			if ( sResults.empty() ) continue;
 
 			const Type* keyType = it.key();
-			bool trunc = truncate && keyType->size() > targetType->size();
+			bool trunc = resolve_mode.truncate && keyType->size() > targetType->size();
 			Cost sCost = Cost::zero();
 			if ( trunc ) { sCost.safe += keyType->size() - targetType->size(); }
 			for ( const Interpretation* i : sResults ) {
@@ -360,13 +358,14 @@ InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs,
 				for ( auto it = matches->begin(); it != matches->end(); ++it ) {
 					// results for all functions with that type
 					InterpretationList sResults = resolveToAny(
-						resolver, it.get(), expr, convEnv, Resolver::Mode{}.without_conversions() );
+						resolver, it.get(), expr, convEnv, 
+						copy(resolve_mode).without_conversions() );
 					if ( sResults.empty() ) continue;
 
 					// cast and perhaps truncate expressions to match result type
 					const Type* keyType = it.key();
 					unsigned kn = keyType->size(), cn = fromType->size();
-					bool trunc = truncate && kn > cn;
+					bool trunc = resolve_mode.truncate && kn > cn;
 					Cost sCost = convCost + conv.cost;
 					if ( trunc ) { sCost.safe += kn - cn; }
 					for ( const Interpretation* i : sResults ) {
@@ -374,7 +373,7 @@ InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs,
 						if ( trunc ) {
 							sExpr = new CastExpr{ new TruncateExpr{ i->expr, fromType }, &conv };
 						} else if ( kn > cn ) {
-							assert( cn == 1 && "multi-element conversions unsupported" );
+							assume( cn == 1, "multi-element conversions unsupported" );
 							List<TypedExpr> els;
 							els.reserve(kn);
 							els.push_back(
@@ -415,7 +414,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 
 		// return all candidates with this name
 		return resolveToAny( *this, withName(), funcExpr, env, resolve_mode );
-	} else assert(!"Unsupported expression type");
+	} else unreachable("Unsupported expression type");
 
 	return {};
 }
@@ -423,7 +422,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 /// Resolves expression with the target type, subject to env, optionally truncating result 
 /// expresssions.
 InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,  
-		const Type* targetType, const Env* env, bool truncate = true ) {
+		const Type* targetType, const Env* env, Resolver::Mode resolve_mode = {} ) {
 	Cost rCost;
 
 	// if the target type is partially polymorphic, attempt to make it concrete by the current 
@@ -432,27 +431,16 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 	sub( targetType );
 	if ( is<PolyType>( targetType ) ) {
 		// only an unbound poly type would survive as the target
-		return resolveToUnbound( resolver, expr, as<PolyType>(targetType), env, truncate );
+		return resolveToUnbound( resolver, expr, as<PolyType>(targetType), env, resolve_mode );
 	}
-
-	// // if the target type is polymorphic and unbound, expand out all conversion options
-	// const PolyType* pTarget = as_safe<PolyType>(targetType);
-	// if ( pTarget ) {
-	// 	ClassRef pClass = findClass( env, pTarget );
-	// 	if ( pClass && pClass->bound ) {
-	// 		targetType = pClass->bound;
-	// 		++rCost.poly;
-	// 	} else {
-	// 		return resolveToUnbound( resolver, expr, pTarget, env, truncate );
-	// 	}
-	// }
 
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
 		// convert leaf expression to given type
 		Env* rEnv = Env::from( env );
 		const TypedExpr* rExpr =
-			convertTo( targetType, as<VarExpr>(expr), resolver.conversions, rEnv, rCost, truncate );
+			convertTo( targetType, as<VarExpr>(expr), resolver.conversions, rEnv, rCost, 
+			           resolve_mode.truncate );
 		// return expression if applicable
 		return rExpr 
 			? InterpretationList{ new Interpretation{ rExpr, rEnv, move(rCost) } }
@@ -466,12 +454,13 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 		// pull resolutions from cache
 		InterpretationList& subs = sub.is_poly() ?
 			resolver.cached( targetType, funcExpr,
-				[&resolver,&withName,truncate]( const Type* ty, const Expr* e ) {
-					return resolveToPoly( resolver, withName(), as<FuncExpr>(e), ty, truncate );
+				[&resolver,&withName,resolve_mode]( const Type* ty, const Expr* e ) {
+					return resolveToPoly( 
+						resolver, withName(), as<FuncExpr>(e), ty, resolve_mode );
 				} ) :
 			resolver.cached( targetType, funcExpr, 
-				[&resolver,&withName,truncate]( const Type* ty, const Expr* e ) {
-					return resolveTo( resolver, withName(), as<FuncExpr>(e), ty, truncate ); 
+				[&resolver,&withName,resolve_mode]( const Type* ty, const Expr* e ) {
+					return resolveTo( resolver, withName(), as<FuncExpr>(e), ty, resolve_mode ); 
 				} );
 		if ( env == nullptr && rCost == Cost::zero() ) return subs;
 		
@@ -486,12 +475,17 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 			rSubs.push_back( new Interpretation{ i->expr, sEnv, move(sCost), copy(i->argCost) } );
 		}
 		return rSubs;
-	} else assert(!"Unsupported expression type");
+	} else unreachable("Unsupported expression type");
 
 	return {}; // unreachable
 }
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType,
                                               const Env* env ) {
-	return resolveWithExtType( *this, expr, targetType, env );
+#if defined RP_RES_IMM
+	Mode resolve_mode = Mode{}.without_assertions();
+#else
+	Mode resolve_mode = Mode{};
+#endif
+	return resolveWithExtType( *this, expr, targetType, env, resolve_mode );
 }

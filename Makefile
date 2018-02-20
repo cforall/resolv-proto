@@ -20,14 +20,14 @@ LAST_DIR ?= bu
 LAST_RES ?= def
 
 # Debug Levels: #
-# 0. Just -O0
-# 1. -O0 and memory verification
-# 2. -O0, memory verification and trace printing
+# 0. -O0, asserts
+# 1. -O0, asserts, memory verification
+# 2. -O0, asserts, memory verification, trace printing
 
 ifdef DBG
 CXXFLAGS += -O0 -DRP_DEBUG=${DBG}
 else
-CXXFLAGS += -O2
+CXXFLAGS += -O2 -DNDEBUG
 endif
 
 ifdef SORTED

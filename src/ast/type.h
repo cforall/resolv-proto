@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -12,6 +11,7 @@
 #include "forall.h"
 
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
 
@@ -225,10 +225,12 @@ class TupleType : public Type {
 public:
 	typedef Type Base;
 	
-	TupleType(const List<Type>& types_)
-		: types_(types_) { assert( this->types_.size() > 1 ); }
-	TupleType(List<Type>&& types_)
-		: types_( move(types_) ) { assert( this->types_.size() > 1 ); }
+	TupleType(const List<Type>& types_) : types_(types_) {
+		assume( this->types_.size() > 1, "tuple contains multiple types" );
+	}
+	TupleType(List<Type>&& types_) : types_( move(types_) ) {
+		assume( this->types_.size() > 1, "tuple contains multiple types" );
+	}
 	
 	Type* clone() const override { return new TupleType( types_ ); }
 	

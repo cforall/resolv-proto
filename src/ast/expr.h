@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -13,6 +12,7 @@
 #include "type.h"
 
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "resolver/conversion.h"
@@ -38,7 +38,7 @@ class VarExpr : public TypedExpr {
 public:
 	typedef Expr Base;
 	
-	VarExpr(const Type* ty_) : ty_( ty_ ) { assert( ty_ ); }
+	VarExpr(const Type* ty_) : ty_( ty_ ) { assume( ty_, "var type is valid" ); }
 	
 	Expr* clone() const override { return new VarExpr( ty_ ); }
 	
@@ -93,7 +93,7 @@ public:
 
 	/// Trim TypedExpr type to n elements (n < arg_->type()->size())
 	TruncateExpr(const TypedExpr* arg_, unsigned n) : arg_(arg_) {
-		assert( n < arg_->type()->size() );
+		assume( n < arg_->type()->size(), "truncates shorter" );
 		switch ( n ) {
 		case 0:
 			target_ = new VoidType;
@@ -225,8 +225,9 @@ class TupleElementExpr : public TypedExpr {
 public:
 	typedef Expr Base;
 	
-	TupleElementExpr( const TypedExpr* of_, unsigned ind_ )
-		: of_( of_ ), ind_( ind_ ) { assert( is<TupleType>( of_->type() ) ); }
+	TupleElementExpr( const TypedExpr* of_, unsigned ind_ ) : of_( of_ ), ind_( ind_ ) {
+		assume( is<TupleType>( of_->type() ), "tuple element base valid" );
+	}
 	
 	Expr* clone() const override { return new TupleElementExpr( of_, ind_ ); }
 	

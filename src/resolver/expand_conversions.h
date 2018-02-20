@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <functional>
 #include <utility>
 
@@ -14,6 +13,7 @@
 
 #include "data/cast.h"
 #include "data/compare.h"
+#include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "data/range.h"
@@ -203,7 +203,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
         } else if ( tid == typeof<TupleType>() ) {
             // can't match tuples to non-tuple types
             return nullptr;
-        } else assert(!"Unhandled target type");
+        } else unreachable("Unhandled target type");
     } else if ( eid == typeof<PolyType>() ) {
         ClassRef eclass = getClass( env, as<PolyType>(etype) );
 
@@ -220,7 +220,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
             // neither tuples nor void can bind to PolyType vars.
             // TODO introduce ttype vars for this
             return nullptr;
-        } else assert(!"Unhandled target type");
+        } else unreachable("Unhandled target type");
     } else if ( eid == typeof<VoidType>() ) {
         // fail for non-void targets
         return ( tid == typeof<VoidType>() ) ? expr : nullptr;
@@ -292,7 +292,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
             }
             
         }}
-    } else assert(!"Unhandled expression type");
+    } else unreachable("Unhandled expression type");
 
     return nullptr; // unreachable
 }

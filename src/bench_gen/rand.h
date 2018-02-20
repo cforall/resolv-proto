@@ -1,12 +1,12 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <initializer_list>
 #include <limits>
 #include <random>
 #include <vector>
 
+#include "data/debug.h"
 #include "data/mem.h"
 
 /// Default random engine for project
@@ -91,15 +91,15 @@ class WeightedGenerator : public Generator {
 public:
     WeightedGenerator( DiscreteRandomGenerator::engine_type& e, std::initializer_list<double> ws,
                        GeneratorList&& gs ) : steps(e, ws), gs( move(gs) ) {
-        assert(ws.size() > 1 && "Should be at least 2 steps");
-        assert(this->gs.size() == ws.size() && "Should be same number of weights as generators");
+        assume(ws.size() > 1, "Should be at least 2 steps");
+        assume(this->gs.size() == ws.size(), "Should be same number of weights as generators");
     }
 
     template<typename WIter>
     WeightedGenerator( DiscreteRandomGenerator::engine_type& e, WIter wbegin, WIter wend,
                        GeneratorList&& gs ) : steps(e, wbegin, wend), gs( move(gs) ) {
-        assert(wend - wbegin > 1 && "Should be at least 2 steps");
-        assert(this->gs.size() == (size_t)(wend - wbegin) && "Should be same number of weights as generators");
+        assume(wend - wbegin > 1, "Should be at least 2 steps");
+        assume(this->gs.size() == (size_t)(wend - wbegin), "Should be same number of weights as generators");
     }
 
     unsigned operator() () final { return (*gs[ steps() ])(); }

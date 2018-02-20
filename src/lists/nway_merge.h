@@ -1,11 +1,12 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <utility>
 #include <vector>
 
 #include "merge.h"
+
+#include "data/debug.h"
 
 /// Given n > 1 sorted queues of T, produces a list of combination tuples ordered  
 /// by the sum of their elements.
@@ -87,7 +88,7 @@ class NWayMerge {
 	/// Places the first element on the output queue
 	void init_out_q() {
 		unsigned n = queues.size();
-		assert( n > 1 );
+		assume( n > 1, "merged single queue" );
 		
 		// Ensure all queues non-empty
 		for ( auto& q : queues ) if ( q.empty() ) return;

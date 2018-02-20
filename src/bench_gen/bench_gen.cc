@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstdlib>
 #include <cstddef>
 #include <initializer_list>
@@ -25,6 +24,7 @@
 #include "ast/type.h"
 #include "ast/type_mutator.h"
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/guard.h"
 #include "data/list.h"
 #include "data/mem.h"
@@ -58,7 +58,7 @@ struct TypeGen {
         case Compound: return new NamedType{ NameGen::get_lower( i ) };
         case Poly: return forall ? forall->add( NameGen::get_cap( i ) ) : nullptr;
         case N_KINDS: return nullptr;
-        default: assert(false); return nullptr;
+        default: unreachable("Invalid kind"); return nullptr;
         }
     }
 
@@ -249,7 +249,7 @@ class BenchGenerator {
                 out.push_back( TypeGen::poly( random( i_poly-1 ) ) );
             }
             break;
-        } case N_KINDS: assert(!"Invalid type kind generated.");
+        } case N_KINDS: unreachable("Invalid type kind generated.");
         }
     }
 
@@ -607,7 +607,7 @@ class BenchGenerator {
             List<FuncDecl>& conc_funcs =
                 tid == typeof<ConcType>() ? basic_funcs :
                 tid == typeof<NamedType>() ? struct_funcs[ as<NamedType>(ty)->name() ] :
-                (assert(!"invalid expression type"), *(List<FuncDecl>*)0);
+                (unreachable("invalid expression type"), *(List<FuncDecl>*)0);
             unsigned n_funcs = conc_funcs.size() + poly_funcs.size();
             
             if ( n_funcs == 0 ) {  // leaf expression if nothing with compatible type
@@ -694,7 +694,7 @@ class BenchGenerator {
                     } else if ( pid == typeof<NamedType>() ) {
                         // exact match for concrete named type
                         std::cout << *as<NamedType>(pty);
-                    } else assert(!"invalid concrete parameter type");
+                    } else unreachable("invalid concrete parameter type");
                 }
             }
         }

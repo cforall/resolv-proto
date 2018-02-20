@@ -121,8 +121,13 @@ public:
 
 	/// Flags for interpretation mode
 	class Mode {
+#if defined RP_DIR_TD
+		constexpr Mode(bool ec, bool av, bool ca, bool t)
+			: expand_conversions(ec), allow_void(av), check_assertions(ca), truncate(t) {}
+#else
 		constexpr Mode(bool ec, bool av, bool ca)
 			: expand_conversions(ec), allow_void(av), check_assertions(ca) {}
+#endif
 	public:
 		/// Should interpretations be expanded by their conversions? [true]
 		const bool expand_conversions;
@@ -130,18 +135,31 @@ public:
 		const bool allow_void;
 		/// Should assertions be checked? [false]
 		const bool check_assertions;
+#if defined RP_DIR_TD
+		// Should tuple types be truncated? [true]
+		const bool truncate;
+#endif
 
 		/// Default flags
-		constexpr Mode() : expand_conversions(true), allow_void(false), 
+		constexpr Mode() : expand_conversions(true), allow_void(false)
 #if defined RP_RES_IMM
-			check_assertions(true) 
+			, check_assertions(true) 
 #else
-			check_assertions(false)
+			, check_assertions(false)
+#endif
+#if defined RP_DIR_TD
+			, truncate(true)
 #endif
 			{}
 
 		/// Flags for top-level resolution
-		static constexpr Mode top_level() { return { false, true, true }; }
+		static constexpr Mode top_level() {
+#if defined RP_DIR_TD
+			return { false, true, true, true };
+#else
+			return { false, true, true };
+#endif
+		}
 
 		/// Turn off expand_conversions
 		Mode&& without_conversions() && {
@@ -153,10 +171,19 @@ public:
 			as_non_const(allow_void) = is<VoidType>(t);
 			return move(*this);
 		}
+
 #if defined RP_RES_IMM
 		// Turn off check assertions
 		Mode&& without_assertions() && {
 			as_non_const(check_assertions) = false;
+			return move(*this);
+		}
+#endif
+
+#if defined RP_DIR_TD
+		// Turn off truncate
+		Mode&& without_truncation() && {
+			as_non_const(truncate) = false;
 			return move(*this);
 		}
 #endif

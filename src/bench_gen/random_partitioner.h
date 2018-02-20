@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <initializer_list>
 #include <map>
@@ -9,6 +8,8 @@
 #include <utility>
 
 #include "rand.h"
+
+#include "data/debug.h"
 
 class RandomPartitioner {
 	/// C_memo[k - 2][n - 2k] is n choose k, if it has already been computed
@@ -108,7 +109,7 @@ public:
 	/// Places the (exclusive) end indices of the partitions in parts
 	void get_nonempty( unsigned n, std::initializer_list<unsigned*> parts ) {
 		unsigned k = parts.size();
-		assert( n >= k );
+		assume( n >= k, "invalid partition" );
 		
 		auto it = parts.begin();
 		unsigned last = 0;

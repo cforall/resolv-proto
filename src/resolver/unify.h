@@ -9,6 +9,7 @@
 
 #include "ast/type.h"
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/list.h"
 
 bool unify(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
@@ -61,7 +62,7 @@ bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env
 
         cost.safe += argType->size() - tParam->size();
         return true;
-    } else assert(!"Unhandled parameter type");
+    } else unreachable("Unhandled parameter type");
 
     return false; // unreachable
 }
@@ -89,7 +90,7 @@ bool unifyTuple(const Type* paramType, const Type* argType, Cost& cost, Env*& en
             return unify( as<NamedType>(paramType), argType, cost, env );
         } else if ( pid == typeof<PolyType>() ) {
             return unify( as<PolyType>(paramType), argType, cost, env );
-        } else assert(!"Unhandled parameter type");
+        } else unreachable("Unhandled parameter type");
 
         return false; // unreachable
     }

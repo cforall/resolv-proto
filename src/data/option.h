@@ -1,9 +1,10 @@
 #pragma once
 
-#include <cassert>
 #include <functional>
 #include <type_traits>
 #include <utility>
+
+#include "debug.h"
 
 using std::move;
 
@@ -103,10 +104,10 @@ public:
     constexpr bool has_value() const { return filled; }
 
     /// Get contained value (checked)
-    T& value() & { assert(filled); return get(); }
-    const T& value() const& { assert(filled); return get(); }
-    T&& value() && { assert(filled); return move(get()); }
-    const T&& value() const&& { assert(filled); return move(get()); }
+    T& value() & { assume(filled, "checked get failed"); return get(); }
+    const T& value() const& { assume(filled, "checked get failed"); return get(); }
+    T&& value() && { assume(filled, "checked get failed"); return move(get()); }
+    const T&& value() const&& { assume(filled, "checked get failed"); return move(get()); }
 
     /// Get contained or default value
     template<typename U>

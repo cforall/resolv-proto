@@ -1,7 +1,16 @@
 # TODO #
 
 ## Next few days ##
-* Double check on immediate-resolution ambiguities...
+* generate `overloads-more2`
+* Run TD experiments on DEF/IMM res
+* Look at using this (or something like):
+```
+#if defined NASSERT
+#define unreachable(msg) __builtin_unreachable();
+#else
+#define unreachable(msg) assert(!msg);
+#endif
+```
 
 ## Next few weeks ##
 * Modify semantics of top-level resolution to resolve to `void` (see `void` test case)

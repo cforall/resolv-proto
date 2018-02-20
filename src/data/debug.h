@@ -3,6 +3,15 @@
 #include <iostream>
 #include <utility>
 
+#if defined NASSERT
+#define unreachable(msg) __builtin_unreachable()
+#define assume(cond,msg) if (!(cond)) __builtin_unreachable()
+#else
+#include <cassert>
+#define unreachable(msg) assert(!msg)
+#define assume(cond,msg) assert((cond) && msg)
+#endif
+
 #if defined RP_DEBUG && RP_DEBUG >= 2
 
 #define DBG(...) std::cerr << "\t" << __FILE__ << ":" << __LINE__ << " " << __VA_ARGS__ << std::endl
