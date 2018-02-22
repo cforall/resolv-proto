@@ -35,7 +35,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	cached.clear();  // clear subexpression cache
 #endif
 
-	InterpretationList results = resolve( expr, Env::none(), Mode::top_level() );
+	InterpretationList results = resolve( expr, Env::none(), ResolverMode::top_level() );
 	
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {

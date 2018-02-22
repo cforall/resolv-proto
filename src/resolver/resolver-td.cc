@@ -28,10 +28,19 @@
 /// Resolves to an unbound type variable
 InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr, 
 									 const PolyType* targetType, const Env* env, 
-									 Resolver::Mode resolve_mode = {} ) {
+									 ResolverMode resolve_mode = {} ) {
 	InterpretationList results;
-	InterpretationList& subs = resolver.cached( expr, 
-		[&resolver]( const Expr* e ) { return resolver.resolve( e, nullptr ); } );
+
+#if defined RP_RES_IMM
+	auto mode = ResolverMode{}.with_assertions_if( resolve_mode.check_assertions );
+#else
+	auto mode = ResolverMode{};
+#endif
+	InterpretationList& subs = resolver.cached( expr, mode, 
+		[&resolver]( const Expr* e, ResolverMode mode ) {
+			return resolver.resolve( e, nullptr, mode );
+		} );
+
 	for ( const Interpretation* i : subs ) {
 		// loop over subexpression results, binding result types to target type
 		const TypedExpr* rExpr = i->expr;
@@ -66,7 +75,7 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 }
 
 InterpretationList resolveWithExtType( 
-	Resolver&, const Expr*, const Type*, const Env*, Resolver::Mode );
+	Resolver&, const Expr*, const Type*, const Env*, ResolverMode );
 
 /// Returns true if the first type element of rType unifyies with boundType
 bool unifyExt( const Type* boundType, const Type* rType, Cost& rCost, Env*& rEnv ) {
@@ -79,7 +88,7 @@ bool unifyExt( const Type* boundType, const Type* rType, Cost& rCost, Env*& rEnv
 template<typename Funcs>
 InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs, 
                                  const FuncExpr* expr, const Env* env, 
-                                 Resolver::Mode resolve_mode = {} ) {
+                                 ResolverMode resolve_mode = {} ) {
 	InterpretationList results{};
 	
 	for ( const FuncDecl* func : funcs ) {
@@ -217,7 +226,7 @@ InterpretationList resolveToAny( Resolver& resolver, const Funcs& funcs,
 
 /// Resolves a function expression with a fixed return type
 InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, const FuncExpr* expr, 
-                              const Type* targetType, Resolver::Mode resolve_mode = {} ) {
+                              const Type* targetType, ResolverMode resolve_mode = {} ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
 	
@@ -314,7 +323,7 @@ InterpretationList resolveTo( Resolver& resolver, const FuncSubTable& funcs, con
 
 InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs, 
                                   const FuncExpr* expr, const Type* targetType, 
-								  Resolver::Mode resolve_mode = {} ) {
+								  ResolverMode resolve_mode = {} ) {
 	InterpretationList results;
 	const auto& funcIndex = funcs.index();
 
@@ -398,7 +407,7 @@ InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs,
 }
 
 InterpretationList Resolver::resolve( const Expr* expr, const Env* env, 
-                                      Resolver::Mode resolve_mode ) {
+                                      ResolverMode resolve_mode ) {
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
 		InterpretationList results{ new Interpretation{ as<VarExpr>(expr), env } };
@@ -422,7 +431,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 /// Resolves expression with the target type, subject to env, optionally truncating result 
 /// expresssions.
 InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,  
-		const Type* targetType, const Env* env, Resolver::Mode resolve_mode = {} ) {
+		const Type* targetType, const Env* env, ResolverMode resolve_mode = {} ) {
 	Cost rCost;
 
 	// if the target type is partially polymorphic, attempt to make it concrete by the current 
@@ -453,14 +462,14 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 
 		// pull resolutions from cache
 		InterpretationList& subs = sub.is_poly() ?
-			resolver.cached( targetType, funcExpr,
-				[&resolver,&withName,resolve_mode]( const Type* ty, const Expr* e ) {
+			resolver.cached( targetType, funcExpr, resolve_mode, 
+				[&resolver,&withName]( const Type* ty, const Expr* e, ResolverMode mode ) {
 					return resolveToPoly( 
-						resolver, withName(), as<FuncExpr>(e), ty, resolve_mode );
+						resolver, withName(), as<FuncExpr>(e), ty, mode );
 				} ) :
-			resolver.cached( targetType, funcExpr, 
-				[&resolver,&withName,resolve_mode]( const Type* ty, const Expr* e ) {
-					return resolveTo( resolver, withName(), as<FuncExpr>(e), ty, resolve_mode ); 
+			resolver.cached( targetType, funcExpr, resolve_mode, 
+				[&resolver,&withName]( const Type* ty, const Expr* e, ResolverMode mode ) {
+					return resolveTo( resolver, withName(), as<FuncExpr>(e), ty, mode ); 
 				} );
 		if ( env == nullptr && rCost == Cost::zero() ) return subs;
 		
@@ -483,9 +492,9 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType,
                                               const Env* env ) {
 #if defined RP_RES_IMM
-	Mode resolve_mode = Mode{}.without_assertions();
+	auto resolve_mode = ResolverMode{}.without_assertions();
 #else
-	Mode resolve_mode = Mode{};
+	auto resolve_mode = ResolverMode{};
 #endif
 	return resolveWithExtType( *this, expr, targetType, env, resolve_mode );
 }

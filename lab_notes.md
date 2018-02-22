@@ -1,6 +1,20 @@
+## 22 Feb 2018 ##
+* fix segfault and test failures from yesterday
+
+## 21 Feb 2018 ##
+* met Peter van Beek about algorithms/AI approaches to problem
+  * suggests looking into dynamic programming as cost/correctness model
+    * problem might not be exponential
+    * "non-linear dynamic programming" as phrase regarding cost
+  * there exists literature on data structures for unification
+* further testing of `td-*`: all tests work on `-def`
+* debug `td-imm`
+  * segfault in resolution (same as before: assertions recursively resolved at same level)
+  * made caching depend on resolution mode, some test failures ensuing
+
 ## 20 Feb 2018 ##
 * Switched asserts over to `unreachable`/`assume` in `debug.h`
-* Update easy versions of inputs to be handled by `td-def`
+* Update easy versions of inputs to be handled by `td-def` up to `nesting-more`
 * Fix bug in occurs check (wasn't checking on all variable adds, got `T => #x<T>`)
 
 ## 14-16 Feb 2018 ##

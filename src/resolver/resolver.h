@@ -1,7 +1,5 @@
 #pragma once
 
-//#include <iostream>
-//
 #include <cstddef>
 #include <functional>
 #include <unordered_map>
@@ -41,22 +39,132 @@ using AmbiguousEffect = std::function<void(const Expr*,
 /// has unbound type variables and the unbound typeclasses.
 using UnboundEffect = std::function<void(const Expr*, const List<TypeClass>&)>;
 
+/// Flags for interpretation mode
+class ResolverMode {
+#if defined RP_DIR_TD
+	constexpr ResolverMode(bool ec, bool av, bool ca, bool t)
+		: expand_conversions(ec), allow_void(av), check_assertions(ca), truncate(t) {}
+#else
+	constexpr ResolverMode(bool ec, bool av, bool ca)
+		: expand_conversions(ec), allow_void(av), check_assertions(ca) {}
+#endif
+public:
+	/// Should interpretations be expanded by their conversions? [true]
+	const bool expand_conversions;
+	/// Should interpretations with void type be allowed? [false]
+	const bool allow_void;
+	/// Should assertions be checked? [false]
+	const bool check_assertions;
+#if defined RP_DIR_TD
+	// Should tuple types be truncated? [true]
+	const bool truncate;
+#endif
+
+	/// Default flags
+	constexpr ResolverMode() : expand_conversions(true), allow_void(false)
+#if defined RP_RES_IMM
+		, check_assertions(true) 
+#else
+		, check_assertions(false)
+#endif
+#if defined RP_DIR_TD
+		, truncate(true)
+#endif
+		{}
+
+	/// Flags for top-level resolution
+	static constexpr ResolverMode top_level() {
+#if defined RP_DIR_TD
+		return { false, true, true, true };
+#else
+		return { false, true, true };
+#endif
+	}
+
+	/// Get a integer code for this mode
+	constexpr unsigned id() const {
+		return 
+			expand_conversions
+			| (allow_void << 1)
+			| (check_assertions << 2)
+#if defined RP_DIR_TD
+			| (truncate << 3)
+#endif
+			;
+	}
+
+	/// Turn off expand_conversions
+	ResolverMode&& without_conversions() && {
+		as_non_const(expand_conversions) = false; 
+		return move(*this);
+	}
+	/// Conditionally turn on allow_void if t is void
+	ResolverMode&& with_void_as( const Type* t ) && {
+		as_non_const(allow_void) = is<VoidType>(t);
+		return move(*this);
+	}
+
+#if defined RP_RES_IMM
+	// Turn off check assertions
+	ResolverMode&& without_assertions() && {
+		as_non_const(check_assertions) = false;
+		return move(*this);
+	}
+
+	// Conditionally turn off check assertions
+	ResolverMode&& with_assertions_if( bool b ) && {
+		as_non_const(check_assertions) = b;
+		return move(*this);
+	}
+#endif
+
+#if defined RP_DIR_TD
+	// Turn off truncate
+	ResolverMode&& without_truncation() && {
+		as_non_const(truncate) = false;
+		return move(*this);
+	}
+#endif
+};
+
+inline bool operator== ( const ResolverMode& a, const ResolverMode& b ) {
+	return a.id() == b.id();
+}
+
+namespace std {
+	template<> struct hash<ResolverMode> {
+		typedef ResolverMode argument_type;
+		typedef std::size_t result_type;
+		result_type operator() ( const argument_type& t ) const { return t.id(); }
+	};
+
+	template<> struct hash< std::pair<const Expr*,ResolverMode> > {
+		typedef std::pair<const Expr*,ResolverMode> argument_type;
+		typedef std::size_t result_type;
+		result_type operator() ( const argument_type& t ) const {
+			return std::hash<const Expr*>{}( t.first ) ^ t.second.id();
+		}
+	};
+}
+
 #if defined RP_DIR_TD
 /// argument cache; prevents re-calculation of shared subexpressions under same environment
 class ArgCache {
+	using ExprKey = std::pair<const Expr*, ResolverMode>;
 	using KeyedMap = TypeMap< InterpretationList >;
-	std::unordered_map<const Expr*, KeyedMap> tcache; // typed expression cache
-	std::unordered_map<const Expr*, InterpretationList> ucache; // untyped expression cache
+	std::unordered_map<ExprKey, KeyedMap> tcache; // typed expression cache
+	std::unordered_map<ExprKey, InterpretationList> ucache; // untyped expression cache
 
 public:
 	/// Looks up the interpretations with a given type in the cache, generating them if needed.
 	/// The generation function takes ty and e as arguments and returns an InterpretationList
 	template<typename F>
-	InterpretationList& operator() ( const Type* ty, const Expr* e, F gen ) {
+	InterpretationList& operator() ( const Type* ty, const Expr* e, ResolverMode mode, F gen ) {
 		// search for expression
-		auto eit = tcache.find( e );
+		ExprKey key{ e, mode };
+		auto eit = tcache.find( key );
 		if ( eit == tcache.end() ) {
-			eit = tcache.emplace_hint( eit, e, KeyedMap{} );
+			eit = tcache.emplace_hint( eit, key, KeyedMap{} );
 		}
 
 		// find appropriately typed return value
@@ -64,10 +172,7 @@ public:
 		auto it = ecache.find( ty );
 		if ( it == ecache.end() ) {
 			// build if not found
-			it = ecache.insert( ty, gen( ty, e ) ).first;
-//			std::cerr << 'm' << std::endl;
-//		} else {
-//			std::cerr << 'h' << std::endl;
+			it = ecache.insert( ty, gen( ty, e, mode ) ).first;
 		}
 
 		return it.get();
@@ -76,11 +181,12 @@ public:
 	/// Looks up the untyped interpretations in the cache, generating them if needed.
 	/// The generation function takes e as an argument, and returns an InterpretationList
 	template<typename F>
-	InterpretationList& operator() ( const Expr* e, F gen ) {
+	InterpretationList& operator() ( const Expr* e, ResolverMode mode, F gen ) {
 		// search for expression
-		auto it = ucache.find( e );
+		ExprKey key{ e, mode };
+		auto it = ucache.find( key );
 		if ( it == ucache.end() ) {
-			it = ucache.emplace_hint( it, e, gen( e ) );
+			it = ucache.emplace_hint( it, key, gen( e, mode ) );
 		}
 		return it->second;
 	}
@@ -91,7 +197,7 @@ public:
 		ucache.clear();
 	}
 };
-#endif
+#endif // RP_DIR_TD
 
 /// State-tracking class for resolving expressions
 class Resolver {
@@ -119,80 +225,10 @@ public:
 #endif
 		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
 
-	/// Flags for interpretation mode
-	class Mode {
-#if defined RP_DIR_TD
-		constexpr Mode(bool ec, bool av, bool ca, bool t)
-			: expand_conversions(ec), allow_void(av), check_assertions(ca), truncate(t) {}
-#else
-		constexpr Mode(bool ec, bool av, bool ca)
-			: expand_conversions(ec), allow_void(av), check_assertions(ca) {}
-#endif
-	public:
-		/// Should interpretations be expanded by their conversions? [true]
-		const bool expand_conversions;
-		/// Should interpretations with void type be allowed? [false]
-		const bool allow_void;
-		/// Should assertions be checked? [false]
-		const bool check_assertions;
-#if defined RP_DIR_TD
-		// Should tuple types be truncated? [true]
-		const bool truncate;
-#endif
-
-		/// Default flags
-		constexpr Mode() : expand_conversions(true), allow_void(false)
-#if defined RP_RES_IMM
-			, check_assertions(true) 
-#else
-			, check_assertions(false)
-#endif
-#if defined RP_DIR_TD
-			, truncate(true)
-#endif
-			{}
-
-		/// Flags for top-level resolution
-		static constexpr Mode top_level() {
-#if defined RP_DIR_TD
-			return { false, true, true, true };
-#else
-			return { false, true, true };
-#endif
-		}
-
-		/// Turn off expand_conversions
-		Mode&& without_conversions() && {
-			as_non_const(expand_conversions) = false; 
-			return move(*this);
-		}
-		/// Conditionally turn on allow_void if t is void
-		Mode&& with_void_as( const Type* t ) && {
-			as_non_const(allow_void) = is<VoidType>(t);
-			return move(*this);
-		}
-
-#if defined RP_RES_IMM
-		// Turn off check assertions
-		Mode&& without_assertions() && {
-			as_non_const(check_assertions) = false;
-			return move(*this);
-		}
-#endif
-
-#if defined RP_DIR_TD
-		// Turn off truncate
-		Mode&& without_truncation() && {
-			as_non_const(truncate) = false;
-			return move(*this);
-		}
-#endif
-	};
-
 	/// Recursively resolve interpretations subject to `env`, expanding conversions if 
 	/// not at the top level. May return ambiguous interpretations, but otherwise will 
 	/// not return invalid interpretations.
-	InterpretationList resolve( const Expr* expr, const Env* env, Mode resolve_mode = {} );
+	InterpretationList resolve( const Expr* expr, const Env* env, ResolverMode resolve_mode = {} );
 	
 	/// Resolves `expr` as `targetType`, subject to `env`. 
 	/// Returns all interpretations (possibly ambiguous).

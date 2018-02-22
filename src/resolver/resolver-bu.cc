@@ -32,7 +32,7 @@
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
 InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env* outEnv, 
-                               Resolver::Mode resolve_mode ) {
+                               ResolverMode resolve_mode ) {
 	InterpretationList results;
 	
 	// find functions with no parameters, skipping remaining checks if none
@@ -65,7 +65,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 /// Return an interpretation for all single-argument interpretations in funcs
 template<typename Funcs>
 InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, InterpretationList&& args, 
-                               Resolver::Mode resolve_mode ) {
+                               ResolverMode resolve_mode ) {
 	InterpretationList results;
 
 	for ( const Interpretation* arg : args ) {
@@ -135,7 +135,7 @@ using ComboList = std::vector<InterpretationList>;
 
 template<typename Funcs>
 InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
-                               ComboList&& args, Resolver::Mode resolve_mode ) {
+                               ComboList&& args, ResolverMode resolve_mode ) {
 	InterpretationList results{};
 
 	for ( const FuncDecl* func : funcs ) {
@@ -248,7 +248,7 @@ using ComboList = std::vector< std::pair<Cost, InterpretationList> >;
 /// argument packs in combos
 template<typename Funcs>
 InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
-                               ComboList&& combos, Resolver::Mode resolve_mode ) {
+                               ComboList&& combos, ResolverMode resolve_mode ) {
 	InterpretationList results;
 	
 	for ( const auto& combo : combos ) {
@@ -308,7 +308,7 @@ struct interpretation_unambiguous {
 };
 
 InterpretationList Resolver::resolve( const Expr* expr, const Env* env, 
-                                      Resolver::Mode resolve_mode ) {
+                                      ResolverMode resolve_mode ) {
 	InterpretationList results;
 	
 	auto eid = typeof(expr);
@@ -371,9 +371,9 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
 	                                          const Env* env ) {
 #if defined RP_RES_IMM
-	Mode resolve_mode = Mode{}.without_conversions().with_void_as( targetType ).without_assertions();
+	auto resolve_mode = ResolverMode{}.without_conversions().with_void_as( targetType ).without_assertions();
 #else
-	Mode resolve_mode = Mode{}.without_conversions().with_void_as( targetType );
+	auto resolve_mode = ResolverMode{}.without_conversions().with_void_as( targetType );
 #endif
 	return convertTo( targetType, resolve( expr, env, resolve_mode ), conversions );
 }

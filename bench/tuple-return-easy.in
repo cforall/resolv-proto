@@ -1,27 +1,27 @@
-// MANUALLY ADJUSTED
-// n_decls: 1500
-// n_exprs: 750
-// seed: 3
-// n_overloads: weighted 0.5 uniform 2 120, 0.5 constant 1 [1,120]
-// n_rets: discrete 0.15 0.8 0.05 [0,2]
-// n_parms: discrete 0.05 0.35 0.55 0.03 0.01 0.01 [0,5]
-// n_poly_types: discrete 0.9 0.1 [0,1]
-// p_ret_overload: 0.1
-// max_tries: 20
-// p_new_type: 0.5
-// get_basic: weighted 0.375 uniform 0 2, 0.25 constant 3, 0.375 uniform 4 7 [0,7]
-// with_struct_params: 12 21 25
-// get_struct: weighted 0.45 uniform 0 12, 0.28 constant 13, 0.24 constant 14, 0.02 uniform 15 21, 0.01 uniform 22 25 [0,25]
-// get_nested_struct: weighted 0.45 uniform 0 12, 0.28 constant 13, 0.24 constant 14, 0.02 uniform 15 21, 0.01 uniform 22 25 [0,25]
-// p_nested_at_root: 0.06
-// p_nested_deeper: 0.3
-// p_unsafe_offset: 0.25
-// basic_offset: geometric 0.25 [0,4294967295]
-// p_with_kind: 0.54 0.36 0.1
-// n_assns: weighted 0.65 constant 0, 0.25 uniform 1 10, 0.1 uniform 11 35 [0,35]
-// p_all_poly_assn_param: 0.78
-// p_all_poly_assn_return: 0.34
-// p_poly_assn_nested: 0.95
+// // MANUALLY ADJUSTED
+// // n_decls: 1500
+// // n_exprs: 750
+// // seed: 3
+// // n_overloads: weighted 0.5 uniform 2 120, 0.5 constant 1 [1,120]
+// // n_rets: discrete 0.15 0.8 0.05 [0,2]
+// // n_parms: discrete 0.05 0.35 0.55 0.03 0.01 0.01 [0,5]
+// // n_poly_types: discrete 0.9 0.1 [0,1]
+// // p_ret_overload: 0.1
+// // max_tries: 20
+// // p_new_type: 0.5
+// // get_basic: weighted 0.375 uniform 0 2, 0.25 constant 3, 0.375 uniform 4 7 [0,7]
+// // with_struct_params: 12 21 25
+// // get_struct: weighted 0.45 uniform 0 12, 0.28 constant 13, 0.24 constant 14, 0.02 uniform 15 21, 0.01 uniform 22 25 [0,25]
+// // get_nested_struct: weighted 0.45 uniform 0 12, 0.28 constant 13, 0.24 constant 14, 0.02 uniform 15 21, 0.01 uniform 22 25 [0,25]
+// // p_nested_at_root: 0.06
+// // p_nested_deeper: 0.3
+// // p_unsafe_offset: 0.25
+// // basic_offset: geometric 0.25 [0,4294967295]
+// // p_with_kind: 0.54 0.36 0.1
+// // n_assns: weighted 0.65 constant 0, 0.25 uniform 1 10, 0.1 uniform 11 35 [0,35]
+// // p_all_poly_assn_param: 0.78
+// // p_all_poly_assn_return: 0.34
+// // p_poly_assn_nested: 0.95
 #x<#t> b-o0
 #n b-o1
 b-o2 #y<#d>
@@ -2050,12 +2050,12 @@ r( #r 8 )
 bam( -9 )
 bam( 7 11 )
 bap( 6 #f )
-v( 3 bin( z( d( bap( #x<6> #x<7> ) 3 ) ) 4 ) )
+//v( 3 bin( z( d( bap( #x<6> #x<7> ) 3 ) ) 4 ) )
 baw( 0 )
 bag( #x<1> #x<1> #x<1> 12 )
 bad( #x<#d> )
 bap( #d )
-// x( p( 2 0 ) bap( bid( bin( b( ban( -2 5 ) ) 0 ) ) ) )
+// // x( p( 2 0 ) bap( bid( bin( b( ban( -2 5 ) ) 0 ) ) ) )
 x( #v #x<3> )
 bap( 0 #n )
 y( #l )
@@ -2112,7 +2112,7 @@ d( #x<#p> #b )
 z( -1 )
 z( 1 #y<1> )
 bap( 8 )
-bid( baw( 8 bam( d( v( 0 baf( bam( #m 1 ) bid( 7 bip( -2 4 ) ) ) ) ) ) ) #f )
+//bid( baw( 8 bam( d( v( 0 baf( bam( #m 1 ) bid( 7 bip( -2 4 ) ) ) ) ) ) ) #f )
 z( 0 -1 )
 baw( 5 )
 d( #y<3> )
@@ -2186,7 +2186,7 @@ bag( 4 biw( b( #y<0> #x<0> ) ) )
 bam( 8 #n )
 bit( )
 bil( #b #y<5> )
-baw( bap( bit( 17 bit( 1 #y<#n> ) ) 2 ) 2 )
+//baw( bap( bit( 17 bit( 1 #y<#n> ) ) 2 ) 2 )
 b( #l )
 bid( bag( 10 1 ) #f #f )
 baf( #x<3> 6 3 #x<3> #m )
@@ -2262,7 +2262,7 @@ bam( 5 20 )
 bag( 0 #x<4> )
 bit( 5 #x<2> )
 bay( #x<5> )
-// bam( 0 bag( 17 bit( bap( #d ) ) ) )
+// // bam( 0 bag( 17 bit( bap( #d ) ) ) )
 d( 4 )
 bag( #x<#w> #x<#w> )
 bay( 5 3 )

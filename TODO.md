@@ -4,6 +4,7 @@
 * Run TD experiments on DEF/IMM res
 
 ## Next few weeks ##
+* Make mode that throws away alternatives of ambiguous expression
 * Modify semantics of top-level resolution to resolve to `void` (see `void` test case)
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
   * Look at tuple truncations as conversions in expand_conversions
@@ -18,10 +19,9 @@
 * investigate user-defined conversions
   * It's possible that polymorphic conversions will basically push this on us anyway...
 * maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
-
-## Indeterminate Future ##
+* look up unification data structures literature
+* investigate problem as dynamic programming
 * Look at Martelli (Bilson03p.39 cite. 25) for linear-space type representation, (ibid. cite. 4) for set operations on types
-* Refine cost model -- look at cases in `convert_amb`
 * Possibly change mapped assertion value to an Interpretation from a TypedExpr
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)
   * small-set optimization on TypeMap may also be a good idea
