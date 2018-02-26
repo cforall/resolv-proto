@@ -1,0 +1,19 @@
+## Traversal directions ##
+
+### bu "bottom-up" ###
+fully resolve each argument before attempting to resolve a function call
+
+### td "top-down" ###
+resolve arguments filtered to match types allowed by function parameters (cached to avoid duplication of work)
+
+## Assertion resolution orders ##
+
+### def "deferred" ###
+optimistically assume all assertions resolvable, only resolve assertions for cheapest top-level interpretations once all top-level interpretations are generated
+
+### imm "immediate" ###
+resolve assertions immediately after generating interpretation (disambiguation deferred as in def)
+
+### top "top-level" ###
+resolve assertions when each top-level interpretation is generated
+

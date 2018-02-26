@@ -2,7 +2,7 @@
 /rp-*
 /bench_gen
 /tests/renumber
-/bench/plots
+/bench/plots/*.pdf
 *.o
 *.d
 .lastmakeflags
