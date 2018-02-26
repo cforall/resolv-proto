@@ -1,5 +1,5 @@
 ## 26 Feb 2018 ##
-* finish testing `td-imm`
+* finish testing `td-imm`, `td-top`
 
 ## 23 Feb 2018 ##
 * test `td-imm`, generate easy tests as needed

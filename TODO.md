@@ -1,7 +1,6 @@
 # TODO #
 
 ## Next few days ##
-* Run TD experiments on DEF/IMM res
 
 ## Next few weeks ##
 * Make mode that throws away alternatives of ambiguous expression
