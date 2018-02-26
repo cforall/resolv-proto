@@ -1,0 +1,2276 @@
+// n_decls: 1500
+// n_exprs: 750
+// seed: 8
+// n_overloads: weighted 0.65 constant 1, 0.25 uniform 2 6, 0.1 uniform 7 40 [1,40]
+// n_rets: discrete 0.15 0.85 [0,1]
+// n_parms: discrete 0.05 0.35 0.55 0.03 0.01 0.01 [0,5]
+// n_poly_types: discrete 0.9 0.1 [0,1]
+// p_ret_overload: 0.1
+// max_tries: 20
+// p_new_type: 0.5
+// get_basic: weighted 0.375 uniform 0 2, 0.25 constant 3, 0.375 uniform 4 7 [0,7]
+// with_struct_params: 12 21 25
+// get_struct: weighted 0.45 uniform 0 12, 0.28 constant 13, 0.24 constant 14, 0.02 uniform 15 21, 0.01 uniform 22 25 [0,25]
+// get_nested_struct: weighted 0.45 uniform 0 12, 0.28 constant 13, 0.24 constant 14, 0.02 uniform 15 21, 0.01 uniform 22 25 [0,25]
+// p_nested_at_root: 0.06
+// p_nested_deeper: 0.3
+// p_unsafe_offset: 0.25
+// basic_offset: geometric 0.25 [0,4294967295]
+// p_with_kind: 0.54 0.36 0.1
+// n_assns: weighted 0.65 constant 0, 0.25 uniform 1 10, 0.1 uniform 11 35 [0,35]
+// p_all_poly_assn_param: 0.78
+// p_all_poly_assn_return: 0.34
+// p_poly_assn_nested: 0.95
+3 b #b
+#b d #y<#b> 3
+f 3 #y<1> 6 #x<#y<1>>
+0 g 0
+6 k 6 #x<0>
+4 l 3 #x<#d>
+#y<5> m #y<5> 5
+2 n 2
+3 p-o0
+p-o1 #x<2>
+0 p-o2 0
+0 p-o3 #g
+p-o4 4 3
+p-o5 2 #x<T>
+p-o6 #x<#m> #k
+5 p-o7 #l #gg<5>
+7 p-o8 #t #t
+T p-o9 2 #y<2>
+#x<#m> p-o10 7 3
+0 p-o11 0 T
+#y<0> p-o12 3 3 #y<0>
+4 p-o13 7 7 #r #r
+5 r #y<#r> #p
+7 t 7
+T v 3 5 | 1 kaz #y<#l> | #x<T> lag | T bug T | kay | dug #y<6>
+3 w T | 5 dif T | kan #y<3> #y<3> | T fow #x<T> | 0 fot #y<T> 0
+T x #l
+#w y 1 #w
+#y<5> z 0 1
+#b bab 2 #y<#b>
+T bad 3 3
+7 baf 2 #w 5
+#y<4> bag 2
+bak-o0 #t
+T bak-o1 4
+3 bak-o2 3
+4 bak-o3 T 4 | T bop T | 6 kaz T | #n kiw T | #m bar T | 3 kav T T | T duk T 0 | gax T T | #y<#g> kol T #y<#g> | T lad T T | T fuz T | #y<7> bor #y<7> #x<T> | T kid #y<0> #y<5> | 0 dor T | #y<#g> bim T #y<#g> | #y<1> buv | 3 fow T | T gov T T | #x<#b> dap #x<#b> T | T bug T | 0 kiw T | 7 dap T #y<#g>
+T bak-o4 3 0 2
+#x<#y<1>> bal-o0 #y<1>
+bal-o1 1 #y<#w>
+5 bal-o2 7 #kk<7>
+0 bal-o3 2 0
+4 bam 2 #y<T>
+3 ban 6
+bap
+#x<3> bar-o0
+#m bar-o1 T
+#b bar-o2 #w #w
+3 bar-o3 #rr<#t 1> 1
+#y<6> bat #x<#f> #x<T>
+bav-o0 5
+4 bav-o1 #y<4>
+#f bav-o2 6 6
+1 bav-o3 #y<#y<3>> 6
+1 bav-o4 #y<3> 0
+#k bav-o5 #v T
+baw-o0 7 #y<#t>
+4 baw-o1 #t T
+0 bax 2
+T bay 6 6
+#x<0> baz-o0 3
+0 baz-o1 1
+#b baz-o2 #x<#b> 6
+#p bib 4 #p
+7 bid 3
+1 bif-o0
+#m bif-o1 #x<6>
+6 bif-o2 T
+T bif-o3 4
+0 bif-o4 #p #x<7>
+#v big #v #v
+bik 3 T | T dap | 5 lab #y<#p> 5
+#y<6> bil-o0 #g 6
+6 bil-o1 0 0
+bim-o0
+bim-o1 #x<7>
+bim-o2 3
+1 bim-o3 #w
+7 bim-o4 7
+3 bim-o5 5
+3 bim-o6 #x<#b>
+#y<#d> bim-o7 #y<0>
+5 bim-o8 #p
+bim-o9 #y<2> 1
+1 bim-o10 #x<1> T | lap #y<3> #y<3> | #y<#g> gir #y<#g> | #y<6> lad #y<#v> | far T #x<4> | #y<7> goy #y<7> 5 | T guf #x<1> | fuz #y<#t> | T bug #x<#v> | giz | #n dob #x<T> | kur #x<0> T | #y<T> dak T
+#l bim-o11 #f 0
+4 bim-o12 #x<T> 3 | 5 fuk #x<#b> #x<#b> | #w dob T T 5 5 | #x<#l> gon | #w koz T
+3 bim-o13 3 #g
+#r bim-o14 3 1
+#y<#g> bim-o15 T #y<#g> | #m bif #x<T> | #x<#y<1>> bal #y<1>
+3 bim-o16 #k T | dov T | 5 kid #y<#v> | #x<1> fup #y<2> #b | kob T | 0 doz T | 3 gut #x<#f> | #y<T> dap #y<T> #y<T> | T koz #x<#k> | T dif T 1 | doy #y<#t> #x<3>
+4 bim-o17 5 1
+4 bim-o18 #y<4> #y<4>
+4 bim-o19 2 4
+5 bim-o20 T 5 | 7 buv #y<T> | buv T | 5 giz #x<0>
+T bim-o21 #f 6
+3 bim-o22 T 2
+#x<2> bim-o23 #x<2> 4 #x<2> 2
+4 bin T | 0 fok T | 3 kog T | T dun T T | 3 gov T T | 1 doy #y<T> | #m kay T | T kol | 3 box T
+3 bip-o0 #y<3> T
+#v bip-o1 3 1
+3 bir 5 5
+#y<3> bit 5 #y<3>
+#x<#l> biv 0
+#k biw #y<#k> 3
+bix T #k | 2 kot T | #y<1> buv | #b gut #x<2> | #x<T> gov #x<T> | T kak | 3 fuz #x<3> #x<3> | dug #y<6>
+#f biy-o0
+3 biy-o1 #x<6>
+T biy-o2 #k | 3 dib #y<2> | 0 duy #y<#d> | #x<#n> gaz T T | #x<2> kom #x<2> 2 | #x<2> doz #x<#d> | #x<0> fow | 2 dar #x<T> | #x<#y<1>> bal #y<1> | #y<3> fim | #f fod T
+#p biy-o3 7 7
+7 biy-o4 3 3
+1 biz 1 1 4 #x<3>
+3 bob-o0 #m
+#t bob-o1 #k
+3 bob-o2 #x<T>
+4 bob-o3 4
+bob-o4 T #x<T>
+bob-o5 #w 3
+#x<3> bob-o6 3 #w
+3 bob-o7 3 3
+2 bob-o8 #y<#g> 5
+0 bob-o9 1 #r
+bob-o10 #k 3 3 5
+0 bod #g #g
+3 bof-o0 3
+bof-o1 1 2
+6 bof-o2 #l 0
+#v bof-o3 T #x<#v>
+5 bog 5
+bok #g #g
+7 bol T | kux #x<T> | #w gut #x<#w> 0 | T bug #x<#v> | #l duf #y<#b> #x<5>
+3 bom #k
+6 bon T | doy T #x<6>
+3 bop T
+bor-o0 7
+4 bor-o1 2
+#pp<2 2> bor-o2 #pp<2 2>
+#x<#b> bor-o3 5
+3 bor-o4 3
+2 bor-o5 T 2
+5 bor-o6 6 #d
+T bor-o7 6 3 | T bug T #y<T> | 5 giz #x<0> | 7 gir #y<0> 0
+#x<0> bor-o8 0 0
+2 bor-o9 3 2
+4 bor-o10 5 #k
+#y<#v> bor-o11 0 2
+#n bor-o12 #n 4
+7 bor-o13 #y<#b> 2
+#y<7> bor-o14 #y<7> #x<3>
+#x<#f> bor-o15 1 #x<1> #x<1> #x<1>
+3 bot T 1 3
+#w bov T 3
+#l bow 1 1
+3 box-o0 3
+box-o1 #n 0
+box-o2 4 4
+#g box-o3 #g 1
+#x<#w> box-o4 6 6
+#dd<#d> box-o5 7 T
+#x<#k> boy #x<#k> #x<#k>
+#v boz 1 #v
+5 bub #x<5> 2
+#x<3> bud 3
+1 buf-o0
+#x<#m> buf-o1 0
+#x<4> buf-o2 T
+3 buf-o3 1
+2 buf-o4 2 2
+7 bug-o0
+#b bug-o1
+bug-o2 #x<2>
+1 bug-o3 2
+T bug-o4 #y<2>
+T bug-o5 6
+T bug-o6 #n | 5 kid T T | #m dix #y<T> #x<3>
+T bug-o7 #x<#v>
+#y<#d> bug-o8 3
+7 bug-o9 #b
+1 bug-o10 #x<#n>
+3 bug-o11 #y<#g>
+T bug-o12 T
+#x<T> bug-o13 #y<#r>
+#y<0> bug-o14 0
+0 bug-o15 1
+bug-o16 5 5
+bug-o17 #f 1
+1 bug-o18 #x<3> #x<1>
+#x<#b> bug-o19 T R
+R bug-o20 T #y<#k>
+T bug-o21 0 #y<#d>
+#v bug-o22 2 T | #x<#k> doz T T | kaz | #y<0> buk #x<#g> 0 | 2 gax T | T kur #y<#d> #r | #y<1> fiy #y<1> #y<1> | dug #y<6> | 3 koz #bb<0>
+#d bug-o23 0 2
+#m bug-o24 #n 3
+#x<R> bug-o25 T #t
+5 bug-o26 #y<#n> 7
+#mm<T #n> bug-o27 6 4
+T bug-o28 #x<4> 0 3 #x<4>
+#y<0> buk #x<#g> 0
+bul #y<#t>
+2 bum #y<3> 6
+6 bun 6 T | T doz T | 2 lad #y<2> T | #y<7> bor #y<7> #x<3> | T gid T | T bug #y<2>
+4 bup 2 3
+bur #m
+2 but 2 5
+#y<1> buv-o0
+buv-o1 T
+#y<3> buv-o2 T | #y<#g> kol T #y<T> | 1 gut T T | #y<3> fuz #y<7> | #y<0> fiv #y<0>
+1 buv-o3 #y<#n>
+6 buv-o4 #y<3>
+4 buv-o5 4
+5 buv-o6 5
+#m buv-o7 #b
+7 buv-o8 #y<7>
+6 buv-o9 2
+6 buv-o10 6
+6 buv-o11 #p
+4 buv-o12 #d
+3 buv-o13 3
+buv-o14 3 T
+1 buv-o15 6 T
+1 buv-o16 1 1
+5 buv-o17 5 #m
+#v buv-o18 6 #f
+#b buv-o19 0 1
+6 buv-o20 T 3
+#l buv-o21 #l T | 3 gum T T | #x<5> kaf T T | kow T | T gam T T | 1 doy #rr<T T> | p #x<2> | dif T | T kak | #x<5> gir #x<T> T | T kid #y<#v>
+3 buv-o22 4 4
+4 buv-o23 0 #y<4>
+6 buv-o24 0 5
+0 buv-o25 0 0
+0 buv-o26 0 T
+buw 3
+3 bux 1 0
+#k buy 5
+3 buz T #y<3> | T giw T T | lad T | bul #y<#t> | 5 kid #y<#v> | 5 fuz #y<1> | 0 giz T | T bug #x<#v> | 3 bim #x<#b> | #x<T> bug T #t | 4 kur T
+dab 3 2
+#y<5> dad #y<5> 5
+#y<#n> daf #nn<2 3> 2
+#y<4> dag 4 4
+#y<#p> dak-o0
+#y<R> dak-o1 T
+1 dak-o2 1
+3 dak-o3 3 #x<3>
+#x<5> dak-o4 3 2
+3 dak-o5 3 #n
+dal-o0 1
+dal-o1 0 0
+#m dal-o2 T 1
+6 dal-o3 5 #x<#g> #f T 5 | duk #y<7> #y<1> | #x<T> kom #x<T> T | #nn<#w T> lap #nn<#w T> | #l koz T | #y<#g> kol T #y<#g> | 3 duk T | 6 buv T | kux #x<T> | T koz #x<#k>
+dam T | #x<T> daz | #x<0> kol #x<0> | #n dob #x<T>
+#y<1> dan 1 2
+dap-o0
+T dap-o1 | 3 gut #x<#f> | kig | T day | 3 fuz #x<3> #x<3> | #y<#t> gax T 3 | 2 koz T T | #x<T> gog T
+1 dap-o2
+dap-o3 T | kan #y<3> #y<3> | T dap
+dap-o4 0
+#f dap-o5 6
+6 dap-o6 6
+4 dap-o7 7
+1 dap-o8 #l
+dap-o9 T 3
+dap-o10 #y<T> 4
+dap-o11 1 3
+6 dap-o12 T 6
+#y<T> dap-o13 #y<T> #y<T>
+5 dap-o14 5 #y<T> | T kol T | #y<3> koz #y<3> | T kid T T | T dap T 3 | T kam #x<#t> | 0 fuz T T | gax #y<#v> | T dun | T koz #x<#k>
+R dap-o15 T 3 | #y<0> gat #y<0> 1 | dun | R kug #x<#x<#r>> | 4 fow #x<#k> | #y<0> buk #x<#g> 0 | T bug R #y<#k> | T kow R #l | 3 doz #y<#l> | #x<#n> gaz T T
+#x<#b> dap-o16 #x<#b> T | 3 doy #y<T> T | lad T 1 | #v bof T #x<#v> | 3 kur #y<6> | #x<T> giz T 1 | #f gaz T 3
+2 dap-o17 #t 1
+6 dap-o18 T #x<3>
+6 dap-o19 3 #x<3>
+#bb<#v> dap-o20 #y<#w> #w
+1 dap-o21 #x<7> 1
+4 dap-o22 #y<#t> 3
+#r dap-o23 #r 4
+#x<6> dap-o24 1 6
+1 dap-o25 #x<#d> #x<#d>
+1 dap-o26 6 T
+0 dap-o27 #d #y<4>
+#y<#p> dap-o28 6 7
+1 dap-o29 T #y<1>
+0 dap-o30 T #n
+7 dap-o31 T #y<#g> | #x<T> bug T T | T gid T
+2 dap-o32 #w #k
+#m dap-o33 T R | 1 bim #x<R> R | 0 baz R | 2 kiw #y<#g> | dun #y<R> #y<T> | 1 din #x<#v> #x<#v> | #x<T> bug #y<#r> | bul #y<#t>
+6 dap-o34 #y<#m> 6
+dap-o35 1 #l #l
+5 dap-o36 #y<#n> 5 T
+dar-o0 3
+#y<1> dar-o1 #m
+7 dar-o2 #n
+0 dar-o3 #y<3>
+3 dar-o4 3
+5 dar-o5 T
+#l dar-o6 #x<2>
+3 dar-o7 #f
+2 dar-o8 #x<T>
+dar-o9 0 0
+dar-o10 3 #p
+4 dar-o11 #y<3> 3
+2 dar-o12 #x<#k> 2
+#y<#f> dar-o13 3 #y<#f>
+1 dar-o14 #x<#r> #g
+3 dar-o15 6 6
+0 dar-o16 0 0
+#r dar-o17 3 T
+3 dar-o18 1 T
+1 dar-o19 1 #r
+7 dar-o20 7 #x<7>
+7 dar-o21 3 #y<0>
+T dat 2
+3 dav 2 T | 1 gog T #y<2> | 7 buv #y<7>
+3 daw 3 #v
+#x<#t> dax
+#y<4> day-o0
+T day-o1 | 3 buz T #y<3>
+1 day-o2 1
+0 day-o3 0
+day-o4 0 0
+day-o5 1 1
+day-o6 5 #x<#l>
+day-o7 #ff<5> 5
+T day-o8 #d T
+0 day-o9 0 0
+2 day-o10 #b #b
+T day-o11 #p 3 | 0 fuz T T | fuz #y<#t> | 2 fow #kk<2> #kk<2> | 1 gut T T | 7 gaz T | #x<T> kul #x<T> #x<1> | dap T | #y<6> bat #x<#f> #x<T> | #y<#x<7>> lag #x<7> | 5 gox T 3
+6 day-o12 #f 1
+#y<5> day-o13 3 #y<5>
+#n day-o14 0 #n
+2 day-o15 3 2
+T day-o16 5 2
+T day-o17 5 5
+5 day-o18 5 T
+0 day-o19 5 #w #ll<7> T #ll<7>
+6 day-o20 3 #x<#p> #d 0 0
+#x<1> daz-o0
+5 daz-o1
+7 daz-o2 4 5 0 0 T
+3 dib #y<2>
+0 did 0
+dif-o0 7
+dif-o1 5
+dif-o2 3
+1 dif-o3 2
+2 dif-o4 0
+#y<3> dif-o5 6
+5 dif-o6 T | #y<4> lad T | #x<1> fow #x<T> | #y<0> gat #y<0> T | 6 kid #x<#p> T | 4 bav #y<4> | 6 bon T | bim
+dif-o7 T 0 | #f gaz T 3 | #x<1> daz | kay #x<7> 0 | #m bif #x<6> | #y<4> day
+dif-o8 #y<#d> #x<#y<#d>>
+dif-o9 #x<3> 5
+dif-o10 #f 2
+#x<#d> dif-o11 1 1
+#p dif-o12 1 6
+T dif-o13 T 1
+#x<3> dif-o14 #x<#p> 1
+1 dif-o15 #f #n
+#p dif-o16 4 #y<#p>
+7 dif-o17 3 3
+#n dif-o18 7 3
+7 dif-o19 0 #w 5
+6 dif-o20 T #x<#m> T
+5 dif-o21 3 #w 3 7 6
+#m dig-o0 4
+dig-o1 2 3
+#x<#v> dig-o2 2 T 0 | T gaz | gut T T | dug #y<6> | #x<4> buf T | #x<1> kiy | #x<#b> dap #x<#b> T | 3 kid #y<0> #y<5> | #v kif #y<T> T | 3 bim T 2 | T kam #x<#t>
+dik
+dil #n 7
+dim T #x<1>
+din-o0 5
+din-o1 6
+T din-o2 0
+3 din-o3 T | 0 lad T | #x<#d> kuf T 7 1 | 2 dow #y<T> #x<#y<T>> | T lag | kaz | 4 buv T #y<4> | fuz T T | #x<T> bug #y<#r> | 4 lay T | #x<#l> gon
+2 din-o4 3
+din-o5 T 1
+din-o6 #g 4
+0 din-o7 #y<#n> 3
+T din-o8 #y<7> 7
+1 din-o9 #x<#v> #x<#v>
+2 dip 2
+2 dir 2 T
+dit 0 4
+div 3 3
+1 diw #r
+#m dix #y<T> #x<3>
+diy
+T diz 6 #k | 7 duk #x<T> | #n kid #y<3> #y<3> | #y<#x<7>> faw #x<7> | #y<#p> dak | #l gip #x<#l> 2 | 1 bim #x<1> T | 3 lob #x<#g> T
+#n dob-o0 #x<T>
+#x<0> dob-o1 T | T gid T | 0 duy #y<#d> | 6 buv #y<3> | #y<7> bor #y<7> #x<3> | #v bof T #x<#v> | 5 bug #y<#n> 7 | #y<7> kaz #y<7>
+#y<#w> dob-o2 #l 0
+#w dob-o3 #w T 5 5
+2 dod #v
+3 dof 5 7
+3 dog 3 3
+3 dok-o0 #y<2>
+#l dok-o1 #l
+dok-o2 T 3
+#n dok-o3 #n #n
+T dok-o4 2 2
+6 dok-o5 6 6
+#x<T> dol-o0 #x<T> | 4 kuy T T | T doz T | fuz #y<#t> | 1 dar #x<#r> #g | #x<0> fow T T | giz T #x<#g>
+3 dol-o1 1 1
+1 dol-o2 5 #x<5>
+1 dol-o3 5 5 #v
+7 dom 7 #b
+don 1
+5 dop #g #y<T>
+0 dor-o0 3
+dor-o1 4 1
+3 dor-o2 2 1
+#y<#v> dot 3 5
+dov T | #y<T> bor #y<T> #x<3> | kux #x<2> | bor T | 6 dap T #x<3> | T law T | T doy #x<3> #x<5>
+2 dow #y<T> #x<#y<T>>
+0 dox #x<1> #p
+doy-o0 #y<7>
+1 doy-o1 #y<T>
+#b doy-o2 6
+#d doy-o3 1
+3 doy-o4 #v
+#y<#k> doy-o5 #m
+#y<#y<6>> doy-o6 5
+#x<#v> doy-o7 3
+#m doy-o8 T
+7 doy-o9 #x<7>
+1 doy-o10 #rr<5 5>
+0 doy-o11 0
+doy-o12 #kk<#t> 3
+doy-o13 #y<#t> #x<3>
+doy-o14 3 #x<6>
+3 doy-o15 #y<2> 2
+#y<#t> doy-o16 #y<#y<#t>> 7
+#y<1> doy-o17 4 #y<1>
+7 doy-o18 #x<3> #x<5>
+3 doy-o19 3 #l
+T doy-o20 0 1 | 4 kik T T | 3 koz #bb<0> | doy #y<7> | 3 kul #y<#v> 4 4 4 6 | #x<T> dap #x<T> T | #n kiw T
+T doy-o21 3 #b | T gif T #y<#t> | #y<0> fav T #y<0> | dif #x<3> 5 | T gid T | T din #y<7> 7 | #x<T> bug #y<#r>
+5 doy-o22 T 5
+#m doy-o23 #m 0
+2 doy-o24 2 T | T lil #x<T> #x<T> T | 7 gaz T | #x<4> buf T | 3 bug #y<#g> | bob T #x<T> | 3 bob #x<T> | 1 kaz #x<#g> | T gay #x<#t> 3 | 2 fuz #y<#m> | T fot T T | kiw #x<2> #x<2>
+5 doy-o25 #x<5> T
+0 doy-o26 0 0
+1 doy-o27 #y<1> #l
+doy-o28 #x<3> 5 3
+2 doy-o29 T 4 R
+#y<7> doy-o30 #g #g 2 2
+0 doz-o0 6
+0 doz-o1 T | T dap T 3 | #x<2> kom #x<T> 2
+T doz-o2 3 | T fik T 4 | kul #x<3> | fuy #y<3> 3 | gig | kan #y<3> #y<3> | T koz #y<0> #x<0>
+#x<T> doz-o3 4
+3 doz-o4 #y<6>
+4 doz-o5 1
+#x<2> doz-o6 #x<#d>
+0 doz-o7 0
+T doz-o8 #p
+2 doz-o9 2
+3 doz-o10 #y<#l>
+0 doz-o11 5
+T doz-o12 #k | T kak | #y<3> dif T | T guf | bob T #x<T> | 3 law #x<#v> | 1 dun #bb<#k>
+#v doz-o13 #g
+#f doz-o14 #f
+doz-o15 1 #x<3>
+doz-o16 #w 5
+#x<#k> doz-o17 7 T | gig | 7 dun #y<T> | #x<#k> boy #x<#k> #x<#k> | 2 bor T 2
+5 doz-o18 4 3
+3 doz-o19 #k 7
+0 doz-o20 3 2
+0 doz-o21 4 6
+#x<7> doz-o22 7 #x<7>
+#y<7> doz-o23 1 6
+#n doz-o24 #n #n
+2 doz-o25 #n 4
+T doz-o26 1 2 | gut T | dug #y<6>
+1 doz-o27 6 #m
+3 dub 6
+dud-o0 5
+#t dud-o1 #t
+T dud-o2 #y<0> | 7 baf T #w 5 | T lag | 1 bug T | fow | #d fow T T | #x<T> gog T
+dud-o3 3 #x<3>
+5 dud-o4 T #n | T gut T #y<T> | #x<T> bug #y<#r> | T dow #y<T> #x<#y<T>> | 6 buv T | 2 fuz #y<#m>
+#l duf #y<#b> #x<5>
+dug #y<6>
+7 duk-o0 #x<#r>
+3 duk-o1 T
+1 duk-o2 1
+duk-o3 1 #l
+duk-o4 #y<7> #y<1>
+3 duk-o5 3 0
+6 duk-o6 3 7
+7 duk-o7 1 #x<#k>
+0 duk-o8 5 #t
+T dul 6 6
+#y<6> dum 6 #y<6>
+dun-o0
+3 dun-o1
+0 dun-o2
+dun-o3 #x<5>
+dun-o4 7
+dun-o5 5
+6 dun-o6 T
+#g dun-o7 3
+1 dun-o8 #bb<#k>
+6 dun-o9 #x<#k>
+7 dun-o10 #y<T>
+0 dun-o11 0
+dun-o12 5 T
+dun-o13 1 1
+dun-o14 #y<T> #y<T>
+3 dun-o15 3 #x<#w>
+5 dun-o16 0 #x<5>
+R dun-o17 7 #y<T>
+#d dun-o18 T #d
+2 dun-o19 #v 2
+1 dun-o20 #p 1
+0 dun-o21 3 0
+T dun-o22 3 3
+T dun-o23 2 2 | 1 buv T T | 6 gab T | #x<0> fow | #x<1> gap #x<1> #x<1> | T guf #x<1> | #k kan T
+#y<6> dun-o24 5 #y<6>
+#w dun-o25 #w #l
+2 dun-o26 T #n | #x<5> gir #x<T> T | kur | #x<0> dob T | 2 lad #y<2> T | 0 duy #y<#d> | #x<5> kaf T T | #y<3> gik #y<3> #y<3> | 5 kol T 5 | #x<#x<4>> gan #x<4> | #x<3> bar
+#v dun-o27 #v 3
+#y<#f> dun-o28 1 1
+1 dun-o29 #y<3> 3
+#t dun-o30 T 5
+#b dup #l T | 0 fiy T | #x<#r> kur #x<#r> | 1 dap #x<#d> #x<#d> | T kug #x<#x<#r>> | T bug #x<#v> | 3 duk T | #x<2> doz #x<#d> | 2 fow #kk<2> #kk<2>
+1 dur #w 4
+dut T | 3 dol T T | 2 kad #x<#n> #x<#n> T #t | #x<3> kaz #y<T> | T dif T T | #x<#w> fuk T T | #ff<#k> kol #x<T> 5 | T law T | #x<#m> gaf T T | #v gop T T | #b gut #x<2> | #x<2> guf #x<0> | #n kaz #x<6> #y<#k>
+#y<5> duv 1 1
+#y<#g> duw 7 7 7
+#b dux 0 4
+0 duy #y<#d>
+4 duz 6 6
+2 fab #w #w
+5 fad #x<0> #x<0> 0
+#l faf #p #l
+4 fag #x<4> #y<3>
+2 fak 6 7
+fal 0
+7 fam #x<3> #n
+3 fan
+#t fap 2 1
+far T #x<4> | 0 kul T 0 | T gik #x<7> 7 | #x<2> guf #x<0> | T kam #x<#t> | 5 lab #y<#p> T | #x<1> kiy | T fur T | kaz | T buv T | #y<1> fiy #y<1> #y<1> | #x<#x<4>> gan #x<4>
+6 fat 3 #k
+5 fav-o0 #ll<#l>
+T fav-o1 1
+fav-o2 #y<5> #y<#v>
+2 fav-o3 2 #b
+1 fav-o4 6 6
+#y<0> fav-o5 T #y<0> | 6 bil T T | liz T | 1 fiw T #y<3> | 0 gab #x<#f> #x<T> | 0 fux T | 0 giz T | 1 doy #rr<5 5> | #n gag T | 5 kid #y<#v> | dap
+#y<#x<7>> faw #x<7>
+#w fax 2
+fay 6 7 6
+#g faz 5 #x<#f>
+7 fib 0 6
+4 fid #y<3> #r
+3 fif 3 3
+7 fig 7 6 7
+2 fik-o0 3
+T fik-o1 4 4 | 4 lag #x<T> 0 | 4 bob T | #y<#x<7>> lag #x<7> | T fuz T T | #v guf #y<2> | #y<#t> kat T T | 1 lit #x<1> #y<#g> | 2 kur #x<T> #y<3> | #w bov T 3
+#w fik-o2 #w 3
+1 fik-o3 7 1
+fil 1 #x<7>
+#y<3> fim
+#x<3> fin #v #v
+#y<#n> fip 3 7
+#f fir-o0
+fir-o1 #x<#d>
+T fir-o2 5 3 | 5 gaz T | #y<7> kaz #y<7>
+fit-o0 3
+2 fit-o1 #t 2
+1 fit-o2 7 7
+1 fit-o3 1 #k
+#y<#p> fit-o4 0 T
+#y<0> fiv #y<0>
+#x<#m> fiw-o0 6
+0 fiw-o1 0
+1 fiw-o2 T #y<3>
+#x<6> fiw-o3 6 4
+#y<#k> fiw-o4 #x<T> #p 2 #x<T> #y<2>
+2 fix 2
+0 fiy-o0 #k
+fiy-o1 2 6
+T fiy-o2 4 3
+#x<#b> fiy-o3 #y<#x<#b>> 0
+#y<1> fiy-o4 #y<1> #y<1>
+1 fiy-o5 #b 1 #x<#v>
+#d fiz-o0 2
+T fiz-o1 3 3
+#m fiz-o2 T 1
+#k fiz-o3 #y<3> #f
+1 fob 3
+#f fod 5
+3 fof #y<3> 1
+3 fog 3
+0 fok #x<T> | #y<6> dun T #y<6>
+#d fol 1 T | #w dob T T 5 5 | #x<#r> kur #x<#r> | #n kaz #x<6> #y<#k> | 1 fiw T #y<3> | #w kiw #x<#k>
+#y<2> fom 3 1 #y<2>
+fon-o0 4
+fon-o1 6
+fon-o2 #g T
+5 fon-o3 0 0
+fop 3
+2 for 6
+3 fot-o0
+fot-o1 2
+fot-o2 4 4
+3 fot-o3 #b 3
+3 fot-o4 3 5
+2 fot-o5 2 #bb<T>
+0 fot-o6 #y<T> 0
+7 fot-o7 #w 7
+5 fot-o8 5 T
+3 fot-o9 3 #l
+5 fov-o0 5
+7 fov-o1 6 6
+fow-o0
+6 fow-o1
+1 fow-o2
+#x<0> fow-o3
+fow-o4 5
+#y<5> fow-o5 #p
+2 fow-o6 2
+7 fow-o7 7
+5 fow-o8 1
+#g fow-o9 #x<T> | #nn<#w T> lap #nn<#w T> | #y<2> giw T | 3 gum T T | 2 gov #y<2>
+3 fow-o10 3
+#x<1> fow-o11 #x<1>
+5 fow-o12 5
+5 fow-o13 T | 5 gut T #x<#v> | #x<2> guf #x<T>
+4 fow-o14 4
+2 fow-o15 #x<3>
+4 fow-o16 #x<#k>
+5 fow-o17 6
+2 fow-o18 #r
+#l fow-o19 #l
+fow-o20 0 7
+3 fow-o21 #t T | 1 dun #bb<T> | 2 fud #x<6> | 1 kaz #y<#l> | 3 fuz #x<3> #x<3> | fir #x<#d> | 0 duy #y<#d> | 1 gog T #y<2>
+#x<0> fow-o22 3 3
+#g fow-o23 3 #g
+#d fow-o24 T 2 | #y<T> koz #y<T> | T kid T #x<T> | #x<T> kak T #x<#m> | dun | 4 fag #x<4> #y<T> | 1 fiw T #y<3> | #y<#d> bug T
+#y<2> fow-o25 3 1
+T fow-o26 #r 3
+7 fow-o27 #t 3
+2 fow-o28 2 #b
+1 fow-o29 1 #v
+6 fow-o30 6 3
+2 fow-o31 #kk<2> #kk<2>
+#r fow-o32 0 6
+#l fow-o33 0 1
+#y<0> fow-o34 0 #y<0>
+#x<#b> fox 3
+3 foy #d 6
+0 foz 0 #x<#l>
+3 fub
+2 fud #x<6>
+3 fuf 3 3
+5 fug #x<T> #nn<#x<T> 5>
+4 fuk-o0 3
+5 fuk-o1 #x<#b> #x<#b>
+#x<#w> fuk-o2 1 1
+1 ful 1 #y<#b>
+T fum 3 #y<3>
+#g fun 2 T
+fup-o0 #d 4
+T fup-o1 #x<T> 1 | T gut T 0 | 2 kur #x<T> #y<3> | bak T | 1 kaz #x<#g> | 3 lob #x<#g> T | T kur #x<T> | duk #y<7> #y<1> | dug #y<6> | 3 gir T
+#x<1> fup-o2 #y<2> #b
+1 fup-o3 T 1
+fur-o0 5
+5 fur-o1 5
+4 fur-o2 1 T
+#y<5> fur-o3 5 5
+#r fur-o4 #x<#k> 7
+4 fut-o0 1
+2 fut-o1 2 3
+#x<4> fuv 4
+5 fuw
+0 fux-o0 0
+7 fux-o1 0 #y<0> 7 1 0
+fuy-o0 6
+fuy-o1 #y<3> 3
+T fuy-o2 #k 3
+3 fuy-o3 1 #x<3> #x<3> #y<0> 0
+fuz-o0 3
+fuz-o1 6
+fuz-o2 #y<#t>
+#y<3> fuz-o3 #y<7>
+3 fuz-o4 #m
+2 fuz-o5 #y<#m>
+3 fuz-o6 5
+#y<7> fuz-o7 1
+3 fuz-o8 3
+7 fuz-o9 3
+5 fuz-o10 #y<1>
+#m fuz-o11 6
+fuz-o12 3 3
+fuz-o13 #n 7
+fuz-o14 6 1
+fuz-o15 0 0
+fuz-o16 T 1
+fuz-o17 #nn<#p 5> 5
+#g fuz-o18 #y<#l> 5
+4 fuz-o19 0 4
+#y<#d> fuz-o20 0 3
+#x<1> fuz-o21 3 3
+#k fuz-o22 2 #x<3>
+3 fuz-o23 7 #y<4>
+#y<#l> fuz-o24 1 0
+4 fuz-o25 4 4
+1 fuz-o26 3 1
+2 fuz-o27 2 2
+2 fuz-o28 1 1
+3 fuz-o29 #x<3> #x<3>
+#v fuz-o30 #v 3
+0 fuz-o31 T R
+7 fuz-o32 2 #y<T>
+fuz-o33 3 #x<#v> T | dun #y<T> #y<T> | #y<#d> bim #y<T> | kul #x<3> | dov T | 3 buz T #y<3> | 3 dok #y<2> | #y<T> bug T | #x<#m> kol T | 3 gum T T | T kur T 2 | 0 buv T T
+gab-o0 3
+#b gab-o1 #b
+6 gab-o2 6
+gab-o3 #k 2
+#v gab-o4 3 0
+#x<5> gab-o5 5 #x<5>
+#v gab-o6 1 1
+#w gab-o7 #k #x<#w>
+3 gab-o8 0 0
+#b gab-o9 #b #b
+0 gab-o10 #x<#f> #x<0>
+3 gab-o11 T #x<0>
+0 gab-o12 0 #d T
+#x<3> gad 1 1
+T gaf-o0 2
+#x<#m> gaf-o1 T 1
+#y<3> gaf-o2 #y<#d> 3
+#k gaf-o3 T #y<7> 7 #y<7> 1 | 3 kol T T | #x<0> fow | #x<T> lag | T giw | #x<#k> boy #x<#k> #x<#k>
+#n gag-o0 T
+#x<#g> gag-o1 3
+5 gak-o0
+gak-o1 5 T | T guf T | #f gax T | 1 gog T #y<2> | 3 gab T #x<0> | dov T | 5 fuz #y<1> | 3 bor T | 3 bob T T | 1 dap #x<#d> #x<#d>
+0 gak-o2 7 2
+6 gak-o3 #p 6
+6 gak-o4 T 3
+#k gak-o5 0 0
+#x<T> gal 2 2
+5 gam 5 T | #x<3> fin T T | 0 dar #y<3> | 1 dap T #y<1> | #m fiz T 1 | #x<1> daz | T lag
+#x<#x<4>> gan #x<4>
+#x<3> gap-o0
+2 gap-o1 2
+2 gap-o2 3 T | #x<T> bud T | #y<7> bor #y<7> #x<T> | T gaz #y<6> 6 | T bak T 0 2 | #x<3> kaz #y<1> | #y<#d> bug T | gab T
+#x<1> gap-o3 #x<1> #x<1>
+1 gap-o4 5 1
+5 gap-o5 5 5
+gar 3
+#y<0> gat #y<0> 1
+gav-o0 #x<#w> 3
+gav-o1 #y<3> #t
+#y<3> gav-o2 6 6
+#x<#f> gav-o3 3 5
+2 gav-o4 #y<3> 2
+T gaw 0
+6 gax-o0
+5 gax-o1
+3 gax-o2
+#x<6> gax-o3
+4 gax-o4
+#rr<#v 1> gax-o5
+gax-o6 #y<#v>
+gax-o7 #x<3>
+#f gax-o8 3
+2 gax-o9 7
+6 gax-o10 #f
+gax-o11 3 3
+gax-o12 #d 4
+gax-o13 #m T | kiw #x<2> #x<2> | doy #y<#t> #x<3> | #pp<2 2> bor #pp<2 2> | #m bif #x<6>
+gax-o14 5 6
+gax-o15 #p 4
+#d gax-o16 #d #d
+#x<#y<3>> gax-o17 6 #y<3>
+6 gax-o18 6 6
+1 gax-o19 2 2
+#y<7> gax-o20 #x<2> 3
+3 gax-o21 #kk<#t> 3
+#v gax-o22 T 5
+7 gax-o23 #n #k
+2 gax-o24 2 #y<#w>
+T gax-o25 4 1 | T fub | #r dar T T | #y<2> giw T | gav #x<#w> 3 | #x<0> fow | gub T | 4 bin T | dun #x<5> | 6 gak T T | #y<T> kin T | #x<T> bar | 4 kur #x<T> | #y<T> fim | T kam #x<#t> | #n gag T
+#y<#t> gax-o26 T 3
+#x<0> gax-o27 0 0
+#y<5> gax-o28 2 #y<5> 3
+2 gax-o29 #g 2 #g #g #f
+1 gay-o0
+#f gay-o1 6
+5 gay-o2 5
+2 gay-o3 2 2
+T gay-o4 #x<#t> 3
+T gaz-o0 | #g fun T T | T kak | 2 fuz T T | #x<2> kug T | dov T | #y<4> day | 3 gaz #x<#w> | bim #x<7> | 5 fug #x<T> #nn<#x<T> 5>
+5 gaz-o1 #g
+7 gaz-o2 T
+#l gaz-o3 1
+3 gaz-o4 #x<#w>
+gaz-o5 7 7
+gaz-o6 #x<#f> #f
+gaz-o7 T 2
+gaz-o8 #p 4
+T gaz-o9 4 2
+#y<T> gaz-o10 3 0
+7 gaz-o11 4 4
+#t gaz-o12 #r T | #y<T> kiw #x<T> #x<T> | #y<0> fav T #y<0> | 3 fuz T #y<4> | gid | 4 fag #x<4> #y<3> | T kak | lad #y<4> | 3 bop T
+#m gaz-o13 #x<3> 3
+#f gaz-o14 T 3 | 5 guf T #r | buv T | #f kid #z<4> #z<4>
+#w gaz-o15 2 #w
+7 gaz-o16 #w #w
+1 gaz-o17 0 #f
+3 gaz-o18 #y<6> 6
+#x<#n> gaz-o19 T R
+#b gaz-o20 5 #y<5>
+#x<T> gaz-o21 #x<T> 5 | #y<3> buv T
+2 gaz-o22 #x<2> #x<2>
+#y<3> gaz-o23 2 3
+#v gaz-o24 T 5
+gaz-o25 5 5 2
+#x<T> gaz-o26 0 #x<T> 1 | bix T T | 2 bum #y<3> 6 | dif #y<#d> #x<#y<#d>> | #x<2> kom #x<2> 2
+0 gib #y<#x<T>> #y<#x<T>>
+gid-o0
+R gid-o1 T
+#x<1> gid-o2 1
+gid-o3 #y<#g> 4
+#t gid-o4 6 #x<#t>
+#r gid-o5 #n 0
+T gif #n #y<#t> | 4 lay T #x<T> | 0 doz T | #m bif #x<6> | doy #y<#t> #x<3> | T dap | 4 dap #y<#t> 3 | 2 gom #x<#l> 2 | giz | 3 fuz #x<3> #x<3>
+gig-o0
+#y<6> gig-o1 7
+#r gig-o2 #r 3 3
+#y<T> gik-o0 0 | #x<2> lag T | #x<1> daz | #y<2> giw T | 3 gab T #x<0> | 5 fow T | 0 duy #y<#d> | 6 kul T | p #x<#m> #k
+#n gik-o1 #y<#n> 7
+#y<3> gik-o2 #y<3> #y<3>
+T gik-o3 #x<7> 7
+3 gil 6 6 #y<#v>
+gim T 4
+1 gin 0 7
+#l gip #x<#l> 2
+3 gir-o0 #t
+#y<#g> gir-o1 #y<#g>
+#x<#k> gir-o2 6
+3 gir-o3 #m
+#x<4> gir-o4 #b 4
+0 gir-o5 #p 7
+4 gir-o6 #d 3
+7 gir-o7 #y<0> 0
+#x<5> gir-o8 #x<5> 5
+0 gir-o9 3 #n 5 #n #x<6>
+6 git 6 #v
+#b giv T
+3 giw-o0
+giw-o1 3
+6 giw-o2 #x<7>
+#y<2> giw-o3 T
+T giw-o4 3 3
+T giw-o5 4 4 | 0 doz T | T kul T 6 6 | dam T | 0 kur #dd<#g> 5
+#f gix 3
+7 giy 3
+giz-o0
+giz-o1 #r
+4 giz-o2 4
+0 giz-o3 0
+4 giz-o4 T | #x<0> fow T T | 0 guv T | bik T T | #y<1> buv | T dud #y<0> | T bad T T | T kog T | #y<0> fiv #y<0>
+3 giz-o5 #y<3>
+2 giz-o6 #p
+0 giz-o7 T | #m fuz T | T bug T #y<#k> | T gid T | T koz #x<#k> | #y<5> dad #y<5> 5 | 4 bav #y<4> | #x<0> fow | kux #x<2> | 2 bor T 2
+3 giz-o8 2
+7 giz-o9 #y<#v>
+2 giz-o10 #m
+T giz-o11 #b | T gap T | 2 gax T #y<#w> | 2 goy T 3 | #x<7> lag T | dik | 2 kiw #y<#g> | T n T | #x<1> daz | kan #y<3> #y<3> | #m dap T T | kaz | #y<#p> dak | #w gaz T #w | kul #y<1> | T dun T T | p #x<T> | 3 dib #y<T> | fow | gax #x<3>
+#v giz-o12 #v
+5 giz-o13 #x<0>
+#y<6> giz-o14 1
+giz-o15 T 0
+giz-o16 3 #x<#g>
+1 giz-o17 #m 1
+#x<#w> giz-o18 0 0
+0 giz-o19 6 #y<#f>
+#x<#k> giz-o20 3 3
+#x<0> giz-o21 0 #y<#r>
+#x<5> giz-o22 5 7
+3 giz-o23 #n 3
+0 giz-o24 7 3
+1 giz-o25 2 T
+5 giz-o26 T 5
+#b giz-o27 #p #p
+#x<T> giz-o28 2 1
+1 giz-o29 1 1
+1 giz-o30 5 #x<5>
+#x<1> giz-o31 4 0
+#b giz-o32 #b #b
+7 giz-o33 3 #r 7
+2 gob #v #v
+2 god #y<#n> 2
+#x<T> gof 1 #x<T>
+gog-o0 3
+7 gog-o1 #f
+3 gog-o2 1
+#x<T> gog-o3 2
+4 gog-o4 #y<4> #y<4>
+1 gog-o5 T #y<2>
+#r gok T 2
+7 gol-o0 7 5
+#x<T> gol-o1 5 #x<T>
+2 gom #x<#l> 2
+#x<#l> gon
+#v gop-o0 1 1
+#y<#p> gop-o1 3 #x<T> | #y<6> dun T #y<6> | T fuw | 1 kum #x<7> 7 | #x<#b> bug T T | T gid T | 0 fot #y<T> 0 | kig | 1 kaz #y<#l> | lim #y<#n> | 2 dun T #n
+5 gop-o2 #r T | 4 kur T | #x<#b> dap #x<#b> T | T guf | bap | T dun T 2 | #y<1> buv
+3 gop-o3 2 3
+#p gor 1 #x<#p>
+T got T 0
+gov-o0 #t
+gov-o1 #g
+#p gov-o2 0
+#x<T> gov-o3 #x<T>
+#b gov-o4 #x<#w>
+2 gov-o5 #y<2>
+gov-o6 7 7
+6 gov-o7 6 6
+#y<3> gov-o8 3 #x<3>
+3 gov-o9 3 3
+3 gov-o10 T 3
+#f gov-o11 T 2
+7 gov-o12 #k 2
+#x<4> gov-o13 5 #r
+4 gov-o14 #b 4 2
+gow 6 6
+5 gox-o0 T 3
+7 gox-o1 6 #x<T> #x<T>
+3 goy-o0
+goy-o1 #d
+goy-o2 2
+#x<T> goy-o3 #x<T>
+#p goy-o4 #p
+goy-o5 7 T | #l koz T
+#y<7> goy-o6 #y<7> 5
+2 goy-o7 7 T
+0 goy-o8 #d 0
+2 goy-o9 T 3
+#x<#b> goy-o10 5 1 3
+1 goy-o11 #v 1 #d #d
+3 goz #m
+gub 3
+#g gud #g 7
+4 guf-o0
+T guf-o1
+T guf-o2 #x<1>
+5 guf-o3 5
+#v guf-o4 #y<2>
+3 guf-o5 3
+#x<2> guf-o6 #x<0>
+5 guf-o7 #v
+4 guf-o8 #t
+1 guf-o9 6
+T guf-o10 0
+4 guf-o11 #p
+guf-o12 2 1
+guf-o13 #x<2> 2
+5 guf-o14 #r #r
+#y<3> guf-o15 #t 6
+3 guf-o16 #w 3
+#l guf-o17 #f 2
+7 guf-o18 #l #y<#l>
+4 guf-o19 4 T
+T guf-o20 3 T
+#f guf-o21 #g #g
+#l guf-o22 3 #l
+2 guf-o23 T #r | 3 koz T 3 | T bob #x<T> | 3 bim #x<#b> | T kug | #n kid #y<T> #y<3> | #n kiw T
+6 guf-o24 #v #v
+6 guf-o25 6 #x<T> | T gax | 6 bif T | 5 kid #y<#v> | kay #x<7> 0 | #y<3> gut T 3 | din T
+0 guf-o26 2 2
+1 gug 6 0 6
+T guk #b 0
+7 gul 3 7
+3 gum T T
+2 gun #ff<T> R
+1 gup 6 3
+#b gur T 1 | 6 kuy T | #y<T> dak T | 7 giz #y<#v> | #y<6> lad #y<#v> | 3 kid #y<0> #y<5> | din T 1 | 1 doy #rr<5 5>
+1 gut-o0
+gut-o1 0
+gut-o2 7
+3 gut-o3 #y<0>
+0 gut-o4 0
+T gut-o5 1 | bak T | 7 gaz T | 2 fud #x<6> | gav #x<#w> 3 | 2 koz T T | kur #x<#d> 1 | #x<0> dob T | #x<T> kul #x<T> #x<1> | gid | 4 giz T | T bug #y<2>
+#k gut-o6 5
+#y<#k> gut-o7 2
+2 gut-o8 #r
+#x<#v> gut-o9 7
+#g gut-o10 #p
+3 gut-o11 #x<#f>
+#b gut-o12 #x<2>
+#m gut-o13 4
+#x<#d> gut-o14 #d
+2 gut-o15 #y<#w>
+gut-o16 3 3
+#y<#n> gut-o17 6 3
+#w gut-o18 #x<#w> 0
+T gut-o19 2 2
+T gut-o20 2 #y<2>
+0 gut-o21 T R
+1 gut-o22 T T
+1 gut-o23 1 1
+1 gut-o24 T #b
+#v gut-o25 5 2
+3 gut-o26 2 4
+3 gut-o27 2 #v
+5 gut-o28 5 #x<6>
+6 gut-o29 6 #d
+2 gut-o30 3 #z<T> | T gut | T buv T T | 4 kik T T | #y<7> kaz #y<7>
+4 gut-o31 T 4
+#t gut-o32 #t 0
+T gut-o33 5 7
+2 gut-o34 #m 2
+5 gut-o35 0 #x<#v>
+#y<3> gut-o36 T 3 | 4 kok T 7 | dik | 2 kup T | lap T 0
+1 gut-o37 2 3 4 2
+1 gut-o38 2 6 1 #x<#k>
+0 guv 3
+6 guw T 1 | #rr<#v 1> gax | #x<3> kaz #y<1> | 1 din #x<#v> #x<#v> | T kav T T | 5 fow T | kaz #y<#l> 3 #m 3 5 | T fuz T | 0 kul #x<0> 0 | T dud #y<0> | 2 lad #y<2> T | 3 bob #x<T>
+T gux 0 0 #k 0 | 0 doz T | 6 kav #x<#x<T>> 5 | 5 dap #y<#n> 5 T | 6 buv #y<3> | kul #x<3> | T gak | #x<2> lag T | 5 giz T T | 2 dar #x<T> | #t dun T T | T fuk #x<#b> #x<#b> | 2 fuz #y<#m> | #y<5> m #y<T> T | 3 gut #x<#f> | #w kiw #x<#k>
+guy #y<2>
+3 guz
+#y<6> kab-o0 #w
+1 kab-o1 3 T | 7 bim T | gax #x<3> | 7 duk #x<#r> | #x<2> kom #x<2> 2 | lim #y<#n> | bug #x<2> | 4 kod T | liz T
+1 kab-o2 #k 2
+1 kad-o0 #r #r
+#f kad-o1 #y<#r> 0 #f
+2 kad-o2 #x<#n> #x<#n> T #t
+1 kaf-o0
+#x<5> kaf-o1 5 5
+kag-o0 #d
+1 kag-o1 1
+T kak-o0
+T kak-o1 4 | 6 dun T | 1 bug #x<T> #x<1> | kiw T T | T gaz #x<#w> | #y<#x<7>> faw #x<7> | 1 gog T #y<2> | 3 koz #x<#m> | 5 fuk #x<#b> #x<#b> | gab T | dik | 2 goy T T | #x<2> doz #x<#d> | 3 gov T T | dif T | T kur T | #y<T> dak T | buv T
+#x<3> kak-o2 3 #x<#m>
+#y<#x<5>> kal #x<5> 5
+T kam-o0 #x<#t>
+3 kam-o1 #n
+#k kan-o0 T
+kan-o1 #y<3> #y<3>
+T kap 4 4
+2 kar 4 3
+#y<#t> kat T 4 | 3 lap T 0 | dun #y<T> #y<T> | 3 koz #x<#m> | bim | 4 kik T T | #b gov #x<#w> | #y<#g> gir #y<#g> | guy #y<2> | #x<0> dob T | dok T T | T dun | 6 dap T #x<3> | T goy | T giw | #g fow #x<T> | giz T #x<#g> | #y<4> day | 4 l T #x<#d> | #pp<2 2> bor #pp<2 2>
+6 kav-o0 #x<#x<5>> 5
+3 kav-o1 3 3
+6 kav-o2 3 #w
+3 kaw-o0 4 T | T buv T
+#w kaw-o1 #w T
+1 kax 5 5
+kay-o0
+T kay-o1 #d
+#m kay-o2 3
+kay-o3 #x<7> 0
+3 kay-o4 3 T
+#x<#w> kay-o5 1 T
+kaz-o0
+1 kaz-o1
+kaz-o2 7
+kaz-o3 #m
+kaz-o4 1
+#y<#p> kaz-o5 3
+1 kaz-o6 #y<#l>
+1 kaz-o7 #x<#g>
+6 kaz-o8 T
+#y<7> kaz-o9 #y<7>
+#p kaz-o10 #p
+7 kaz-o11 #k
+#x<3> kaz-o12 #y<1>
+kaz-o13 3 #f
+T kaz-o14 0 0
+0 kaz-o15 #w #w
+#l kaz-o16 #y<1> 2
+#y<T> kaz-o17 4 T | 2 gut T #z<T> | giz | 5 fow T | dun #y<T> #y<T> | #f kad #y<#r> 0 #f | #x<#g> gag T | T koz #y<0> #x<0> | #x<3> kaz #y<1> | 3 kiw T T | #y<T> gut T 3
+#n kaz-o18 #x<6> #y<#k>
+5 kaz-o19 #v 5
+6 kaz-o20 5 5
+1 kaz-o21 #x<#y<#b>> 1
+7 kaz-o22 #y<5> 1
+6 kaz-o23 #b 4
+2 kaz-o24 #w 2
+0 kaz-o25 5 1 7 3
+kaz-o26 #y<#l> 3 #m 3 5
+T kib #m | T dun T T | T din #y<7> 7 | 3 kur #y<6> | 5 giz #x<0> | 1 gax T T | #x<T> gov #x<T> | lad #y<4> | bix T #k | bim #y<T> 1 | dug #y<6> | #x<0> kol #x<0> | fot T | kul T T | #x<T> bug #y<#r>
+kid-o0 1
+5 kid-o1 #y<#v>
+5 kid-o2 3
+3 kid-o3 #m
+#d kid-o4 0
+#w kid-o5 #p
+#v kid-o6 5
+#l kid-o7 #l
+kid-o8 7 #y<#k>
+T kid-o9 7 3
+T kid-o10 #g 2 | fow T | 4 kik T T | p #x<2> | #x<2> guf #x<0> | T fur T | 7 doy #x<7> | koz T T | dug #y<6> | 5 lab #y<#p> 5 | 2 fow #kk<2> #kk<2> | 3 doz #y<6> | #y<3> gik #y<3> #y<3> | duk #y<7> #y<1> | #y<5> m #y<T> 5 | bap
+#f kid-o11 #z<4> #z<4>
+T kid-o12 #v 1
+6 kid-o13 #x<#p> 1
+0 kid-o14 T 0
+#n kid-o15 #y<3> #y<3>
+#f kid-o16 2 2
+5 kid-o17 5 5
+3 kid-o18 3 6
+3 kid-o19 3 T
+3 kid-o20 #y<0> #y<5>
+T kid-o21 3 #x<3> | dim T #x<1> | #n kid #y<3> #y<3> | lap #y<3> #y<3> | 1 fiw T #y<3> | #y<3> fuz #y<7> | #x<2> guf #x<0> | 7 doy #x<7> | 3 bug #y<#g> | #m gut T
+5 kid-o22 5 #b
+#v kid-o23 1 3 #v
+#v kif #y<3> 3
+kig-o0
+#d kig-o1 7
+kig-o2 #r 0
+3 kig-o3 3 #m
+4 kik-o0 T R | 5 gam T T | 2 din R | 3 law #x<#v> | 5 lag T | #x<0> fow | 0 dar #y<3> | #y<6> bat #x<#f> #x<T> | gax #x<3> | R koz #x<#m>
+#w kik-o1 2 2
+#y<4> kik-o2 5 7
+kil #f
+#x<#d> kim 1
+#y<T> kin 3 | T kug #x<T> | #x<4> buf T | gax #y<#v> | fav #y<5> #y<#v> | 4 gog #y<4> #y<4>
+#w kip
+#x<#v> kir 4
+#w kit-o0 1 3
+2 kit-o1 3 1
+T kit-o2 1 #g
+#l kit-o3 #l #l 7
+#w kiv 1 #w
+kiw-o0 3
+#n kiw-o1 T
+6 kiw-o2 1
+#w kiw-o3 #w
+4 kiw-o4 2
+0 kiw-o5 3
+0 kiw-o6 0
+#w kiw-o7 #x<#k>
+2 kiw-o8 #y<#g>
+#x<#k> kiw-o9 6
+kiw-o10 5 #g
+kiw-o11 3 3
+kiw-o12 #x<2> #x<2>
+3 kiw-o13 3 #y<T>
+#y<7> kiw-o14 #x<T> #x<T>
+0 kiw-o15 2 #x<6>
+5 kiw-o16 #p 3
+4 kiw-o17 4 4
+3 kiw-o18 3 3
+3 kiw-o19 3 #x<#l>
+0 kiw-o20 #t 0
+T kiw-o21 #m 0 | T dif T 1
+#y<3> kiw-o22 7 7
+#l kiw-o23 7 T
+3 kiw-o24 3 #b
+#l kiw-o25 3 #l
+3 kiw-o26 7 3 7
+T kiw-o27 0 #b #g
+#d kix 1 1
+#x<1> kiy-o0
+kiy-o1 0
+#x<#t> kiy-o2 3
+#x<T> kiy-o3 0 T | din T 4
+#k kiz-o0 6
+#f kiz-o1 5 #f
+kob T
+4 kod-o0 T
+#v kod-o1 2
+3 kof 7 3
+3 kog 3
+6 kok-o0
+4 kok-o1 7 7
+#f kok-o2 T #d
+3 kol-o0
+4 kol-o1 3
+#m kol-o2 #m
+2 kol-o3 1
+#y<4> kol-o4 4
+#x<0> kol-o5 #x<0>
+#x<#m> kol-o6 T
+T kol-o7 0 | #y<1> doy T #y<1> | gax #x<3>
+kol-o8 4 7
+kol-o9 5 #w
+kol-o10 0 3
+#ff<#k> kol-o11 #x<T> 5 | 7 gaz T T | giz | 3 doz #y<6> | T guf | 1 dun #bb<#k> | 4 kur T
+#r kol-o12 0 #x<#r>
+5 kol-o13 #f 1
+#m kol-o14 5 #y<#m>
+3 kol-o15 3 4
+#y<#g> kol-o16 T #y<#g>
+4 kol-o17 #y<T> T | #y<0> fav T #y<T> | #f kid #z<4> #z<4> | #m fiz T 1 | dap T | T giz T
+5 kol-o18 5 5
+2 kol-o19 #x<6> #x<6>
+0 kol-o20 #x<T> 0
+0 kol-o21 3 3
+#m kol-o22 2 3
+7 kol-o23 3 7
+T kol-o24 7 #y<#d>
+3 kol-o25 3 T
+2 kol-o26 0 6
+1 kol-o27 #p #x<1>
+T kol-o28 1 #f
+kol-o29 3 3 6
+3 kol-o30 #x<3> 1 5
+T kol-o31 2 2 2 #k #y<#t> | bim #x<7> | 0 gut T T | #x<2> doz #x<#d> | kur | lap
+7 kom-o0
+3 kom-o1 #r
+T kom-o2 6
+#g kom-o3 4
+#x<3> kom-o4 1
+#x<5> kom-o5 1 T
+7 kom-o6 #p 7
+#x<2> kom-o7 #x<2> 2
+T kon 1 3
+3 kop-o0 6
+5 kop-o1 6 T
+2 kor 2 2
+2 kot #t
+kov #g
+kow-o0 5
+#y<2> kow-o1 #y<2> 2
+T kow-o2 #l #l
+1 kow-o3 T 3 | 2 gut T | 4 kur T
+3 kow-o4 4 2
+kox 0 6
+T koy #g 5 5
+koz-o0 4
+#y<#y<5>> koz-o1 T | #b giv T | #y<#x<7>> lag #x<7> | #x<3> kaz #y<1> | 6 bon T
+T koz-o2 #x<#k>
+#l koz-o3 2
+3 koz-o4 4
+#x<#k> koz-o5 #n
+3 koz-o6 #x<#m>
+#w koz-o7 #w
+3 koz-o8 1
+4 koz-o9 3
+#nn<#t 6> koz-o10 6
+#y<3> koz-o11 #y<3>
+#l koz-o12 0
+#l koz-o13 #l
+T koz-o14 #t
+3 koz-o15 #bb<0>
+koz-o16 #p 3
+koz-o17 5 5
+0 koz-o18 #l #r
+#r koz-o19 3 0
+#t koz-o20 #t 5
+2 koz-o21 T T | 0 kuw T T | dug #y<T> | T gaz | 1 buv #y<#n> | 4 bak T 4
+6 koz-o22 3 #y<2>
+4 koz-o23 0 #g
+4 koz-o24 2 #x<2>
+3 koz-o25 3 3
+3 koz-o26 3 #f
+#t koz-o27 #t T
+5 koz-o28 2 5
+#w koz-o29 #x<7> 5
+6 koz-o30 6 #y<#p>
+7 koz-o31 7 7
+#w koz-o32 6 0
+3 koz-o33 3 #g
+3 koz-o34 1 T
+T koz-o35 #y<0> #x<0>
+3 koz-o36 0 #x<0> 1
+koz-o37 3 3 6 T
+4 kub 5 3
+T kud #p 2 | fot T T | kaz | #y<T> dak T | guy #y<2> | T gax | #b giv T | 4 bob T | T kul T 6 6 | 2 gun #ff<T> T | #x<#b> bug T T
+#x<#d> kuf T 7 1 | T dok T #n | #x<0> dob T
+3 kug-o0
+kug-o1 #f
+#x<2> kug-o2 2
+T kug-o3 #x<#x<#r>>
+3 kug-o4 5 5
+5 kuk 5 #y<1>
+kul-o0 #y<1>
+kul-o1 #x<3>
+kul-o2 3
+kul-o3 #b
+T kul-o4 0 | T gut | gax #x<3> | fir #x<#d> | 6 bon T | #x<2> guf #x<0> | fuz #y<#t> | dun #y<T> #y<T> | #x<1> gid T
+1 kul-o5 #m
+4 kul-o6 #b
+3 kul-o7 T
+#p kul-o8 1
+7 kul-o9 #w
+6 kul-o10 2
+6 kul-o11 3
+7 kul-o12 #n
+kul-o13 2 2
+kul-o14 3 #n
+kul-o15 6 2
+6 kul-o16 6 #b
+#x<6> kul-o17 2 0
+#y<4> kul-o18 3 #x<#d>
+6 kul-o19 5 7
+#x<T> kul-o20 #x<T> #x<1>
+0 kul-o21 5 0
+#g kul-o22 T 5
+#r kul-o23 #t #l
+0 kul-o24 #x<0> 0
+4 kul-o25 #v 4
+#x<2> kul-o26 #x<2> 2
+T kul-o27 T 6 6
+3 kul-o28 #x<0> 3 3
+6 kul-o29 #x<6> 1 5
+3 kul-o30 #y<#v> 4 4 4 6
+1 kum #x<7> 7
+kun T 3
+2 kup 7
+kur-o0
+2 kur-o1 2
+4 kur-o2 T
+0 kur-o3 0
+0 kur-o4 #y<0>
+7 kur-o5 #f
+4 kur-o6 4
+3 kur-o7 1
+#p kur-o8 5
+6 kur-o9 6
+3 kur-o10 3
+#x<#r> kur-o11 #x<#r>
+2 kur-o12 #y<3>
+#gg<#p> kur-o13 7
+#y<#l> kur-o14 2
+#r kur-o15 #r
+#t kur-o16 #x<#t>
+5 kur-o17 #b
+3 kur-o18 #y<6>
+4 kur-o19 #x<3>
+1 kur-o20 1
+3 kur-o21 #k
+#x<5> kur-o22 5
+#p kur-o23 3
+kur-o24 #x<0> #b
+kur-o25 #x<#d> 1
+5 kur-o26 5 1
+#m kur-o27 4 4
+2 kur-o28 0 0
+0 kur-o29 #dd<#g> 5
+1 kur-o30 3 3
+#y<5> kur-o31 7 #x<7>
+2 kur-o32 #x<T> #y<3> | #y<#t> gax T 3 | bob T #x<T> | 6 gov T T | 1 guf T | #x<#b> dap #x<#b> T | 3 w T
+T kur-o33 3 #y<T> | #w kik T T | #b baz #x<#b> 6 | 1 dap #x<7> 1 | #y<3> gik #y<3> #y<3>
+T kur-o34 #y<#d> #r
+#k kur-o35 1 #x<1>
+#f kur-o36 #d 1
+T kur-o37 T 2 | #r gig T 3 3 | #v lad #x<#n> 5 | #x<#x<4>> gan #x<4> | 6 buv #y<3> | #y<#g> kol T #y<#g> | 2 lad #y<2> T
+kur-o38 3 #mm<#m T> 0 | T kuy T T | T kam #x<#t> | T lag | #y<T> dak T | #n kiw T | dun | kur | bul #y<#t> | #rr<#v 1> gax | 4 bin T
+#t kur-o39 5 #t 5 #x<0> 3
+#f kut-o0 #l 1
+#x<#k> kut-o1 4 #x<#p>
+kuv 3
+0 kuw 6 6
+kux #x<2>
+#y<0> kuy-o0 4
+6 kuy-o1 6
+T kuy-o2 #p #p
+4 kuy-o3 3 3
+#b kuy-o4 2 2 2
+kuz 7
+lab-o0 1
+5 lab-o1 #y<#p> 5
+#t lad-o0
+lad-o1 #f
+lad-o2 0
+lad-o3 #y<4>
+lad-o4 1
+lad-o5 #v
+lad-o6 4
+#p lad-o7 #g
+T lad-o8 6
+#p lad-o9 #p
+#y<4> lad-o10 1
+#y<6> lad-o11 #y<#v>
+3 lad-o12 3
+#y<2> lad-o13 2
+0 lad-o14 0
+lad-o15 T 1
+3 lad-o16 5 #y<#g>
+2 lad-o17 #y<2> T
+3 lad-o18 7 7
+#m lad-o19 #x<#m> 5
+0 lad-o20 #f 0
+3 lad-o21 3 3
+#v lad-o22 #x<#n> 5
+6 lad-o23 1 6
+3 lad-o24 #k #l
+#y<#x<T>> lad-o25 3 #x<T>
+4 laf #g #t
+#x<T> lag-o0
+T lag-o1
+lag-o2 1
+5 lag-o3 5
+#r lag-o4 #g
+3 lag-o5 1
+7 lag-o6 7
+#x<2> lag-o7 T | 3 kam T | #x<0> dob T | 0 dap T T | 3 koz #bb<0>
+#x<7> lag-o8 2
+#y<2> lag-o9 3
+#l lag-o10 4
+T lag-o11 6
+#y<#x<7>> lag-o12 #x<7>
+#r lag-o13 #r
+6 lag-o14 0
+lag-o15 #m #m
+lag-o16 #g #f
+lag-o17 T 1
+lag-o18 2 #r
+1 lag-o19 1 #p
+#g lag-o20 5 3
+4 lag-o21 #x<4> 0
+4 lag-o22 7 4
+#t lag-o23 #n #n
+7 lag-o24 #y<#f> 7
+4 lag-o25 T 4
+2 lag-o26 2 T
+#w lag-o27 #w #w
+0 lag-o28 #f 0
+7 lag-o29 2 #v
+#y<0> lag-o30 6 2
+1 lag-o31 0 0
+#x<#p> lag-o32 #p 6
+0 lag-o33 0 #x<0>
+#kk<#t> lag-o34 3 3
+3 lak-o0 6
+lak-o1 1 #y<#d>
+#y<#k> lak-o2 3 1
+R lak-o3 #n #n #x<6>
+lal-o0 3
+3 lal-o1 3
+#x<1> lal-o2 3 3
+4 lal-o3 #p 0
+1 lal-o4 #x<7> 3
+5 lam 2 2
+lan #y<#g> #g
+lap-o0
+#v lap-o1
+lap-o2 #l
+3 lap-o3 3
+#x<5> lap-o4 5
+3 lap-o5 #b
+#nn<#w T> lap-o6 #nn<#w T> | 0 gib #y<#x<T>> #y<#x<T>> | T dir T T | guy #y<T> | #y<#g> bim T #y<#g> | #x<#y<1>> bal #y<1> | #x<#r> kur #x<#r> | kul T 2 | 6 bon T | #x<T> kul #x<T> #x<1>
+#l lap-o7 T
+#x<#w> lap-o8 4
+7 lap-o9 7
+2 lap-o10 #w
+3 lap-o11 1
+lap-o12 7 0
+lap-o13 #y<3> #y<3>
+lap-o14 6 #k
+lap-o15 #y<#m> 7
+T lap-o16 0 4
+0 lap-o17 #y<7> #y<7>
+6 lap-o18 #p #x<3>
+#p lap-o19 #p T
+#k lap-o20 1 1
+1 lap-o21 1 #x<#b>
+3 lap-o22 #w #y<#w>
+2 lap-o23 2 2
+#v lap-o24 #v 3
+#r lap-o25 1 #r
+3 lap-o26 3 0
+#y<1> lap-o27 #y<1> 4 3 3
+3 lap-o28 #g 2 3 3 T | #x<#d> kim T
+#k lar #k #k
+lat #v
+3 lav 1 7
+1 law-o0 #m
+#m law-o1 3
+T law-o2 T | 0 lit T 1 | #k biw #y<#k> 3 | #l lap T | 1 dun #bb<#k> | 1 gog T #y<2> | 7 gaz T | 1 doy #y<T> | 7 kaz #y<5> T
+3 law-o3 #x<#v>
+0 law-o4 #x<7> 7
+2 lax 2
+lay-o0 6
+4 lay-o1 0
+#y<#d> lay-o2 #k
+lay-o3 3 #l
+#y<0> lay-o4 6 T | 1 bim #x<1> T | 3 doz #y<#l> | 5 fow T | #bb<#v> dap #y<#w> #w | 3 bip #y<3> T | #y<6> lad #y<#v> | 2 fow #x<3> | T law T | #y<1> buv | #x<T> kul #x<T> #x<1>
+6 lay-o5 #d 6
+4 lay-o6 #m 5
+4 lay-o7 4 #x<4>
+0 laz 3 #m 3
+1 lib
+2 lid #f 2
+#y<#p> lif 0 0
+#x<0> lig 4
+#x<#k> lik 0 0
+#n lil-o0 2
+3 lil-o1 #t
+1 lil-o2 3 6
+5 lil-o3 #x<5> #x<5> 5
+lim #y<#n>
+#x<5> lin 6 2
+lip 6
+#x<#dd<#t>> lir 4 4
+1 lit-o0 #x<1> #y<#g>
+0 lit-o1 1 1
+4 liv 4
+5 liw #d
+T lix #n
+3 liy #l 1
+liz-o0 T
+liz-o1 6 #m
+3 liz-o2 3 3 2 #x<#g>
+3 lob #x<#g> T
+T lod 3 4 | 4 giz T | T koz #x<#k>
+
+%%
+
+kaz( 6 )
+kur( 6 )
+kug( 6 )
+gow( 4 6 )
+giz( #x<0> )
+kul( 4 )
+guf( 3 day( fuy( lay( 0 ) dif( kul( v( din( #y<#n> 8 ) 5 ) #x<1> ) 7 ) #x<3> #y<0> did( 2 ) ) 4 ) )
+buv( 8 )
+goy( #p )
+kom( -23 )
+gak( 0 0 )
+dik( )
+goz( #m )
+fal( 4 )
+kur( 8 #mm<#m 1> 5 )
+fot( )
+giz( 7 )
+bug( )
+gut( #r )
+doz( 5 )
+dak( #m )
+doz( 5 guw( kor( kur( 1 ) -4 ) -3 ) )
+kay( #d )
+gut( )
+doy( 10 #b )
+gaz( 3 13 )
+kit( 2 3 )
+buk( #x<#g> -1 )
+for( 15 )
+bak( 6 )
+bum( #y<3> 1 )
+kul( 4 #x<#d> )
+din( 6 )
+bal( #y<1> )
+bug( #y<#d> )
+boy( kay( #d ) #x<#k> )
+fiw( 0 )
+bim( #w )
+gax( #p 6 )
+kid( #m )
+bor( 0 #x<1> #x<1> #x<1> )
+gug( 11 2 6 )
+day( #f 3 )
+gaz( 0 #f )
+lad( diz( 12 #k ) )
+fop( 7 )
+dog( 4 3 )
+kul( 7 #b )
+bik( 6 3 )
+bux( 2 8 )
+guy( #y<2> )
+kol( 7 #y<#d> )
+kog( 4 )
+gog( 2 )
+lap( 5 )
+gut( #y<#w> )
+fib( kit( 6 #g ) 8 )
+kig( )
+buv( 6 #m )
+kuk( -3 #y<1> )
+dig( 6 0 0 )
+giz( #b )
+gid( #y<#g> 7 )
+fan( )
+gut( 21 #d )
+p( 0 )
+doz( -8 #x<3> )
+dur( #w 5 )
+gir( #y<#g> )
+lad( gik( #x<7> 8 ) #x<3> )
+buv( 5 #y<4> )
+kaz( #y<7> )
+buf( -2 -8 )
+lap( 7 )
+bid( doz( #p ) )
+liv( 9 )
+kur( #x<#d> 2 )
+bug( 6 )
+guf( 3 3 )
+fow( #x<1> )
+dif( 4 4 )
+kaz( bug( #x<#v> ) )
+p( 5 #x<#r> )
+kab( 6 #x<#p> )
+bal( 1 #y<#w> )
+gut( -6 )
+doy( gut( kol( #y<#p> #p ) ) 0 )
+fob( 0 )
+gug( 5 lay( 8 #x<4> ) 6 )
+kul( -9 #b )
+lag( #f 0 )
+gut( -6 )
+lik( -4 -3 )
+gut( 6 7 )
+fup( #y<2> #b )
+giz( koy( #g 6 7 ) )
+guv( 3 )
+fip( 1 8 )
+gut( 9 #v )
+lag( #n #n )
+guf( guf( bof( 15 ) #v ) #v )
+kod( 4 )
+lal( 1 4 )
+gov( 8 27 )
+dak( 3 #x<3> )
+fan( )
+bil( 5 2 )
+fuk( koz( 0 ) )
+fuy( kul( -3 ) #x<3> #x<3> #y<0> 0 )
+fuy( #k -8 )
+gig( )
+gax( #p 7 )
+koz( 4 giz( 1 #y<#r> ) -27 )
+kuy( 4 )
+kaz( #x<#y<#b>> -1 )
+kur( 12 #x<7> )
+bor( 12 )
+diw( #r )
+dod( #v )
+gir( 5 #n 5 #n #x<6> )
+kul( #m )
+kaw( #w 7 )
+giz( #y<3> )
+dof( 9 4 )
+gut( 2 3 -2 3 )
+gax( )
+p( #x<2> )
+gax( )
+gak( 9 2 )
+kit( 6 1 )
+fuz( #y<#t> )
+gut( #x<4> #x<4> )
+lag( 2 1 )
+fuz( 5 )
+gog( 2 )
+gaz( 13 #y<5> )
+gal( -1 8 )
+guw( #y<#n> 1 )
+bar( #w #w )
+p( #g )
+gax( 10 #y<5> 5 )
+lap( #y<1> 4 5 6 )
+biy( )
+kaz( -4 #y<6> )
+dor( 9 1 )
+kaz( #y<7> )
+bak( #f 5 )
+koy( bug( 2 #y<#d> ) 6 5 )
+bug( #n 8 )
+dok( #v 4 )
+fot( 2 #bb<2> )
+kur( #x<#t> )
+guf( 8 )
+fuw( )
+fow( 3 #g )
+lag( k( 9 #x<0> ) )
+koz( 0 5 )
+guv( 10 )
+dar( #m )
+gax( )
+kom( #p buv( 7 ) )
+fuz( #y<#v> 4 )
+fow( )
+kaz( )
+doz( 11 #m )
+dif( 7 )
+bor( -1 #k )
+bor( -3 )
+kuz( day( 8 6 ) )
+bof( 3 #x<#v> )
+guf( 3 )
+kaz( #y<#l> )
+kaz( 4 gir( kay( kak( ) ) ) )
+p( #x<#m> #k )
+giz( 10 )
+kur( 9 )
+dib( #y<2> )
+p( #t #t )
+kul( 7 )
+gol( 8 #x<1> )
+lag( #w #w )
+doz( 9 #x<7> )
+bim( #x<1> 3 )
+dif( doy( -9 #b ) #n )
+kal( #x<5> 7 )
+doz( 1 #x<3> )
+dap( )
+giz( 2 )
+bim( kow( #l #l ) )
+bug( #y<2> )
+gax( #x<3> )
+gov( #x<6> )
+kiz( 13 )
+kay( 7 )
+gaz( 8 #y<5> )
+bim( 6 )
+dif( 5 4 )
+koz( gov( #x<#k> ) )
+gut( 5 6 3 #x<#k> )
+kug( #f )
+day( 4 1 )
+duk( #y<7> #y<1> )
+p( 0 )
+goy( )
+kur( #k )
+dap( 3 #y<#g> )
+lad( -5 )
+gaz( #r 2 )
+lap( 4 2 )
+dug( #y<6> )
+duk( 4 )
+kur( 7 )
+biy( 9 7 )
+kiw( #y<#g> )
+kuy( 6 )
+din( 12 )
+kol( #f 16 )
+gux( 4 3 #k 3 )
+gip( #x<#l> 2 )
+gov( -10 3 )
+day( fiz( 3 3 ) #b )
+gaz( #w #w )
+y( 7 #w )
+bal( giz( #p ) #kk<7> )
+kaf( 18 5 )
+kol( 0 5 )
+lad( 1 )
+fop( -3 )
+fow( 1 7 )
+buv( 6 )
+bim( #x<1> 0 )
+gav( #y<3> 3 )
+kaz( 1 )
+koz( 4 #x<2> )
+kop( 13 )
+dap( #l )
+koz( #l )
+dun( guf( kay( #d ) 11 ) )
+bam( 7 #y<#k> )
+gak( kid( guf( 4 6 ) dap( 3 ) ) -15 )
+guf( #r #r )
+kok( 2 #d )
+kur( goy( #x<#d> ) 2 )
+gut( gut( 6 #v ) )
+kur( 4 )
+fuz( #n 18 )
+lap( 8 )
+kuw( 6 6 )
+fop( 6 )
+gar( 3 )
+dap( #d #y<4> )
+bim( 4 1 )
+kar( 0 11 )
+doy( 19 )
+fut( 1 )
+gir( #m )
+kug( #x<#x<#r>> )
+bob( #x<#n> )
+kiw( 3 #x<#l> )
+fuz( -1 1 )
+kox( 1 12 )
+gax( #d #d )
+gaz( 3 5 )
+koz( 10 )
+fiy( 5 3 )
+biz( 1 1 6 #x<3> )
+giz( 5 12 )
+y( 1 #w )
+kid( 20 5 )
+kul( #t #l )
+doy( #x<3> 7 9 )
+gug( 10 -2 8 )
+lal( #x<7> 4 )
+bif( 1 )
+fow( )
+fon( 2 -4 )
+lag( kur( 2 ) 5 )
+gap( 12 )
+lag( #g #f )
+boy( #x<#k> #x<#k> )
+gak( 0 5 )
+day( #f 1 )
+bip( #y<3> 4 )
+kol( 0 )
+fan( )
+day( -1 5 )
+din( 5 )
+buv( 3 gam( 12 3 ) )
+gap( 17 -3 )
+kom( #x<2> 1 )
+kit( 7 3 )
+dun( #v 5 )
+gut( 6 #d )
+doy( #v )
+gak( dak( 6 kud( #p 7 ) ) 2 )
+dal( 6 #x<#g> kol( guf( dar( gaf( #y<#d> 3 ) ) ) gid( #v ) ) #x<3> 12 )
+lin( doz( 5 kol( #x<#m> 0 ) ) fuz( #y<#m> ) )
+koz( 4 6 )
+din( #x<#v> #x<#v> )
+doy( #y<7> )
+gax( #y<#v> )
+z( 3 0 )
+kod( -4 )
+doz( 4 3 )
+buv( )
+fow( 0 7 )
+dap( 2 -6 )
+kog( 3 )
+day( #ff<5> -2 )
+bim( 3 #y<#g> )
+dob( #x<#v> )
+doz( #g )
+box( 6 6 )
+gut( 3 8 )
+bor( #pp<2 2> )
+dud( lag( 7 gaz( 5 8 ) ) )
+fov( 6 12 )
+kil( #f )
+kiw( 5 )
+doz( -2 )
+p( #l #gg<5> )
+gaz( -13 #f )
+gir( #y<#g> )
+gid( )
+gub( 7 )
+lap( 5 )
+kod( 3 )
+k( 2 #x<0> )
+box( 6 )
+n( 0 )
+gaz( 4 8 )
+duf( #y<#b> #x<5> )
+dak( )
+kad( #y<#r> 1 #f )
+lix( #n )
+fuz( 5 13 )
+lam( 2 3 )
+fow( #p )
+gaz( 5 5 )
+dun( )
+dob( #x<#r> )
+doy( 3 12 )
+kid( #g -3 )
+kur( bug( #n ) )
+koz( 4 #y<#p> )
+fuz( 3 #x<#v> 4 )
+doz( 8 )
+doz( 4 2 )
+kur( #y<3> )
+koz( #t 5 )
+fow( 0 #y<0> )
+lal( #p 1 )
+gig( )
+day( 3 4 )
+gax( 3 5 )
+kak( )
+kur( #y<3> )
+fik( 1 1 )
+din( #x<#v> #x<#v> )
+giz( #y<#v> )
+dan( 11 4 )
+fuz( 11 )
+kod( gab( -3 #d 2 ) )
+kid( #y<3> kaz( 1 5 ) )
+bit( 9 #y<3> )
+koz( 6 )
+lag( #x<4> 3 )
+buv( #g )
+bug( guf( guf( 8 ) #n ) 3 )
+gax( 3 9 )
+duz( 9 -4 )
+lap( 6 #k )
+bor( 3 -1 )
+kiw( fam( #x<3> fow( #r 4 ) ) )
+buv( #y<#n> )
+kaf( )
+gut( 4 #y<2> )
+kuy( 8 )
+kid( 9 )
+bim( )
+biy( 20 8 )
+gax( #x<2> 10 )
+fow( 12 )
+kit( 3 13 )
+kid( 3 1 )
+gan( #x<4> )
+daz( )
+koz( #n )
+giz( -10 )
+kiw( #x<#k> )
+kid( 4 0 )
+lad( #v )
+bif( #p #x<7> )
+dun( -7 3 )
+gan( #x<4> )
+dif( 9 )
+gak( -4 0 )
+doy( 6 )
+gaw( 0 )
+lap( 4 )
+bim( #k #y<4> )
+duk( 2 2 )
+fuz( #y<1> )
+gon( )
+fap( 4 5 )
+kom( #r )
+dun( #x<#k> )
+lit( #x<1> #y<#g> )
+din( #x<#v> #x<#v> )
+dar( #f )
+koz( 5 4 )
+dun( 3 5 )
+fow( #l )
+fot( #b 4 )
+kiw( #t 1 )
+fiy( #y<#x<#b>> 1 )
+kur( #y<6> )
+gag( 1 )
+gig( )
+fuv( 6 )
+kid( 3 -2 )
+fur( 7 fow( 1 ) )
+p( #x<2> )
+kul( 8 #n )
+kaz( doz( #p ) 3 )
+gir( #b -5 )
+dun( kur( #y<3> 2 ) 7 )
+bif( 4 )
+guf( 6 #x<3> )
+gam( 9 #w )
+doz( #n #n )
+kid( #x<#p> 2 )
+fot( 2 )
+dap( #y<#w> #w )
+lad( 5 )
+bor( 0 2 )
+gut( )
+z( 6 6 )
+doy( 19 #b )
+gov( #k dun( 4 -5 ) )
+buf( 4 6 )
+dap( #v #y<#m> )
+day( 5 #y<0> )
+dog( 7 3 )
+dun( 8 1 )
+gaz( #g )
+kur( #y<#d> #r )
+dun( #v 2 )
+bor( 8 )
+gaz( 4 11 )
+kid( 8 )
+bor( 10 8 )
+goy( #p )
+dap( )
+lit( #x<1> #y<#g> )
+fin( #v #v )
+kaz( 4 )
+kid( 11 5 )
+gap( -3 10 )
+kit( law( 4 ) 1 )
+doy( 2 #y<6> )
+bav( 15 )
+lad( 6 #x<#d> )
+gab( 8 )
+fuz( 2 #y<5> )
+gif( #n #y<#t> )
+kug( #f )
+lap( #g 4 3 0 #x<#m> )
+dar( kol( gut( goy( #y<7> giz( -7 kud( #p fat( 3 #k ) ) lag( 3 #x<0> ) ) ) 8 ) 3 2 #k gik( 0 ) ) )
+kuy( 9 )
+dud( #y<0> )
+dar( giz( 3 dif( bob( 3 3 ) ) ) )
+gaf( #g #y<7> 11 #y<7> giz( #p ) )
+dar( #n )
+l( 2 #x<#d> )
+lab( 1 )
+lad( gog( -6 ) 6 )
+koz( #t )
+kaz( #y<5> -6 )
+liy( #l din( dar( bug( kur( #n 1 ) ) kib( #m ) ) ) )
+bud( 3 )
+kiw( #t 2 )
+don( 4 )
+kiw( #w )
+fot( )
+gak( 0 4 )
+dif( 3 #w 9 11 7 )
+guf( #x<1> )
+gaf( #y<#d> -3 )
+dak( 5 )
+bur( #m )
+dun( #y<3> 1 )
+bif( #p #x<7> )
+kup( 4 )
+kul( #x<0> 2 )
+dok( 6 3 )
+ful( 2 #y<#b> )
+kiw( 6 3 9 )
+doz( 2 9 )
+bov( 3 0 )
+kur( 7 2 )
+gov( 8 5 )
+dif( 5 #y<#p> )
+bim( 4 )
+day( 5 bug( fuw( ) #t ) )
+bim( #p )
+fol( 2 1 )
+dif( #x<3> 3 )
+//kol( v( 6 koz( bug( giz( -4 10 ) ) 3 ) ) #f )
+fiz( fim( ) #f )
+fuk( 8 )
+giz( 4 #x<#g> )
+bor( w( 0 ) 1 )
+gip( #x<#l> fav( 1 ) )
+dob( #l 0 )
+fuv( 2 )
+dun( 2 )
+bug( 11 )
+dor( 11 )
+bav( #y<4> )
+fow( #x<1> )
+duk( 3 17 )
+dap( koz( #bb<0> ) #y<#b> )
+kid( buv( guf( #r #r ) day( #f law( bug( #y<#d> #t ) 7 ) ) ) 7 )
+guf( #v #v )
+lob( #x<#g> 1 )
+gaz( #x<#w> )
+lav( 1 10 )
+kut( 5 #x<#p> )
+gut( 1 0 )
+faw( #x<7> )
+guw( goy( g( 4 ) 6 ) 3 )
+kux( #x<2> )
+dun( 3 4 )
+lim( #y<#n> )
+gov( #x<#x<4>> )
+fid( #y<3> #r )
+kul( -1 )
+fuk( #x<#b> #x<#b> )
+dap( 3 #t )
+gaz( 0 #f )
+fuz( #m )
+kid( 5 #b )
+fuf( 3 6 )
+gut( 11 )
+doy( 1 5 )
+dar( 8 #y<0> )
+gut( -2 )
+lik( 0 -6 )
+bag( -5 )
+gaz( 1 #f )
+dub( 10 )
+f( buv( kug( #x<#x<#r>> ) ) #y<1> 6 #x<#y<1>> )
+lik( 4 4 )
+bob( 8 #r )
+fog( 3 )
+fuy( 5 #x<3> #x<3> #y<0> kol( kur( 6 ) ) )
+law( #m )
+x( #l )
+gid( #d )
+koz( 16 #g )
+kur( 10 1 )
+lad( #g )
+kol( 5 )
+kul( #x<6> 2 6 )
+gum( #x<4> #x<4> )
+gut( #y<#w> )
+kiw( 0 5 )
+bor( 4 )
+doy( 3 #l )
+dun( 2 6 )
+kay( 0 )
+fud( #x<6> )
+dud( #y<0> )
+giy( 5 )
+kab( #k -5 )
+ful( 10 #y<#b> )
+day( 0 -8 )
+gat( #y<0> 4 )
+kur( #y<0> )
+bim( #y<4> #y<4> )
+fuz( 1 #y<#l> )
+kin( 5 )
+fid( #y<3> #r )
+guf( #x<1> )
+doy( #g #g -2 6 )
+l( fuz( #m ) #x<#d> )
+dim( 7 #x<1> )
+dof( -1 4 )
+lag( kok( ) )
+lix( #n )
+bal( 6 #y<#w> )
+box( #n 3 )
+kol( bar( #f ) )
+gab( doy( p( ) dox( #x<1> doz( fiz( #y<3> #f ) ) ) ) #d 6 )
+kid( 1 )
+dun( 3 -4 )
+lay( 3 #l )
+baw( #t #d )
+fad( #x<0> #x<0> 2 )
+gol( 6 3 )
+kal( #x<5> 10 )
+bav( 4 )
+fow( #l )
+gox( #x<#g> 8 )
+buv( 9 2 )
+gil( 12 kaz( doy( #v ) ) #y<#v> )
+duz( 11 7 )
+gut( 1 )
+giz( #m )
+fiy( 2 7 )
+gov( -3 )
+guf( 10 )
+biw( #y<#k> 5 )
+fuy( -2 #x<3> #x<3> kuy( #p #p ) 0 )
+fap( 6 1 )
+fuz( 11 )
+kom( 1 )
+gaz( 3 2 )
+kur( #y<3> )
+dap( )
+gir( 10 )
+kol( #m )
+goz( #m )
+gag( 3 )
+kim( kid( day( kid( #x<#p> -8 ) ) #b ) )
+kuz( 3 )
+gag( #x<#v> )
+kaz( #x<#g> )
+bum( bug( gid( #x<#l> ) ) 6 )
+bid( 1 )
+kiw( 5 #y<4> )
+lag( 13 )
+lag( #w #w )
+bob( #w 5 )
+kaz( #y<#l> )
+kay( )
+fur( 5 )
+kul( #x<6> #x<1> )
+kir( -4 )
+gut( 2 )
+w( #y<#v> )
+kid( 4 7 #v )
+doy( bay( fug( #x<4> #nn<#x<4> 5> ) gut( 10 7 ) ) 7 )
+gof( 6 dak( fan( ) 3 ) )
+gom( #x<#l> 2 )
+lad( dun( 3 6 ) )
+kiw( 5 )
+kut( #l 1 )
+fuz( 4 7 )
+guw( #x<3> 7 )
+gik( 5 )
+giz( 1 )
+lad( #x<#m> -1 )
+gax( 7 )
+dun( #y<3> 8 )
+kaz( #y<1> )
+gaz( 1 p( 2 lag( 4 ) ) )
+dun( 8 #y<2> )
+gog( #y<4> #y<4> )
+kud( #p 0 )
+dap( #g #y<#g> )
+kow( #l #l )
+giz( #x<0> 6 )
+giz( #y<3> )
+day( 3 #x<#p> #d 0 0 )
+lak( 1 2 )
+gut( #p )
+fud( #x<6> )
+dif( 1 8 )
+koz( 4 #g )
+guf( #r #r )
+lad( 10 11 )
+doz( 6 )
+fiy( 3 21 )
+gag( 6 )
+day( -1 for( 6 ) )
+gop( 4 #x<2> )
+doz( dar( -1 4 ) #m )
+kig( #r 0 )
+guk( #b 3 )
+gak( -2 15 )
+lid( #f 9 )
+lap( 3 )
+guf( #t 4 )
+daz( )
+giw( )
+bar( #rr<#t 1> 5 )
+kan( #y<3> #y<3> )
+gid( #n 0 )
+gaz( #x<#t> 1 )
+dun( #bb<#k> )
+din( 0 )
+lap( #y<1> 3 gir( #d dud( #x<1> kom( 8 ) ) ) 3 )
+biy( 13 3 )
+guf( #y<2> )
+gir( 9 #n 5 #n #x<6> )
+p( 4 #t )
+bar( 2 )
+bim( #x<2> 3 #x<2> 7 )
+kop( 5 4 )
+kad( #r #r )
+kur( 1 )
+fit( 1 kur( 7 ) )
+gik( -2 )
+dor( 4 )
+kom( 1 )
+doz( #k gut( p( 8 3 #y<0> ) ) )
+kaz( #w 3 )
+bav( 5 )
+kur( 9 )
+giv( 5 )
+fon( 3 0 )
+w( #d )
+gax( -2 #y<#w> )
+gov( #b 4 0 )
+bof( 3 #x<#v> )
+bay( 9 6 )
+doz( 0 )
+dud( #t )
+dap( #x<0> #y<#g> )
+dap( 4 #y<1> )
+kav( 7 6 )
+gom( #x<#l> 5 )
+lix( #n )
+koz( 4 )
+din( kid( gab( -7 #d #d ) gof( gup( 6 5 ) bor( 6 7 ) ) ) 1 )
+koz( 7 )
+gut( #x<2> )
+bor( 12 )
+fuz( #y<7> 7 )
+dil( #n 12 )
+giz( 3 4 )
+fow( 10 2 )
+gut( 9 #d )
+kax( 8 5 )
+dok( 2 2 )
+dut( 3 )
+kur( #y<6> )
+dob( #w #y<5> 5 7 )
+bob( 4 3 )
+buf( 1 )
+law( #y<1> )
+div( 5 3 )
+gax( 13 #y<3> )
+kur( #x<0> #b )
+fuz( 5 #x<#v> #d )
+bim( #x<1> 3 )
+doy( #x<3> 8 11 )
+laf( #g #t )

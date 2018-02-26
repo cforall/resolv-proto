@@ -1,3 +1,11 @@
+## 26 Feb 2018 ##
+* finish testing `td-imm`
+
+## 23 Feb 2018 ##
+* test `td-imm`, generate easy tests as needed
+  * bad top-level call can make this go *really* badly; `k( 4 )` in `overloads-most` takes over half a minute (without eating all the RAM, it seems just to be really hammering cache)
+  * done to `parms-fewer` (inclusive)
+
 ## 22 Feb 2018 ##
 * fix segfault and test failures from yesterday
 

@@ -16,6 +16,7 @@
 
 ## Next few months ##
 * more resolver algorithms (hybrid traversal orders, lazy evaluation, caching resolver queries, etc.)
+  * Try a variant of `bu`/`td` where it tries to find the combos **before** the next argument (if there's only one, the base environment can be updated)
 * investigate user-defined conversions
   * It's possible that polymorphic conversions will basically push this on us anyway...
 * maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
