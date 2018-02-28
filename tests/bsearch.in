@@ -1,0 +1,18 @@
+// Based on correspondance with Rob
+
+bsearch E #ptr<E>
+2 minus-short 2 2
+3 minus-int 3 3
+4 minus-long 4 4
+
+msearch-short 2 #ptr<2>
+msearch-int 3 #ptr<3>
+msearch-long 4 #ptr<4>
+
+%%
+
+bsearch( minus(3 3) #ptr<2> )
+bsearch( minus(3 3) #ptr<4> )
+
+msearch( minus(3 3) #ptr<2> )
+msearch( minus(3 3) #ptr<4> )

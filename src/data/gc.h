@@ -42,6 +42,10 @@ private:
 /// Use young generation until next collection
 inline void new_generation() { GC::get().new_generation(); }
 
+/// no-op default trace
+template<typename T>
+inline const GC& operator<< (const GC& gc, const T& x) { return gc; }
+
 inline void traceAll(const GC& gc) {}
 
 /// Marks all arguments as live in current generation
