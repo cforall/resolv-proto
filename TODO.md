@@ -2,6 +2,7 @@
 
 ## Next few days ##
 * Finish `persistent_map`-based environment
+  * I think I want an `Entry` API and index operator, also a `try_emplace`
 * Make git branch for deferred resolution
 
 ## Next few weeks ##
@@ -12,6 +13,16 @@
    * Might just "flatten" (easier if persistent-map based)
 
 ## Next few months ##
+* Look at increment-based merging for `persistent_map`-Env
+  1. reroot at merged-to Env
+  2. recursively attempt to apply each transition in reverse order from merged-from Env
+     * keep "seen" set to avoid duplication
+     * possibly works better if there isn't an explicit class representation in `Env`
+       * fewer update nodes for class rebindings
+       * would need a linear pass to reconstruct classes (possibly similar to two-phase environment in CFA-CC)
+       * main problem would be occurs check
+       * might be able to "skip" update nodes that are just class re-linking
+* Look at sub-interpretation result caching for deferred resolution order
 * Make mode that throws away alternatives of ambiguous expression
 * Modify semantics of top-level resolution to resolve to `void` (see `void` test case)
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)

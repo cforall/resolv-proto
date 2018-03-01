@@ -1,0 +1,322 @@
+#pragma once
+
+#include <cstddef>
+#include <functional>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
+
+#include "debug.h"
+#include "gc.h"
+
+/// Wraps a hash table in a persistent data structure, using a technique based 
+/// on the persistent array in Conchon & Filliatre "A Persistent Union-Find 
+/// Data Structure"
+
+template<typename Key, typename Val, 
+         typename Hash = std::hash<Key>, typename Eq = std::equal_to<Key>>
+class persistent_map : public GC_Object {
+	/// Type of this class
+	using Self = persistent_map<Key, Val, Hash, Eq>;
+	
+	/// Type of underlying hash table
+	using Base = std::unordered_map<Key, Val, Hash, Eq>;
+	
+	/// Node inserted into underlying map
+	struct Ins {
+		Self* base;  ///< Modified map
+		Key key;     ///< Key inserted
+		Val val;     ///< Value stored
+
+		template<typename K, typename V>
+		Ins(Self* b, K&& k, V&& v) : base(b), key(std::forward<K>(k)), val(std::forward<V>(v)) {}
+	};
+
+	/// Node removed from underlying map
+	struct Rem {
+		Self* base;  ///< Modified map
+		Key key;     ///< Key removed
+
+		template<typename K>
+		Rem(Self* b, K&& k) : base(b), key(std::forward<K>(k)) {}
+	};
+
+	/// Underlying storage
+	union data_t {
+		char def;
+		Base base;
+		Ins ins;
+		Rem rem;
+
+		data_t() : def('\0') {}
+		~data_t() {}
+	} data;
+
+	/// Mode of node
+	mutable enum mode_t { BASE, REM, INS, UPD } mode;
+
+	/// get mutable reference as T
+	template<typename T>
+	T& as() { return reinterpret_cast<T&>(data); }
+
+	/// get const reference as T
+	template<typename T>
+	const T& as() const { return reinterpret_cast<const T&>(data); }
+
+	/// get mutable reference as T from const
+	template<typename T>
+	T& as_non_const() const { return const_cast<T&>(reinterpret_cast<const T&>(data)); }
+
+	/// get rvalue reference as T
+	template<typename T>
+	T&& take_as() { return std::move(as<T>()); }
+
+	/// initialize as T
+	template<typename T, typename... Args>
+	void init( Args&&... args ) {
+		new( &as<T>() ) T { std::forward<Args>(args)... };
+	}
+
+	/// reset as current mode
+	void reset() {
+		switch( mode ) {
+			case BASE:          as<Base>().~Base(); break;
+			case REM:           as<Rem>().~Rem();   break;
+			case INS: case UPD: as<Ins>().~Ins();   break;
+			default: unreachable("invalid mode");
+		}
+	}
+
+	persistent_map( mode_t m, Base&& b ) : data(), mode(m) {
+		assume(m == BASE, "invalid mode");
+		init<Base>(std::move(b));
+	}
+
+	template<typename K, typename V>
+	persistent_map( mode_t m, const Self* o, K&& k, V&& v ) : data(), mode(m) {
+		assume(m == INS || m == UPD, "invalid mode");
+		init<Ins>(o, std::forward<K>(k), std::forward<V>(v));
+	}
+
+	template<typename K>
+	persistent_map( mode_t m, const Self* o, K&& k ) : data(), mode(m) {
+		assume(m == REM, "invalid mode");
+		init<Rem>(o, std::forward<K>(k));
+	}
+
+protected:
+	void trace(const GC& gc) const {
+		switch( mode ) {
+			case BASE: {
+				for (const auto& entry : as<Base>()) {
+					gc << entry.first << entry.second;
+				}
+				return;
+			}
+			case REM: {
+				const Rem& self = as<Rem>();
+				gc << self.base << self.key;
+				return;
+			}
+			case INS: case UPD: {
+				const Ins& self = as<Ins>();
+				gc << self.base << self.key << self.val;
+				return;
+			}
+			default: unreachable("invalid mode");
+		}
+	}
+
+public:
+	using size_type = std::size_t;
+
+	persistent_map() : data(), mode(BASE) { init<Base>(); }
+
+	persistent_map( const Self& o ) = delete;
+
+	Self& operator= ( const Self& o ) = delete;
+
+	~persistent_map() { reset(); }
+
+	/// reroot persistent map at current node
+	void reroot() const {
+		// recursive base case
+		if ( mode == BASE ) return;
+		
+		// reroot base
+		Self* base = ( mode == REM ) ? as_non_const<Rem>().base : as_non_const<Ins>().base;
+		base->reroot();
+		assume(base->mode == BASE, "reroot results in base");
+
+		// take map out of base
+		Base&& base_map = base->take_as<Base>();
+		base->reset();
+
+		// switch base to inverse of self and mutate base map
+		switch ( mode ) {
+			case REM: {
+				Rem& self = as_non_const<Rem>();
+				auto it = base_map.find( self.key );
+				assume( it != base_map.end(), "removed node must exist in base");
+
+				base->init<Ins>( this, std::move(self.key), std::move(it->second) );
+				base->mode = INS;
+
+				base_map.erase( it );
+				break;
+			}
+			case INS: {
+				Ins& self = as_non_const<Ins>();
+
+				base->init<Rem>( this, self.key );
+				base->mode = REM;
+
+				base_map.insert( std::move(self.key), std::move(self.val) );
+				break;
+			}
+			case UPD: {
+				Ins& self = as_non_const<Ins>();
+				auto it = base_map.find( self.key );
+				assume( it != base_map.end(), "updated node must exist in base");
+
+				base->init<Ins>( this, std::move(self.key), std::move(it->second) );
+				base->mode = UPD;
+
+				it->second = std::move(self.val);
+				break;
+			}
+			default: unreachable("invalid mode");
+		}
+
+		// set base map into self
+		reset();
+		init<Base>( std::move(base_map) );
+		mode = BASE;
+	}
+
+	/// true iff the map is empty
+	bool empty() const {
+		reroot();
+		return as<Base>().empty();
+	}
+
+	/// Get number of entries in map
+	size_type size() const {
+		reroot();
+		return as<Base>().size();
+	}
+
+	/// Check if value is present
+	size_type count(const Key& k) const {
+		reroot();
+		return as<Base>().count( k );
+	}
+
+	/// Get value; undefined behavior if not present
+	const Val& get(const Key& k) const {
+		reroot();
+		const Base& self = as<Base>();
+		auto it = self.find(k);
+		assume(it != self.end(), "get target not present");
+		return it->second;
+	}
+
+	/// Set value, storing new map in output variable
+	template<typename K, typename V>
+	Self* set(K&& k, V&& v) {
+		reroot();
+		assume(mode == BASE, "reroot results in base");
+
+		// transfer map to new node
+		Self* ret = new Self{ BASE, take_as<Base>() };
+		reset();
+		Base& base_map = ret->as<Base>();
+
+		// check if this is update or insert
+		auto it = base_map.find( k );
+		if ( it == base_map.end() ) {
+			// set self to REM node and insert into base
+			init<Rem>( ret, k );
+			mode = REM;
+
+			base_map.emplace_hint( it, std::forward<K>(k), std::forward<V>(v) );
+		} else {
+			// set self to UPD node and modify base
+			init<Ins>( ret, std::forward<K>(k), std::move(it->second) );
+			mode = UPD;
+
+			it->second = std::forward<V>(v);
+		}
+
+		return ret;
+	}
+
+	/// smart reference for indexing interface
+	class Entry {
+	friend persistent_map;
+		Self* base;
+		const Key& key;
+
+		Entry(Self* b, const Key& k) : base(b), key(k) {}
+
+	public:
+		/// Gets the underlying map instance
+		Self* get_base() const { return base; }
+
+		/// Checks if the key exists in the map
+		bool exists() const { return base->count(key); }
+
+		/// Gets the value for the key (if it exists)
+		const Val& get() const { return base->get(key); }
+
+		/// Cast version of get
+		operator const Val& () const { return base->get(key); }
+
+		/// Sets the value into the key; returns entry pointing to new set
+		template<typename V>
+		Entry& set(V&& v) {
+			base = base->set(std::forward<V>(v));
+			return *this;
+		}
+
+		/// Assignment version of set
+		template<typename V>
+		Entry& operator= (V&& v) {
+			base = base->set(std::forward<V>(v));
+			return *this;
+		}
+
+		/// Gets value or initializes to new value from args
+		template<typename... Args>
+		Entry& get_or(Args&&... args) {
+			base = base->get_or(key, std::forward<Args>(args)...);
+			return *this;
+		}
+	};
+
+	/// Gets smart reference to slot with given key
+	Entry operator[] (const Key& k) { return { this, k }; }
+
+	/// Gets Entry for key, initializing from args if not present
+	template<typename... Args>
+	Entry get_or(const Key& k, Args&&... args) {
+		reroot();
+		assume(mode == BASE, "reroot results in base");
+		Base& base_map = as<Base>();
+
+		// check already present
+		if ( base_map.count(k) ) return { this, k };
+
+		// otherwise insert based on parameters
+		base_map.emplace( k, Val{ std::forward<Args>(args)... } );
+		Self* ret = new Self{ BASE, std::move(base_map) };
+
+		// update self to point to new base
+		reset();
+		init<Rem>( ret, k );
+		mode = REM;
+
+		// return entry for new base
+		return { ret, k };
+	}
+};
