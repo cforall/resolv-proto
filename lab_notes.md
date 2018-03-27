@@ -1,3 +1,48 @@
+## 26-26 Mar 2018 ##
+* Work on Persistent Union-Find data structure
+  * TODO: look at not doing path compression (no path compression, but fewer updates to reverse)
+
+## 20-23 Mar 2018 ##
+* Further work on CFA-CC GC
+  * CFA-CC compiles now
+  * Crashes come from by-value Constants as BaseSyntaxNode
+    * Fixed
+
+## 15-16 Mar 2018 ##
+* Continue integrating `-def` into CFA-CC
+  * look into segfaults on pair/maybe/result
+* Pause integration to put GC in CFA-CC
+  * possible deleting calls:
+    * deleteAll: done
+    * maybeMoveBuild: only for parse nodes
+    * filter( container, pred, true ): done
+
+## 14 Mar 2018 ##
+* Continue integrating `-def` into CFA-CC
+  * builds, horrifically broken
+  * TODO: Wrap `need`/`have`/`openVars` in copy-on-write ref-counted smart pointer
+  * TODO: Once done, make default-constructor for those three parameters to Alternative
+
+## 13 Mar 2018 ##
+* Continue integrating `-def` into CFA-CC
+  * think I'm going to have to pull `need`/`have` up into `Alternative`
+    * maybe transfer happens in `validateFunctionAlternative` (?)
+* rewrite `waitfor` resolver to handle deleted expressions
+
+## 12 Mar 2018 ##
+* Start integrating `-def` resolution into CFA-CC
+  * Find top-level entry point:
+    * `findUnfinishedKindExpression`
+      * findKindExpression forwards to ^
+        * also calls finishExpr, which seems to just make sure all calls have a `TypeSubstitution`
+        * findIntegralExpression forwards to ^
+        * findSingleExpression forwards to ^
+      * findVoidExpression forwards to resolveInVoidContext, which forwards to ^
+      * Resolver::previsit(WaitForStmt*) seems to miss
+        * does call AlternativeFinder::findWithAdjustment
+      * calls AlternativeFinder::find
+  * Re-write entry point to call `resolveAssertions`
+
 ## 26 Feb 2018 ##
 * finish testing `td-imm`, `td-top`
 

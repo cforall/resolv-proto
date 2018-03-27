@@ -257,11 +257,14 @@ public:
 		Self* base;
 		const Key& key;
 
+	public:
 		Entry(Self* b, const Key& k) : base(b), key(k) {}
 
-	public:
 		/// Gets the underlying map instance
 		Self* get_base() const { return base; }
+
+		/// Gets the key
+		const Key& get_key() const { return key; }
 
 		/// Checks if the key exists in the map
 		bool exists() const { return base->count(key); }
@@ -275,14 +278,14 @@ public:
 		/// Sets the value into the key; returns entry pointing to new set
 		template<typename V>
 		Entry& set(V&& v) {
-			base = base->set(std::forward<V>(v));
+			base = base->set(key, std::forward<V>(v));
 			return *this;
 		}
 
 		/// Assignment version of set
 		template<typename V>
 		Entry& operator= (V&& v) {
-			base = base->set(std::forward<V>(v));
+			base = base->set(key, std::forward<V>(v));
 			return *this;
 		}
 
