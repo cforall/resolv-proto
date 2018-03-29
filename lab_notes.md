@@ -31,6 +31,11 @@
         * don't even bother with `GC_Traceable`, the extra `bool` isn't worth it, make it a value type with a `<<` operator on `GC`
 * Start updating Env to use Persistent Union-Find
   * TODO: update mergeClasses
+* Fixed bug with following code:
+  ```
+  Base&& base = take_as<Base>(); // should take by value, due to reset
+  reset_as_base();               // may as well reset_as_base()
+  ```
 
 ## 20-23 Mar 2018 ##
 * Further work on CFA-CC GC

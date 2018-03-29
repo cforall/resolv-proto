@@ -93,6 +93,12 @@ private:
 		}
 	}
 
+	/// reset as base
+	void reset_as_base() { 
+		assume( mode == BASE, "can only reset_as_base() on BASE" );
+		as<Base>().~Base();
+	}
+
 	persistent_map( Mode m, Base&& b ) : data(), mode(m) {
 		assume(m == BASE, "invalid mode");
 		init<Base>(std::move(b));
@@ -158,8 +164,8 @@ public:
 		assume(base->mode == BASE, "reroot results in base");
 
 		// take map out of base
-		Base&& base_map = base->take_as<Base>();
-		base->reset();
+		Base base_map = base->take_as<Base>();
+		base->reset_as_base();
 
 		// switch base to inverse of self and mutate base map
 		switch ( mode ) {
@@ -256,7 +262,7 @@ public:
 
 		// transfer map to new node
 		Self* ret = new Self{ BASE, take_as<Base>() };
-		reset();
+		reset_as_base();
 		Base& base_map = ret->as<Base>();
 
 		// check if this is update or insert
@@ -340,7 +346,7 @@ public:
 		Self* ret = new Self{ BASE, std::move(base_map) };
 
 		// update self to point to new base
-		reset();
+		reset_as_base();
 		init<Rem>( ret, k );
 		mode = REM;
 
