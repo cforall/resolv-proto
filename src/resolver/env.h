@@ -259,7 +259,8 @@ public:
 		return ( localAssns > 0 || ! classes.empty() ) ? this : parent;
 	}
 
-	Env() = default;
+	Env() 
+		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr ) {}
 
 	/// Constructs a brand new environment with a single class containing only var
 	Env( const PolyType* var ) 
