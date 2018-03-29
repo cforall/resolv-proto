@@ -14,6 +14,7 @@
 #include "data/cast.h"
 #include "data/gc.h"
 #include "data/mem.h"
+#include "data/persistent_map.h"
 
 bool Env::occursIn( const Env* env, const List<PolyType>& vars, const Type* t ) {
 	return OccursIn{ env, vars }( t );
@@ -96,10 +97,7 @@ void Env::trace(const GC& gc) const {
 		gc << entry.vars << entry.bound;
 	}
 
-	for ( const auto& assn : assns ) {
-		gc << assn.first << assn.second;
-	}
-	gc << parent;
+	gc << assns << parent;
 }
 
 std::ostream& operator<< (std::ostream& out, const TypeClass& c) {

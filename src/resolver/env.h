@@ -12,9 +12,11 @@
 #include "cost.h"
 
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/gc.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "data/persistent_map.h"
 
 #if defined RP_DEBUG && RP_DEBUG >= 1
 	#define dbg_verify() verify()
@@ -70,13 +72,13 @@ class Env final : public GC_Object {
 	/// Underlying map type
 	using Map = std::unordered_map<const PolyType*, ClassRef>;
 	/// Assertions known by this environment
-	using AssertionMap = std::unordered_map<const FuncDecl*, const TypedExpr*>;
+	using AssertionMap = persistent_map<const FuncDecl*, const TypedExpr*>;
 	/// Set of seen types for recursion on classes
 	using SeenTypes = std::unordered_set<const PolyType*>;
 
 	Storage classes;         ///< Backing storage for typeclasses
 	Map bindings;            ///< Bindings from a named type variable to another type
-	AssertionMap assns;      ///< Backing storage for assertions
+	AssertionMap* assns;     ///< Backing storage for assertions
 	std::size_t localAssns;  ///< Count of local assertions
 
 public:
@@ -130,24 +132,6 @@ private:
 		for ( const PolyType* v : c.vars ) if ( markedSeen( seen, v ) ) return true;
 		return false;
 	}
-
-	// /// Resets the environment cost from direct calculation
-	// void recost() {
-	// 	SeenTypes seen{};
-	// 	cost = EnvCost{};  // reset cost
-
-	// 	for (const Env* crnt = this; crnt; crnt = crnt->parent ) {
-	// 		for ( const TypeClass& c : crnt->classes ) {
-	// 			// skip seen typeclasses
-	// 			if ( seenAny( seen, c ) ) continue;
-	// 			// count bound variables
-	// 			cost.vars += c.vars.size() - 1;
-	// 			if ( c.bound ) ++cost.vars;
-	// 		}
-	// 		// count local type assertions
-	// 		cost.assns += crnt->localAssns;
-	// 	}
-	// }
 
 	/// Inserts a new typeclass, consisting of a single var (should not be present).
 	void insert( const PolyType* v ) {
@@ -279,13 +263,13 @@ public:
 
 	/// Constructs a brand new environment with a single class containing only var
 	Env( const PolyType* var ) 
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr)
+		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr )
 		{ insert( var ); }
 
 	/// Constructs a brand new environment with a single class
-	Env( ClassRef& r ) : classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
-		copyClass(r);
-	}
+	Env( ClassRef& r )
+		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr )
+		{ copyClass(r); }
 
 	/// Heap-Constructs a brand new environment with a single bound class.
 	/// Returns nullptr if the class cannot be bound
@@ -298,20 +282,19 @@ public:
 
 	/// Constructs a brand new environment with a single class with an added type variable
 	Env( ClassRef& r, const PolyType* var )
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
+		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr ) {
 		copyClass(r);
 		if ( ! bindings.count( var ) ) { addToClass(0, var); }
 	}
 	
 	/// Constructs a brand new environment with a single class
 	Env( ClassRef& r, std::nullptr_t )
-			: classes(), bindings(), assns(), localAssns(0), parent(nullptr) {
-		copyClass(r);
-	}
+		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr ) 
+		{ copyClass(r); }
 
 	/// Shallow copy, just sets parent of new environment
 	Env( const Env& o )
-		: classes(), bindings(), assns(), localAssns(0), parent(o.getNonempty()) {}
+		: classes(), bindings(), assns( o.assns ), localAssns( 0 ), parent( o.getNonempty() ) {}
 
 	/// Deleted to avoid the possibility of environment cycles.
 	Env& operator= ( const Env& o ) = delete;
@@ -346,22 +329,11 @@ public:
 
 	/// Finds an assertion in this environment, returns null if none
 	const TypedExpr* findAssertion( const FuncDecl* f ) const {
-		// search self
-		auto it = assns.find( f );
-		if ( it != assns.end() ) return it->second;
-		// lookup in parent, adding to local binding if found
-		for ( const Env* crnt = parent; crnt; crnt = crnt->parent ) {
-			it = crnt->assns.find( f );
-			if ( it != crnt->assns.end() ) {
-				as_non_const(this)->assns[ f ] = it->second;
-				return it->second;
-			}
-		}
-		return nullptr;
+		return assns->get_or_default( f, nullptr );
 	}
 
 	/// Gets local assertion list
-	const AssertionMap& getAssertions() const { return assns; }
+	const AssertionMap& getAssertions() const { return *assns; }
 
 	/// Binds this class to the given type; class should be currently unbound.
 	/// May copy class into local scope; class should belong to this or a parent.
@@ -392,17 +364,15 @@ public:
 
 	/// Binds an assertion in this environment. `f` should be currently unbound.
 	void bindAssertion( const FuncDecl* f, const TypedExpr* assn ) {
-		assns.emplace( f, assn );
+		assns = assns->set( f, assn );
 		++localAssns;
 	}
 
-	/// Merges the target environment with this one.
-	/// Returns false if fails, but does NOT roll back partial changes.
-	/// seen makes sure work isn't doubled for inherited bindings
-	bool merge( const Env& o, SeenTypes&& seen = SeenTypes{} ) {
-		// Already compatible with o, by definition.
-		if ( inheritsFrom( o ) ) return true;
-		
+private:
+	/// Checks if the classes of another environment are compatible with those of this environment.
+	/// Returns false if fails, but does NOT roll back partial changes; `seen` makes sure work 
+	/// isn't duplicated for inherited bindings
+	bool mergeClasses( const Env& o, SeenTypes&& seen ) {
 		// merge classes
 		for ( std::size_t ci = 0; ci < o.classes.size(); ++ci ) {
 			const TypeClass& c = o.classes[ ci ];
@@ -449,21 +419,144 @@ public:
 			}
 		}
 
-		// merge assertions
-		for ( const auto& a : o.assns ) {
-			auto it = assns.find( a.first );
-			if ( it == assns.end() ) {
-				assns.insert( a );
-				++localAssns;
+		// merge parents
+		if ( o.parent ) {
+			if ( inheritsFrom( *o.parent ) ) return true;  // compatible by definition
+			if ( ! mergeClasses( *o.parent, move(seen) ) ) return false;
+		}
+		
+		return true;
+	}
+
+	/// Checks if the assertions of another environment are compatible with those of this. 
+	/// Returns false if fails, but does NOT roll back partial changes.
+	bool mergeAssns( const Env& o ) {
+		/// Edit item for path state
+		struct Edit {
+			AssertionMap::Mode mode;  ///< Type of change to a key
+			const TypedExpr* val;     ///< Updated key value, if applicable
+
+			Edit(AssertionMap::Mode m, const TypedExpr* v = nullptr) : mode(m), val(v) {}
+		};
+
+		// reroot environment
+		assns->reroot();
+
+		// keep state for edits
+		std::unordered_map<const FuncDecl*, Edit> edits;  // edits to base map (presumably this)
+		unsigned n[] = { 0, 0, 0, 0 };  // number of nodes for each Mode
+		
+		// trace path from other environment
+		const AssertionMap* oassns = o.assns;
+		AssertionMap::Mode omode = oassns->get_mode();
+		while ( omode != AssertionMap::BASE ) {
+			const FuncDecl* key = oassns->get_key();
+			auto it = edits.find( key );
+
+			if ( it == edits.end() ) {
+				// newly seen key, mark op
+				const TypedExpr* val = ( omode == AssertionMap::REM ) ? nullptr : oassns->get_val();
+				edits.emplace_hint( it, key, Edit{ omode, val } );
+				++n[ omode ];
 			} else {
-				if ( it->second != a.second ) return false;
+				AssertionMap::Mode& smode = it->second.mode;
+				switch ( omode ) {
+					case AssertionMap::REM: {
+						// later insertion, change to update
+						assume( smode == AssertionMap::INS, "inconsistent mode" );
+						--n[ smode ];
+						smode = AssertionMap::UPD;
+						++n[ smode ];
+					} break;
+					case AssertionMap::INS: {
+						switch ( smode ) {
+							case AssertionMap::REM: {
+								// later removal, no net change to map
+								--n[ smode ];
+								edits.erase( it );
+							} break;
+							case AssertionMap::UPD: {
+								// later update collapses to insertion
+								--n[ smode ];
+								smode = AssertionMap::INS;
+								++n[ smode ];
+							} break;
+							default: unreachable("inconsistent mode");
+						}
+					} break;
+					case AssertionMap::UPD: {
+						// later removal or update overrides this update
+						assume( smode == AssertionMap::REM || smode == AssertionMap::UPD, 
+							"inconsistent mode");
+					} break;
+					default: unreachable("invalid mode");
+				}
+			}
+
+			oassns = oassns->get_base();
+			omode = oassns->get_mode();
+		}
+
+		// apply edits
+		if ( oassns != assns ) {
+			// These assertion sets are not versions of the same persistent structure
+			// FIXME this can be removed if rest of environment is switched over
+			for ( const auto& a : *o.assns ) {
+				auto it = assns->find( a.first );
+				if ( it == assns->end() ) {
+					assns = assns->set( a.first, a.second );
+					++localAssns;
+				} else {
+					if ( it->second != a.second ) return false;
+				}
+			}
+
+			return true;  // all assertions successfully bound
+		}
+
+		if ( n[ AssertionMap::UPD ] == 0 ) {
+			// can possibly short-circuit to one set or another if no updates to check
+
+			// all changes are removal, no merge needed
+			if ( n[ AssertionMap::INS ] == 0 ) return true;
+
+			// all changes are insertions, just use other set
+			if ( n[ AssertionMap::REM ] == 0 ) {
+				assns = o.assns;
+				localAssns += o.localAssns;
+				return true;
 			}
 		}
 
-		// merge parents
-		if ( o.parent && ! merge( *o.parent, move(seen) ) ) return false;
-		
-		return true;
+		// apply insertions and check updates
+		for ( const auto& e : edits ) {
+			switch ( e.second.mode ) {
+				case AssertionMap::INS: {
+					// apply insertions
+					assns = assns->set( e.first, e.second.val );
+					++localAssns;
+				} break;
+				case AssertionMap::UPD: {
+					// check updates
+					if ( assns->get( e.first ) != e.second.val ) return false;
+				} break;
+				default: break; // ignore other cases
+			}
+		}
+
+		return true; // all assertions sucessfully bound
+	}
+
+public:
+	/// Merges the target environment with this one; both environments must be versions of the 
+	/// same initial environment.
+	/// Returns false if fails, but does NOT roll back partial changes.
+	bool merge( const Env& o ) {
+		// Already compatible with o, by definition.
+		if ( inheritsFrom( o ) ) return true;
+
+		// check classes and assertions
+		return mergeClasses( o, SeenTypes{} ) && mergeAssns( o );
 	}
 
 	/// Gets an environment equivalent to this one, but with structure flattened up to p.
@@ -478,11 +571,6 @@ public:
 				if ( ! seenAny( seen, crnt->classes[i] ) ) {
 					env->copyClass( ClassRef{ crnt, i } );
 				}
-			}
-
-			// loop through assertions, copying any seen
-			for ( const auto& assn : assns ) {
-				env->localAssns += (env->assns.insert( assn ).second == true);
 			}
 		}
 		

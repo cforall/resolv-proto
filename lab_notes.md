@@ -1,6 +1,36 @@
-## 26-26 Mar 2018 ##
+## 26-29 Mar 2018 ##
 * Work on Persistent Union-Find data structure
   * TODO: look at not doing path compression (no path compression, but fewer updates to reverse)
+  * TODO: look at persistent union-find as variant on persistent map
+    * rename to `persistent_disjoint_set<Elm>`
+    * no `Update` op
+    * has `AddUnder { Elm root; Elm child; bool inc_rank }` op, and inverse `RemFrom`
+      * probably lose path compression if you do this, but the equivalence classes shouldn't be *that* big
+    * Should be a `compare` operation that takes two persistent maps, traces paths between them
+      * `EQ` if same map
+      * `SUB` if `a` to `b` by only `Add` or `AddUnder`
+      * `SUP` if `a` to `b` by only `Rem` or `RemFrom`
+      * `INC` otherwise
+    * I think can make an `editPath` operation that gets a collapsed string of edits to move 
+      from one state to another, then merge based on it
+      * assuming editing the target, ignore `Add`, add `Rem`, `Update` is a failure
+      * I think an insertion-ordered set is the right data structure for the path
+        * update as traversed
+        * maybe `std::list` with a `std::unordered_map` from key to list iterator
+      * Don't go that complicated, just expose the internal list structure
+    * Keep a map of roots to something else (used for class reps)
+    * Should also be a `clone` operation that reroots a persistent data structure, then copies the map into an unrelated map
+    * With this, modifications to `Env`:
+      * remove `parent`
+      * make `bindings` and `assns` pointers (initially copies of the parent pointers)
+      * merge can be done *very* efficiently for `compare(a, b)` in `EQ`, `SUB`, `SUP`
+        * even otherwise, don't need to worry about merging parent nodes recursively, because there 
+          aren't any
+      * `Env` might become `GC_Traceable` instead -- really just a wrapper for the two `GC_Object` pointers, can hold it by-value
+        * can remove `localAssns`, only real use is in `getNonempty`, which is obviated by value type here
+        * don't even bother with `GC_Traceable`, the extra `bool` isn't worth it, make it a value type with a `<<` operator on `GC`
+* Start updating Env to use Persistent Union-Find
+  * TODO: update mergeClasses
 
 ## 20-23 Mar 2018 ##
 * Further work on CFA-CC GC
