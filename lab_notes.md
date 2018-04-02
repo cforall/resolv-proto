@@ -1,3 +1,9 @@
+## 02 Apr 2018 ##
+* Continue work on persistency-based `Env`
+  * finish `persistent_disjoint_set`
+  * TODO add `persistent_disjoint_set` for classes, `persistent_map` for representatives to `Env`
+    * maybe remove `Env::{from,none}()` to ease refactor to one base env
+
 ## 26-29 Mar 2018 ##
 * Work on Persistent Union-Find data structure
   * TODO: look at not doing path compression (no path compression, but fewer updates to reverse)

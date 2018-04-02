@@ -16,12 +16,20 @@
 
 template<typename Elm, typename Hash = std::hash<Elm>, typename Eq = std::equal_to<Elm>>
 class persistent_disjoint_set : public GC_Object {
-	template<typename T, typename H, typename E>
-	friend const GC& operator<< (const GC& gc, const persistent_disjoint_set<T,H,E>&);
-
+public:
 	/// Type of this class
 	using Self = persistent_disjoint_set<Elm, Hash, Eq>;
 
+	/// Types of version nodes
+	enum Mode { 
+		BASE,    ///< Root node of version tree
+		ADD,     ///< Add key to set
+		REM,     ///< Reverse add operation
+		ADDTO,   ///< Merge one class root under another
+		REMFROM  ///< Reverse addTo operation
+	};
+
+private:
 	/// Type of node height
 	using Height = unsigned char;
 
@@ -74,14 +82,8 @@ class persistent_disjoint_set : public GC_Object {
 		~Data() {}
 	} data;
 
-	/// Type of node
-	mutable enum Mode { 
-		BASE,    ///< Base node
-		ADD,     ///< Add operation
-		REM,     ///< Reverse Add
-		ADDTO,   ///< AddTo operation
-		REMFROM  ///< Reverse AddTo
-	} mode;
+	/// Type of version node
+	mutable Mode mode;
 
 	/// get mutable reference as T
 	template<typename T>
@@ -148,7 +150,7 @@ protected:
 		switch( mode ) {
 			case BASE: {
 				for (const auto& entry : as<Base>()) {
-					gc << entry.first << entry.second;
+					gc << entry.first;
 				}
 				return;
 			}
@@ -343,122 +345,21 @@ public:
 		return ret;
 	}
 
-private:
-	using Map = persistent_map<Elm, Node, Hash, Eq>;
-	Map* base;  ///< Underlying map for union find
-
-	/// Finds root for element i, performing path compression and returning new map 
-	/// and root element
-	static Map::Entry find_aux(Map& f, Elm i) {
-		// get entry, inserting if necessary
-		Map::Entry fi = f[i];
-		if ( ! fi.exists() ) { return fi = Node{ i }; }
-		// return if root
-		const Node& fin = fi.get();
-		Elm p = fin.parent;
-		if ( i == p ) return fi;
-		// otherwise recurse, compressing path
-		Elm n = fin.next;
-		unsigned char r = fin.rank;
-
-		Map::Entry fp = find_aux(f, p);
-		p = fp.get_key();
-		Map* f2 = fp.get_base()->set( i, Node{ p, n, r } );
-		return { f2, p };
-	}
-
-public:
-	using iterator = Map::iterator;
-	
-	persistent_disjoint_set() : base(new Map{}) {}
-
-	/// Begin iterator for map; invalidated under the same conditions as persistent_map::begin()
-	iterator begin() const { return base->begin(); }
-
-	/// End iterator for map; invalidated under the same conditions as persistent_map::end()
-	iterator end() const { return base->end(); }
-
-	/// Finds root for element i, performing path compression and insertion as needed
-	Elm find(Elm i) const {
-		Map::Entry fp = find_aux(*as_non_const(base), i);
-		as_non_const(base) = fp.get_base();
-		return fp.get_key();
-	}
-
-	/// Checks if two elements are in different classes
-	bool disjoint(Elm i, Elm j) { return find(i) != find(j); }
-
-	/// Inserts a previously absent node into the map
-	void insert(Elm i) {
-		assume(base->count( i ) == 0, "Element is not present in map");
-		base->set( i, Node{ i } );
-	}
-
-	/// Inserts a previously absent node into the map in an existing equivalence class
-	void insert(Elm i, Elm c) {
-		assume(base->count( i ) == 0, "Element is not present in map");
-
-		// get class parameters
-		Map::Entry fp = find_aux(*base, c);
-		const Node& pn = fp.get();
-		Elm p = pn.parent;
-		Elm n = pn.next;
-		unsigned char r = pn.rank;
-
-		// splice into equivalence class, increasing rank if necessary
-		base = base->set( i, Node{ p, n, 0 } );
-		base = base->set( p, Node{ p, i, r + (unsigned char)(r == 0) } );
-	}
-
-	/// Takes union of two element classes
-	void merge(Elm i, Elm j) {
-		Map::Entry fx = find_aux(*base, i);
-		const Node& fxn = fx.get();
-		Elm x = fxn.parent;
-		Elm xx = fxn.next;
-		unsigned char xr = fxn.rank;
-		base = fx.get_base();
-
-		Map::Entry fy = find_aux(*base, j);
-		
-		// return early if already merged
-		if ( x == fy.get_key() ) return;
-
-		const Node& fyn = fy.get();
-		Elm y = fyn.root;
-		Elm yy = fyn.next;
-		unsigned char yr = fyn.rank;
-
-		// unify classes
-		if ( xr < yr ) {
-			// place x under y, splicing lists together
-			base = base->set( x, Node{ y, yy, xr } );
-			base = base->set( y, Node{ y, xx, yr } );
-		} else /* if ( xr >= yr ) */ {
-			// place y under x, splicing lists together
-			base = base->set( y, Node{ x, xx, yr } );
-			// increase x's rank if ranks are equal
-			base = base->set( x, Node{ x, yy, xr + (unsigned char)(xr == yr) } );
-		}
-	}
-
-	bool contains(Elm i) const { return base->count( i ); }
-
 	/// Reports all members of a class to `out`; none if i does not exist in map
 	template<typename OutputIterator>
 	void find_class(Elm i, OutputIterator& out) const {
+		const Base& self = rerooted();
+
 		// skip empty classes
-		if ( ! base->count( i ) ) return;
+		if ( ! self.count( i ) ) return;
 
 		Elm crnt = i;
 		do {
 			*out++ = crnt;
-			crnt = base->get( crnt ).next;
+			auto it = self.find( crnt );
+			assume( crnt != self.end(), "current node must exist in base");
+			crnt = it->second.next;
 		} while ( crnt != i );
 	}
 };
 
-template<typename T, typename H, typename E>
-const GC& operator<< (const GC& gc, const persistent_disjoint_set<T,H,E>& uf) {
-	gc << uf.base;
-}
