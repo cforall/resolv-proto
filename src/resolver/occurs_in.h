@@ -9,16 +9,15 @@
 /// Checks if any of a list of forbidden variables occur in the expansion of a type in an 
 /// environment.
 class OccursIn : public TypeVisitor<OccursIn, bool> {
-	const Env* env;
 	const List<PolyType>& vars;
+	const Env& env;
 
 public:
 	using Super = TypeVisitor<OccursIn, bool>;
 	using Super::visit;
 	using Super::operator();
 
-	OccursIn( const List<PolyType>& vars ) : env(nullptr), vars(vars) {}
-	OccursIn( const Env* env, const List<PolyType>& vars ) : env(env), vars(vars) {}
+	OccursIn( const List<PolyType>& vars, const Env& env ) : vars(vars), env(env) {}
 
 	bool visit( const PolyType* t, bool& r ) {
 		// check forbidden variable list for occurance of t
@@ -28,9 +27,11 @@ public:
 				return false;
 			}
 		}
+
 		// recursively check substitution of t from environment
-		ClassRef tr = findClass( env, t );
-		if ( tr ) return visit( tr->bound, r );
+		ClassRef tr = env.findRef( t );
+		if ( tr ) return visit( tr.get_bound(), r );
+
 		// didn't find substitution
 		return true;
 	}

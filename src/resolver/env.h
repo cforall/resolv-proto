@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <list>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -16,6 +17,7 @@
 #include "data/gc.h"
 #include "data/list.h"
 #include "data/mem.h"
+#include "data/persistent_disjoint_set.h"
 #include "data/persistent_map.h"
 
 #if defined RP_DEBUG && RP_DEBUG >= 1
@@ -45,75 +47,70 @@ std::ostream& operator<< (std::ostream&, const TypeClass&);
 class ClassRef {
 	friend Env;
 
-	const Env* env;   ///< Containing environment
-	std::size_t ind;  ///< Index in that environment's class storage
+	const Env* env;        ///< Containing environment
+	const PolyType* root;  ///< Root member of this class
+	
 public:
-	ClassRef() : env(nullptr), ind(0) {}
-	ClassRef( const Env* env, std::size_t ind ) : env(env), ind(ind) {}
+	ClassRef() : env(nullptr), root(nullptr) {}
+	ClassRef( const Env* env, const PolyType* root ) : env(env), root(root) {}
+
+	/// Gets the root of the referenced type class
+	const PolyType* get_root() const { return root; }
+
+	/// Ensures that root is still the representative element of this typeclass;
+	/// undefined behaviour if called without referenced typeclass
+	inline void update_root();
+
+	/// Gets the type variables of the referenced type class, empty list for none
+	inline List<PolyType> get_vars() const;
+
+	/// Gets the bound type of the referenced type class, nullptr for none such
+	inline const Type* get_bound() const;
+
+	/// Gets the referenced typeclass
+	inline TypeClass get_class() const;
 
 	// Get referenced typeclass
-	const TypeClass& operator* () const;
-	const TypeClass* operator-> () const { return &(this->operator*()); }
+	inline TypeClass operator* () const { return get_class(); };
 
 	// Check that there is a referenced typeclass
 	explicit operator bool() const { return env != nullptr; }
 
-	bool operator== (const ClassRef& o) const { return env == o.env && ind == o.ind; }
+	bool operator== (const ClassRef& o) const { return env == o.env && root == o.root; }
 	bool operator!= (const ClassRef& o) const { return !(*this == o); }
 };
 
 /// Stores type-variable and assertion bindings
-class Env final : public GC_Object {
+class Env final {
 	friend ClassRef;
+	friend const GC& operator<< (const GC&, const Env&);
 	friend std::ostream& operator<< (std::ostream&, const Env&);
 
 	/// Backing storage for typeclasses
-	using Storage = std::vector<TypeClass>;
-	/// Underlying map type
-	using Map = std::unordered_map<const PolyType*, ClassRef>;
+	using Classes = persistent_disjoint_set<const PolyType*>;
+	/// Type bindings included in this environment (from class root)
+	using Bindings = persistent_map<const PolyType*, const Type*>;
 	/// Assertions known by this environment
-	using AssertionMap = persistent_map<const FuncDecl*, const TypedExpr*>;
-	/// Set of seen types for recursion on classes
-	using SeenTypes = std::unordered_set<const PolyType*>;
+	using Assertions = persistent_map<const FuncDecl*, const TypedExpr*>;
 
-	Storage classes;         ///< Backing storage for typeclasses
-	Map bindings;            ///< Bindings from a named type variable to another type
-	AssertionMap* assns;     ///< Backing storage for assertions
-	std::size_t localAssns;  ///< Count of local assertions
+	Classes* classes;        ///< Backing storage for typeclasses
+	Bindings* bindings;      ///< Bindings from a named type variable to another type
+	Assertions* assns;       ///< Backing storage for assertions
 
 public:
-	const Env* parent;       ///< Environment this inherits bindings from
-
 	/// Finds the binding reference for this polytype, { nullptr, _ } for none such.
 	/// Updates the local map with the binding, if found.
 	ClassRef findRef( const PolyType* var ) const {
-		// search self
-		auto it = bindings.find( var );
-		if ( it != bindings.end() ) return it->second;
-		// lookup in parent, adding to local binding if found
-		for ( const Env* crnt = parent; crnt; crnt = crnt->parent ) {
-			it = crnt->bindings.find( var );
-			if ( it != crnt->bindings.end() ) {
-				as_non_const(this)->bindings[ var ] = it->second;
-				return it->second;
-			}
-		}
-		return {};
+		const PolyType* root = classes->find_or_default( var, nullptr );
+		if ( root ) return { this, root };
+		else return {};
 	}
 
 	/// true iff t occurs in vars, recursively expanded according to env
-	static bool occursIn( const Env* env, const List<PolyType>& vars, const Type* t );
-
-	/// true iff t occurs in vars
-	static bool occursIn( const List<PolyType>& vars, const Type* t );
-
-	/// true iff t occurs in var, recursively expanded according to env
-	static inline bool occursIn( const Env* env, const PolyType* var, const Type* t ) {
-		return occursIn( env, List<PolyType>{ var }, t );
-	}
+	bool occursIn( const List<PolyType>& vars, const Type* t ) const;
 
 	/// true iff t occurs in var
-	static inline bool occursIn( const PolyType* var, const Type* t ) {
+	bool occursIn( const PolyType* var, const Type* t ) const {
 		return occursIn( List<PolyType>{ var }, t );
 	}
 
@@ -122,243 +119,113 @@ private:
 	void verify() const;
 #endif
 
-	/// marks a type as seen; true iff the type has already been marked
-	static bool markedSeen( SeenTypes& seen, const PolyType* v ) {
-		return seen.insert( v ).second == false;
-	}
-	
-	/// true iff any of the types in c have been seen already; adds types in c to seen
-	static bool seenAny( SeenTypes& seen, const TypeClass& c ) {
-		for ( const PolyType* v : c.vars ) if ( markedSeen( seen, v ) ) return true;
-		return false;
-	}
-
 	/// Inserts a new typeclass, consisting of a single var (should not be present).
 	void insert( const PolyType* v ) {
-		bindings[ v ] = { this, classes.size() };
-		classes.emplace_back( List<PolyType>{ v } );
+		classes = classes->add( v );
+		bindings = bindings->set( v, nullptr );
 	}
 
-	/// Copies a typeclass from a parent; r.first should not be this or null, and none of the 
-	/// members of the class should be bound directly in this. Updates r with the new location
-	void copyClass( ClassRef& r ) {
+	/// Adds `v` to local class rooted at `root`; `v` should not be bound in this environment.
+	void addToClass( const PolyType* root, const PolyType* v ) {
 		dbg_verify();
-		std::size_t i = classes.size();
-		classes.push_back( *r );
-		r = ClassRef{ this, i };
-		for ( const PolyType* v : classes[i].vars ) { bindings[v] = r; }
+		classes = classes->add( v )->merge( root, v );
 		dbg_verify();
 	}
 
-	/// Copies a typeclass from a parent; r.first should not be this or null, and none of the 
-	/// members of the class should be bound directly in this.
-	void copyClass( ClassRef&& r ) {
-		dbg_verify();
-		std::size_t i = classes.size();
-		classes.push_back( *r );
-		r = ClassRef{ this, i };
-		for ( const PolyType* v : classes[i].vars ) { bindings[v] = r; }
-		dbg_verify();
-	}
-
-	/// Adds v to local class with id rid; v should not be bound in this environment.
-	void addToClass( std::size_t rid, const PolyType* v ) {
-		dbg_verify();
-		classes[ rid ].vars.push_back( v );
-		bindings[ v ] = { this, rid };
-		dbg_verify();
-	}
-
-	/// Makes cbound the bound of r in this environment, returning false if incompatible.
-	/// May mutate r to copy into local scope.
+	/// Makes cbound or a more specialized type the bound of r in this environment, 
+	/// returning false if incompatible. Does not roll back intermediate changes.
+	/// Will update r to final root
 	bool mergeBound( ClassRef& r, const Type* cbound );
 
 	/// Merges s into r; returns false if fails due to contradictory bindings.
-	/// r should be local, but may be moved by the merging process; s should be non-null
+	/// Will update r to final root, s will have no such change.
 	bool mergeClasses( ClassRef& r, ClassRef s ) {
-		const PolyType* st = s->vars[0];  // to reacquire s when complete.
-		
 		// ensure bounds match
-		if ( ! mergeBound( r, s->bound ) ) return false;
-		
-		TypeClass& rc = classes[ r.ind ];
+		if ( ! mergeBound( r, s.get_bound() ) ) return false;
 
 		// ensure occurs check not violated
-		if ( occursIn( this, s->vars, rc.bound ) ) return false;
+		if ( occursIn( s.get_vars(), r.get_bound() ) ) return false;
 
-		s = s.env->findRef( st );  // find s in original env in case mergeBound invalidated
-		const TypeClass& sc = *s;
+		// merge two classes
+		s.update_root();  // in case mergeBound invalidated it
+		const PolyType* rr = r.get_root();
+		const PolyType* sr = s.get_root();
+		Classes* new_classes = classes->merge( rr, sr );
 
-		if ( s.env == this ) {
-			// need to merge two existing local classes -- guaranteed that vars don't 
-			// overlap
-			rc.vars.insert( rc.vars.end(), sc.vars.begin(), sc.vars.end() );
-			for ( const PolyType* v : sc.vars ) { bindings[v] = r; }
-			// remove s from local class-list
-			std::size_t victim = classes.size() - 1;
-			if ( s.ind != victim ) {
-				classes[ s.ind ] = move(classes[victim]);
-				for ( const PolyType* v : classes[ s.ind ].vars ) { bindings[v] = s; }
-			}
-			classes.pop_back();
-			if ( r.ind == victim ) {
-				// note that r has been moved to the old position of s
-				r.ind = s.ind;
-			}
-			dbg_verify();
-			return true;
-		}
-		
-		// merge in variables
-		rc.vars.reserve( rc.vars.size() + sc.vars.size() );
-		for ( const PolyType* v : sc.vars ) {
-			ClassRef rr = findRef( v );
-			if ( ! rr || rr == s ) {
-				// not bound or bound in target class in parent; can safely add to r if no cycle
-				addToClass( r.ind, v );
-			} else if ( rr == r ) {
-				// already in class; do nothing
-			} else {
-				// new victim class; needs to merge successfully as well
-				if ( ! mergeClasses( r, rr ) ) return false;
-			}
-		}
+		// update bindings
+		assume(classes->get_mode() == Classes::REMFROM, "Classes updated to by merge");
+		const PolyType* root = classes->get_root();
+		if ( root == rr ) {
+			// erase binding for sr if no longer root
+			bindings = bindings->erase( sr );
+		} else if ( root == sr ) {
+			// update s binding to match merged r binding and then erase r
+			bindings = bindings->set( sr, bindings->get( rr ) )->erase( rr );
+			// reroot r
+			r.root = sr;
+		} else unreachable("root must be one of previous two class roots");
+
+		// finalize classes
+		classes = new_classes;
 		dbg_verify();
 		return true;
 	}
 
-	/// Recursively places references to unbound typeclasses in the output list
-	void getUnbound( std::unordered_set<const PolyType*>& seen, 
-	                 List<TypeClass>& out ) const {
-		for ( const TypeClass& c : classes ) {
-			// skip classes containing vars we've seen before
-			if ( seenAny( seen, c ) ) continue;
-			// report unbound classes
-			if ( ! c.bound ) { out.push_back( &c ); }
-		}
-
-		// recurse to parent
-		if ( parent ) { parent->getUnbound( seen, out ); }
-	}
-
-	/// Is this environment descended from the other?
-	bool inheritsFrom( const Env& o ) const {
-		const Env* crnt = this;
-		do {
-			if ( crnt == &o ) return true;
-			crnt = crnt->parent;
-		} while ( crnt );
-		return false;
-	}
-
 public:
-	/// Returns this or its first non-empty parent environment (null for empty env).
-	const Env* getNonempty() const {
-		// rely on the invariant that if this is empty, its parent will be 
-		// either null or non-empty
-		return ( localAssns > 0 || ! classes.empty() ) ? this : parent;
-	}
+	Env() : classes( new Classes{} ), bindings( new Bindings{} ), assns( new Assertions{} ) {}
 
-	Env() 
-		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr ) {}
+	/// Shallow copy, just sets copy of underlying maps
+	Env( const Env& o ) = default;
+	Env& operator= ( const Env& o ) = default;
 
-	/// Constructs a brand new environment with a single class containing only var
-	Env( const PolyType* var ) 
-		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr )
-		{ insert( var ); }
-
-	/// Constructs a brand new environment with a single class
-	Env( ClassRef& r )
-		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr )
-		{ copyClass(r); }
-
-	/// Heap-Constructs a brand new environment with a single bound class.
-	/// Returns nullptr if the class cannot be bound
-	static Env* make( ClassRef& r, const Type* sub ) {
-		if ( occursIn( r->vars, sub ) ) return nullptr;
-		Env* env = new Env{ r };
-		env->classes.front().bound = sub;
-		return env;
-	}
-
-	/// Constructs a brand new environment with a single class with an added type variable
-	Env( ClassRef& r, const PolyType* var )
-		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr ) {
-		copyClass(r);
-		if ( ! bindings.count( var ) ) { addToClass(0, var); }
-	}
-	
-	/// Constructs a brand new environment with a single class
-	Env( ClassRef& r, std::nullptr_t )
-		: classes(), bindings(), assns( new AssertionMap{} ), localAssns( 0 ), parent( nullptr ) 
-		{ copyClass(r); }
-
-	/// Shallow copy, just sets parent of new environment
-	Env( const Env& o )
-		: classes(), bindings(), assns( o.assns ), localAssns( 0 ), parent( o.getNonempty() ) {}
-
-	/// Deleted to avoid the possibility of environment cycles.
-	Env& operator= ( const Env& o ) = delete;
-
-	/// Makes a new environment with the given environment as parent.
-	/// If the given environment is null, so will be the new one.
-	static Env* from( const Env* env ) { return env ? new Env{ *env } : nullptr; }
-
-	/// Gets a nullptr for an unintialized environment
-	static constexpr Env* none() { return nullptr; }
+	/// Rely on GC to clean up un-used version nodes
+	~Env() = default;
 
 	/// Inserts a type variable if it doesn't already exist in the environment.
 	/// Returns false if already present.
-	bool insertVar( const PolyType* orig ) {
-		if ( findRef(orig) ) return false;
-		insert( orig );
+	bool insertVar( const PolyType* var ) {
+		if ( classes->count( var ) ) return false;
+		insert( var );
 		return true;
 	}
 
 	/// Gets the type-class for a type variable, creating it if needed
-	ClassRef getClass( const PolyType* orig ) {
-		ClassRef r = findRef( orig );
+	ClassRef getClass( const PolyType* var ) {
+		ClassRef r = findRef( var );
 		if ( ! r ) {
-			r = { this, classes.size() };
-			insert( orig );
+			insert( var );
+			r = { this, var };
 		}
 		return r;
 	}
-
-	/// Gets local class list
-	const Storage& getClasses() const { return classes; }
 
 	/// Finds an assertion in this environment, returns null if none
 	const TypedExpr* findAssertion( const FuncDecl* f ) const {
 		return assns->get_or_default( f, nullptr );
 	}
 
-	/// Gets local assertion list
-	const AssertionMap& getAssertions() const { return *assns; }
-
 	/// Binds this class to the given type; class should be currently unbound.
-	/// May copy class into local scope; class should belong to this or a parent.
-	/// Returns false if would create recursive loop
+	/// Class should belong to this environment. Returns false if would create recursive loop.
 	bool bindType( ClassRef& r, const Type* sub ) {
-		if ( occursIn( this, r->vars, sub ) ) return false;
-		if ( r.env != this ) { copyClass( r ); }
-		classes[ r.ind ].bound = sub;
+		assume( r.env == this, "invalid ref for environment" );
+		if ( occursIn( r.get_vars(), sub ) ) return false;
+		bindings = bindings->set( r.get_root(), sub );
 		return true;
 	}
 
 	/// Binds the type variable into to the given class; returns false if the 
 	/// type variable is incompatibly bound.
 	bool bindVar( ClassRef& r, const PolyType* var ) {
+		assume( r.env == this, "invalid ref for environment" );
 		ClassRef vr = findRef( var );
 		if ( vr == r ) return true;  // exit early if already bound
-		if ( r.env != this ) { copyClass(r); }  // ensure r is local
 		if ( vr ) {
 			// merge variable's existing class into this one
 			return mergeClasses( r, vr );
 		} else {
 			// add unbound variable to class if no cycle
-			if ( occursIn( this, var, classes[r.ind].bound ) ) return false;
-			addToClass( r.ind, var );
+			if ( occursIn( var, r.get_bound() ) ) return false;
+			addToClass( r.get_root(), var );
 			return true;
 		}
 	}
@@ -366,67 +233,232 @@ public:
 	/// Binds an assertion in this environment. `f` should be currently unbound.
 	void bindAssertion( const FuncDecl* f, const TypedExpr* assn ) {
 		assns = assns->set( f, assn );
-		++localAssns;
 	}
 
 private:
 	/// Checks if the classes of another environment are compatible with those of this environment.
-	/// Returns false if fails, but does NOT roll back partial changes; `seen` makes sure work 
-	/// isn't duplicated for inherited bindings
-	bool mergeClasses( const Env& o, SeenTypes&& seen ) {
-		// merge classes
-		for ( std::size_t ci = 0; ci < o.classes.size(); ++ci ) {
-			const TypeClass& c = o.classes[ ci ];
-			std::size_t n = c.vars.size();
-			std::size_t i;
-			ClassRef r{};  // typeclass in this environment
-			bool nonempty = false;  // cover corner case where all vars in class previously seen
+	/// Returns false if fails, but does NOT roll back partial changes.
+	bool mergeAllClasses( const Env& o ) {
+		/// Edit item for path state
+		struct Edit {
+			Classes::Mode mode;    ///< Type of change to a key
+			const PolyType* root;  ///< New/Previous root, if addTo/remFrom node
 
-			for ( i = 0; i < n; ++i ) {
-				if ( markedSeen( seen, c.vars[i] ) ) continue;
-				nonempty = true;
-				// look for first existing bound variable
-				r = findRef( c.vars[i] );
-				if ( r ) break;
-			}
+			Edit(Classes::Mode m, const PolyType* r = nullptr) : mode(m), root(r) {}
+		};
 
-			if ( i < n ) {
-				// attempt to merge bound into r
-				if ( ! mergeBound( r, c.bound ) ) return false;
-				// make sure that occurs check is not violated
-				if ( occursIn( this, c.vars, r->bound ) ) return false;
-				// merge previous variables into this class
-				if ( r.env != this ) { copyClass( r ); }
-				for ( std::size_t j = 0; j < i; ++j ) { addToClass( r.ind, c.vars[j] ); }
-				// merge subsequent variables into this class
-				while ( ++i < n ) {
-					if ( markedSeen( seen, c.vars[i] ) ) continue;
-					// copy unbound variables into this class, skipping ones already bound to it
-					ClassRef rr = findRef( c.vars[i] );
-					if ( ! rr ) {
-						// unbound; safe to add
-						addToClass( r.ind, c.vars[i] );
-					} else if ( rr == r ) {
-						// bound to target class; already added, do nothing
-					} else {
-						// merge new class into existing
-						if ( ! mergeClasses( r, rr ) ) return false;
-					}
-				}
-			} else if ( nonempty ) {
-				// no variables in this typeclass bound; just copy up
-				copyClass( ClassRef{ &o, ci } );
-				continue;
-			}
-		}
+		// track class changes
+		classes->reroot();
 
-		// merge parents
-		if ( o.parent ) {
-			if ( inheritsFrom( *o.parent ) ) return true;  // compatible by definition
-			if ( ! mergeClasses( *o.parent, move(seen) ) ) return false;
-		}
+		using EditEntry = std::pair<const PolyType*, Edit>;
+		using EditList = std::list<EditEntry>;
+		using IndexedEdits = std::vector<EditList::iterator>;
+
+		EditList edits;
+		std::unordered_map<const PolyType*, IndexedEdits> editIndex;
 		
-		return true;
+		// trace path from other evironment
+		const Classes* oclasses = o.classes;
+		Classes::Mode omode = oclasses->get_mode();
+		while ( omode != Classes::BASE ) {
+			const PolyType* key = oclasses->get_key();
+			IndexedEdits& forKey = editIndex[ key ];
+
+			if ( forKey.empty() ) {
+				// newly seen key, mark op
+				const PolyType* root = ( omode == Classes::ADD || omode == Classes::REM ) ?
+					nullptr : oclasses->get_root();
+				auto it = edits.emplace( edits.begin(), key, Edit{ omode, root } );
+				forKey.push_back( move(it) );
+			} else {
+				auto next = forKey.back();  // edit next applied to this key
+				Classes::Mode nmode = next->second.mode; // next action applied
+
+				switch ( omode ) {
+					case Classes::ADD: {
+						switch ( nmode ) {
+							case Classes::REM: {
+								// later removal, no net change to classes
+								edits.erase( next );
+								forKey.pop_back();
+							} break;
+							case Classes::ADDTO: {
+								// later merge, prefix with this addition
+								auto it = edits.emplace( edits.begin(), key, Edit{ omode } );
+								forKey.push_back( move(it) );
+							} break;
+							default: unreachable("inconsistent mode");
+						}
+					} break;
+					case Classes::REM: {
+						// later addition, no net change to classes
+						assume ( nmode == Classes::ADD, "inconsistent mode" );
+						edits.erase( next );
+						forKey.pop_back();
+					} break;
+					case Classes::ADDTO: {
+						// later unmerged from same class, no net change to classes
+						assume( nmode == Classes::REMFROM, "inconsistent mode" );
+						assume( oclasses->get_root() == next->second.root, "inconsistent tree" );
+						edits.erase( next );
+						forKey.pop_back();
+					} break;
+					case Classes::REMFROM: {
+						const PolyType* root = oclasses->get_root();
+						switch ( nmode ) {
+							case Classes::REM: {
+								// later removal, prefix with this unmerge
+								auto it = edits.emplace( edits.begin(), key, Edit{ omode, root } );
+								forKey.push_back( move(it) );
+							} break;
+							case Classes::ADDTO: {
+								if ( root == next->second.root ) {
+									// later merged back into same class, no net change
+									edits.erase( next );
+									forKey.pop_back();
+								} else {
+									// later merged into different class, prefix with this unmerge
+									auto it = edits.emplace( 
+										edits.begin(), key, Edit{ omode, root } );
+									forKey.push_back( move(it) );
+								}
+							} break;
+							default: unreachable("inconsistent mode");
+						}
+					} break;
+					default: unreachable("invalid mode");
+				}
+			}
+
+			oclasses = oclasses->get_base();
+			omode = oclasses->get_mode();
+		}
+		assume( oclasses == classes, "classes must be versions of same map" );
+
+		/// Edit item for binding changes
+		struct BEdit {
+			Bindings::Mode mode;  ///< Type of change to a key
+			const Type* val;      ///< Updated key value, if applicable
+
+			BEdit(Bindings::Mode m, const Type* v = nullptr) : mode(m), val(v) {}
+		};
+
+		// track binding merges
+		bindings->reroot();
+		std::unordered_map<const PolyType*, BEdit> bedits; // edits to base bindings
+		
+		// trace path from other environment
+		const Bindings* bbindings = o.bindings;
+		Bindings::Mode bmode = bbindings->get_mode();
+		while ( bmode != Bindings::BASE ) {
+			const PolyType* key = bbindings->get_key();
+			auto it = bedits.find( key );
+
+			if ( it == bedits.end() ) {
+				// newly seen key, mark operation
+				const Type* val = ( bmode == Bindings::REM ) ? nullptr : bbindings->get_val();
+				bedits.emplace_hint( it, key, BEdit{ bmode, val } );
+			} else {
+				Bindings::Mode& smode = it->second.mode;
+				switch ( bmode ) {
+					case Bindings::REM: {
+						// later insertion, change to update
+						assume( smode == Bindings::INS, "inconsistent mode" );
+						smode = Bindings::UPD;
+					} break;
+					case Bindings::INS: {
+						switch ( smode ) {
+							case Bindings::REM: {
+								// later removal, no net change to map
+								bedits.erase( it );
+							} break;
+							case Bindings::UPD: {
+								// later update collapses to insertion
+								smode = Bindings::INS;
+							} break;
+							default: unreachable("inconsistent mode");
+						}
+					} break;
+					case Bindings::UPD: {
+						// later removal or update overrides this update
+						assume( smode == Bindings::REM || smode == Bindings::UPD, 
+							"inconsistent mode");
+					} break;
+					default: unreachable("invalid mode");
+				}
+			}
+
+			bbindings = bbindings->get_base();
+			bmode = bbindings->get_mode();
+		}
+		assume( bbindings == bindings, "bindings must be versions of same map" );
+
+		// merge typeclasses (always possible, can always merge all classes into one if the 
+		// bindings unify)
+		for ( const EditEntry& edit : edits ) {
+			const PolyType* key = edit.first;
+			const Edit& e = edit.second;
+			auto bit = bedits.find( key );
+
+			switch ( e.mode ) {
+				case Classes::ADD: {
+					// add new type variable
+					classes = classes->add( key );
+					// optionally add binding (none if later ADDTO)
+					if ( bit != bedits.end() ) {
+						const BEdit& be = bit->second;
+						assume( be.mode == Bindings::INS, "inconsistent binding");
+						bindings = bindings->set( key, be.val );
+						bedits.erase( bit );
+					}
+				} break;
+				case Classes::REM: {
+					// do not remove type variable (merging)
+					// if binding change (none if earlier REMFROM), check
+					if ( bit != bedits.end() ) {
+						const BEdit& be = bit->second;
+						assume( be.mode == Bindings::REM, "inconsistent binding");
+						// do not remove binding either
+						bedits.erase( bit );
+					}
+				} break;
+				case Classes::ADDTO: {
+					// merge classes
+					classes = classes->merge( e.root, key );
+					// remove binding for new child (none if earlier ADD or REMFROM)
+					if ( bit != bedits.end() ) {
+						const BEdit& be = bit->second;
+						assume( be.mode == Bindings::REM, "inconsistent binding");
+						bindings = bindings->erase( key );
+						bedits.erase( bit );
+					}
+				} break;
+				case Classes::REMFROM: {
+					// do not split classes
+					// if binding for new root (none if later REM or ADDTO), leave in update list
+					if ( bit != bedits.end() ) {
+						const BEdit& be = bit->second;
+						assume( be.mode == Bindings::INS, "inconsistent binding");
+						// leave in update list to check later
+					}
+				} break;
+				default: unreachable("invalid mode");
+			}
+		}
+
+		// finish merging bindings -- all that should be left is updates on roots and inserts on 
+		// new roots from REMFROM nodes. This may fail, or may merge further classes
+		for ( const auto& entry : bedits ) {
+			const PolyType* key = entry.first;
+			const BEdit& e = entry.second;
+			assume( e.mode == Bindings::UPD || e.mode == Bindings::INS, "inconsistent binding");
+			
+			// get reference for class, and attempt binding update
+			ClassRef r{ this, classes->find( key ) };
+			if ( ! mergeBound( r, e.val ) ) return false;
+		}
+
+		return true; // all edits applied successfully
 	}
 
 	/// Checks if the assertions of another environment are compatible with those of this. 
@@ -434,60 +466,59 @@ private:
 	bool mergeAssns( const Env& o ) {
 		/// Edit item for path state
 		struct Edit {
-			AssertionMap::Mode mode;  ///< Type of change to a key
-			const TypedExpr* val;     ///< Updated key value, if applicable
+			Assertions::Mode mode;  ///< Type of change to a key
+			const TypedExpr* val;   ///< Updated key value, if applicable
 
-			Edit(AssertionMap::Mode m, const TypedExpr* v = nullptr) : mode(m), val(v) {}
+			Edit(Assertions::Mode m, const TypedExpr* v = nullptr) : mode(m), val(v) {}
 		};
 
-		// reroot environment
+		// track assertion changes
 		assns->reroot();
 
-		// keep state for edits
-		std::unordered_map<const FuncDecl*, Edit> edits;  // edits to base map (presumably this)
+		std::unordered_map<const FuncDecl*, Edit> edits;  // edits to base map
 		unsigned n[] = { 0, 0, 0, 0 };  // number of nodes for each Mode
 		
 		// trace path from other environment
-		const AssertionMap* oassns = o.assns;
-		AssertionMap::Mode omode = oassns->get_mode();
-		while ( omode != AssertionMap::BASE ) {
+		const Assertions* oassns = o.assns;
+		Assertions::Mode omode = oassns->get_mode();
+		while ( omode != Assertions::BASE ) {
 			const FuncDecl* key = oassns->get_key();
 			auto it = edits.find( key );
 
 			if ( it == edits.end() ) {
 				// newly seen key, mark op
-				const TypedExpr* val = ( omode == AssertionMap::REM ) ? nullptr : oassns->get_val();
+				const TypedExpr* val = ( omode == Assertions::REM ) ? nullptr : oassns->get_val();
 				edits.emplace_hint( it, key, Edit{ omode, val } );
 				++n[ omode ];
 			} else {
-				AssertionMap::Mode& smode = it->second.mode;
+				Assertions::Mode& smode = it->second.mode;
 				switch ( omode ) {
-					case AssertionMap::REM: {
+					case Assertions::REM: {
 						// later insertion, change to update
-						assume( smode == AssertionMap::INS, "inconsistent mode" );
+						assume( smode == Assertions::INS, "inconsistent mode" );
 						--n[ smode ];
-						smode = AssertionMap::UPD;
+						smode = Assertions::UPD;
 						++n[ smode ];
 					} break;
-					case AssertionMap::INS: {
+					case Assertions::INS: {
 						switch ( smode ) {
-							case AssertionMap::REM: {
+							case Assertions::REM: {
 								// later removal, no net change to map
 								--n[ smode ];
 								edits.erase( it );
 							} break;
-							case AssertionMap::UPD: {
+							case Assertions::UPD: {
 								// later update collapses to insertion
 								--n[ smode ];
-								smode = AssertionMap::INS;
+								smode = Assertions::INS;
 								++n[ smode ];
 							} break;
 							default: unreachable("inconsistent mode");
 						}
 					} break;
-					case AssertionMap::UPD: {
+					case Assertions::UPD: {
 						// later removal or update overrides this update
-						assume( smode == AssertionMap::REM || smode == AssertionMap::UPD, 
+						assume( smode == Assertions::REM || smode == Assertions::UPD, 
 							"inconsistent mode");
 					} break;
 					default: unreachable("invalid mode");
@@ -497,34 +528,18 @@ private:
 			oassns = oassns->get_base();
 			omode = oassns->get_mode();
 		}
-
+		assume( oassns == assns, "assertions must be versions of same map" );
+		
 		// apply edits
-		if ( oassns != assns ) {
-			// These assertion sets are not versions of the same persistent structure
-			// FIXME this can be removed if rest of environment is switched over
-			for ( const auto& a : *o.assns ) {
-				auto it = assns->find( a.first );
-				if ( it == assns->end() ) {
-					assns = assns->set( a.first, a.second );
-					++localAssns;
-				} else {
-					if ( it->second != a.second ) return false;
-				}
-			}
-
-			return true;  // all assertions successfully bound
-		}
-
-		if ( n[ AssertionMap::UPD ] == 0 ) {
+		if ( n[ Assertions::UPD ] == 0 ) {
 			// can possibly short-circuit to one set or another if no updates to check
 
 			// all changes are removal, no merge needed
-			if ( n[ AssertionMap::INS ] == 0 ) return true;
+			if ( n[ Assertions::INS ] == 0 ) return true;
 
 			// all changes are insertions, just use other set
-			if ( n[ AssertionMap::REM ] == 0 ) {
+			if ( n[ Assertions::REM ] == 0 ) {
 				assns = o.assns;
-				localAssns += o.localAssns;
 				return true;
 			}
 		}
@@ -532,12 +547,11 @@ private:
 		// apply insertions and check updates
 		for ( const auto& e : edits ) {
 			switch ( e.second.mode ) {
-				case AssertionMap::INS: {
+				case Assertions::INS: {
 					// apply insertions
 					assns = assns->set( e.first, e.second.val );
-					++localAssns;
 				} break;
-				case AssertionMap::UPD: {
+				case Assertions::UPD: {
 					// check updates
 					if ( assns->get( e.first ) != e.second.val ) return false;
 				} break;
@@ -552,165 +566,53 @@ public:
 	/// Merges the target environment with this one; both environments must be versions of the 
 	/// same initial environment.
 	/// Returns false if fails, but does NOT roll back partial changes.
-	bool merge( const Env& o ) {
-		// Already compatible with o, by definition.
-		if ( inheritsFrom( o ) ) return true;
-
-		// check classes and assertions
-		return mergeClasses( o, SeenTypes{} ) && mergeAssns( o );
-	}
-
-	/// Gets an environment equivalent to this one, but with structure flattened up to p.
-	/// p must be an ancestor of this.
-	Env* flatten( const Env* p ) const {
-		Env* env = Env::from( p );
-		
-		std::unordered_set<const PolyType*> seen;
-		for (const Env* crnt = this; crnt != p; crnt = crnt->parent) {
-			// loop through classes, copying those not previously seen
-			for ( unsigned i = 0; i < crnt->classes.size(); ++i ) {
-				if ( ! seenAny( seen, crnt->classes[i] ) ) {
-					env->copyClass( ClassRef{ crnt, i } );
-				}
-			}
-		}
-		
-		return env;
-	}
+	bool merge( const Env& o ) { return mergeAllClasses( o ) && mergeAssns( o ); }
 
 	/// Gets the list of unbound typeclasses in this environment
-	List<TypeClass> getUnbound() const {
-		std::unordered_set<const PolyType*> seen;
-		List<TypeClass> out;
-		getUnbound( seen, out );
+	std::vector<TypeClass> getUnbound() const {
+		std::vector<TypeClass> out;
+		for ( const auto& entry : *bindings ) {
+			if ( entry.second == nullptr ) {
+				out.push_back( *ClassRef{ this, entry.first } );
+			}
+		}
 		return out;
 	}
 
-protected:
-	void trace(const GC& gc) const override;
+	/// Replaces type with bound value, if a substitution exists
+	const Type* replace( const PolyType* pty ) const {
+		const PolyType* root = classes->find_or_default( pty, nullptr );
+		if ( ! root ) return as<Type>(pty);
+		const Type* bound = bindings->get_or_default( root, nullptr );
+		return bound ? bound : as<Type>(pty);
+	}
+
+	/// Replaces type with bound value, if type is a PolyType and a substitution exists.
+	const Type* replace( const Type* ty ) const {
+		if ( is<PolyType>(ty) ) return replace( as<PolyType>(ty) );
+		else return ty;
+	}
 
 private:
 	/// Writes out this environment
     std::ostream& write(std::ostream& out) const;
 };
 
-inline const TypeClass& ClassRef::operator* () const {
-	return env->classes[ ind ];
+void ClassRef::update_root() {
+	root = env->classes->find( root );
 }
 
-/// Finds the typeclass for a given type variable, empty if no such type variable exists
-inline ClassRef findClass( const Env* env, const PolyType* pty ) {
-	if ( ! env ) return {};
-	return env->findRef( pty );
+List<PolyType> ClassRef::get_vars() const {
+	List<PolyType> vars;
+	env->classes->find_class( root, std::back_inserter(vars) );
+	return vars;
 }
 
-/// Gets the typeclass for a given type variable, inserting it if necessary.
-inline ClassRef getClass( Env*& env, const PolyType* pty ) {
-	if ( ! env ) { env = new Env{}; }
-	return env->getClass( pty );
+const Type* ClassRef::get_bound() const {
+	return env->bindings->get_or_default( root, nullptr );
 }
 
-// TODO consider having replace return the first PolyType in a class as a unique representative
-
-/// Replaces type with bound value in environment, if substitution exists.
-/// Treats null environment as empty.
-inline const Type* replace( const Env* env, const PolyType* pty ) {
-    if ( ! env ) return as<Type>(pty);
-    ClassRef r = env->findRef( pty );
-	if ( r && r->bound ) return r->bound;
-    return as<Type>(pty);
-}
-
-/// Replaces type with bound value in the environment, if type is a PolyType with a 
-/// substitution in the environment. Treats null environment as empty.
-inline const Type* replace( const Env* env, const Type* ty ) {
-	if ( ! env ) return ty;
-	if ( is<PolyType>(ty) ) {
-		ClassRef r = env->findRef( as<PolyType>(ty) );
-		if ( r && r->bound ) return r->bound;
-	}
-	return ty;
-}
-
-/// Inserts the given type variable into this environment if it is not currently present.
-/// Returns false if the variable was already there.
-inline bool insertVar( Env*& env, const PolyType* orig ) {
-	if ( ! env ) {
-		env = new Env{ orig };
-		return true;
-	} else {
-		return env->insertVar( orig );
-	}
-}
-
-/// Adds the given substitution to this environment. 
-/// `r` should be currently unbound and belong to `env` or a parent.
-/// Creates a new environment if `env == null`
-inline bool bindType( Env*& env, ClassRef& r, const Type* sub ) {
-	if ( ! env ) {
-		env = Env::make(r, sub);
-		return env != nullptr;
-	} else {
-		return env->bindType( r, sub );
-	}
-}
-
-/// Adds the type variable to the given class. Creates new environment if null, 
-/// returns false if incompatible binding.
-inline bool bindVar( Env*& env, ClassRef& r, const PolyType* var ) {
-	if ( ! env ) {
-		if ( Env::occursIn( var, r->bound ) ) return false;
-		env = new Env{r, var};
-		return true;
-	} else {
-		return env->bindVar( r, var );
-	}
-}
-
-/// Finds the given assertion in the environment; nullptr if unbound. 
-/// Null environment treated as empty.
-inline const TypedExpr* findAssertion( const Env* env, const FuncDecl* f ) {
-	return env ? env->findAssertion( f ) : nullptr;
-}
-
-/// Adds the given assertion to the envrionment; the assertion should not currently exist 
-/// in the environment. Creates new envrionment if null.
-inline void bindAssertion( Env*& env, const FuncDecl* f, const TypedExpr* assn ) {
-	if ( ! env ) { env = new Env{}; }
-	env->bindAssertion( f, assn );
-}
-
-/// Merges b into a, returning false and nulling a on failure
-inline bool merge( Env*& a, const Env* b ) {
-    if ( ! b ) return true;
-    if ( ! a ) {
-        a = new Env{ *b };
-        return true;
-    }
-    if ( ! a->merge( *b ) ) {
-        a = nullptr;
-        return false;
-    }
-    return true;
-}
-
-/// Gets self, or parent if environment is non-null but empty
-inline const Env* getNonempty( const Env* env ) {
-	return env ? env->getNonempty() : nullptr;
-}
-
-/// Returns child, flattened so that it doesn't inherit from parent.
-/// child should be a descendant of parent.
-inline Env* flattenOut( const Env* child, const Env* parent ) {
-	if ( ! child ) return nullptr;
-	if ( ! parent || child == parent ) return new Env{ *child };
-	return child->flatten( parent->parent );
-}
-
-/// Gets the list of unbound typeclasses in an environment
-inline List<TypeClass> getUnbound( const Env* env ) {
-	return env ? env->getUnbound() : List<TypeClass>{};
-}
+TypeClass ClassRef::get_class() const { return { get_vars(), get_bound() }; }
 
 inline std::ostream& operator<< (std::ostream& out, const Env& env) {
     return env.write( out );

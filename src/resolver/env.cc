@@ -12,35 +12,37 @@
 #include "ast/type.h"
 #include "ast/typed_expr_type_mutator.h"
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/gc.h"
 #include "data/mem.h"
 #include "data/persistent_map.h"
 
-bool Env::occursIn( const Env* env, const List<PolyType>& vars, const Type* t ) {
-	return OccursIn{ env, vars }( t );
-}
-
-bool Env::occursIn( const List<PolyType>& vars, const Type* t ) {
-	return OccursIn{ vars }( t );
+bool Env::occursIn( const List<PolyType>& vars, const Type* t ) const {
+	return OccursIn{ vars, *this }( t );
 }
 
 bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
+	assume(r.env == this, "invalid environment reference");
 	dbg_verify();
-	if ( cbound == nullptr ) return true;  // trivial if no type to bind to
 
-	if ( r->bound == nullptr ) {  // bind if no type in target class
+	if ( cbound == nullptr ) return true; // trivial if no type to bind to
+
+	const Type* rbound = r.get_bound();
+	if ( rbound == nullptr ) {  // bind if no type in target class
 		return bindType( r, cbound );
-	} else if ( r->bound == cbound ) {  // shortcut for easy case
+	} else if ( rbound == cbound ) {  // shortcut easy case
 		return true;
-	} else {  // attempt to structurally bind r->bound to cbound
+	} else {  // attempt to structurally bind rbound to cbound
+		// find common bound, failing if none
 		Cost::Element cost = 0;
-		const PolyType* rt = r->vars[0];  // save variable in this class
-		TypeUnifier tu{ this, cost };
-		const Type* common = tu( r->bound, cbound );
+		TypeUnifier tu{ *this, cost };
+		const Type* common = tu( rbound, cbound );
 		if ( ! common ) return false;
-		r = r.env->findRef( rt );  // reset ref to restored class
-		if ( r.env != this ) { copyClass( r ); }
-		classes[ r.ind ].bound = common;  // specialize r's bound to common type
+
+		// bind class to common bound
+		r.update_root();  // may have been merges in TypeUnifier
+		bindings = bindings->set( r.get_root(), common );
+		
 		dbg_verify();
 		return true;
 	}
@@ -50,54 +52,31 @@ bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 #include <cassert>
 
 void Env::verify() const {
-	for ( unsigned ci = 0; ci < classes.size(); ++ci ) {
-		const TypeClass& tc = classes[ci];
+	// check all type variables have a root which is bound
+	for ( const auto& v : *classes ) {
+		assert( bindings->count( classes->find( v.first ) ) );
+	}
 
-		// check variable uniqueness
-		for ( unsigned vi = 0; vi < tc.vars.size(); ++vi ) {
-			const PolyType* v = tc.vars[vi];
+	for ( const auto& b : *bindings ) {
+		// check all bindings correspond to type variables
+		assert( classes->count( b.first ) );
 
-			// check variable is properly bound in cache
-			const ClassRef& vr = bindings.at( v );
-			assert( vr.env == this && vr.ind == ci );
+		List<PolyType> vars;
+		classes->find_class( b.first, std::back_inserter( vars ) );
 
-			// check variables are unique in a class
-			for ( unsigned vj = vi + 1; vj < tc.vars.size(); ++vj ) {
-				assert(v != tc.vars[vj]);
-			}
-
-			// check variables are unique in an environment
-			for ( unsigned cj = ci + 1; cj < classes.size(); ++cj ) {
-				for ( const PolyType* u : classes[cj].vars ) {
-					assert(v != u);
-				}
-			}
+		// check that said variable is the root of its entire class
+		for ( const PolyType* v : vars ) {
+			assert( b.first == classes->find( v ) );
 		}
 
 		// check occurs check not subverted
-		if ( tc.bound ) {
-			assert( ! occursIn( this, tc.vars, tc.bound ) );
-		}
+		assert( ! occursIn( vars, b.second ) );
 	}
-
-	// check cached bindings are still valid
-	for ( const auto& b : bindings ) {
-		assert( b.second.ind < b.second.env->classes.size() );
-		const TypeClass& bc = *b.second;
-		assert( std::count( bc.vars.begin(), bc.vars.end(), b.first ) );
-	}
-
-	// same for parent
-	if ( parent ) parent->verify();
 }
 #endif
 
-void Env::trace(const GC& gc) const {
-	for ( const TypeClass& entry : classes ) {
-		gc << entry.vars << entry.bound;
-	}
-
-	gc << assns << parent;
+const GC& operator<< (const GC& gc, const Env& env) {
+	return gc << env.classes << env.bindings << env.assns;
 }
 
 std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
@@ -122,38 +101,19 @@ std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
 	return out;
 }
 
-void writeClasses(std::ostream& out, const Env* env, bool printed = false,
-	              std::unordered_set<const PolyType*>&& seen = {}) {
-	for ( const TypeClass& c : env->getClasses() ) {
-		for ( const PolyType* v : c.vars ) {
-			// skip classes containing vars we've seen before
-			if ( ! seen.insert( v ).second ) goto nextClass;
-		}
-		if ( printed ) { out << ", "; } else { printed = true; }
-		out << c;
-	nextClass:; }
-
-	// recurse to parent if necessary
-	if ( env->parent ) writeClasses(out, env->parent, printed, move(seen));
-}
-
-void writeAssertions(std::ostream& out, const Env* env, TypedExprTypeMutator<EnvSubstitutor>& sub,
-                     std::unordered_set<const FuncDecl*>&& seen = {}) {
-	for ( const auto& assn : env->getAssertions() ) {
-		// skip seen assertions
-		if ( ! seen.insert( assn.first ).second ) continue;
-		// print assertion
-		out << " | " << *assn.first << " => ";
-		if ( assn.second ) { out << *sub(assn.second); } else { out << "???"; }
-	}
-	// recurse to parent if necessary
-	if ( env->parent ) writeAssertions(out, env->parent, sub, move(seen));
-}
-
 std::ostream& Env::write(std::ostream& out) const {
 	out << "{";
-	writeClasses(out, this);
-	TypedExprTypeMutator<EnvSubstitutor> sub{ EnvSubstitutor{ this } };
-	writeAssertions(out, this, sub);
+	// print classes
+	bool printed = false;
+	for ( const auto& b : *bindings ) {
+		if ( printed ) { out << ", "; } else { printed = true; }
+		out << *findRef( b.first );
+	}
+	// print assertions
+	TypedExprTypeMutator<EnvSubstitutor> sub{ EnvSubstitutor{ *this } };
+	for ( const auto& a : *assns ) {
+		out << " | " << *a.first << " => ";
+		if ( a.second ) { out << *sub(a.second); } else { out << "???"; }
+	}
 	return out << "}";
 }

@@ -13,6 +13,8 @@
 /// Conchon & Filliatre "A Persistent Union-Find Data Structure". Path 
 /// compression is not performed (to lower cost of persistent rollback). 
 /// Auxilliary lists are kept for efficient retrieval of class members.
+/// Find root should still operate in O(log k), for k the size of an 
+/// equivalence class.
 
 template<typename Elm, typename Hash = std::hash<Elm>, typename Eq = std::equal_to<Elm>>
 class persistent_disjoint_set : public GC_Object {
@@ -44,7 +46,7 @@ private:
 
 		template<typename E, typename F>
 		Node(E&& p, F&& n, Height h) 
-			: parent(std::forward<E>(p)), next(std::forward<F>(n)), height(r) {}
+			: parent(std::forward<E>(p)), next(std::forward<F>(n)), height(h) {}
 	};
 
 	/// Type of class map
@@ -92,10 +94,6 @@ private:
 	/// get const reference as T
 	template<typename T>
 	const T& as() const { return reinterpret_cast<const T&>(data); }
-
-	/// get mutable reference as T from const
-	template<typename T>
-	T& as_non_const() const { return const_cast<T&>(reinterpret_cast<const T&>(data)); }
 
 	/// get rvalue reference as T
 	template<typename T>
@@ -186,9 +184,10 @@ public:
 		if ( mode == BASE ) return;
 
 		// reroot base
+		Self* mut_this = const_cast<Self*>(this);
 		Self* base = ( mode == ADD || mode == REM ) ? 
-			as_non_const<Add>().base : 
-			as_non_const<AddTo>().base;
+			mut_this->as<Add>().base : 
+			mut_this->as<AddTo>().base;
 		base->reroot();
 		assume(base->mode == BASE, "reroot results in base");
 
@@ -199,25 +198,25 @@ public:
 		// switch base to inverse of self and mutate base map
 		switch ( mode ) {
 			case ADD: {
-				Add& self = as_non_const<Add>();
+				Add& self = mut_this->as<Add>();
 
-				base->init<Add>( this, self.root );
+				base->init<Add>( mut_this, self.root );
 				base->mode = REM;
 
 				base_map.emplace( self.root, Node{ std::move(self.root) } );
 			} break;
 			case REM: {
-				Add& self = as_non_const<Add>();
+				Add& self = mut_this->as<Add>();
 
-				base->init<Add>( this, self.root );
+				base->init<Add>( mut_this, self.root );
 				base->mode = ADD;
 
 				base_map.erase( self.root );
 			} break;
 			case ADDTO: {
-				AddTo& self = as_non_const<AddTo>();
+				AddTo& self = mut_this->as<AddTo>();
 
-				base->init<AddTo>( this, self.root, self.child, self.new_height );
+				base->init<AddTo>( mut_this, self.root, self.child, self.new_height );
 				base->mode = REMFROM;
 
 				auto child_it = base_map.find( self.child );
@@ -230,9 +229,9 @@ public:
 				addEdge( child, root, std::move(self.root), Height(self.new_height) );
 			} break;
 			case REMFROM: {
-				AddTo& self = as_non_const<AddTo>();
+				AddTo& self = mut_this->as<AddTo>();
 
-				base->init<AddTo>( this, self.root, self.child, self.new_height );
+				base->init<AddTo>( mut_this, self.root, self.child, self.new_height );
 				base->mode = ADDTO;
 
 				auto child_it = base_map.find( self.child );
@@ -248,8 +247,8 @@ public:
 		}
 
 		// set base map into self
-		reset();
-		init<Base>( std::move(base_map) );
+		mut_this->reset();
+		mut_this->init<Base>( std::move(base_map) );
 		mode = BASE;
 	}
 
@@ -292,6 +291,22 @@ public:
 		}
 	}
 
+	/// Finds root for element i, or default if i is not present
+	template<typename E>
+	Elm find_or_default(Elm i, E&& d) const {
+		const Base& self = rerooted();
+
+		auto it = self.find( i );
+		if ( it == self.end() ) return d;
+
+		while ( it->first != it->second.parent ) {
+			it = self.find( it->second.parent );
+
+			assume(it != self.end(), "find target not present");
+		}
+		return it->first;
+	}
+
 	/// Adds fresh class including only one item; returns updated map
 	template<typename E>
 	Self* add(E&& i) {
@@ -313,7 +328,8 @@ public:
 		return ret;
 	}
 
-	/// Merges two classes given by their roots; returns updated map
+	/// Merges two classes given by their roots; returns updated map.
+	/// If two classes have same height, `i` is new root.
 	Self* merge(Elm i, Elm j) {
 		reroot();
 
@@ -347,7 +363,7 @@ public:
 
 	/// Reports all members of a class to `out`; none if i does not exist in map
 	template<typename OutputIterator>
-	void find_class(Elm i, OutputIterator& out) const {
+	void find_class(Elm i, OutputIterator&& out) const {
 		const Base& self = rerooted();
 
 		// skip empty classes
@@ -357,9 +373,49 @@ public:
 		do {
 			*out++ = crnt;
 			auto it = self.find( crnt );
-			assume( crnt != self.end(), "current node must exist in base");
+			assume( it != self.end(), "current node must exist in base" );
 			crnt = it->second.next;
 		} while ( crnt != i );
+	}
+
+	/// Get version node type
+	Mode get_mode() const { return mode; }
+
+	/// Get next version up the revision tree (self if base node)
+	const Self* get_base() const {
+		switch ( mode ) {
+			case BASE:                return this;
+			case ADD: case REM:       return as<Add>().base;
+			case ADDTO: case REMFROM: return as<AddTo>().base;
+			default: unreachable("invalid mode");
+		}
+	}
+
+	/// Get root of new class formed/removed/split (undefined if called on base)
+	Elm get_root() const {
+		switch ( mode ) {
+			case ADD: case REM:       return as<Add>().root;
+			case ADDTO: case REMFROM: return as<AddTo>().root;
+			default: unreachable("invalid mode for get_root()");
+		}
+	}
+
+	/// Get child root of new class formed/split (undefined if called on base or add/remove node)
+	Elm get_child() const {
+		switch ( mode ) {
+			case ADDTO: case REMFROM: return as<AddTo>().child;
+			default: unreachable("invalid mode for get_child()");
+		}
+	}
+
+	/// Gets acted-upon key for new class (root unless for add/remove node, child for add to/remove 
+	/// from node, undefined otherwise)
+	Elm get_key() const {
+		switch ( mode ) {
+			case ADD: case REM:       return as<Add>().root;
+			case ADDTO: case REMFROM: return as<AddTo>().child;
+			default: unreachable("invalid mode for get_key()");
+		}
 	}
 };
 

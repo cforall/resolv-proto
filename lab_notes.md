@@ -1,8 +1,20 @@
-## 02 Apr 2018 ##
+## 02-06 Apr 2018 ##
 * Continue work on persistency-based `Env`
   * finish `persistent_disjoint_set`
   * TODO add `persistent_disjoint_set` for classes, `persistent_map` for representatives to `Env`
     * maybe remove `Env::{from,none}()` to ease refactor to one base env
+    * TODO fix `mergeAllClasses`
+* Try to track down GC/PassVisitor bug again:
+  ```
+  cd src/prelude/
+  gdb ../driver/cfa-cpp
+  break GC.cc:72
+  c 5
+  // crash comes after here ... doesn't seem to make any sense ... try at -O0
+  ```
+  * at -O0: SEGV at same spot, object is 0x7fffffffdb48, address 18341 in GC::old
+    * watching the address doesn't seem to work, maybe watch the GC index?
+    * check address in GC_Object constructor, throw trap if #18341
 
 ## 26-29 Mar 2018 ##
 * Work on Persistent Union-Find data structure

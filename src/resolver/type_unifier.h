@@ -17,7 +17,7 @@ class TypeUnifier : public TypeMutator<TypeUnifier> {
 public:
 	using Parent = TypeMutator<TypeUnifier>;
 
-	Env* env;             ///< Environment to unify under
+	Env& env;             ///< Environment to unify under
 private:
 	using TyIt = option<List<Type>::const_iterator>;
 	
@@ -40,17 +40,20 @@ private:
 	/// Unifies a concrete/named parameter with a polymorphic target, 
 	/// returns success and sets r to common type or nullptr if none such
 	bool unifyConcPoly( const Type* t, const PolyType* u, const Type*& r ) {
-		ClassRef uc = getClass( env, u );
+		ClassRef uc = env.getClass( u );
 
-		if ( uc->bound ) {
+		const Type* ubound = uc.get_bound();
+		if ( ubound ) {
 			// recursive call on bound type
 			changedTo = false;
-			auto guard = swap_in_scope( to, copy(uc->bound) );
+			auto guard = swap_in_scope( to, copy(ubound) );
 			auto guard2 = swap_in_scope( toIt, TyIt{} );
 			r = Parent::operator()( t );
 
 			// fail early
 			if ( r == nullptr ) return false;
+
+			uc.update_root();  // update in case of iterator invalidation
 		} else {
 			// unbound class can just bind to concrete parameter
 			r = t;
@@ -58,12 +61,11 @@ private:
 		// mark binding, changed target type
 		changedTo = true;
 		++cost;
-		uc = getClass( env, u );  // reacquire in case of iterator invalidation
-		return bindType( env, uc, r );
+		return env.bindType( uc, r );
 	}
 
 public:
-	TypeUnifier( Env* env, Cost::Element& cost )
+	TypeUnifier( Env& env, Cost::Element& cost )
 		: env(env), cost(cost), to(nullptr), toIt(), changedTo(false) {}
 
 	using Parent::visit;
@@ -162,42 +164,46 @@ public:
 		return true;
 	}
 
-	bool visit( const PolyType* t, const Type*& r ) {
-		ClassRef pc = getClass( env, t );
+	bool visit( const PolyType* p, const Type*& r ) {
+		ClassRef pc = env.getClass( p );
 
 		const Type* ut = unifyTo();
 		auto uid = typeof(ut);
 		if ( uid == typeof<ConcType>() || uid == typeof<NamedType>() ) {
-			if ( pc->bound ) {
+			const Type* pbound = pc.get_bound();
+			if ( pbound ) {
 				// recursive call on bound type
 				bool oldChangedTo = changedTo;
 				changedTo = false;
 				auto guard = swap_in_scope( to, copy(ut) );
 				auto guard2 = swap_in_scope( toIt, TyIt{} );
-				r = Parent::operator()( pc->bound );
+				r = Parent::operator()( pbound );
 				changedTo |= oldChangedTo;
 
 				// fail early
 				if ( r == nullptr ) return false;
+
+				pc.update_root();  // update in case of iterator invalidation
 			} else {
 				// unbound class can just be bound to concrete target
 				r = ut;
 			}
 			// mark binding
 			++cost;
-			pc = getClass( env, t );  // reaquire class in case of iterator invalidation
-			return bindType( env, pc, r );
+			return env.bindType( pc, r );
 		} else if ( uid == typeof<PolyType>() ) {
 			// attempt to bind variable; this is the point that may invalidate iterators
-			if ( ! bindVar( env, pc, as<PolyType>(ut) ) ) {
+			if ( ! env.bindVar( pc, as<PolyType>(ut) ) ) {
 				r = nullptr;
 				return false;
 			}
 
 			// count binding, update representative
 			cost += 2;  // to argument + from paramter
-			if ( pc->bound ) {
-				r = pc->bound;
+			pc.update_root();
+			const Type* pbound = pc.get_bound();
+			if ( pbound ) {
+				r = pbound;
 				changedTo = true;
 			}
 			return true;

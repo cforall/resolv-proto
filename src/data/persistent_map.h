@@ -284,6 +284,28 @@ public:
 		return ret;
 	}
 
+	/// Remove value, storing new map in output variable; does nothing if key not in map
+	Self* erase(const Key& k) {
+		reroot();
+		assume(mode == BASE, "reroot results in base");
+
+		// exit early if key does not exist in map
+		if ( ! as<Base>().count( k ) ) return this;
+
+		// transfer map to new node
+		Self* ret = new Self{ BASE, take_as<Base>() };
+		reset_as_base();
+		Base& base_map = ret->as<Base>();
+
+		// set self to INS node and remove from base
+		init<Ins>( ret, k, base_map[k] );
+		mode = INS;
+		
+		base_map.erase( k );
+
+		return ret;
+	}
+
 	/// smart reference for indexing interface
 	class Entry {
 	friend persistent_map;
@@ -354,7 +376,7 @@ public:
 		return { ret, k };
 	}
 
-	/// Get node type
+	/// Get version node type
 	Mode get_mode() const { return mode; }
 
 	/// Get next version up the revision tree (self if base node)
