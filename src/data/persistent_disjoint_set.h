@@ -192,7 +192,7 @@ public:
 		assume(base->mode == BASE, "reroot results in base");
 
 		// take map out of base
-		Base&& base_map = base->take_as<Base>();
+		Base base_map = base->take_as<Base>();
 		base->reset();
 
 		// switch base to inverse of self and mutate base map
