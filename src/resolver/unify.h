@@ -12,16 +12,17 @@
 #include "data/debug.h"
 #include "data/list.h"
 
-bool unify(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
-    TypeUnifier unifier{ env, cost.poly };
+bool unify(const Type* paramType, const Type* argType, Cost& cost, Env& env) {
+    Env newEnv = env;
+    TypeUnifier unifier{ newEnv, cost.poly };
     if ( unifier( paramType, argType ) != nullptr ) {
-        env = unifier.env;
+        env = newEnv;
         return true;
     } else return false;
 }
 
 /// Unifies a tuple type with another type; may truncate the argument tuple to match
-bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env*& env) {
+bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env& env) {
     auto pid = typeof(paramType);
     if ( pid == typeof<VoidType>() ) {
         cost.safe += argType->size();
@@ -55,7 +56,7 @@ bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env
         // ensure unused elements are tracked
         for ( unsigned i = argType->size(); i < tParam->size(); ++i ) {
             if ( const PolyType* pEl = as_safe<PolyType>(tParam->types()[i]) ) {
-                insertVar( env, pEl );
+                env.insertVar( pEl );
                 ++cost.poly;
             }
         }
@@ -68,7 +69,7 @@ bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env
 }
 
 /// Unifies a (possibly tuple) type with another type; mat truncate the argument type to match
-bool unifyTuple(const Type* paramType, const Type* argType, Cost& cost, Env*& env) {
+bool unifyTuple(const Type* paramType, const Type* argType, Cost& cost, Env& env) {
     auto aid = typeof(argType);
     if ( aid == typeof<VoidType>() ) {
         return is<VoidType>(paramType);
@@ -99,11 +100,11 @@ bool unifyTuple(const Type* paramType, const Type* argType, Cost& cost, Env*& en
 /// Checks if a list of argument types match a list of parameter types.
 /// The argument types may contain tuple types, which should be flattened; the parameter 
 /// types will not. The two lists should be the same length after flattening.
-bool unifyList( const List<Type>& params, const InterpretationList& args, Cost& cost, Env*& env ) {
+bool unifyList( const List<Type>& params, const InterpretationList& args, Cost& cost, Env& env ) {
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
 		// merge in argument environment
-		if ( ! merge( env, args[j]->env ) ) return false;
+		if ( ! env.merge( args[j]->env ) ) return false;
 		// test unification of parameters
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {

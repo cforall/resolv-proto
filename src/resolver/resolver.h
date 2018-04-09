@@ -4,6 +4,7 @@
 #include <functional>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "conversion.h"
 #include "cost.h"
@@ -37,7 +38,7 @@ using AmbiguousEffect = std::function<void(const Expr*,
 
 /// Effect to be run on unbound type variables; arguments are the expression which 
 /// has unbound type variables and the unbound typeclasses.
-using UnboundEffect = std::function<void(const Expr*, const List<TypeClass>&)>;
+using UnboundEffect = std::function<void(const Expr*, const std::vector<TypeClass>&)>;
 
 /// Flags for interpretation mode
 class ResolverMode {
@@ -228,11 +229,11 @@ public:
 	/// Recursively resolve interpretations subject to `env`, expanding conversions if 
 	/// not at the top level. May return ambiguous interpretations, but otherwise will 
 	/// not return invalid interpretations.
-	InterpretationList resolve( const Expr* expr, const Env* env, ResolverMode resolve_mode = {} );
+	InterpretationList resolve( const Expr* expr, const Env& env, ResolverMode resolve_mode = {} );
 	
 	/// Resolves `expr` as `targetType`, subject to `env`. 
 	/// Returns all interpretations (possibly ambiguous).
-	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, const Env* env );
+	InterpretationList resolveWithType( const Expr* expr, const Type* targetType, const Env& env );
 
 	/// Resolve best interpretation of input expression
 	/// Will return invalid interpretation and run appropriate effect if 

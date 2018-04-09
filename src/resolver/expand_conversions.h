@@ -147,16 +147,17 @@ void expandConversions( InterpretationList& results, ConversionGraph& conversion
 
 /// Attempts to bind a typeclass r to the concrete type conc in the current environment, 
 /// returning true if successful
-bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
-    if ( r->bound ) {
+bool classBinds( ClassRef r, const Type* conc, Env& env, Cost& cost ) {
+    const Type* rbound = r.get_bound();
+    if ( rbound ) {
         // test for match if class already has a representative.
         TypeUnifier unification{ env, cost.poly };
-        conc = unification( r->bound, conc );
+        conc = unification( rbound, conc );
         if ( conc == nullptr ) return false;
         env = unification.env;
     } else {
         // make concrete class the new typeclass representative
-        if ( ! bindType( env, r, conc ) ) return false;
+        if ( ! env.bindType( r, conc ) ) return false;
     }
 
     // increment cost and return
@@ -168,7 +169,7 @@ bool classBinds( ClassRef r, const Type* conc, Env*& env, Cost& cost ) {
 /// as needed. Returns nullptr for no such conversion; may update env and cost on such a 
 /// failure result.
 const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, ConversionGraph& conversions, 
-                            Env*& env, Cost& cost, bool truncate = true ) {
+                            Env& env, Cost& cost, bool truncate = true ) {
     const Type* etype = expr->type();
     auto eid = typeof( etype );
     auto tid = typeof( ttype );
@@ -192,7 +193,7 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
             return nullptr;
         } else if ( tid == typeof<PolyType>() ) {
             // test for match if target typeclass already has representative
-            ClassRef tclass = getClass( env, as<PolyType>(ttype) );
+            ClassRef tclass = env.getClass( as<PolyType>(ttype) );
             return classBinds( tclass, etype, env, cost ) ? expr : nullptr;
         } else if ( tid == typeof<VoidType>() ) {
             // one safe conversion to truncate concrete type to Void
@@ -205,14 +206,14 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
             return nullptr;
         } else unreachable("Unhandled target type");
     } else if ( eid == typeof<PolyType>() ) {
-        ClassRef eclass = getClass( env, as<PolyType>(etype) );
+        ClassRef eclass = env.getClass( as<PolyType>(etype) );
 
         if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() ) {
             // attempt to bind polymorphic return type to concrete paramter
             return classBinds( eclass, ttype, env, cost ) ? expr : nullptr;
         } else if ( tid == typeof<PolyType>() ) {
             // attempt to merge two typeclasses
-            if ( bindVar( env, eclass, as<PolyType>(ttype) ) ) {
+            if ( env.bindVar( eclass, as<PolyType>(ttype) ) ) {
                 ++cost.poly;
                 return expr;
             } else return nullptr;
@@ -313,7 +314,7 @@ InterpretationList convertTo( const Type* targetType, InterpretationList&& resul
             setOrUpdateInterpretation( best, ty, i );
         } else {
             Cost cost = i->cost;
-            Env* newEnv = Env::from( i->env );
+            Env newEnv = i->env;
             const TypedExpr* newExpr = 
                 convertTo( targetType, i->expr, conversions, newEnv, cost );
             if ( newExpr ) {

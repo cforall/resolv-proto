@@ -31,7 +31,7 @@
 
 /// Return an interpretation for all zero-arg functions in funcs
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env* outEnv, 
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env& outEnv, 
                                ResolverMode resolve_mode ) {
 	InterpretationList results;
 	
@@ -48,7 +48,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		// skip functions returning no values, unless at top level
 		if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
-		const Env* env = outEnv;
+		Env env = outEnv;
 		
 		const TypedExpr* call = new CallExpr{ func, resolver.id_src };
 
@@ -56,7 +56,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, env ) ) ) continue;
 		
 		// no interpretation with zero arg cost
-		results.push_back( new Interpretation{ call, env, func->poly_cost() } );
+		results.push_back( new Interpretation{ call, move(env), func->poly_cost() } );
 	}
 	
 	return results;
@@ -87,7 +87,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 
 			// Environment for call bindings
 			Cost cost = func->poly_cost() + arg->cost; // cost for this call
-			Env* env = Env::from( arg->env );
+			Env env = arg->env;
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
 				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
@@ -120,7 +120,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 
 #if defined RP_DIR_BU
 /// Unifies prefix of argument type with parameter type (required to be size 1)
-bool unifyFirst( const Type* paramType, const Type* argType, Cost& cost, Env*& env ) {
+bool unifyFirst( const Type* paramType, const Type* argType, Cost& cost, Env& env ) {
 	auto aid = typeof(argType);
 	if ( aid == typeof<VoidType>() ) {
 		return false;  // paramType size == 1
@@ -137,6 +137,7 @@ template<typename Funcs>
 InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
                                ComboList&& args, ResolverMode resolve_mode ) {
 	InterpretationList results{};
+	Env env;
 
 	for ( const FuncDecl* func : funcs ) {
 		// skip void-returning functions unless at top level
@@ -161,7 +162,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		Cost rCost = func->poly_cost();
 
 		// iteratively build matches, one parameter at a time
-		std::vector<ArgPack> combos{ ArgPack{ nullptr } };
+		std::vector<ArgPack> combos{ ArgPack{ env } };
 		std::vector<ArgPack> nextCombos{};
 		for ( const Type* param : rParams ) {
 			assume(param->size() == 1, "parameter list should be flattened");
@@ -173,7 +174,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 					unsigned cInd = cType->size() - combo.on_last;
 					const Type* crntType = cType->types()[ cInd ];
 					Cost cCost = combo.cost;
-					Env* cEnv = Env::from( combo.env );
+					Env cEnv = combo.env;
 
 					if ( unify( param, crntType, cCost, cEnv ) ) {
 						// build new combo which consumes more arguments
@@ -190,10 +191,10 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 				// build new combos from matching interpretations
 				for ( const Interpretation* i : args[combo.next] ) {
 					Cost iCost = combo.cost + i->cost;
-					Env* iEnv = Env::from( combo.env );
+					Env iEnv = combo.env;
 
 					// fail if cannot merge interpretation into combo
-					if ( ! merge( iEnv, i->env ) ) continue;
+					if ( ! iEnv.merge( i->env ) ) continue;
 					// fail if interpretation type does not match parameter
 					if ( ! unifyFirst( param, i->type(), iCost, iEnv ) ) continue;
 
@@ -219,13 +220,13 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 
 			// make interpretation for this combo
 			const TypedExpr* call = new CallExpr{ func, move(combo.args), copy(rForall), rType };
-			const Env* cEnv = combo.env;
+			const Env cEnv = combo.env;
 			
 			// check type assertions if necessary
 			if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cEnv ) ) ) continue;
 			
 			results.push_back( new Interpretation{ 
-				call, cEnv, rCost + combo.cost, move(combo.argCost) } );
+				call, move(cEnv), rCost + combo.cost, move(combo.argCost) } );
 		}
 	}
 
@@ -273,7 +274,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			
 			// Environment for call bindings
 			Cost cost = func->poly_cost() + combo.first;
-			Env* env = nullptr; // initialized by unifyList()
+			Env env; // initialized by unifyList()
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
 				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
@@ -307,14 +308,14 @@ struct interpretation_unambiguous {
 	}
 };
 
-InterpretationList Resolver::resolve( const Expr* expr, const Env* env, 
+InterpretationList Resolver::resolve( const Expr* expr, const Env& env, 
                                       ResolverMode resolve_mode ) {
 	InterpretationList results;
 	
 	auto eid = typeof(expr);
 	if ( eid == typeof<VarExpr>() ) {
 		// do nothing for expressions which are already typed
-		results.push_back( new Interpretation{ as<VarExpr>(expr), env } );
+		results.push_back( new Interpretation{ as<VarExpr>(expr), copy(env) } );
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>( expr );
 
@@ -369,7 +370,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env* env,
 }
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
-	                                          const Env* env ) {
+	                                          const Env& env ) {
 #if defined RP_RES_IMM
 	auto resolve_mode = ResolverMode{}.without_conversions().with_void_as( targetType ).without_assertions();
 #else

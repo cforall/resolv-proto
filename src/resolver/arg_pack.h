@@ -9,7 +9,7 @@
 
 /// State to iteratively build a match of expressions to arguments
 struct ArgPack {
-	const Env* env;                   ///< Current environment
+	const Env env;                    ///< Current environment
 	Cost cost;                        ///< Current cost
 	Cost argCost;                     ///< Current argument-only cost
 	List<TypedExpr> args;             ///< List of current arguments
@@ -25,10 +25,10 @@ struct ArgPack {
 	
 	#if defined RP_DIR_TD
 	/// Initialize ArgPack with first argument iterator and initial environment
-	ArgPack(const List<Expr>::const_iterator& it, const Env* e) 
+	ArgPack(const List<Expr>::const_iterator& it, const Env& e) 
 		: env(e), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(it) {}
 	#elif defined RP_DIR_BU
-	ArgPack(const Env* e)
+	ArgPack(const Env& e)
 		:env(e), cost(), argCost(), args(), crnt(nullptr), on_last(0), next(0) {}
 	#endif
 	
@@ -42,7 +42,7 @@ struct ArgPack {
 	}
 
 	/// Update ArgPack with new interpretation for next arg, specifying cost and environment
-	ArgPack(const ArgPack& old, const Interpretation* i, Cost&& newCost, const Env* newEnv, 
+	ArgPack(const ArgPack& old, const Interpretation* i, Cost&& newCost, const Env& newEnv, 
 			unsigned leftover = 0 )
 		: env(newEnv), cost(move(newCost)), argCost(old.argCost + i->argCost),
 		  args(old.args), crnt(leftover ? i->expr : nullptr), on_last(leftover), next(old.next) {
@@ -52,7 +52,7 @@ struct ArgPack {
 	}
 
 	/// Update ArgPack with new binding for leftover arg portion
-	ArgPack(const ArgPack& old, Cost&& newCost, const Env* newEnv, unsigned leftover)
+	ArgPack(const ArgPack& old, Cost&& newCost, const Env& newEnv, unsigned leftover)
 		: env(newEnv), cost(move(newCost)), argCost(old.argCost), args(old.args), 
 		  crnt(leftover ? old.crnt : nullptr), on_last(leftover), next(old.next) {
 		if ( on_last == 0 ) args.push_back( old.crnt );

@@ -1,9 +1,10 @@
-## 02-06 Apr 2018 ##
+## 02-09 Apr 2018 ##
 * Continue work on persistency-based `Env`
   * finish `persistent_disjoint_set`
-  * TODO add `persistent_disjoint_set` for classes, `persistent_map` for representatives to `Env`
-    * maybe remove `Env::{from,none}()` to ease refactor to one base env
-    * TODO fix `mergeAllClasses`
+  * add `persistent_disjoint_set` for classes, `persistent_map` for representatives to `Env`
+  * refactor to single base environment (TODO fix)
+  * finish `mergeAllClasses`
+  * code compiles
 * Try to track down GC/PassVisitor bug again:
   ```
   cd src/prelude/

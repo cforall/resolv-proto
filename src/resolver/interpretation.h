@@ -19,18 +19,21 @@
 /// Typed interpretation of an expression
 struct Interpretation : public GC_Object {
 	const TypedExpr* expr;  ///< Base expression for interpretation
-	const Env* env;         ///< Type variables and assertions bound by this interpretation
+	const Env env;          ///< Type variables and assertions bound by this interpretation
 	Cost cost;              ///< Overall cost of interpretation
 	Cost argCost;			///< Summed cost of the interpretation's arguments
 	
+	/// Default constructor, may provide expression [default null]
+	Interpretation( const TypedExpr* expr = nullptr ) : expr(expr), env(), cost(), argCost() {}
+
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0] and environment [default empty]
-	Interpretation( const TypedExpr* expr = nullptr, const Env* env = nullptr, 
-	                Cost&& cost = Cost{}, Cost&& argCost = Cost{} )
+	Interpretation( const TypedExpr* expr, Env&& env, Cost&& cost = Cost{}, 
+			Cost&& argCost = Cost{} )
 		: expr(expr), env(env), cost(move(cost)), argCost(move(argCost)) {}
 	
 	/// Fieldwise copy-constructor
-	Interpretation( const TypedExpr* expr, const Env* env, const Cost& cost, const Cost& argCost )
+	Interpretation( const TypedExpr* expr, const Env& env, const Cost& cost, const Cost& argCost )
 		: expr(expr), env(env), cost(cost), argCost(argCost) {}
 	
 	friend void swap(Interpretation& a, Interpretation& b) {
@@ -39,7 +42,7 @@ struct Interpretation : public GC_Object {
 		swap(a.expr, b.expr);
 		swap(a.cost, b.cost);
 		swap(a.argCost, b.argCost);
-		swap(a.env, b.env);
+		swap(as_non_const(a.env), as_non_const(b.env));
 	}
 	
 	/// true iff the interpretation is ambiguous; 
@@ -76,7 +79,7 @@ struct Interpretation : public GC_Object {
 		}
 
 		return new Interpretation{ new AmbiguousExpr{ expr, i->type(), move(alts) }, 
-		                           nullptr, copy(i->cost), copy(i->argCost) };
+		                           Env{}, copy(i->cost), copy(i->argCost) };
 	}
 
 	/// Print this interpretation, using the named style
@@ -86,8 +89,8 @@ struct Interpretation : public GC_Object {
 			return;
 		}
 	
-		out << "[" << *env->replace( type() ) << " / " << cost /*<< ":" << argCost*/ << "]";
-		if ( style == ASTNode::Print::Default && env != nullptr ) { out << *env; }
+		out << "[" << *env.replace( type() ) << " / " << cost /*<< ":" << argCost*/ << "]";
+		if ( style == ASTNode::Print::Default && ! env.empty() ) { out << env; }
 		out << " ";
 		expr->write(out, style);
 	}

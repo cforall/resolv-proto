@@ -181,6 +181,18 @@ public:
 	/// Rely on GC to clean up un-used version nodes
 	~Env() = default;
 
+	/// Swap with other environment
+	void swap( Env& o ) {
+		using std::swap;
+
+		swap( classes, o.classes );
+		swap( bindings, o.bindings );
+		swap( assns, o.assns );
+	}
+
+	/// Check if this environment has no classes or assertions
+	bool empty() const { return classes->empty() && assns->empty(); }
+
 	/// Inserts a type variable if it doesn't already exist in the environment.
 	/// Returns false if already present.
 	bool insertVar( const PolyType* var ) {
@@ -566,7 +578,16 @@ public:
 	/// Merges the target environment with this one; both environments must be versions of the 
 	/// same initial environment.
 	/// Returns false if fails, but does NOT roll back partial changes.
-	bool merge( const Env& o ) { return mergeAllClasses( o ) && mergeAssns( o ); }
+	bool merge( const Env& o ) {
+		// short-circuit for empty case
+		if ( o.empty() ) return true;
+		if ( empty() ) {
+			*this = o; 
+			return true;
+		}
+		// full merge
+		return mergeAllClasses( o ) && mergeAssns( o );
+	}
 
 	/// Gets the list of unbound typeclasses in this environment
 	std::vector<TypeClass> getUnbound() const {
@@ -617,3 +638,5 @@ TypeClass ClassRef::get_class() const { return { get_vars(), get_bound() }; }
 inline std::ostream& operator<< (std::ostream& out, const Env& env) {
     return env.write( out );
 }
+
+inline void swap( Env& a, Env& b ) { a.swap( b ); }

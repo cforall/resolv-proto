@@ -35,7 +35,8 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	cached.clear();  // clear subexpression cache
 #endif
 
-	InterpretationList results = resolve( expr, Env::none(), ResolverMode::top_level() );
+	Env env;
+	InterpretationList results = resolve( expr, env, ResolverMode::top_level() );
 	
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {
@@ -57,7 +58,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		// check candidate assertion resolution
 		const Interpretation& r = *results[i];
 		const TypedExpr* rExpr = r.expr;
-		Env* rEnv = Env::from( r.env );
+		Env rEnv = r.env;
 #if defined RP_RES_IMM
 		AssertionResolver assnDisambiguator{ *this, rEnv, true };  // disambiguates by assertions
 		if ( assnDisambiguator.mutate( rExpr ) != nullptr ) {
@@ -107,7 +108,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	}
 
 	// check for unbound type variables in environment
-	List<TypeClass> unbound = getUnbound( candidate->env );
+	std::vector<TypeClass> unbound = candidate->env.getUnbound();
 	if ( ! unbound.empty() ) {
 		on_unbound( expr, unbound );
 		collect_young();

@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 	AmbiguousEffect on_ambiguous = 
 		[]( const Expr* e, List<Interpretation>::const_iterator i, 
 		    List<Interpretation>::const_iterator end ) {};
-	UnboundEffect on_unbound = []( const Expr* e, const List<TypeClass>& cs ) {};
+	UnboundEffect on_unbound = []( const Expr* e, const std::vector<TypeClass>& cs ) {};
 
 	switch ( args.filter() ) {
 	case Args::Filter::None:
@@ -61,9 +61,9 @@ int main(int argc, char **argv) {
 			};
 		}
 
-		on_unbound = [&out]( const Expr* e, const List<TypeClass>& cs ) {
+		on_unbound = [&out]( const Expr* e, const std::vector<TypeClass>& cs ) {
 			out << "ERROR: unbound type variables in " << *e << ":";
-			for ( const TypeClass* c : cs ) { out << ' ' << *c; }
+			for ( const TypeClass& c : cs ) { out << ' ' << c; }
 			out << std::endl;
 		};
 		break;
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 			out << std::endl;
 		};
 
-		on_unbound = [&out]( const Expr* e, const List<TypeClass>& cs ) {
+		on_unbound = [&out]( const Expr* e, const std::vector<TypeClass>& cs ) {
 			e->write( out, ASTNode::Print::InputStyle );
 			out << std::endl;
 		};
