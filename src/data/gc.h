@@ -1,12 +1,20 @@
 #pragma once
 
+#include <cassert>
 #include <vector>
 
 class GC_Traceable;
 class GC_Object;
+class GC_Guard;
 
 /// Manually traced and called garbage collector
 class GC {
+	friend class GC_Guard;
+
+	/// Collects the youngest generation, placing survivors in previous generation.
+	/// Young generation objects cannot be kept alive by pointers from older generation.
+	/// Older generation is used for subsequent new objects.
+	void collect_young();
 public:
 	/// Gets singleton GC instance
 	static GC& get();
@@ -17,36 +25,55 @@ public:
 	/// Adds a new object to garbage collection
 	void register_object(GC_Object*);
 
-	/// Use young generation for subsequent new objects
-	void new_generation();
+	/// Adds an object to the set of static roots
+	void register_static_root(GC_Traceable*);
 
-	/// Collects the young generation, placing survivors in old generation.
-	/// Old generation is used for subsequent new objects.
-	void collect_young();
+	/// Start new generation for subsequent new objects
+	GC_Guard new_generation();
 
-	/// Collects all memory; use old generation afterward.
+	/// Traces all static roots
+	void trace_static_roots();
+
+	/// Collects oldest generation; use oldest generation afterward.
+	/// Error if currently using younger generation
 	void collect();
+
+	/// Collects all contained objects
+	~GC();
 
 private:
 	GC();
 
-	/// The current collection's mark bit
-	bool mark;
+	using Generation = std::vector<GC_Object*>;
+	std::vector<Generation> gens;  ///< Set of generations; always at least one
 
-	typedef std::vector<class GC_Object*> Generation;
-	Generation old;
-	Generation young;
-	bool using_young;
+	using StaticRoots = std::vector<GC_Traceable*>;
+	StaticRoots static_roots;      ///< Set of static-lifetime roots
+
+	bool mark;                     ///< The current collection's mark bit
+	unsigned g;                    ///< The current number generation in use
+};
+
+/// Cleanup object for young generation
+class GC_Guard {
+	friend class GC;
+
+	GC& gc;      ///< GC associated with
+	unsigned g;  ///< Generation constructed for
+
+	GC_Guard( GC& gc, unsigned g ) : gc(gc), g(g) {}
+
+public:
+	~GC_Guard() {
+		assert( gc.g == g && "collecting current generation" );
+		gc.collect_young();
+	}
 };
 
 /// Use young generation until next collection
-inline void new_generation() { GC::get().new_generation(); }
+inline GC_Guard new_generation() { return GC::get().new_generation(); }
 
-/// no-op default trace
-template<typename T>
-inline const GC& operator<< (const GC& gc, const T& x) { return gc; }
-
-inline void traceAll(const GC& gc) {}
+inline void traceAll(const GC&) {}
 
 /// Marks all arguments as live in current generation
 template<typename T, typename... Args>
@@ -55,20 +82,27 @@ inline void traceAll(const GC& gc, T& x, Args&... xs) {
 	traceAll(gc, xs...);
 }
 
-/// Traces young-generation roots and does a young collection
+/// Traces roots without collecting
 template<typename... Args>
-inline void collect_young(Args&... roots) {
+inline void trace(Args&... roots) {
 	GC& gc = GC::get();
 	traceAll(gc, roots...);
-	gc.collect_young();
 }
 
-/// Traces roots and collects other elements
+/// Traces roots and collects other elements; should not be any young generations live
 template<typename... Args>
 inline void collect(Args&... roots) {
 	GC& gc = GC::get();
 	traceAll(gc, roots...);
 	gc.collect();
+}
+
+/// Makes a new expression as a static root
+template<typename T, typename... Args>
+inline T* new_static_root( Args&&... args ) {
+	T* root = new T( std::forward<Args>(args)... );
+	GC::get().register_static_root( root );
+	return root;
 }
 
 /// Class that is traced by the GC, but not managed by it
@@ -84,9 +118,21 @@ protected:
 /// Class that is managed by the GC
 class GC_Object : public GC_Traceable {
 	friend class GC;
-
 protected:
-	virtual ~GC_Object() {}
-public:
+	// Override default constructors to ensure clones are registered and properly marked
 	GC_Object();
+
+	GC_Object(const GC_Object&);
+
+	GC_Object(GC_Object&&);
+
+	GC_Object& operator= (const GC_Object&) { /* do not assign mark */ return *this; }
+
+	GC_Object& operator= (GC_Object&&) { /* do not assign mark */ return *this; }
+
+	// Ensure subclasses can be deleted by garbage collector
+	virtual ~GC_Object() {}
+
+	/// override to trace any child objects
+	virtual void trace(const GC&) const {}
 };

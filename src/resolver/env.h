@@ -304,7 +304,7 @@ private:
 					} break;
 					case Classes::REM: {
 						// later addition, no net change to classes
-						assume ( nmode == Classes::ADD, "inconsistent mode" );
+						assume( nmode == Classes::ADD, "inconsistent mode" );
 						edits.erase( next );
 						forKey.pop_back();
 					} break;

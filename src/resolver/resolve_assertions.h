@@ -117,7 +117,9 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 				}
 			} default: { // multiple satisfying assertions: defer evaluation
 				deferIds.push_back( asn );
-				deferred.push_back( move(satisfying) );
+				// ambiguous interpretations have environments that are not versions of the correct 
+				// environment
+				deferred.push_back( splitAmbiguous( move(satisfying) ) );
 				return true;
 			}
 		}

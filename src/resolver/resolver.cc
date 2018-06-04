@@ -30,7 +30,7 @@ public:
 
 const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	id_src = 0;  // initialize type variable IDs
-	new_generation();  // set up new GC generation
+	auto gc_guard = new_generation();  // set up new GC generation
 #if defined RP_DIR_TD
 	cached.clear();  // clear subexpression cache
 #endif
@@ -41,7 +41,6 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	// return invalid interpretation on empty results
 	if ( results.empty() ) {
 		on_invalid( expr );
-		collect_young();
 		return Interpretation::make_invalid();
 	}
 
@@ -72,14 +71,12 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	// quit if no such candidate
 	if ( candidates.empty() ) {
 		on_invalid( expr );
-		collect_young();
 		return Interpretation::make_invalid();
 	}
 
 	// ambiguous if more than one min-cost interpretation
 	if ( candidates.size() > 1 ) {
 		on_ambiguous( expr, candidates.begin(), candidates.end() );
-		collect_young();
 		return Interpretation::make_invalid();
 	}
 
@@ -93,7 +90,6 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		// ambiguous if more than one min-cost interpretation
 		if ( min_pos != results.begin() ) {
 			on_ambiguous( expr, results.begin(), ++min_pos );
-			collect_young();
 			return Interpretation::make_invalid();
 		}
 	}
@@ -103,7 +99,6 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	
 	// handle ambiguous candidate from conversion expansion
 	if ( ResolvedExprInvalid{ on_ambiguous }( candidate->expr ) ) {
-		collect_young();
 		return Interpretation::make_invalid();
 	}
 
@@ -111,10 +106,9 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	std::vector<TypeClass> unbound = candidate->env.getUnbound();
 	if ( ! unbound.empty() ) {
 		on_unbound( expr, unbound );
-		collect_young();
 		return Interpretation::make_invalid();
 	}
 	
-	collect_young( candidate );
+	trace( candidate );
 	return candidate;
 }

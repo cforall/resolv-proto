@@ -60,4 +60,7 @@ std::ostream& operator<< (std::ostream& out, const Forall& f) {
 	return out << '}';
 }
 
-const GC& operator<< (const GC& gc, const Forall* f) { return gc << f->vars << f->assns; }
+const GC& operator<< (const GC& gc, const Forall* f) {
+	if ( ! f ) return gc;
+	return gc << f->vars << f->assns;
+}

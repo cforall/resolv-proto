@@ -12,6 +12,7 @@
 #include "ast/type.h"
 #include "data/cast.h"
 #include "data/compare.h"
+#include "data/debug.h"
 #include "data/gc.h"
 #include "data/list.h"
 #include "data/mem.h"
@@ -23,9 +24,6 @@ struct Interpretation : public GC_Object {
 	Cost cost;              ///< Overall cost of interpretation
 	Cost argCost;			///< Summed cost of the interpretation's arguments
 	
-	/// Default constructor, may provide expression [default null]
-	Interpretation( const TypedExpr* expr = nullptr ) : expr(expr), env(), cost(), argCost() {}
-
 	/// Make an interpretation for an expression [default null]; 
 	/// may provide cost [default 0] and environment [default empty]
 	Interpretation( const TypedExpr* expr, Env&& env, Cost&& cost = Cost{}, 
@@ -56,7 +54,7 @@ struct Interpretation : public GC_Object {
 	const Type* type() const { return expr->type(); }
 	
 	/// Returns a fresh invalid interpretation
-	static Interpretation* make_invalid() { return new Interpretation{}; }
+	static Interpretation* make_invalid() { return new Interpretation{ nullptr, Env{} }; }
 
 	/// Merges two interpretations (must have same cost, type, and underlying expression) 
 	/// to produce a new ambiguous interpretation. No environment is stored in the outer 
@@ -130,6 +128,26 @@ inline std::ostream& operator<< ( std::ostream& out, const Interpretation& i ) {
 
 /// List of interpretations
 using InterpretationList = List<Interpretation>;
+
+/// takes original list and separates ambiguous interpretations into individual entries
+inline InterpretationList&& splitAmbiguous( InterpretationList&& is ) {
+	unsigned n = is.size();
+	for ( unsigned i = 0; i < n; ++i ) {
+		if ( const AmbiguousExpr* amb = as_safe<AmbiguousExpr>( is[i]->expr ) ) {
+			const List<Interpretation>& alts = amb->alts();
+			assume( ! alts.empty(), "ambiguous expression has at least one alternative" );
+			// overwrite first element
+			assume( ! alts[0]->is_ambiguous(), "ambiguous expressions do not contain others" );
+			is[i] = alts[0];
+			// append later elements
+			for ( unsigned j = 1; j < alts.size(); ++j ) {
+				assume( ! alts[j]->is_ambiguous(), "ambiguous expressions do not contain others" );
+				is.push_back( alts[j] );
+			}
+		}
+	}
+	return move(is);
+}
 
 /// Functor to extract the cost from an interpretation
 struct interpretation_cost {

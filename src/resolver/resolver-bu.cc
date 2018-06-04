@@ -118,6 +118,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 	return results;
 }
 
+// #define RP_DIR_BU
+
 #if defined RP_DIR_BU
 /// Unifies prefix of argument type with parameter type (required to be size 1)
 bool unifyFirst( const Type* paramType, const Type* argType, Cost& cost, Env& env ) {
@@ -134,10 +136,9 @@ bool unifyFirst( const Type* paramType, const Type* argType, Cost& cost, Env& en
 using ComboList = std::vector<InterpretationList>;
 
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
-                               ComboList&& args, ResolverMode resolve_mode ) {
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList&& args, 
+                               const Env& outEnv, ResolverMode resolve_mode ) {
 	InterpretationList results{};
-	Env env;
 
 	for ( const FuncDecl* func : funcs ) {
 		// skip void-returning functions unless at top level
@@ -162,7 +163,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 		Cost rCost = func->poly_cost();
 
 		// iteratively build matches, one parameter at a time
-		std::vector<ArgPack> combos{ ArgPack{ env } };
+		std::vector<ArgPack> combos{ ArgPack{ outEnv } };
 		std::vector<ArgPack> nextCombos{};
 		for ( const Type* param : rParams ) {
 			assume(param->size() == 1, "parameter list should be flattened");
@@ -248,8 +249,8 @@ using ComboList = std::vector< std::pair<Cost, InterpretationList> >;
 /// Return an interpretation for all matches between functions in funcs and 
 /// argument packs in combos
 template<typename Funcs>
-InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, 
-                               ComboList&& combos, ResolverMode resolve_mode ) {
+InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList&& combos,
+                               const Env& outEnv, ResolverMode resolve_mode ) {
 	InterpretationList results;
 	
 	for ( const auto& combo : combos ) {
@@ -274,7 +275,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs,
 			
 			// Environment for call bindings
 			Cost cost = func->poly_cost() + combo.first;
-			Env env; // initialized by unifyList()
+			Env env = outEnv; // initialized by unifyList()
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
 				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
@@ -330,10 +331,10 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env& env,
 		// get interpretations for subexpressions (if any)
 		switch( funcExpr->args().size() ) {
 			case 0: {
-				// environment is threaded to other matchFuncs variants from arguments
 				results = matchFuncs( *this, withName(), env, resolve_mode );
 			} break;
 			case 1: {
+				// gets environment from arguments
 				results = matchFuncs( *this, withName(), 
 				                      resolve( funcExpr->args().front(), env ), 
 									  resolve_mode );
@@ -350,13 +351,13 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env& env,
 				}
 				
 #if defined RP_DIR_BU
-				results = matchFuncs( *this, withName(), move(sub_results), resolve_mode );
+				results = matchFuncs( *this, withName(), move(sub_results), env, resolve_mode );
 #elif defined RP_DIR_CO
 				interpretation_unambiguous valid;
 				auto merged = unsorted_eager_merge<
 					const Interpretation*, Cost, interpretation_cost>( sub_results, valid );
 				
-				results = matchFuncs( *this, withName(), move(merged), resolve_mode );
+				results = matchFuncs( *this, withName(), move(merged), env, resolve_mode );
 #endif
 			} break;
 		}

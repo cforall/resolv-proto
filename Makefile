@@ -20,12 +20,12 @@ LAST_DIR ?= bu
 LAST_RES ?= def
 
 # Debug Levels: #
-# 0. -O0, asserts, ASAN
-# 1. -O0, asserts, ASAN, expensive safety checks
-# 2. -O0, asserts, ASAN, expensive safety checks, trace printing
+# 0. -O0, asserts, GC_TRAP
+# 1. -O0, asserts, GC_TRAP, expensive safety checks
+# 2. -O0, asserts, GC_TRAP, expensive safety checks, trace printing
 
 ifdef DBG
-CXXFLAGS += -O0 -DRP_DEBUG=${DBG} -fsanitize=address -fno-omit-frame-pointer
+CXXFLAGS += -O0 -DRP_DEBUG=${DBG} -DGC_TRAP
 else
 CXXFLAGS += -O2 -DNDEBUG
 endif
