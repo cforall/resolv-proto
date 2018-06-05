@@ -44,8 +44,8 @@ InterpretationList resolveToUnbound( Resolver& resolver, const Expr* expr,
 	for ( const Interpretation* i : subs ) {
 		// loop over subexpression results, binding result types to target type
 		const TypedExpr* rExpr = i->expr;
-		Env rEnv = i->env;
-		if ( ! rEnv.merge( env ) ) continue;
+		Env rEnv = env;
+		if ( i->env && ! rEnv.merge( i->env ) ) continue;
 		ClassRef r = rEnv.getClass( targetType );
 		Cost rCost = i->cost;
 
@@ -486,7 +486,7 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 			Env sEnv = env;
 			Cost sCost = is_poly(sType) ? i->cost : rCost + i->cost;
 			if ( sub.is_poly() && ! unifyExt( targetType, sType, sCost, sEnv ) ) continue;
-			if ( ! sEnv.merge( i->env ) ) continue;
+			if ( i->env && ! sEnv.merge( i->env ) ) continue;
 			rSubs.push_back( 
 				new Interpretation{ i->expr, move(sEnv), move(sCost), copy(i->argCost) } );
 		}

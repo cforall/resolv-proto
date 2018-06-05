@@ -40,7 +40,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 
 		ComboResult append( const Interpretation* i ) {
 			Env env = envs.back();
-			if ( ! env.merge( i->env ) ) return ComboResult::REJECT_THIS;
+			if ( i->env && ! env.merge( i->env ) ) return ComboResult::REJECT_THIS;
 			crnt.push_back( i );
 			envs.push_back( env );
 			return ComboResult::ACCEPT;
@@ -110,7 +110,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 			} case 1: { // unique satisfying assertion: add to environment
 				const Interpretation* s = satisfying.front();
 				if ( bindRecursive( asn, s->expr ) ) {
-					env.merge( s->env );
+					if ( s->env ) env.merge( s->env );
 					return true;
 				} else {
 					return false;
@@ -239,7 +239,7 @@ public:
 			const TypedExpr* alt_bak = alt_expr;
 			Env alt_env = env;
 			// skip alternatives that can't be resolved in the current environment
-			if ( ! alt_env.merge( alt->env ) ) {
+			if ( alt->env && ! alt_env.merge( alt->env ) ) {
 				changed = true;
 				continue;
 			}

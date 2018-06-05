@@ -104,7 +104,7 @@ bool unifyList( const List<Type>& params, const InterpretationList& args, Cost& 
 	unsigned i = 0;
 	for ( unsigned j = 0; j < args.size(); ++j ) {
 		// merge in argument environment
-		if ( ! env.merge( args[j]->env ) ) return false;
+		if ( args[j]->env && ! env.merge( args[j]->env ) ) return false;
 		// test unification of parameters
 		unsigned m = args[j]->type()->size();
 		if ( m == 1 ) {

@@ -54,7 +54,7 @@ struct Interpretation : public GC_Object {
 	const Type* type() const { return expr->type(); }
 	
 	/// Returns a fresh invalid interpretation
-	static Interpretation* make_invalid() { return new Interpretation{ nullptr, Env{} }; }
+	static Interpretation* make_invalid() { return new Interpretation{ nullptr, Env::invalid() }; }
 
 	/// Merges two interpretations (must have same cost, type, and underlying expression) 
 	/// to produce a new ambiguous interpretation. No environment is stored in the outer 
@@ -77,7 +77,7 @@ struct Interpretation : public GC_Object {
 		}
 
 		return new Interpretation{ new AmbiguousExpr{ expr, i->type(), move(alts) }, 
-		                           Env{}, copy(i->cost), copy(i->argCost) };
+		                           Env::invalid(), copy(i->cost), copy(i->argCost) };
 	}
 
 	/// Print this interpretation, using the named style

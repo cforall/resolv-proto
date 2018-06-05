@@ -1,11 +1,14 @@
-## 01 June ##
+## 01-05 June ##
 * Started on resolving bugs in new `Env`
+  * `Interpretation::merge_ambiguous()` generated a fresh environment for the ambiguous 
+    expressions in a different tree; fixed by giving these an invalid environment, and 
+    checking for this invalid environment before merging environments in.
+    * Added new test, `amb_env` to do regression on this bug
+  * fixed bug in new `Env::mergeAllClasses` where two separate trees can still be in the same class
+    * Was actually a bug where a non-root key was passed to merge from the ADDTO merger
+      * was non-root because of a previous (elided) REMFROM in the edit list
+      * similar bugs where non-root merge-to key exists, or classes have already been merged
   * fails on `default-easy`, `overloads-more-easy`, `parms-fewer-easy`, `poly-less2-easy`
-    * `default-easy`:
-      * merge fails at `resolver-bu.cc:196`
-      * `iEnv` classes rooted at `0x607000046cd0`, `i->env` at `0x6070000179b0`
-      * `i` at `0x60800001a820`
-        * Env (same it keeps) copy of `arg->env`
 
 ## 24 May-01 June ##
 * Started performance testing of GC branch.

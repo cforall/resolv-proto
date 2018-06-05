@@ -171,6 +171,9 @@ private:
 		return true;
 	}
 
+	/// Constructor for invalid environment
+	Env( std::nullptr_t ) : classes(nullptr), bindings(nullptr), assns(nullptr) {}
+
 public:
 	Env() : classes( new Classes{} ), bindings( new Bindings{} ), assns( new Assertions{} ) {}
 
@@ -181,6 +184,9 @@ public:
 	/// Rely on GC to clean up un-used version nodes
 	~Env() = default;
 
+	/// Gets an invalid (always empty) environment
+	static Env invalid() { return Env{nullptr}; }
+
 	/// Swap with other environment
 	void swap( Env& o ) {
 		using std::swap;
@@ -189,6 +195,12 @@ public:
 		swap( bindings, o.bindings );
 		swap( assns, o.assns );
 	}
+
+	/// true if this environment is valid
+	explicit operator bool() const { return classes != nullptr; }
+
+	/// true if this environment is valid
+	bool valid() const { return (bool)*this; }
 
 	/// Check if this environment has no classes or assertions
 	bool empty() const { return classes->empty() && assns->empty(); }
@@ -261,6 +273,8 @@ private:
 
 		// track class changes
 		classes->reroot();
+
+		dbg_verify();
 
 		using EditEntry = std::pair<const PolyType*, Edit>;
 		using EditList = std::list<EditEntry>;
@@ -410,59 +424,73 @@ private:
 		for ( const EditEntry& edit : edits ) {
 			const PolyType* key = edit.first;
 			const Edit& e = edit.second;
-			auto bit = bedits.find( key );
-
+			
 			switch ( e.mode ) {
 				case Classes::ADD: {
 					// add new type variable
 					classes = classes->add( key );
-					// optionally add binding (none if later ADDTO)
+					// add binding
+					auto bit = bedits.find( key );
 					if ( bit != bedits.end() ) {
+						// take final value if it is a root in its own map
 						const BEdit& be = bit->second;
-						assume( be.mode == Bindings::INS, "inconsistent binding");
+						assume(be.mode == Bindings::INS, "inconsistent binding");
 						bindings = bindings->set( key, be.val );
+						// remove update from edit set so that it isn't re-checked
 						bedits.erase( bit );
+					} else {
+						// otherwise just put in null
+						bindings = bindings->set( key, nullptr );
 					}
 				} break;
 				case Classes::REM: {
 					// do not remove type variable (merging)
-					// if binding change (none if earlier REMFROM), check
-					if ( bit != bedits.end() ) {
-						const BEdit& be = bit->second;
-						assume( be.mode == Bindings::REM, "inconsistent binding");
-						// do not remove binding either
-						bedits.erase( bit );
-					}
 				} break;
 				case Classes::ADDTO: {
+					// if previous REMFROM on this key, it may not be root in `classes`
+					const PolyType* key_root = classes->find( key );
+					// if previous ADDTO on this root, it may not be root in `classes`
+					const PolyType* merge_root = classes->find( e.root );
+					// Classes could have already been merged
+					if ( key_root == merge_root ) break;
 					// merge classes
-					classes = classes->merge( e.root, key );
-					// remove binding for new child (none if earlier ADD or REMFROM)
-					if ( bit != bedits.end() ) {
-						const BEdit& be = bit->second;
-						assume( be.mode == Bindings::REM, "inconsistent binding");
-						bindings = bindings->erase( key );
-						bedits.erase( bit );
+					Classes* old_classes = classes;
+					classes = classes->merge( key_root, merge_root );
+					// remove binding for new child
+					assume(old_classes->get_mode() == Classes::REMFROM, "old classes now REMFROM");
+					const PolyType* new_child = old_classes->get_child();
+					if ( bindings->count( new_child ) ) {
+						// add new insert node to check merge with old value if needed
+						if ( const Type* child_bind = bindings->get( new_child ) ) {
+							// store this insert under the original key, which *must* be a 
+							// REM binding change if present, which is not useful info
+							auto bit = bedits.find( key );
+							if ( bit != bedits.end() ) {
+								BEdit& be = bit->second;
+								assume(be.mode == Bindings::REM, "inconsistent binding");
+								be = BEdit{ Bindings::INS, child_bind };
+							} else {
+								bedits.emplace_hint( bit, key, BEdit{ Bindings::INS, child_bind } );
+							}
+						}
+						// remove child binding from map
+						bindings = bindings->erase( new_child );
 					}
 				} break;
 				case Classes::REMFROM: {
 					// do not split classes
-					// if binding for new root (none if later REM or ADDTO), leave in update list
-					if ( bit != bedits.end() ) {
-						const BEdit& be = bit->second;
-						assume( be.mode == Bindings::INS, "inconsistent binding");
-						// leave in update list to check later
-					}
 				} break;
 				default: unreachable("invalid mode");
 			}
 		}
 
-		// finish merging bindings -- all that should be left is updates on roots and inserts on 
-		// new roots from REMFROM nodes. This may fail, or may merge further classes
+		// finish merging bindings. This may fail, or may merge further classes
 		for ( const auto& entry : bedits ) {
 			const PolyType* key = entry.first;
 			const BEdit& e = entry.second;
+
+			// skip binding removals; the ADDTO merge has taken out all the new non-roots
+			if ( e.mode == Bindings::REM ) continue;
 			assume( e.mode == Bindings::UPD || e.mode == Bindings::INS, "inconsistent binding");
 			
 			// get reference for class, and attempt binding update
@@ -470,6 +498,7 @@ private:
 			if ( ! mergeBound( r, e.val ) ) return false;
 		}
 
+		dbg_verify();
 		return true; // all edits applied successfully
 	}
 

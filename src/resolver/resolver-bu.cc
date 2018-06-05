@@ -65,7 +65,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 /// Return an interpretation for all single-argument interpretations in funcs
 template<typename Funcs>
 InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, InterpretationList&& args, 
-                               ResolverMode resolve_mode ) {
+                               const Env& outEnv, ResolverMode resolve_mode ) {
 	InterpretationList results;
 
 	for ( const Interpretation* arg : args ) {
@@ -87,7 +87,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 
 			// Environment for call bindings
 			Cost cost = func->poly_cost() + arg->cost; // cost for this call
-			Env env = arg->env;
+			Env env = arg->env ? arg->env : outEnv;
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
 				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
@@ -118,7 +118,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 	return results;
 }
 
-// #define RP_DIR_BU
+//#define RP_DIR_BU
 
 #if defined RP_DIR_BU
 /// Unifies prefix of argument type with parameter type (required to be size 1)
@@ -195,7 +195,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 					Env iEnv = combo.env;
 
 					// fail if cannot merge interpretation into combo
-					if ( ! iEnv.merge( i->env ) ) continue;
+					if ( i->env && ! iEnv.merge( i->env ) ) continue;
 					// fail if interpretation type does not match parameter
 					if ( ! unifyFirst( param, i->type(), iCost, iEnv ) ) continue;
 
@@ -275,7 +275,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 			
 			// Environment for call bindings
 			Cost cost = func->poly_cost() + combo.first;
-			Env env = outEnv; // initialized by unifyList()
+			Env env = outEnv;
 			unique_ptr<Forall> forall = Forall::from( func->forall(), resolver.id_src );
 			List<Type> params = forall ? 
 				ForallSubstitutor{ forall.get() }( func->params() ) : func->params();
@@ -334,10 +334,9 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env& env,
 				results = matchFuncs( *this, withName(), env, resolve_mode );
 			} break;
 			case 1: {
-				// gets environment from arguments
 				results = matchFuncs( *this, withName(), 
 				                      resolve( funcExpr->args().front(), env ), 
-									  resolve_mode );
+									  env, resolve_mode );
 			} break;
 			default: {
 				std::vector<InterpretationList> sub_results;
