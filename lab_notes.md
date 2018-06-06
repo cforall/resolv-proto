@@ -8,8 +8,9 @@
     * Was actually a bug where a non-root key was passed to merge from the ADDTO merger
       * was non-root because of a previous (elided) REMFROM in the edit list
       * similar bugs where non-root merge-to key exists, or classes have already been merged
-  * fails on `default-easy`, `overloads-more-easy`, `parms-fewer-easy`, `poly-less2-easy`
-
+  * Fixed bug where some added classes weren't getting bindings
+  * Fixed bug where forgot to trace `NamedType::params_`
+  
 ## 24 May-01 June ##
 * Started performance testing of GC branch.
 * Started trimming `clone` calls

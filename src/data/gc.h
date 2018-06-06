@@ -132,7 +132,4 @@ protected:
 
 	// Ensure subclasses can be deleted by garbage collector
 	virtual ~GC_Object() {}
-
-	/// override to trace any child objects
-	virtual void trace(const GC&) const {}
 };

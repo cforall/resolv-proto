@@ -135,6 +135,8 @@ public:
 	}
 
 protected:
+	void trace(const GC& gc) const override { gc << params_; }
+
 	bool equals(const Type& obj) const override {
 		const NamedType* that = as_safe<NamedType>(&obj);
 		return that && *this == *that;
@@ -183,8 +185,6 @@ public:
 	}
 
 protected:
-	void trace(const GC& gc) const override {}
-
 	bool equals(const Type& obj) const override {
 		const PolyType* that = as_safe<PolyType>(&obj);
 		return that && *this == *that; 
