@@ -1,0 +1,14 @@
+// Detects failures due to resolution over invalid environment in 
+// ambiguous expressions
+
+#a make
+#b make
+
+T bind T
+
+#a amb #a
+#a amb #b
+
+use #a
+%%
+use( amb( bind( make() ) ) )
