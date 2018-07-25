@@ -153,7 +153,7 @@ private:
 		Classes* new_classes = classes->merge( rr, sr );
 
 		// update bindings
-		assume(classes->get_mode() == Classes::REMFROM, "Classes updated to by merge");
+		assume(classes->get_mode() == Classes::REMFROM, "Classes updated to REMFROM by merge");
 		const PolyType* root = classes->get_root();
 		if ( root == rr ) {
 			// erase binding for sr if no longer root
