@@ -10,9 +10,14 @@
 #include "resolver/canonical_type_map.h"
 #include "resolver/func_table.h"
 
+class Resolver;
+
 /// Parses input according to the following format:
 ///
-/// start := NL* <function_decl>* "%%\n" <resolv_expr>*
+/// start := block+ | scope
+/// block := "{" NL+ scope "}" NL+
+/// scope := <function_decl>* "%%\n" body 
+/// body := (block | <resolv_expr>)*
 /// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* <type_assertion>* NL+
 /// type_assertion := "|" (<type>" ")* <name> (" "<type>)*
 /// resolv_expr := <subexpr> NL+
@@ -48,7 +53,8 @@
 /// with the leaf nodes represented by type identifiers corresponding to 
 /// variables. 
 ///
-/// Returns true and sets funcs, exprs & types if appropriate, 
-/// prints errors otherwise.
-bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
-                  CanonicalTypeMap& types, Args& args );
+/// Functions and expressions may be grouped into lexically-scoped blocks by 
+/// using curly braces. Only in-scope declarations can be used within a block
+///
+/// Calls resolver on a pipelined basis while parsing input
+void run_input( std::istream& in, Resolver& resolver, Args& args );

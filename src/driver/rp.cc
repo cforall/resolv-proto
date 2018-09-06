@@ -19,15 +19,16 @@ long ms_between(std::clock_t start, std::clock_t end) {
 
 int main(int argc, char **argv) {
 	Args args{argc, argv};
-	FuncTable funcs;
-	List<Expr> exprs;
-	CanonicalTypeMap types;
+	// FuncTable funcs;
+	// List<Expr> exprs;
+	// CanonicalTypeMap types;
 	std::ostream& out = args.out();
 	
-	if ( ! parse_input( args.in(), funcs, exprs, types, args ) ) return 1;
+	// if ( ! parse_input( args.in(), funcs, exprs, types, args ) ) return 1;
 	
-	ConversionGraph conversions = make_conversions( types );
+	// ConversionGraph conversions = make_conversions( types );
 	
+	ValidEffect on_valid = []( const Expr* e, const Interpretation* i ) {};
 	InvalidEffect on_invalid = []( const Expr* e ) {};
 	AmbiguousEffect on_ambiguous = 
 		[]( const Expr* e, List<Interpretation>::const_iterator i, 
@@ -89,58 +90,35 @@ int main(int argc, char **argv) {
 		break;
 	}
 
-	Resolver resolve{ conversions, funcs, on_invalid, on_ambiguous, on_unbound };
+	if ( args.quiet() ) {
+		// empty valid effect is correct in this case
+	} else if ( args.testing() ) {
+		on_valid = [&out]( const Expr* e, const Interpretation* i ) {
+			i->write( out, ASTNode::Print::Concise );
+			out << std::endl;
+		};
+	} else if ( args.filter() != Args::Filter::None ) {
+		if ( args.filter() == Args::Filter::Invalid ) {
+			on_valid = [&out]( const Expr* e, const Interpretation* i ) {
+				e->write( out, ASTNode::Print::InputStyle );
+				out << std::endl;
+			};
+		}
+	} else {
+		on_valid = [&out]( const Expr* e, const Interpretation* i ) {
+			out << *i << std::endl;
+		};
+	}
 
 	volatile std::clock_t start, end;
-
-	if ( args.quiet() ) {
-		start = std::clock();
-		// loop without printing
-		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-			resolve( *e );
-		}
-		end = std::clock();
-	} else if ( args.testing() ) {
-		start = std::clock();
-		// loop printing all interpretations concisely
-		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-			out << "\n";
-			const Interpretation *i = resolve( *e );
-			if ( i->is_valid() ) {
-				i->write( out, ASTNode::Print::Concise );
-				out << std::endl;
-				*e = i->expr;
-			}
-		}
-		end = std::clock();
-	} else if ( args.filter() != Args::Filter::None ) {
-		start = std::clock();
-		// loop only printing un-filtered 
-		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-			const Interpretation *i = resolve( *e );
-			if ( args.filter() == Args::Filter::Invalid && i->is_valid() ) {
-				(*e)->write( out, ASTNode::Print::InputStyle );
-				out << std::endl;
-			}
-		}
-		end = std::clock();
-	} else {
-		start = std::clock();
-		// loop printing all interpretations
-		for ( auto e = exprs.begin(); e != exprs.end(); ++e ) {
-			out << "\n";
-			const Interpretation *i = resolve( *e );
-			if ( i->is_valid() ) {
-				out << *i << std::endl;
-				*e = i->expr;
-			}
-		}
-		end = std::clock();
-	}
+	Resolver resolver{ on_valid, on_invalid, on_ambiguous, on_unbound };
+	start = std::clock();
+	run_input( args.in(), resolver, args );
+	end = std::clock();
 
 	if ( args.bench() ) {
 		// num_decls,num_exprs,runtime(ms)
-		out << funcs.size() << "," << exprs.size() << "," << ms_between(start, end) << std::endl;
+		out << resolver.n_funcs << "," << resolver.n_exprs << "," << ms_between(start, end) << std::endl;
 	}
 	
 	collect();

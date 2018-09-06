@@ -14,11 +14,14 @@
 #include "data/list.h"
 #include "data/range.h"
 
+struct ConversionListCompare;
+
 /// Graph of conversions
 class ConversionGraph {
 	friend const GC& operator<< (const GC&, const ConversionGraph&);
 	friend std::ostream& operator<< (std::ostream&, const ConversionGraph&);
 	friend ConversionGraph make_conversions( CanonicalTypeMap& types );
+	friend ConversionListCompare;
 public:
 	struct ConversionNode;
 
@@ -195,6 +198,9 @@ public:
 		fromNode.out.push_back( i );
 		toNode.in.push_back( i );
 	}
+
+	/// Adds a new type to the conversion graph
+	void addType( const Type* ty );
 };
 
 using Conversion = ConversionGraph::Conversion;

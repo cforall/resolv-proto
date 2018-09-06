@@ -1,8 +1,4 @@
-
 [#foo / (0,0,0,0,0)] f( #foo )
-
 [#bar / (0,0,0,0,0)] g( #bar )
-
 [#foo / (0,1,1,-1,0)] h( #foo )
-
 ERROR: no valid resolution for h( #bar )

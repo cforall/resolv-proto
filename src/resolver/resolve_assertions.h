@@ -305,8 +305,7 @@ public:
 		do {
 			// attempt to disambiguate deferred assertion matches with additional information
 			if ( ! deferred.empty() ) {
-				auto compatible = filter_combos<const Interpretation*>( 
-						deferred, interpretation_env_merger{ env } );
+				auto compatible = filter_combos( deferred, interpretation_env_merger{ env } );
 				if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
 				interpretation_env_coster costs;

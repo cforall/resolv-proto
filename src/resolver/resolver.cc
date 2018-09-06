@@ -112,3 +112,26 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	trace( candidate );
 	return candidate;
 }
+
+void Resolver::beginScope() {
+	// TODO implement
+}
+
+void Resolver::endScope() {
+	// TODO implement
+}
+
+void Resolver::addType(const Type* ty) {
+	conversions.addType( ty );
+}
+
+void Resolver::addDecl(FuncDecl* func) {
+	++n_funcs;
+	funcs.insert( func );
+}
+
+void Resolver::addExpr(const Expr* expr) {
+	++n_exprs;
+	const Interpretation* i = (*this)(expr);
+	if ( i->is_valid() ) { on_valid( expr, i ); }
+}

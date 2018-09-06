@@ -1,8 +1,4 @@
-
 [#int / (0,0,0,0,0)] foo-i( #ptr<#int> )
-
 [#float / (0,0,0,0,0)] foo-f( #ptr<#float> )
-
 [#int / (0,2,1,-1,0)] foo-i( addr( #int ) )
-
 [#float / (0,2,1,-1,0)] foo-f( addr( #float ) )

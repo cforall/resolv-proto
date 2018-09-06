@@ -1,6 +1,3 @@
-
 ERROR: ambiguous resolution for f( 2 2 )
-
 [Void / (0,1,1,-1,1)] g( 2 => 3 )
-
 ERROR: no valid resolution for h( 2 )

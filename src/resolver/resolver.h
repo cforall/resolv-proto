@@ -25,6 +25,10 @@
 #define RP_ASSN_CHECK(expr) resolve_mode.check_assertions && (expr)
 #endif
 
+/// Effect to be run on valid interpretation; arguments are the untyped expression 
+/// and its valid interpretation
+using ValidEffect = std::function<void(const Expr*, const Interpretation*)>;
+
 /// Effect to run on invalid interpretation; argument is the expression which 
 /// could not be resolved.
 using InvalidEffect = std::function<void(const Expr*)>;
@@ -202,29 +206,47 @@ public:
 
 /// State-tracking class for resolving expressions
 class Resolver {
+	static const unsigned default_max_recursive_assertions = 5;
 public:
-	ConversionGraph& conversions;       ///< Conversions between known types
-	FuncTable& funcs;                   ///< Known function declarations
+	ConversionGraph conversions;        ///< Conversions between known types
+	FuncTable funcs;                    ///< Known function declarations
 	unsigned id_src;                    ///< Source of type variable IDs
+	unsigned n_funcs;                   ///< Total count of functions
+	unsigned n_exprs;                   ///< Total count of expressions
 	unsigned max_recursive_assertions;  ///< Maximum recursive assertion depth
 
 #if defined RP_DIR_TD
 	ArgCache cached;               ///< Cached expression resolutions
 #endif
 	
+	ValidEffect on_valid;          ///< Effect to run on valid interpretation
 	InvalidEffect on_invalid;      ///< Effect to run on invalid interpretation
 	AmbiguousEffect on_ambiguous;  ///< Effect to run on ambiguous interpretation
 	UnboundEffect on_unbound;      ///< Effect to run on unbound type variables
 
-	Resolver( ConversionGraph& conversions, FuncTable& funcs,
-	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound,
-			  unsigned max_recursive_assertions = 5 )
-		: conversions( conversions ), funcs( funcs ), id_src( 0 ), 
+	/// Constructor for dynamically-generated function table and conversion graph
+	Resolver( ValidEffect on_valid, InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, 
+	          UnboundEffect on_unbound,
+			  unsigned max_recursive_assertions = default_max_recursive_assertions )
+		: conversions(), funcs(), id_src( 0 ), n_funcs( 0 ), n_exprs( 0 ),
 		  max_recursive_assertions( max_recursive_assertions ), 
 #if defined RP_DIR_TD
-		  cached(),
+		  cached(), 
 #endif
-		  on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
+		  on_valid( on_valid ), on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), 
+		  on_unbound( on_unbound ) {}
+	
+// 	/// Constructor for already-filled function table and conversion graph
+// 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
+// 	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound,
+// 			  unsigned max_recursive_assertions = default_max_recursive_assertions )
+// 		: conversions( conversions ), funcs( funcs ), id_src( 0 ), n_funcs( 0 ), n_exprs( 0 ), 
+// 		  max_recursive_assertions( max_recursive_assertions ), 
+// #if defined RP_DIR_TD
+// 		  cached(),
+// #endif
+// 		  on_valid( []( const Expr* e, const Interpretation* i ) {} ), on_invalid( on_invalid ), 
+// 		  on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
 
 	/// Recursively resolve interpretations subject to `env`, expanding conversions if 
 	/// not at the top level. May return ambiguous interpretations, but otherwise will 
@@ -239,4 +261,20 @@ public:
 	/// Will return invalid interpretation and run appropriate effect if 
 	/// resolution fails
 	const Interpretation* operator() ( const Expr* expr );
+
+	/// Starts a new lexical scope
+	void beginScope();
+
+	/// Ends the current lexical scope, clearing all contained declarations
+	void endScope();
+
+	/// Adds a new type to the resolution graph
+	void addType(const Type*);
+
+	/// Adds a new function declaration to the current lexical scope
+	void addDecl(FuncDecl*);
+
+	/// Adds a new expression to the current lexical scope, causing it to be resolved and the 
+	/// appropriate effect to be run
+	void addExpr(const Expr*);
 };

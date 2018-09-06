@@ -1134,19 +1134,19 @@ public:
     size_type count( const ConcType* ty ) const {
         auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
-        return it.second->leaf ? 1 : 0;
+        return it->second->leaf ? 1 : 0;
     }
 
     size_type count( const NamedType* ty ) const {
         auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
-        return it.second->count( ty->params() );
+        return it->second->count( ty->params() );
     }
 
     size_type count( const PolyType* ty ) const {
         auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
-        return it.second->leaf ? 1 : 0;
+        return it->second->leaf ? 1 : 0;
     }
 
     size_type count( const TupleType* ty ) const {
