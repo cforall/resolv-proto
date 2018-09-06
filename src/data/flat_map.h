@@ -1,10 +1,10 @@
 #pragma once
 
 #include <iterator>
-#include <map>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
+
+#include "std_wrappers.h"
 
 /// Gets underlying value type of a map
 template<typename T>
@@ -168,11 +168,6 @@ public:
 	}
 };
 
-/// Wrapper around std::unordered_map declaration with the proper number of template 
-/// parameters for use with FlatMap
-template<typename K, typename V>
-using std_unordered_map = std::unordered_map<K, V>;
-
 /// A map holding a collection that iterates and inserts directly into the 
 /// contained collection.
 /// @param Key      the key type
@@ -233,6 +228,7 @@ public:
 
 	/// Gets a reference to the underlying index, useful if it has features not replicated in the 
 	/// FlatMap API.
+	Underlying& index() { return m; }
 	const Underlying& index() const { return m; }
 	
 	bool empty() const { return n == 0; }
@@ -284,11 +280,6 @@ public:
 	
 	Inner& operator[] ( const Key& k ) { return *find_or_create( k ); }
 };
-
-/// Wrapper around std::map declaration with the proper number of template 
-/// parameters for use with FlatMap
-template<typename K, typename V>
-using std_map = std::map<K, V>;
 
 /// Wrapper for flat map using a sorted map
 template<typename Key, typename Inner, typename Extract>

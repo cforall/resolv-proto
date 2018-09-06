@@ -21,8 +21,8 @@
 /// Parses a name (lowercase alphanumeric ASCII string starting with a 
 /// lowercase letter), returning true, storing result into ret, and  
 /// incrementing token if so. token must not be null.
-bool parse_name(char *&token, std::string& ret) {
-	char *end = token;
+bool parse_name(char const *&token, std::string& ret) {
+	const char *end = token;
 	
 	if ( 'a' <= *end && *end <= 'z' ) ++end;
 	else return false;
@@ -40,8 +40,8 @@ bool parse_name(char *&token, std::string& ret) {
 /// starting with a letter or underscore), returning true, storing result 
 /// (not including hash) into ret, and incrementing token if so. 
 /// token must not be null
-bool parse_named_type(char *&token, std::string& ret) {
-	char *end = token;
+bool parse_named_type(char const *&token, std::string& ret) {
+	const char *end = token;
 
 	if ( ! match_char(end, '#') ) return false;
 
@@ -64,8 +64,8 @@ bool parse_named_type(char *&token, std::string& ret) {
 /// Parses a polymorphic type name (lowercase alphanumeric ASCII string 
 /// starting with an uppercase letter), returning true, storing result into 
 /// ret, and incrementing token if so. token must not be null.
-bool parse_poly_type(char *&token, std::string& ret) {
-	char *end = token;
+bool parse_poly_type(char const *&token, std::string& ret) {
+	const char *end = token;
 	
 	if ( 'A' <= *end && *end <= 'Z' ) ++end;
 	else return false;
@@ -82,13 +82,13 @@ bool parse_poly_type(char *&token, std::string& ret) {
 /// Parses a type name, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
 /// to types and polymorphic types according to forall. token must not be null.  
-bool parse_type(char *&token, Resolver& resolver, CanonicalTypeMap& types, 
+bool parse_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
 	unique_ptr<Forall>& forall, List<Type>& out);
 
 /// Parses an angle-bracket surrounded type list for the paramters of a generic named type
-bool parse_generic_params(char *&token, Resolver& resolver, CanonicalTypeMap& types, 
+bool parse_generic_params(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
 		unique_ptr<Forall>& forall, List<Type>& out) {
-	char *end = token;
+	const char *end = token;
 
 	if ( ! match_char(end, '<') ) return false;
 	match_whitespace(end);
@@ -105,7 +105,7 @@ bool parse_generic_params(char *&token, Resolver& resolver, CanonicalTypeMap& ty
 	return true;
 }
 
-bool parse_type(char *&token, Resolver& resolver, CanonicalTypeMap& types, 
+bool parse_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
 		unique_ptr<Forall>& forall, List<Type>& out) {
 	int t;
 	std::string n;
@@ -132,9 +132,9 @@ bool parse_type(char *&token, Resolver& resolver, CanonicalTypeMap& types,
 /// Parses a type assertion, returning true and adding the assertion into 
 /// binding if so. Concrete types will be canonicalized according to types. 
 /// token must not be null.
-bool parse_assertion(char*&token, Resolver& resolver, CanonicalTypeMap& types, 
+bool parse_assertion(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
 		unique_ptr<Forall>& forall) {
-	char* end = token;
+	const char* end = token;
 
 	// look for type assertion
 	if ( ! match_char(end, '|') ) return false;
@@ -166,7 +166,7 @@ bool parse_assertion(char*&token, Resolver& resolver, CanonicalTypeMap& types,
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
-bool parse_decl(char *line, Resolver& resolver, CanonicalTypeMap& types) {
+bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
 	List<Type> returns, params;
 	std::string name;
 	std::string tag = "";
@@ -208,12 +208,13 @@ bool parse_decl(char *line, Resolver& resolver, CanonicalTypeMap& types) {
 /// Parses a concrete type name, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
 /// to types and polymorphic types forbidden. token must not be null.  
-bool parse_conc_type(char *&token, Resolver& resolver, CanonicalTypeMap& types, List<Type>& out);
+bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
+	List<Type>& out);
 
 /// Parses an angle-bracket surrounded type list for the paramters of a concrete generic named type
-bool parse_conc_generic_params(char *&token, Resolver& resolver, CanonicalTypeMap& types, 
+bool parse_conc_generic_params(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
 		List<Type>& out) {
-	char *end = token;
+	const char *end = token;
 
 	if ( ! match_char(end, '<') ) return false;
 	match_whitespace(end);
@@ -230,7 +231,8 @@ bool parse_conc_generic_params(char *&token, Resolver& resolver, CanonicalTypeMa
 	return true;
 }
 
-bool parse_conc_type(char *&token, Resolver& resolver, CanonicalTypeMap& types, List<Type>& out) {
+bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
+		List<Type>& out) {
 	int t;
 	std::string n;
 
@@ -251,8 +253,9 @@ bool parse_conc_type(char *&token, Resolver& resolver, CanonicalTypeMap& types, 
 
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
-bool parse_subexpr( char *&token, List<Expr>& exprs, Resolver& resolver, CanonicalTypeMap& types ) {
-	char *end = token;
+bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver, 
+		CanonicalTypeMap& types ) {
+	const char *end = token;
 	
 	// Check for a concrete type expression
 	List<Type> cty;
@@ -287,7 +290,7 @@ bool parse_subexpr( char *&token, List<Expr>& exprs, Resolver& resolver, Canonic
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr( char *line, Resolver& resolver, CanonicalTypeMap& types ) {
+bool parse_expr( char const *line, Resolver& resolver, CanonicalTypeMap& types ) {
 	match_whitespace(line);
 	List<Expr> exprs;
 	if ( parse_subexpr(line, exprs, resolver, types) && is_empty(line) ) {
@@ -297,62 +300,89 @@ bool parse_expr( char *line, Resolver& resolver, CanonicalTypeMap& types ) {
 	} else return false;
 }
 
-// bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
-//                   CanonicalTypeMap& types, Args& args ) {
-void run_input( std::istream& in, Resolver& resolver, Args& args ) {
-	CanonicalTypeMap types;
+/// Mode for echo_line -- declarations are echoed for Filtered verbosity, expressions are not
+enum EchoMode { EXPR, DECL };
+
+/// Echos line if in appropriate mode
+void echo_line( std::string& line, Args& args, EchoMode mode = EXPR ) {
+	if ( args.verbosity() == Args::Verbosity::Verbose
+			|| ( args.verbosity() == Args::Verbosity::Filtered && mode == DECL ) ) {
+		args.out() << line << std::endl;
+	}
+}
+
+/// Parses a scope from a series of lines (excluding opening "{" line if in block), 
+/// continuing until end-of-input or terminating "}" line is found.
+/// Prints an error and exits if invalid declaration or expression found
+void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& resolver, 
+		CanonicalTypeMap& types, Args& args ) {
 	std::string line;
-	std::string delim = "%%";
-	unsigned n = 0;
 	
-	// parse declarations
-	while ( std::getline(in, line) ) {
+	// parse declarations and delimiter
+	while ( std::getline( in, line ) ) {
 		++n;
-		if ( is_empty(line) ) {
-			if ( args.verbosity() == Args::Verbosity::Filtered 
-					|| args.verbosity() == Args::Verbosity::Verbose ) {
-				args.out() << line << std::endl;
-			}
+		
+		if ( is_blank( line ) ) {
+			echo_line( line, args, DECL );
 			continue;
 		}
-		if ( line == delim ) {
-			if ( args.verbosity() == Args::Verbosity::Filtered 
-					|| args.verbosity() == Args::Verbosity::Verbose ) {
-				args.out() << line << std::endl;
-			}
+
+		// break when finished declarations
+		if ( line_matches( line, "%%" ) ) {
+			echo_line( line, args, DECL );
 			break;
 		}
-		
-		bool ok = parse_decl(const_cast<char*>(line.data()), resolver, types);
+
+		bool ok = parse_decl( line.data(), resolver, types );
 		if ( ! ok ) {
 			std::cerr << "Invalid declaration [" << n << "]: \"" << line << "\"" << std::endl;
 			std::exit(1);
 		}
 
-		if ( args.verbosity() == Args::Verbosity::Filtered 
-				|| args.verbosity() == Args::Verbosity::Verbose ) {
-			args.out() << line << std::endl;
-		}
+		echo_line( line, args, DECL );
 	}
-	
-	// parse expressions
-	while ( std::getline(in, line) ) {
+
+	while ( std::getline( in, line ) ) {
 		++n;
-		if ( is_empty(line) ) {
-			if ( args.verbosity() == Args::Verbosity::Verbose ) {
-				args.out() << line << std::endl;
-			}
+
+		if ( is_blank( line ) ) {
+			echo_line( line, args );
 			continue;
 		}
-		
-		bool ok = parse_expr(const_cast<char*>(line.data()), resolver, types);
+
+		// break when finished block
+		if ( line_matches( line, "}" ) ) {
+			--scope;
+			resolver.endScope();
+			break;
+		}
+
+		// recurse when starting new block
+		if ( line_matches( line, "{" ) ) {
+			++scope;
+			resolver.beginScope();
+			parse_block( in, n, scope, resolver, types, args );
+			continue;
+		}
+
+		bool ok = parse_expr( line.data(), resolver, types );
 		if ( ! ok ) {
 			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;
 			std::exit(1);
 		}
 
-		if ( args.verbosity() == Args::Verbosity::Verbose ) {
-			args.out() << line << std::endl;
-		}
+		echo_line( line, args );
+	}
+}
+
+void run_input( std::istream& in, Resolver& resolver, Args& args ) {
+	CanonicalTypeMap types;
+	unsigned n = 0, scope = 0;
+
+	parse_block(in, n, scope, resolver, types, args);
+
+	if ( scope != 0 ) {
+		std::cerr << "Unmatched braces" << std::endl;
+		std::exit(1);
 	}
 }

@@ -14,10 +14,10 @@ class Resolver;
 
 /// Parses input according to the following format:
 ///
-/// start := block+ | scope
-/// block := "{" NL+ scope "}" NL+
-/// scope := <function_decl>* "%%\n" body 
-/// body := (block | <resolv_expr>)*
+/// start := <scope>
+/// scope := <function_decl>* "%%\n" <body> 
+/// body := (<block> | <resolv_expr>)*
+/// block := "{" NL+ <scope> "}" NL+
 /// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* <type_assertion>* NL+
 /// type_assertion := "|" (<type>" ")* <name> (" "<type>)*
 /// resolv_expr := <subexpr> NL+

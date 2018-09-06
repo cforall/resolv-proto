@@ -114,11 +114,11 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 }
 
 void Resolver::beginScope() {
-	// TODO implement
+	funcs.index().beginScope();
 }
 
 void Resolver::endScope() {
-	// TODO implement
+	funcs.index().endScope();
 }
 
 void Resolver::addType(const Type* ty) {

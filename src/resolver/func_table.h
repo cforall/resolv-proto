@@ -9,15 +9,26 @@
 #include "ast/type.h"
 #include "data/flat_map.h"
 #include "data/gc.h"
+#include "data/scoped_map.h"
+#include "data/std_wrappers.h"
 
 /// Map from key type to function declarations indexed by it
 #if defined RP_SORTED
 	template<typename Key, typename Inner, typename Extract>
-	using FuncMap = SortedFlatMap<Key, Inner, Extract>; 
+	using FuncMap = FlatMap<Key, Inner, Extract, std_map>;
+
+	template<typename Key, typename Value>
+	using ScopedMap2 = ScopedMap<Key, Value, std_map>;
 #else
 	template<typename Key, typename Inner, typename Extract>
-	using FuncMap = FlatMap<Key, Inner, Extract>;
+	using FuncMap = FlatMap<Key, Inner, Extract, std_unordered_map>;
+
+	template<typename Key, typename Value>
+	using ScopedMap2 = ScopedMap<Key, Value, std_unordered_map>;
 #endif
+
+template<typename Key, typename Inner, typename Extract>
+using ScopedFuncMap = FlatMap<Key, Inner, Extract, ScopedMap2>;
 
 /// Backing storage for an unindexed set of functions
 using FuncList = std::vector<FuncDecl*>;
@@ -53,7 +64,7 @@ struct ExtractName {
 };
 
 /// Backing storage for a set of function declarations, indexed by name
-using FuncTable = FuncMap<std::string, FuncSubTable, ExtractName>;
+using FuncTable = ScopedFuncMap<std::string, FuncSubTable, ExtractName>;
 
 inline const GC& operator<< (const GC& gc, const FuncTable& funcs) {
 	for ( const FuncDecl* obj : funcs ) {

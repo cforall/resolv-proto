@@ -25,10 +25,10 @@ public:
 
 /// A function declaration
 class FuncDecl final : public Decl {
-	std::string name_;        ///< Name of function
-	std::string tag_;         ///< Disambiguating tag for function
-	List<Type> params_;       ///< Parameter types of function
-	const Type* returns_;     ///< Return types of function
+	std::string name_;           ///< Name of function
+	std::string tag_;            ///< Disambiguating tag for function
+	List<Type> params_;          ///< Parameter types of function
+	const Type* returns_;        ///< Return types of function
 	unique_ptr<Forall> forall_;  ///< Names of polymorphic type variables
 	
 	/// Generate appropriate return type from return list
