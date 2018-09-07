@@ -236,18 +236,6 @@ public:
 		  on_valid( on_valid ), on_invalid( on_invalid ), on_ambiguous( on_ambiguous ), 
 		  on_unbound( on_unbound ) {}
 	
-// 	/// Constructor for already-filled function table and conversion graph
-// 	Resolver( ConversionGraph& conversions, FuncTable& funcs,
-// 	          InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, UnboundEffect on_unbound,
-// 			  unsigned max_recursive_assertions = default_max_recursive_assertions )
-// 		: conversions( conversions ), funcs( funcs ), id_src( 0 ), n_funcs( 0 ), n_exprs( 0 ), 
-// 		  max_recursive_assertions( max_recursive_assertions ), 
-// #if defined RP_DIR_TD
-// 		  cached(),
-// #endif
-// 		  on_valid( []( const Expr* e, const Interpretation* i ) {} ), on_invalid( on_invalid ), 
-// 		  on_ambiguous( on_ambiguous ), on_unbound( on_unbound ) {}
-
 	/// Recursively resolve interpretations subject to `env`, expanding conversions if 
 	/// not at the top level. May return ambiguous interpretations, but otherwise will 
 	/// not return invalid interpretations.

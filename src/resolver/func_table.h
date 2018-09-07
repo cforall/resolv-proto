@@ -27,9 +27,6 @@
 	using ScopedMap2 = ScopedMap<Key, Value, std_unordered_map>;
 #endif
 
-template<typename Key, typename Inner, typename Extract>
-using ScopedFuncMap = FlatMap<Key, Inner, Extract, ScopedMap2>;
-
 /// Backing storage for an unindexed set of functions
 using FuncList = std::vector<FuncDecl*>;
 
@@ -58,17 +55,14 @@ using FuncList = std::vector<FuncDecl*>;
 	using FuncSubTable = FuncMap<unsigned, FuncList, ExtractNParams>;
 #endif
 
-/// Functor to extract the name from a function declaration
-struct ExtractName {
-	const std::string& operator() (const FuncDecl* f) { return f->name(); }	
-};
-
 /// Backing storage for a set of function declarations, indexed by name
-using FuncTable = ScopedFuncMap<std::string, FuncSubTable, ExtractName>;
+using FuncTable = ScopedMap2<std::string, FuncSubTable>;
 
 inline const GC& operator<< (const GC& gc, const FuncTable& funcs) {
-	for ( const FuncDecl* obj : funcs ) {
-		gc << obj;
+	for ( const auto& scope : funcs ) {
+		for ( const FuncDecl* func : scope.second ) {
+			gc << func;
+		}
 	}
 	return gc;
 }

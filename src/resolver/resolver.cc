@@ -114,11 +114,11 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 }
 
 void Resolver::beginScope() {
-	funcs.index().beginScope();
+	funcs.beginScope();
 }
 
 void Resolver::endScope() {
-	funcs.index().endScope();
+	funcs.endScope();
 }
 
 void Resolver::addType(const Type* ty) {
@@ -127,7 +127,12 @@ void Resolver::addType(const Type* ty) {
 
 void Resolver::addDecl(FuncDecl* func) {
 	++n_funcs;
-	funcs.insert( func );
+	// insert function at current scope, creating function list for name if necessary
+	auto it = funcs.findAt( funcs.currentScope(), func->name() );
+	if ( it == funcs.end() ) {
+		it = funcs.insert( func->name(), FuncTable::mapped_type{} ).first;
+	}
+	it->second.insert( func );
 }
 
 void Resolver::addExpr(const Expr* expr) {

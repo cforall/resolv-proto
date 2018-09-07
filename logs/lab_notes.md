@@ -1,78 +1,12 @@
 ## 4-7 Sep 2018 ##
-* Start on adding lexical scopes to resolver
+* Added lexical scopes to resolver
   * Variable shadowing is an issue -- maybe I can just not put the shadowed variables in the new scope, using a ScopedMap for the manglenames in the cfa-cc end
-  * Maybe have a "next scope" iterator at the end of each scope?
-    * findNext() on first insert into a new scope
 
 ## 22-30 Aug 2018 ##
 * Go back to debugging breadth-first resolution order
   * trim `kernel-e.c` down to just problem case `kernel-trim.c`
   * built minimal `kernel-construct.c` test case from problem
     * 4-character code bug to update the old resolution state instead of the new one on found deferred assertion...
-
-    * seems like it's selecting `is_thread` version of `get_coroutine` over default...
-      * #3 looks like the likely choice, and has the outline of the thread through `T` in its env
-      * *Why* are the `is_thread` options being selected? There aren't any `get_thread` functions...
-      * Am I storing the wrong declaration somewhere?
-        * I think maybe later `bindAssertion` are overwriting the canonical copy in the `alt`
-          * maybe a secondary map?
-    * Assertions:
-      * 6987: `void main(CIC&)`
-      * 6988: `coroutine_desc * get_coroutine(CIC& this)`
-      * 6991: `void main(CS&)`
-      * 6992: `coroutine_desc * get_coroutine(CS& this)`
-    
-    * both candidates for `get_coroutine` match:
-      1. `forall( is_thread(GC) ) coroutine_desc* get_coroutine(GC&)`
-      2. `coroutine_desc* get_coroutine(processorCtx_t&)`
-    * the only `main` fits as is, binding `{ [ CIC, CS ] => processorCtx_t, [ T ] => processor }`
-      * the `T` might be a pointer deref thing?
-    * the binding environment for `coroutine_desc* get_coroutine(processorCtx_t&)` is basically identical, with a chain of extra redundant updates of `CS => processorCtx_t`
-    * we get each combo of these resolutions as compatible, `compatible[3]` is the desirable one
-    
-    * 4 alternatives for `&this->runner`, 1 for `CtxInvokeCoroutine`
-      * no inferred parameters so far; breadth-first approach might already be top-level?
-        * likely not, doesn't account for function calls below
-    * 4 candidates for `CtxStart`:
-      * for each, `expr.function.var` is `FunctionDecl @0x30917d0` at line 39
-      * for each, `expr.inferParams` is:
-        ```
-        {
-          [6987] => void main(processorCtx_t&) inferParams = {}
-          [6988] => forall( is_thread(GC) ) coroutine_desc* get_coroutine(GC&) inferParams = {} !!
-          [6991] => void main(processorCtx_t&) inferParams = {}
-          [6992] => forall( is_thread(GC) ) coroutine_desc* get_coroutine(GC&) inferParams = {} !!
-        }
-        ```
-      1. `cost = (0,1,0,0,1,1)` 
-         `env = { [ 0_CS, 6_CIC, 7_GC, 8_GC ] => processorCtx_t, [ 4_T ] => processor }`
-      2. `cost = (0,1,0,0,1,1)`
-      3. `cost = (0,1,0,0,0,1)`
-         `env = { [ 0_CS, 6_CIC, 41_GC, 42_GC ] => ?, [ 5_T ] => ? }`
-      4. `cost = (0,1,0,0,1,1)`
-    * 4 candidates for `CtxStart` in reference impl:
-      * for each, `expr.function.var` is `FunctionDecl @303b7d0` at line 39
-      * odd that the costs diverge, even accounting for the different format
-      1. `cost = (0,1,1,1)`
-         ```
-         expr.inferParams = {
-           [6987] => void main(processorCtx_t&) inferParams = {}
-           [6988] => coroutine_desc* get_coroutine(processorCtx_t&) inferParams = {}
-           [6991] => void main(processorCtx_t&) inferParams = {}
-           [6992] => coroutine_desc* get_coroutine(processorCtx_t&) inferParams = {}
-         }
-         ```
-      2. `cost = (0,0,0,0)`
-         ```
-         expr.inferParams = {
-           [6987] => void main(processorCtx_t&) inferParams = {}
-           [6988] => coroutine_desc* get_coroutine(processorCtx_t&) inferParams = {}
-           [6991] => void main(processorCtx_t&) inferParams = {}
-           [6992] => coroutine_desc* get_coroutine(processorCtx_t&) inferParams = {}
-         }
-         ```
-      3. `cost = (0,0,0,0)`
-      4. `cost = (0,0,0,0)`
 
 ## 3-21 Aug 2018 ##
 * Vacation

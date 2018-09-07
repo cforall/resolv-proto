@@ -48,12 +48,14 @@ public:
 	typedef typename Scope::const_reference const_reference;
 	typedef typename Scope::pointer pointer;
 	typedef typename Scope::const_pointer const_pointer;
+	typedef typename Scope::iterator inner_iterator;
+	typedef typename Scope::const_iterator inner_const_iterator;
 
 	class iterator : public std::iterator< std::bidirectional_iterator_tag,
 	                                       value_type > {
 	friend class ScopedMap;
 	friend class const_iterator;
-		typedef typename ScopedMap::Scope::iterator wrapped_iterator;
+		typedef typename ScopedMap::inner_iterator wrapped_iterator;
 		typedef typename ScopedMap::ScopeList scope_list;
 		typedef typename scope_list::size_type size_type;
 
@@ -127,8 +129,8 @@ public:
 	class const_iterator : public std::iterator< std::bidirectional_iterator_tag,
 	                                             value_type > {
 	friend class ScopedMap;
-		typedef typename ScopedMap::Scope::iterator wrapped_iterator;
-		typedef typename ScopedMap::Scope::const_iterator wrapped_const_iterator;
+		typedef typename ScopedMap::inner_iterator wrapped_iterator;
+		typedef typename ScopedMap::inner_const_iterator wrapped_const_iterator;
 		typedef typename ScopedMap::ScopeList scope_list;
 		typedef typename scope_list::size_type size_type;
 
@@ -232,7 +234,7 @@ public:
 	/// Finds the given key in the outermost scope it occurs; returns end() for none such
 	iterator find( const Key &key ) {
 		for ( size_type i = scopes.size() - 1; ; --i ) {
-			typename Scope::iterator val = scopes[i].find( key );
+			inner_iterator val = scopes[i].find( key );
 			if ( val != scopes[i].end() ) return iterator( scopes, val, i );
 			if ( i == 0 ) break;
 		}
@@ -244,7 +246,7 @@ public:
 
 	/// Finds the given key in the provided scope; returns end() for none such
 	iterator findAt( size_type scope, const Key& key ) {
-		typename Scope::iterator val = scopes[scope].find( key );
+		inner_iterator val = scopes[scope].find( key );
 		if ( val != scopes[scope].end() ) return iterator( scopes, val, scope );
 		return end();
 	}
@@ -256,7 +258,7 @@ public:
 	iterator findNext( const_iterator &it, const Key &key ) {
 		if ( it.level == 0 ) return end();
 		for ( size_type i = it.level - 1; ; --i ) {
-			typename Scope::iterator val = scopes[i].find( key );
+			inner_iterator val = scopes[i].find( key );
 			if ( val != scopes[i].end() ) return iterator( scopes, val, i );
 			if ( i == 0 ) break;
 		}
@@ -266,21 +268,31 @@ public:
 			return const_iterator( const_cast< ScopedMap< Key, Value >* >(this)->findNext( it, key ) );
 	}
 
-	// /// Finds the given key in all scopes where it appears; returns empty set if none
-	// Output<Value> findAll( const Key& key ) {
-	// 	Output< Value > found;
-	// 	for ( size_type i = scopes.size() - 1; ; --i ) {
-	// 		typename Scope::iterator val = scopes[i].find( key );
-	// 		if ( val != scopes[i].end() ) { found.insert( val->second ); }
-	// 		if ( i == 0 ) break;
-	// 	}
-	// 	return found;
-	// }
+	/// Finds the given key in all scopes where it appears; returns vector of all references from 
+	/// outermost scope inward, empty vector if none such
+	std::vector<inner_iterator> findAll( const Key& key ) {
+		std::vector<inner_iterator> found;
+		for ( size_type i = scopes.size() - 1; ; --i ) {
+			inner_iterator val = scopes[i].find( key );
+			if ( val != scopes[i].end() ) { found.emplace_back( val ); }
+			if ( i == 0 ) break;
+		}
+		return found;
+	}
+	std::vector<inner_const_iterator> findAll( const Key& key ) const {
+		std::vector<inner_const_iterator> found;
+		for ( size_type i = scopes.size() - 1; ; --i ) {
+			inner_const_iterator val = scopes[i].find( key );
+			if ( val != scopes[i].end() ) { found.emplace_back( val ); }
+			if ( i == 0 ) break;
+		}
+		return found;
+	}
 
 	/// Inserts the given key-value pair into the outermost scope
 	template< typename value_type_t >
 	std::pair< iterator, bool > insert( value_type_t&& value ) {
-		std::pair< typename Scope::iterator, bool > res = scopes.back().insert( std::forward<value_type_t>( value ) );
+		std::pair< inner_iterator, bool > res = scopes.back().insert( std::forward<value_type_t>( value ) );
 		return std::make_pair( iterator(scopes, std::move( res.first ), scopes.size()-1), std::move( res.second ) );
 	}
 
@@ -296,7 +308,7 @@ public:
 
 	template< typename value_type_t >
 	std::pair< iterator, bool > insertAt( size_type scope, value_type_t&& value ) {
-		std::pair< typename Scope::iterator, bool > res = scopes.at(scope).insert( std::forward<value_type_t>( value ) );
+		std::pair< inner_iterator, bool > res = scopes.at(scope).insert( std::forward<value_type_t>( value ) );
 		return std::make_pair( iterator(scopes, std::move( res.first ), scope), std::move( res.second ) );
 	}
 
