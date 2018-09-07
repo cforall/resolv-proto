@@ -1,4 +1,8 @@
+
 [Void / (1,2,1,-1,0)] bsearch( minus-int( 3 3 ) => 2 #ptr<2> )
+
 [Void / (0,2,1,-1,1)] bsearch( minus-int( 3 3 ) => 4 #ptr<4> )
+
 [Void / (1,0,0,0,0)] msearch-short( minus-int( 3 3 ) => 2 #ptr<2> )
+
 [Void / (0,0,0,0,1)] msearch-long( minus-int( 3 3 ) => 4 #ptr<4> )

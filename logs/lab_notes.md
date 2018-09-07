@@ -1,4 +1,4 @@
-## 4-6 Sep 2018 ##
+## 4-7 Sep 2018 ##
 * Start on adding lexical scopes to resolver
   * Variable shadowing is an issue -- maybe I can just not put the shadowed variables in the new scope, using a ScopedMap for the manglenames in the cfa-cc end
   * Maybe have a "next scope" iterator at the end of each scope?

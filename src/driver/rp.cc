@@ -19,14 +19,7 @@ long ms_between(std::clock_t start, std::clock_t end) {
 
 int main(int argc, char **argv) {
 	Args args{argc, argv};
-	// FuncTable funcs;
-	// List<Expr> exprs;
-	// CanonicalTypeMap types;
 	std::ostream& out = args.out();
-	
-	// if ( ! parse_input( args.in(), funcs, exprs, types, args ) ) return 1;
-	
-	// ConversionGraph conversions = make_conversions( types );
 	
 	ValidEffect on_valid = []( const Expr* e, const Interpretation* i ) {};
 	InvalidEffect on_invalid = []( const Expr* e ) {};
@@ -40,19 +33,19 @@ int main(int argc, char **argv) {
 		if ( args.quiet() ) break;
 
 		on_invalid = [&out]( const Expr* e ) {
-			out << "ERROR: no valid resolution for " << *e << std::endl;
+			out << "\nERROR: no valid resolution for " << *e << std::endl;
 		};
 
 		if ( args.testing() ) {
 			on_ambiguous = [&out]( const Expr* e, List<Interpretation>::const_iterator i, 
 					List<Interpretation>::const_iterator end ) {
-				out << "ERROR: ambiguous resolution for " << *e << std::endl;
+				out << "\nERROR: ambiguous resolution for " << *e << std::endl;
 			};
 		} else {
 			on_ambiguous = [&out]( const Expr* e, List<Interpretation>::const_iterator i, 
 					List<Interpretation>::const_iterator end ) {
-				out << "ERROR: ambiguous resolution for " << *e << "\n"
-					<< "       candidates are:\n";
+				out << "\nERROR: ambiguous resolution for " << *e << "\n"
+					<< "       candidates are:";
 
 				for(; i != end; ++i) {
 					out << "\n";
@@ -63,7 +56,7 @@ int main(int argc, char **argv) {
 		}
 
 		on_unbound = [&out]( const Expr* e, const std::vector<TypeClass>& cs ) {
-			out << "ERROR: unbound type variables in " << *e << ":";
+			out << "\nERROR: unbound type variables in " << *e << ":";
 			for ( const TypeClass& c : cs ) { out << ' ' << c; }
 			out << std::endl;
 		};
@@ -94,6 +87,7 @@ int main(int argc, char **argv) {
 		// empty valid effect is correct in this case
 	} else if ( args.testing() ) {
 		on_valid = [&out]( const Expr* e, const Interpretation* i ) {
+			out << "\n";
 			i->write( out, ASTNode::Print::Concise );
 			out << std::endl;
 		};
@@ -106,7 +100,7 @@ int main(int argc, char **argv) {
 		}
 	} else {
 		on_valid = [&out]( const Expr* e, const Interpretation* i ) {
-			out << *i << std::endl;
+			out << "\n" << *i << std::endl;
 		};
 	}
 
@@ -118,7 +112,7 @@ int main(int argc, char **argv) {
 
 	if ( args.bench() ) {
 		// num_decls,num_exprs,runtime(ms)
-		out << resolver.n_funcs << "," << resolver.n_exprs << "," << ms_between(start, end) << std::endl;
+		out << "\n" << resolver.n_funcs << "," << resolver.n_exprs << "," << ms_between(start, end) << std::endl;
 	}
 	
 	collect();
