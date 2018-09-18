@@ -24,11 +24,15 @@
 bool parse_name(char const *&token, std::string& ret) {
 	const char *end = token;
 	
-	if ( 'a' <= *end && *end <= 'z' ) ++end;
+	if ( ('a' <= *end && *end <= 'z') 
+	     || '_' == *end
+		 || '$' == *end  ) ++end;
 	else return false;
 	
-	while ( ('a' <= *end && *end <= 'z') 
-	        || ('0' <= *end && *end <= '9') ) ++end;
+	while ( ('A' <= *end && *end <= 'Z')
+		    || ('a' <= *end && *end <= 'z') 
+	        || ('0' <= *end && *end <= '9')
+			|| '_' == *end ) ++end;
 	
 	ret.assign( token, (end-token) );
 	
@@ -47,7 +51,8 @@ bool parse_named_type(char const *&token, std::string& ret) {
 
 	if ( ('A' <= *end && *end <= 'Z')
 	     || ('a' <= *end && *end <= 'z')
-		 || '_' == *end ) ++end;
+		 || '_' == *end
+		 || '$' == *end ) ++end;
 	else return false;
 
 	while ( ('A' <= *end && *end <= 'Z')
@@ -70,8 +75,10 @@ bool parse_poly_type(char const *&token, std::string& ret) {
 	if ( 'A' <= *end && *end <= 'Z' ) ++end;
 	else return false;
 
-	while ( ('a' <= *end && *end <= 'z') 
-	        || ('0' <= *end && *end <= '9') ) ++end;
+	while ( ('A' <= *end && *end <= 'Z')
+		    || ('a' <= *end && *end <= 'z') 
+	        || ('0' <= *end && *end <= '9')
+			|| '_' == *end ) ++end;
 	
 	ret.assign( token, (end-token) );
 

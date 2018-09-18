@@ -22,12 +22,12 @@ class Resolver;
 /// type_assertion := "|" (<type>" ")* <name> (" "<type>)*
 /// resolv_expr := <subexpr> NL+
 /// subexpr := <conc_type> | <named_type> | <name> " (" (" "<subexpr>)* " )"
-/// name := [a-z][a-z0-9]*
+/// name := [a-z_$][A-Za-z_0-9]*
 /// tag := <name>
 /// type := <conc_type> | <named_type> | <poly_type>
 /// conc_type := "-"?[0-9]+
-/// named_type := "#"[A-Za-z_][A-Za-z_0-9]*("<" <type> (" "<type>)* ">")?
-/// poly_type := [A-Z][a-z0-9]*
+/// named_type := "#"[A-Za-z_$][A-Za-z_0-9]*("<" <type> (" "<type>)* ">")?
+/// poly_type := [A-Z][A-Za-z_0-9]*
 /// NL := "\n" | "//" . ~ "\n" 
 ///
 /// Semantically, types are given numeric identifiers, and also stand in for 
