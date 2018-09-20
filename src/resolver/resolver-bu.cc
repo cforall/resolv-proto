@@ -333,8 +333,8 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env& env,
 
 		// find all candidates with this name
 		Funcs withName = funcs.findAll( nameExpr->name() );
-		for ( const auto& it : funcs ) {
-			for ( const Decl* decl : it.second ) {
+		for ( const auto& it : withName ) {
+			for ( const Decl* decl : it->second ) {
 				results.push_back( 
 					new Interpretation{ new VarExpr{ decl }, copy(env), Cost::zero() } );
 			}

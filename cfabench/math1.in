@@ -16,10 +16,6 @@ T $seq X T
 #$2<6 6> div 6 6
 #$2<8 8> div 8 8
 #$2<T T> div T T | T $assign T T | $constructor T | $constructor T T | $destructor T | T $divide T T | T $modulus T T
-#$ptr<#$fn<#$ptr<1> #$ptr<#__cfaabi_ehm__base_exception_t>>> $field_msg #__cfaabi_ehm__base_exception_t_vtable
-#$ptr<#$fn<#void #$2<#$ptr<#__cfaabi_ehm__base_exception_t> #$ptr<#__cfaabi_ehm__base_exception_t>>>> $field_copy #__cfaabi_ehm__base_exception_t_vtable
-#$ptr<#$fn<#void #$ptr<#__cfaabi_ehm__base_exception_t>>> $field_free #__cfaabi_ehm__base_exception_t_vtable
-#$ptr<#$fn<0 #$ptr<#__cfaabi_ehm__base_exception_t>>> $field_handler #__cfaabi_ehm__try_resume_node
 #$ptr<#__cfa__parent_vtable> $field_parent #__cfa__parent_vtable
 #$ptr<#__cfaabi_ehm__base_exception_t_vtable> $field_parent #__cfaabi_ehm__base_exception_t_vtable
 #$ptr<#__cfaabi_ehm__base_exception_t_vtable> $field_virtual_table #__cfaabi_ehm__base_exception_t
@@ -62,7 +58,7 @@ T $seq X T
 #$ptr<1> $field_sepCur #ofstream
 #$ptr<1> $field_separator #ofstream
 #$ptr<1> $field_tupleSeparator #ofstream
-#$ptr<1> __PRETTY_FUNCTION__
+#$ptr<1> &__PRETTY_FUNCTION__
 #$ptr<1> __builtin_FILE
 #$ptr<1> __builtin_FUNCTION
 #$ptr<1> __builtin___stpcpy_chk #$ptr<1> #$ptr<1> 9
@@ -105,32 +101,27 @@ T $seq X T
 #$ptr<DT> $preincr #$ptr<DT>
 #$ptr<DT> $subassign #$ptr<DT> 8
 #$ptr<DT> $subtract #$ptr<DT> 8
-#$ptr<FT> $assign #$ptr<FT> #$ptr<FT>
-#$ptr<FT> $assign #$ptr<FT> 6
 #Duration $assign #Duration #Duration
 #Time $assign #Time #Time
 #_Istream_cstrC $assign #_Istream_cstrC #_Istream_cstrC
 #_Istream_cstrC cstr #$ptr<1> 6
 #_Istream_cstrUC $assign #_Istream_cstrUC #_Istream_cstrUC
 #_Istream_cstrUC cstr #$ptr<1>
-#__cfaabi_ehm__base_exception_t_vtable ___cfaabi_ehm__base_exception_t_vtable_instance
+#__cfaabi_ehm__base_exception_t_vtable &___cfaabi_ehm__base_exception_t_vtable_instance
 #exception $assign #exception #exception
 #ifstream $assign #ifstream #ifstream
+#ifstream &sin
 #ifstream read #ifstream #$ptr<1> 9
-#ifstream sin
 #ifstream ungetc #ifstream 1
 #ofstream $assign #ofstream #ofstream
-#ofstream serr
-#ofstream sout
+#ofstream &serr
+#ofstream &sout
 #ofstream write #ofstream #$ptr<1> 9
 $constructor #$ptr<#void>
 $constructor #$ptr<#void> #$ptr<DT>
 $constructor #$ptr<DT>
 $constructor #$ptr<DT> #$ptr<DT>
 $constructor #$ptr<DT> 6
-$constructor #$ptr<FT>
-$constructor #$ptr<FT> #$ptr<FT>
-$constructor #$ptr<FT> 6
 $constructor #Duration
 $constructor #Duration #Duration
 $constructor #Duration 6
@@ -215,7 +206,6 @@ $constructor 9
 $constructor 9 9
 $destructor #$ptr<#void>
 $destructor #$ptr<DT>
-$destructor #$ptr<FT>
 $destructor #Duration
 $destructor #Time
 $destructor #_Istream_cstrC
@@ -2162,7 +2152,6 @@ $destructor 9
 6 $divassign 6 6
 6 $divide 6 6
 6 $equal #$ptr<DT> #$ptr<DT>
-6 $equal #$ptr<FT> #$ptr<FT>
 6 $equal 0 0
 6 $equal 10 10
 6 $equal 11 11
@@ -2251,7 +2240,6 @@ $destructor 9
 6 $lessequal 8 8
 6 $lessequal 9 9
 6 $lognot #$ptr<DT>
-6 $lognot #$ptr<FT>
 6 $lognot 0
 6 $lognot 10
 6 $lognot 11
@@ -2276,7 +2264,6 @@ $destructor 9
 6 $multassign 6 6
 6 $multiply 6 6
 6 $notequal #$ptr<DT> #$ptr<DT>
-6 $notequal #$ptr<FT> #$ptr<FT>
 6 $notequal 0 0
 6 $notequal 10 10
 6 $notequal 11 11
@@ -2309,12 +2296,19 @@ $destructor 9
 6 $subtract 6 6
 6 $unaryminus 6
 6 $unaryplus 6
-6 _IEEE_
-6 _ISOC_
-6 _LIB_VERSION
-6 _POSIX_
-6 _SVID_
-6 _XOPEN_
+6 &_IEEE_
+6 &_ISOC_
+6 &_LIB_VERSION
+6 &_POSIX_
+6 &_SVID_
+6 &_XOPEN_
+6 &fP_INFINITE
+6 &fP_NAN
+6 &fP_NORMAL
+6 &fP_SUBNORMAL
+6 &fP_ZERO
+6 &sepSize
+6 &signgam
 6 __atomic_add_fetch #$ptr<6> 6 6
 6 __atomic_add_fetch_4 #$ptr<6> 6 6
 6 __atomic_and_fetch #$ptr<6> 6 6
@@ -2537,14 +2531,9 @@ $destructor 9
 6 __sync_xor_and_fetch #$ptr<6> 6
 6 __sync_xor_and_fetch_4 #$ptr<6> 6
 6 abs 6
-6 atexit #$ptr<#$fn<#void #void>>
+6 atexit [ : ]
 6 eof #ifstream
 6 eof Istype
-6 fP_INFINITE
-6 fP_NAN
-6 fP_NORMAL
-6 fP_SUBNORMAL
-6 fP_ZERO
 6 fail #ifstream
 6 fail #ofstream
 6 fail Istype
@@ -2572,8 +2561,6 @@ $destructor 9
 6 main
 6 matherr #$ptr<#exception>
 6 printf #$ptr<1>
-6 sepSize
-6 signgam
 7 $add 7 7
 7 $addassign 7 7
 7 $assign 7 7
@@ -2775,8 +2762,6 @@ DT $deref #$ptr<DT>
 DT $index #$ptr<DT> 8
 DT $index 8 #$ptr<DT>
 Elt_type $deref Iterator_type
-FT $deref #$ptr<FT>
-Istype $bitor Istype #$ptr<#$fn<#$ref<Istype> #$ref<Istype>>> | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
 Istype $bitor Istype #_Istream_cstrC | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
 Istype $bitor Istype #_Istream_cstrUC | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
 Istype $bitor Istype 0 | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
@@ -2798,6 +2783,7 @@ Istype $bitor Istype 7 | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | c
 Istype $bitor Istype 8 | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
 Istype $bitor Istype 9 | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
 Istype $bitor Istype T | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
+Istype $bitor Istype [ #$ref<Istype> : #$ref<Istype> ] | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
 Istype endl Istype | 6 fail Istype | 6 eof Istype | open Istype #$ptr<1> | close Istype | Istype read Istype #$ptr<1> 9 | Istype ungetc Istype 1 | 6 fmt Istype #$ptr<1>
 Istype read Istype #$ptr<1> 9
 Istype ungetc Istype 1
@@ -2805,7 +2791,6 @@ Iterator_type $predecr Iterator_type
 Iterator_type $preincr Iterator_type
 Iterator_type begin Collection_type
 Iterator_type end Collection_type
-Ostype $bitor Ostype #$ptr<#$fn<#$ref<Ostype> #$ref<Ostype>>> | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
 Ostype $bitor Ostype #$ptr<#void> | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
 Ostype $bitor Ostype #$ptr<1> | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
 Ostype $bitor Ostype #Duration | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
@@ -2830,6 +2815,7 @@ Ostype $bitor Ostype 8 | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 |
 Ostype $bitor Ostype 9 | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
 Ostype $bitor Ostype T
 Ostype $bitor Ostype T Params | T $assign T T | $constructor T | $constructor T T | $destructor T | Ostype $bitor Ostype T | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1> | Ostype $bitor Ostype Params
+Ostype $bitor Ostype [ #$ref<Ostype> : #$ref<Ostype> ] | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
 Ostype endl Ostype | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
 Ostype sep Ostype | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
 Ostype sepDisable Ostype | 0 sepPrt Ostype | sepReset Ostype | sepReset Ostype 0 | #$ptr<1> sepGetCur Ostype | sepSetCur Ostype #$ptr<1> | 0 getNL Ostype | setNL Ostype 0 | sepOn Ostype | sepOff Ostype | 0 sepDisable Ostype | 0 sepEnable Ostype | #$ptr<1> sepGet Ostype | sepSet Ostype #$ptr<1> | #$ptr<1> sepGetTuple Ostype | sepSetTuple Ostype #$ptr<1> | 6 fail Ostype | 6 flush Ostype | open Ostype #$ptr<1> #$ptr<1> | close Ostype | Ostype write Ostype #$ptr<1> 9 | 6 fmt Ostype #$ptr<1>
@@ -2850,6 +2836,10 @@ T max T T | T $assign T T | $constructor T | $constructor T T | $destructor T | 
 T min T T | T $assign T T | $constructor T | $constructor T T | $destructor T | 6 $less T T
 T smoothstep T T T | T $assign T T | $constructor T | $constructor T T | $destructor T | $constructor T 6 | T clamp T T T | T $subtract T T | T $multiply T T | T $divide T T
 T step T T | T $assign T T | $constructor T | $constructor T T | $destructor T | $constructor T 6 | $constructor T 6 | 6 $less T T
+[ #$ptr<1> : #$ptr<#__cfaabi_ehm__base_exception_t> ] $field_msg #__cfaabi_ehm__base_exception_t_vtable
+[ 0 : #$ptr<#__cfaabi_ehm__base_exception_t> ] $field_handler #__cfaabi_ehm__try_resume_node
+[ : #$ptr<#__cfaabi_ehm__base_exception_t> #$ptr<#__cfaabi_ehm__base_exception_t> ] $field_copy #__cfaabi_ehm__base_exception_t_vtable
+[ : #$ptr<#__cfaabi_ehm__base_exception_t> ] $field_free #__cfaabi_ehm__base_exception_t_vtable
 __atomic_clear #$ptr<0> 6
 __atomic_clear #$ptr<10> 6
 __atomic_clear #$ptr<11> 6
@@ -2966,8 +2956,8 @@ __cfaabi_ehm__rethrow_terminate
 __cfaabi_ehm__throw_resume #$ptr<#__cfaabi_ehm__base_exception_t>
 __cfaabi_ehm__throw_terminate #$ptr<#__cfaabi_ehm__base_exception_t>
 __cfaabi_ehm__try_resume_cleanup #$ptr<#__cfaabi_ehm__try_resume_node>
-__cfaabi_ehm__try_resume_setup #$ptr<#__cfaabi_ehm__try_resume_node> #$ptr<#$fn<0 #$ptr<#__cfaabi_ehm__base_exception_t>>>
-__cfaabi_ehm__try_terminate #$ptr<#$fn<#void #void>> #$ptr<#$fn<#void #$2<6 #$ptr<#__cfaabi_ehm__base_exception_t>>>> #$ptr<#$fn<6 #$ptr<#__cfaabi_ehm__base_exception_t>>>
+__cfaabi_ehm__try_resume_setup #$ptr<#__cfaabi_ehm__try_resume_node> [ 0 : #$ptr<#__cfaabi_ehm__base_exception_t> ]
+__cfaabi_ehm__try_terminate [ : ] [ : 6 #$ptr<#__cfaabi_ehm__base_exception_t> ] [ 6 : #$ptr<#__cfaabi_ehm__base_exception_t> ]
 __cyg_profile_func_enter #$ptr<#void> #$ptr<#void>
 __cyg_profile_func_exit #$ptr<#void> #$ptr<#void>
 __sync_lock_release #$ptr<10>
@@ -3001,8 +2991,8 @@ close Istype
 close Ostype
 exit 6
 exit 6 #$ptr<1>
-for_each Iterator_type Iterator_type #$ptr<#$fn<#void Elt_type>> | Iterator_type $assign Iterator_type Iterator_type | $constructor Iterator_type | $constructor Iterator_type Iterator_type | $destructor Iterator_type | Elt_type $assign Elt_type Elt_type | $constructor Elt_type | $constructor Elt_type Elt_type | $destructor Elt_type | Iterator_type $preincr Iterator_type | Iterator_type $predecr Iterator_type | 6 $equal Iterator_type Iterator_type | 6 $notequal Iterator_type Iterator_type | Elt_type $deref Iterator_type
-for_each_reverse Iterator_type Iterator_type #$ptr<#$fn<#void Elt_type>> | Iterator_type $assign Iterator_type Iterator_type | $constructor Iterator_type | $constructor Iterator_type Iterator_type | $destructor Iterator_type | Elt_type $assign Elt_type Elt_type | $constructor Elt_type | $constructor Elt_type Elt_type | $destructor Elt_type | Iterator_type $preincr Iterator_type | Iterator_type $predecr Iterator_type | 6 $equal Iterator_type Iterator_type | 6 $notequal Iterator_type Iterator_type | Elt_type $deref Iterator_type
+for_each Iterator_type Iterator_type [ : Elt_type ] | Iterator_type $assign Iterator_type Iterator_type | $constructor Iterator_type | $constructor Iterator_type Iterator_type | $destructor Iterator_type | Elt_type $assign Elt_type Elt_type | $constructor Elt_type | $constructor Elt_type Elt_type | $destructor Elt_type | Iterator_type $preincr Iterator_type | Iterator_type $predecr Iterator_type | 6 $equal Iterator_type Iterator_type | 6 $notequal Iterator_type Iterator_type | Elt_type $deref Iterator_type
+for_each_reverse Iterator_type Iterator_type [ : Elt_type ] | Iterator_type $assign Iterator_type Iterator_type | $constructor Iterator_type | $constructor Iterator_type Iterator_type | $destructor Iterator_type | Elt_type $assign Elt_type Elt_type | $constructor Elt_type | $constructor Elt_type Elt_type | $destructor Elt_type | Iterator_type $preincr Iterator_type | Iterator_type $predecr Iterator_type | 6 $equal Iterator_type Iterator_type | 6 $notequal Iterator_type Iterator_type | Elt_type $deref Iterator_type
 free #$ptr<#void>
 open #ifstream #$ptr<1>
 open #ifstream #$ptr<1> #$ptr<1>
@@ -3041,133 +3031,133 @@ $constructor( fP_NORMAL() 6 )
 $constructor( _IEEE_()  )
 {
 	#T $addassign #T 6
-	#T $anon
-	#T $rtn_addassign
-	#T $rtn_preincr
-	#T x
-	6 $anon
+	#T &$anon
+	#T &$rtn_addassign
+	#T &$rtn_preincr
+	#T &x
+	6 &$anon
 
 	%%
 
-	$constructor( #T $addassign( x() 6 ) )
+	$constructor( #T $addassign( &x 6 ) )
 }
 {
 	#T $addassign #T 6
-	#T $anon
-	#T $rtn_addassign
-	#T $rtn_postincr
-	#T tmp
-	#T x
+	#T &$anon
+	#T &$rtn_addassign
+	#T &$rtn_postincr
+	#T &tmp
+	#T &x
 	$constructor #T #T
 	$destructor #T
-	6 $anon
+	6 &$anon
 
 	%%
 
 	$constructor( tmp() )
-	$constructor( #T x() )
+	$constructor( #T &x )
 	$destructor( #T )
-	x()
-	$addassign( x() 6 )
-	$constructor( #T tmp() )
+	&x
+	$addassign( &x 6 )
+	$constructor( #T &tmp )
 }
 {
-	#T $anon
-	#T $rtn_predecr
-	#T $rtn_subassign
 	#T $subassign #T 6
-	#T x
-	6 $anon
+	#T &$anon
+	#T &$rtn_predecr
+	#T &$rtn_subassign
+	#T &x
+	6 &$anon
 
 	%%
 
-	$constructor( #T $subassign( x() 6 ) )
+	$constructor( #T $subassign( &x 6 ) )
 }
 {
-	#T $anon
-	#T $rtn_postdecr
-	#T $rtn_subassign
 	#T $subassign #T 6
-	#T tmp
-	#T x
+	#T &$anon
+	#T &$rtn_postdecr
+	#T &$rtn_subassign
+	#T &tmp
+	#T &x
 	$constructor #T #T
 	$destructor #T
-	6 $anon
+	6 &$anon
 
 	%%
 
 	$constructor( tmp() )
-	$constructor( #T x() )
+	$constructor( #T &x )
 	$destructor( #T )
-	x()
-	$subassign( x() 6 )
-	$constructor( #T tmp() )
+	&x
+	$subassign( &x 6 )
+	$constructor( #T &tmp )
 }
 {
-	12 $rtn_exponential
-	12 x
-	12 y
+	12 &$rtn_exponential
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 powf( x() y() ) )
+	$constructor( 12 powf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	13 $rtn_exponential
-	13 x
-	13 y
+	13 &$rtn_exponential
+	13 &x
+	13 &y
 
 	%%
 
-	$constructor( 13 pow( x() y() ) )
+	$constructor( 13 pow( &x &y ) )
 	$constructor( 13  )
 }
 {
-	14 $rtn_exponential
-	14 x
-	14 y
+	14 &$rtn_exponential
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 powl( x() y() ) )
+	$constructor( 14 powl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_exponential
-	15 x
-	15 y
+	15 &$rtn_exponential
+	15 &x
+	15 &y
 
 	%%
 
-	$constructor( 15 cpowf( x() y() ) )
+	$constructor( 15 cpowf( &x &y ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_exponential
-	16 x
-	16 y
+	16 &$rtn_exponential
+	16 &x
+	16 &y
 
 	%%
 
-	$constructor( 16 cpow( x() y() ) )
+	$constructor( 16 cpow( &x &y ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_exponential
-	17 x
-	17 y
+	17 &$rtn_exponential
+	17 &x
+	17 &y
 
 	%%
 
-	$constructor( 17 cpowl( x() y() ) )
+	$constructor( 17 cpowl( &x &y ) )
 	$constructor( 17  )
 }
 {
-	8 $rtn_exponential
-	8 ep
-	8 op
-	9 y
+	8 &$rtn_exponential
+	8 &ep
+	8 &op
+	9 &y
 
 	%%
 
@@ -3175,34 +3165,34 @@ $constructor( _IEEE_()  )
 	$constructor( 8 6 )
 	$constructor( 8  )
 	6
-	$constructor( 8 $shiftleft( ep() $subtract( y() 6 ) ) )
+	$constructor( 8 $shiftleft( &ep $subtract( &y 6 ) ) )
 	$constructor( 8  )
 	$constructor( op() 6 )
 	6
 	6
-	$shiftrightassign( y() 6 )
+	$shiftrightassign( &y 6 )
 	6
-	$multassign( op() ep() )
-	$multassign( ep() ep() )
-	$constructor( 8 $multiply( ep() op() ) )
+	$multassign( &op &ep )
+	$multassign( &ep &ep )
+	$constructor( 8 $multiply( &ep &op ) )
 	$constructor( 8  )
 }
 {
-	#T $anon
 	#T $assign #T #T
 	#T $multiply #T #T
-	#T $rtn_assign
-	#T $rtn_exponential
-	#T $rtn_multiply
-	#T ep
-	#T op
-	#T this
+	#T &$anon
+	#T &$rtn_assign
+	#T &$rtn_exponential
+	#T &$rtn_multiply
+	#T &ep
+	#T &op
+	#T &this
 	$constructor #T
 	$constructor #T #T
 	$constructor #T 6
 	$destructor #T
-	6 $anon
-	9 y
+	6 &$anon
+	9 &y
 
 	%%
 
@@ -3214,18 +3204,18 @@ $constructor( _IEEE_()  )
 	$destructor( #T )
 	6
 	6
-	$shiftrightassign( y() 6 )
+	$shiftrightassign( &y 6 )
 	6
-	$assign( op() $multiply( op() ep() ) )
-	$assign( ep() $multiply( ep() ep() ) )
-	$constructor( #T $multiply( ep() op() ) )
+	$assign( &op $multiply( &op &ep ) )
+	$assign( &ep $multiply( &ep &ep ) )
+	$constructor( #T $multiply( &ep &op ) )
 	$constructor( #T  )
 }
 {
-	9 $rtn_exponential
-	9 ep
-	9 op
-	9 y
+	9 &$rtn_exponential
+	9 &ep
+	9 &op
+	9 &y
 
 	%%
 
@@ -3233,98 +3223,98 @@ $constructor( _IEEE_()  )
 	$constructor( 9 6 )
 	$constructor( 9  )
 	6
-	$constructor( 9 $shiftleft( ep() $subtract( y() 6 ) ) )
+	$constructor( 9 $shiftleft( &ep $subtract( &y 6 ) ) )
 	$constructor( 9  )
 	$constructor( op() 6 )
 	6
 	6
-	$shiftrightassign( y() 6 )
+	$shiftrightassign( &y 6 )
 	6
-	$multassign( op() ep() )
-	$multassign( ep() ep() )
-	$constructor( 9 $multiply( ep() op() ) )
+	$multassign( &op &ep )
+	$multassign( &ep &ep )
+	$constructor( 9 $multiply( &ep &op ) )
 	$constructor( 9  )
 }
 {
-	13 $rtn_exponential
-	8 x
-	8 y
+	13 &$rtn_exponential
+	8 &x
+	8 &y
 
 	%%
 
 	6
 	$constructor( 13 13 )
 	$constructor( 13  )
-	$constructor( 13 $divide( 13 $exponential( x() 7 ) ) )
+	$constructor( 13 $divide( 13 $exponential( &x 7 ) ) )
 	$constructor( 13  )
 }
 {
-	8 $rtn_expassign
-	8 x
-	9 y
+	8 &$rtn_expassign
+	8 &x
+	9 &y
 
 	%%
 
-	$assign( x() $exponential( x() y() ) )
-	$constructor( 8 x() )
+	$assign( &x $exponential( &x &y ) )
+	$constructor( 8 &x )
 	$constructor( 8  )
 }
 {
-	9 $rtn_expassign
-	9 x
-	9 y
+	9 &$rtn_expassign
+	9 &x
+	9 &y
 
 	%%
 
-	$assign( x() $exponential( x() y() ) )
-	$constructor( 9 x() )
+	$assign( &x $exponential( &x &y ) )
+	$constructor( 9 &x )
 	$constructor( 9  )
 }
 {
-	6 $rtn_expassign
-	6 x
-	9 y
+	6 &$rtn_expassign
+	6 &x
+	9 &y
 
 	%%
 
-	$assign( x() $exponential( x() y() ) )
-	$constructor( 6 x() )
+	$assign( &x $exponential( &x &y ) )
+	$constructor( 6 &x )
 	$constructor( 6  )
 }
 {
-	7 $rtn_expassign
-	7 x
-	9 y
+	7 &$rtn_expassign
+	7 &x
+	9 &y
 
 	%%
 
-	$assign( x() $exponential( x() y() ) )
-	$constructor( 7 x() )
+	$assign( &x $exponential( &x &y ) )
+	$constructor( 7 &x )
 	$constructor( 7  )
 }
 {
-	#_Istream_cstrUC _dst
+	#_Istream_cstrUC &_dst
 
 	%%
 
 }
 {
-	#_Istream_cstrUC _dst
-	#_Istream_cstrUC _src
+	#_Istream_cstrUC &_dst
+	#_Istream_cstrUC &_src
 
 	%%
 
 }
 {
-	#_Istream_cstrUC _dst
+	#_Istream_cstrUC &_dst
 
 	%%
 
 }
 {
-	#_Istream_cstrUC _dst
-	#_Istream_cstrUC _ret
-	#_Istream_cstrUC _src
+	#_Istream_cstrUC &_dst
+	#_Istream_cstrUC &_ret
+	#_Istream_cstrUC &_src
 
 	%%
 
@@ -3332,35 +3322,35 @@ $constructor( _IEEE_()  )
 	$constructor( #_Istream_cstrUC  )
 }
 {
-	#$ptr<1> s
-	#_Istream_cstrUC _dst
+	#$ptr<1> &s
+	#_Istream_cstrUC &_dst
 
 	%%
 
 }
 {
-	#_Istream_cstrC _dst
+	#_Istream_cstrC &_dst
 
 	%%
 
 }
 {
-	#_Istream_cstrC _dst
-	#_Istream_cstrC _src
+	#_Istream_cstrC &_dst
+	#_Istream_cstrC &_src
 
 	%%
 
 }
 {
-	#_Istream_cstrC _dst
+	#_Istream_cstrC &_dst
 
 	%%
 
 }
 {
-	#_Istream_cstrC _dst
-	#_Istream_cstrC _ret
-	#_Istream_cstrC _src
+	#_Istream_cstrC &_dst
+	#_Istream_cstrC &_ret
+	#_Istream_cstrC &_src
 
 	%%
 
@@ -3368,43 +3358,43 @@ $constructor( _IEEE_()  )
 	$constructor( #_Istream_cstrC  )
 }
 {
-	#$ptr<1> s
-	#_Istream_cstrC _dst
+	#$ptr<1> &s
+	#_Istream_cstrC &_dst
 
 	%%
 
 }
 {
-	#$ptr<1> s
-	#_Istream_cstrC _dst
-	6 size
+	#$ptr<1> &s
+	#_Istream_cstrC &_dst
+	6 &size
 
 	%%
 
 }
 {
-	#Duration _dst
+	#Duration &_dst
 
 	%%
 
 }
 {
-	#Duration _dst
-	#Duration _src
+	#Duration &_dst
+	#Duration &_src
 
 	%%
 
 }
 {
-	#Duration _dst
+	#Duration &_dst
 
 	%%
 
 }
 {
-	#Duration _dst
-	#Duration _ret
-	#Duration _src
+	#Duration &_dst
+	#Duration &_ret
+	#Duration &_src
 
 	%%
 
@@ -3412,49 +3402,49 @@ $constructor( _IEEE_()  )
 	$constructor( #Duration  )
 }
 {
-	#Duration _dst
-	8 tv
+	#Duration &_dst
+	8 &tv
 
 	%%
 
 }
 {
-	#Duration dur
+	#Duration &dur
 
 	%%
 
-	$assign( tv() 6 )
+	$assign( &tv 6 )
 }
 {
-	#Duration dur
+	#Duration &dur
 
 	%%
 
-	$assign( tv() 6 )
+	$assign( &tv 6 )
 }
 {
-	#Time _dst
-
-	%%
-
-}
-{
-	#Time _dst
-	#Time _src
+	#Time &_dst
 
 	%%
 
 }
 {
-	#Time _dst
+	#Time &_dst
+	#Time &_src
 
 	%%
 
 }
 {
-	#Time _dst
-	#Time _ret
-	#Time _src
+	#Time &_dst
+
+	%%
+
+}
+{
+	#Time &_dst
+	#Time &_ret
+	#Time &_src
 
 	%%
 
@@ -3462,49 +3452,49 @@ $constructor( _IEEE_()  )
 	$constructor( #Time  )
 }
 {
-	#Time _dst
-	9 tv
+	#Time &_dst
+	9 &tv
 
 	%%
 
 }
 {
-	#Time time
+	#Time &time
 
 	%%
 
-	$assign( tv() 6 )
+	$assign( &tv 6 )
 }
 {
-	#Time time
+	#Time &time
 
 	%%
 
-	$assign( tv() 6 )
+	$assign( &tv 6 )
 }
 {
-	6 _dst
-
-	%%
-
-}
-{
-	6 _dst
-	6 _src
+	6 &_dst
 
 	%%
 
 }
 {
-	6 _dst
+	6 &_dst
+	6 &_src
 
 	%%
 
 }
 {
-	6 _dst
-	6 _ret
-	6 _src
+	6 &_dst
+
+	%%
+
+}
+{
+	6 &_dst
+	6 &_ret
+	6 &_src
 
 	%%
 
@@ -3512,9 +3502,9 @@ $constructor( _IEEE_()  )
 	$constructor( 6  )
 }
 {
-	#ofstream _dst
-	6 _index0
-	6 _index1
+	#ofstream &_dst
+	6 &_index0
+	6 &_index1
 
 	%%
 
@@ -3524,10 +3514,10 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#ofstream _dst
-	#ofstream _src
-	6 _index2
-	6 _index3
+	#ofstream &_dst
+	#ofstream &_src
+	6 &_index2
+	6 &_index3
 
 	%%
 
@@ -3537,9 +3527,9 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#ofstream _dst
-	6 _index4
-	6 _index5
+	#ofstream &_dst
+	6 &_index4
+	6 &_index5
 
 	%%
 
@@ -3547,11 +3537,11 @@ $constructor( _IEEE_()  )
 	$constructor( _index5()  )
 }
 {
-	#ofstream _dst
-	#ofstream _ret
-	#ofstream _src
-	6 _index6
-	6 _index7
+	#ofstream &_dst
+	#ofstream &_ret
+	#ofstream &_src
+	6 &_index6
+	6 &_index7
 
 	%%
 
@@ -3563,10 +3553,10 @@ $constructor( _IEEE_()  )
 	$constructor( #ofstream  )
 }
 {
-	#$ptr<#void> file
-	#ofstream _dst
-	6 _index8
-	6 _index9
+	#$ptr<#void> &file
+	#ofstream &_dst
+	6 &_index8
+	6 &_index9
 
 	%%
 
@@ -3576,11 +3566,11 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#$ptr<#void> file
-	#ofstream _dst
-	0 sepDefault
-	6 _index10
-	6 _index11
+	#$ptr<#void> &file
+	#ofstream &_dst
+	0 &sepDefault
+	6 &_index10
+	6 &_index11
 
 	%%
 
@@ -3590,12 +3580,12 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#$ptr<#void> file
-	#ofstream _dst
-	0 sepDefault
-	0 sepOnOff
-	6 _index12
-	6 _index13
+	#$ptr<#void> &file
+	#ofstream &_dst
+	0 &sepDefault
+	0 &sepOnOff
+	6 &_index12
+	6 &_index13
 
 	%%
 
@@ -3605,13 +3595,13 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#$ptr<#void> file
-	#ofstream _dst
-	0 sawNL
-	0 sepDefault
-	0 sepOnOff
-	6 _index14
-	6 _index15
+	#$ptr<#void> &file
+	#ofstream &_dst
+	0 &sawNL
+	0 &sepDefault
+	0 &sepOnOff
+	6 &_index14
+	6 &_index15
 
 	%%
 
@@ -3621,14 +3611,14 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#$ptr<#void> file
-	#$ptr<1> sepCur
-	#ofstream _dst
-	0 sawNL
-	0 sepDefault
-	0 sepOnOff
-	6 _index16
-	6 _index17
+	#$ptr<#void> &file
+	#$ptr<1> &sepCur
+	#ofstream &_dst
+	0 &sawNL
+	0 &sepDefault
+	0 &sepOnOff
+	6 &_index16
+	6 &_index17
 
 	%%
 
@@ -3638,15 +3628,15 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#$ptr<#void> file
-	#$ptr<1> sepCur
-	#$ptr<1> separator
-	#ofstream _dst
-	0 sawNL
-	0 sepDefault
-	0 sepOnOff
-	6 _index18
-	6 _index19
+	#$ptr<#void> &file
+	#$ptr<1> &sepCur
+	#$ptr<1> &separator
+	#ofstream &_dst
+	0 &sawNL
+	0 &sepDefault
+	0 &sepOnOff
+	6 &_index18
+	6 &_index19
 
 	%%
 
@@ -3656,16 +3646,16 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#$ptr<#void> file
-	#$ptr<1> sepCur
-	#$ptr<1> separator
-	#$ptr<1> tupleSeparator
-	#ofstream _dst
-	0 sawNL
-	0 sepDefault
-	0 sepOnOff
-	6 _index20
-	6 _index21
+	#$ptr<#void> &file
+	#$ptr<1> &sepCur
+	#$ptr<1> &separator
+	#$ptr<1> &tupleSeparator
+	#ofstream &_dst
+	0 &sawNL
+	0 &sepDefault
+	0 &sepOnOff
+	6 &_index20
+	6 &_index21
 
 	%%
 
@@ -3675,28 +3665,28 @@ $constructor( _IEEE_()  )
 	6
 }
 {
-	#ifstream _dst
+	#ifstream &_dst
 
 	%%
 
 }
 {
-	#ifstream _dst
-	#ifstream _src
+	#ifstream &_dst
+	#ifstream &_src
 
 	%%
 
 }
 {
-	#ifstream _dst
+	#ifstream &_dst
 
 	%%
 
 }
 {
-	#ifstream _dst
-	#ifstream _ret
-	#ifstream _src
+	#ifstream &_dst
+	#ifstream &_ret
+	#ifstream &_src
 
 	%%
 
@@ -3704,64 +3694,35 @@ $constructor( _IEEE_()  )
 	$constructor( #ifstream  )
 }
 {
-	#$ptr<#void> file
-	#ifstream _dst
+	#$ptr<#void> &file
+	#ifstream &_dst
 
 	%%
 
 }
 {
-	6 _dst
+	6 &_dst
 
 	%%
 
 }
 {
-	6 _dst
-	6 _src
+	6 &_dst
+	6 &_src
 
 	%%
 
 }
 {
-	6 _dst
+	6 &_dst
 
 	%%
 
 }
 {
-	6 _dst
-	6 _ret
-	6 _src
-
-	%%
-
-	$constructor( 6 6 )
-	$constructor( 6  )
-}
-{
-	6 _dst
-
-	%%
-
-}
-{
-	6 _dst
-	6 _src
-
-	%%
-
-}
-{
-	6 _dst
-
-	%%
-
-}
-{
-	6 _dst
-	6 _ret
-	6 _src
+	6 &_dst
+	6 &_ret
+	6 &_src
 
 	%%
 
@@ -3769,28 +3730,57 @@ $constructor( _IEEE_()  )
 	$constructor( 6  )
 }
 {
-	#exception _dst
+	6 &_dst
 
 	%%
 
 }
 {
-	#exception _dst
-	#exception _src
+	6 &_dst
+	6 &_src
 
 	%%
 
 }
 {
-	#exception _dst
+	6 &_dst
 
 	%%
 
 }
 {
-	#exception _dst
-	#exception _ret
-	#exception _src
+	6 &_dst
+	6 &_ret
+	6 &_src
+
+	%%
+
+	$constructor( 6 6 )
+	$constructor( 6  )
+}
+{
+	#exception &_dst
+
+	%%
+
+}
+{
+	#exception &_dst
+	#exception &_src
+
+	%%
+
+}
+{
+	#exception &_dst
+
+	%%
+
+}
+{
+	#exception &_dst
+	#exception &_ret
+	#exception &_src
 
 	%%
 
@@ -3798,1835 +3788,1835 @@ $constructor( _IEEE_()  )
 	$constructor( #exception  )
 }
 {
-	#exception _dst
-	6 type
+	#exception &_dst
+	6 &type
 
 	%%
 
 }
 {
-	#$ptr<1> name
-	#exception _dst
-	6 type
+	#$ptr<1> &name
+	#exception &_dst
+	6 &type
 
 	%%
 
 }
 {
-	#$ptr<1> name
-	#exception _dst
-	13 arg1
-	6 type
+	#$ptr<1> &name
+	#exception &_dst
+	13 &arg1
+	6 &type
 
 	%%
 
 }
 {
-	#$ptr<1> name
-	#exception _dst
-	13 arg1
-	13 arg2
-	6 type
+	#$ptr<1> &name
+	#exception &_dst
+	13 &arg1
+	13 &arg2
+	6 &type
 
 	%%
 
 }
 {
-	#$ptr<1> name
-	#exception _dst
-	13 arg1
-	13 arg2
-	13 retval
-	6 type
+	#$ptr<1> &name
+	#exception &_dst
+	13 &arg1
+	13 &arg2
+	13 &retval
+	6 &type
 
 	%%
 
 }
 {
-	12 $rtn_modulus
-	12 x
-	12 y
+	12 &$rtn_modulus
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 fmodf( x() y() ) )
+	$constructor( 12 fmodf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	12 $rtn_fmod
-	12 x
-	12 y
+	12 &$rtn_fmod
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 fmodf( x() y() ) )
+	$constructor( 12 fmodf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	13 $rtn_modulus
-	13 x
-	13 y
+	13 &$rtn_modulus
+	13 &x
+	13 &y
 
 	%%
 
-	$constructor( 13 fmod( x() y() ) )
+	$constructor( 13 fmod( &x &y ) )
 	$constructor( 13  )
 }
 {
-	14 $rtn_modulus
-	14 x
-	14 y
+	14 &$rtn_modulus
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 fmodl( x() y() ) )
+	$constructor( 14 fmodl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	14 $rtn_fmod
-	14 x
-	14 y
+	14 &$rtn_fmod
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 fmodl( x() y() ) )
+	$constructor( 14 fmodl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_remainder
-	12 x
-	12 y
+	12 &$rtn_remainder
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 remainderf( x() y() ) )
+	$constructor( 12 remainderf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_remainder
-	14 x
-	14 y
+	14 &$rtn_remainder
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 remainderl( x() y() ) )
+	$constructor( 14 remainderl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	#$ptr<6> quo
-	12 $rtn_remquo
-	12 x
-	12 y
+	#$ptr<6> &quo
+	12 &$rtn_remquo
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 remquof( x() y() quo() ) )
+	$constructor( 12 remquof( &x &y &quo ) )
 	$constructor( 12  )
 }
 {
-	#$ptr<6> quo
-	14 $rtn_remquo
-	14 x
-	14 y
+	#$ptr<6> &quo
+	14 &$rtn_remquo
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 remquol( x() y() quo() ) )
+	$constructor( 14 remquol( &x &y &quo ) )
 	$constructor( 14  )
 }
 {
-	#$2<6 12> $rtn_remquo
-	12 x
-	12 y
-	6 quo
+	#$2<6 12> &$rtn_remquo
+	12 &x
+	12 &y
+	6 &quo
 
 	%%
 
 	$constructor( $rtn_remquo() )
-	$assign( x() remquof( x() y() $addr( quo() ) ) )
-	$constructor( #$2<6 12> quo()x() )
+	$assign( &x remquof( &x &y $addr( &quo ) ) )
+	$constructor( #$2<6 12> &quo&x )
 	$constructor( #$2<6 12>  )
 }
 {
-	#$2<6 13> $rtn_remquo
-	13 x
-	13 y
-	6 quo
+	#$2<6 13> &$rtn_remquo
+	13 &x
+	13 &y
+	6 &quo
 
 	%%
 
 	$constructor( $rtn_remquo() )
-	$assign( x() remquo( x() y() $addr( quo() ) ) )
-	$constructor( #$2<6 13> quo()x() )
+	$assign( &x remquo( &x &y $addr( &quo ) ) )
+	$constructor( #$2<6 13> &quo&x )
 	$constructor( #$2<6 13>  )
 }
 {
-	#$2<6 14> $rtn_remquo
-	14 x
-	14 y
-	6 quo
+	#$2<6 14> &$rtn_remquo
+	14 &x
+	14 &y
+	6 &quo
 
 	%%
 
 	$constructor( $rtn_remquo() )
-	$assign( x() remquol( x() y() $addr( quo() ) ) )
-	$constructor( #$2<6 14> quo()x() )
+	$assign( &x remquol( &x &y $addr( &quo ) ) )
+	$constructor( #$2<6 14> &quo&x )
 	$constructor( #$2<6 14>  )
 }
 {
-	#$2<12 12> $rtn_div
-	12 x
-	12 y
+	#$2<12 12> &$rtn_div
+	12 &x
+	12 &y
 
 	%%
 
 	$constructor( $rtn_div() )
-	$assign( y() modff( $divide( x() y() ) $addr( x() ) ) )
-	$constructor( #$2<12 12> x()y() )
+	$assign( &y modff( $divide( &x &y ) $addr( &x ) ) )
+	$constructor( #$2<12 12> &x&y )
 	$constructor( #$2<12 12>  )
 }
 {
-	#$2<13 13> $rtn_div
-	13 x
-	13 y
+	#$2<13 13> &$rtn_div
+	13 &x
+	13 &y
 
 	%%
 
 	$constructor( $rtn_div() )
-	$assign( y() modf( $divide( x() y() ) $addr( x() ) ) )
-	$constructor( #$2<13 13> x()y() )
+	$assign( &y modf( $divide( &x &y ) $addr( &x ) ) )
+	$constructor( #$2<13 13> &x&y )
 	$constructor( #$2<13 13>  )
 }
 {
-	#$2<14 14> $rtn_div
-	14 x
-	14 y
+	#$2<14 14> &$rtn_div
+	14 &x
+	14 &y
 
 	%%
 
 	$constructor( $rtn_div() )
-	$assign( y() modfl( $divide( x() y() ) $addr( x() ) ) )
-	$constructor( #$2<14 14> x()y() )
+	$assign( &y modfl( $divide( &x &y ) $addr( &x ) ) )
+	$constructor( #$2<14 14> &x&y )
 	$constructor( #$2<14 14>  )
 }
 {
-	12 $rtn_fma
-	12 x
-	12 y
-	12 z
+	12 &$rtn_fma
+	12 &x
+	12 &y
+	12 &z
 
 	%%
 
-	$constructor( 12 fmaf( x() y() z() ) )
+	$constructor( 12 fmaf( &x &y &z ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_fma
-	14 x
-	14 y
-	14 z
+	14 &$rtn_fma
+	14 &x
+	14 &y
+	14 &z
 
 	%%
 
-	$constructor( 14 fmal( x() y() z() ) )
+	$constructor( 14 fmal( &x &y &z ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_fdim
-	12 x
-	12 y
+	12 &$rtn_fdim
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 fdimf( x() y() ) )
+	$constructor( 12 fdimf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_fdim
-	14 x
-	14 y
+	14 &$rtn_fdim
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 fdiml( x() y() ) )
+	$constructor( 14 fdiml( &x &y ) )
 	$constructor( 14  )
 }
 {
-	#$ptr<1> tag
-	12 $rtn_nan
+	#$ptr<1> &tag
+	12 &$rtn_nan
 
 	%%
 
-	$constructor( 12 nanf( tag() ) )
+	$constructor( 12 nanf( &tag ) )
 	$constructor( 12  )
 }
 {
-	#$ptr<1> tag
-	14 $rtn_nan
+	#$ptr<1> &tag
+	14 &$rtn_nan
 
 	%%
 
-	$constructor( 14 nanl( tag() ) )
+	$constructor( 14 nanl( &tag ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_exp
-	12 x
+	12 &$rtn_exp
+	12 &x
 
 	%%
 
-	$constructor( 12 expf( x() ) )
+	$constructor( 12 expf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_exp
-	14 x
+	14 &$rtn_exp
+	14 &x
 
 	%%
 
-	$constructor( 14 expl( x() ) )
+	$constructor( 14 expl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_exp
-	15 x
+	15 &$rtn_exp
+	15 &x
 
 	%%
 
-	$constructor( 15 cexpf( x() ) )
+	$constructor( 15 cexpf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_exp
-	16 x
+	16 &$rtn_exp
+	16 &x
 
 	%%
 
-	$constructor( 16 cexp( x() ) )
+	$constructor( 16 cexp( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_exp
-	17 x
+	17 &$rtn_exp
+	17 &x
 
 	%%
 
-	$constructor( 17 cexpl( x() ) )
+	$constructor( 17 cexpl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_exp2
-	12 x
+	12 &$rtn_exp2
+	12 &x
 
 	%%
 
-	$constructor( 12 exp2f( x() ) )
+	$constructor( 12 exp2f( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_exp2
-	14 x
+	14 &$rtn_exp2
+	14 &x
 
 	%%
 
-	$constructor( 14 exp2l( x() ) )
+	$constructor( 14 exp2l( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_expm1
-	12 x
+	12 &$rtn_expm1
+	12 &x
 
 	%%
 
-	$constructor( 12 expm1f( x() ) )
+	$constructor( 12 expm1f( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_expm1
-	14 x
+	14 &$rtn_expm1
+	14 &x
 
 	%%
 
-	$constructor( 14 expm1l( x() ) )
+	$constructor( 14 expm1l( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_pow
-	12 x
-	12 y
+	12 &$rtn_pow
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 powf( x() y() ) )
+	$constructor( 12 powf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_pow
-	14 x
-	14 y
+	14 &$rtn_pow
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 powl( x() y() ) )
+	$constructor( 14 powl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_pow
-	15 x
-	15 y
+	15 &$rtn_pow
+	15 &x
+	15 &y
 
 	%%
 
-	$constructor( 15 cpowf( x() y() ) )
+	$constructor( 15 cpowf( &x &y ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_pow
-	16 x
-	16 y
+	16 &$rtn_pow
+	16 &x
+	16 &y
 
 	%%
 
-	$constructor( 16 cpow( x() y() ) )
+	$constructor( 16 cpow( &x &y ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_pow
-	17 x
-	17 y
+	17 &$rtn_pow
+	17 &x
+	17 &y
 
 	%%
 
-	$constructor( 17 cpowl( x() y() ) )
+	$constructor( 17 cpowl( &x &y ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_log
-	12 x
+	12 &$rtn_log
+	12 &x
 
 	%%
 
-	$constructor( 12 logf( x() ) )
+	$constructor( 12 logf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_log
-	14 x
+	14 &$rtn_log
+	14 &x
 
 	%%
 
-	$constructor( 14 logl( x() ) )
+	$constructor( 14 logl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_log
-	15 x
+	15 &$rtn_log
+	15 &x
 
 	%%
 
-	$constructor( 15 clogf( x() ) )
+	$constructor( 15 clogf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_log
-	16 x
+	16 &$rtn_log
+	16 &x
 
 	%%
 
-	$constructor( 16 clog( x() ) )
+	$constructor( 16 clog( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_log
-	17 x
+	17 &$rtn_log
+	17 &x
 
 	%%
 
-	$constructor( 17 clogl( x() ) )
+	$constructor( 17 clogl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_log2
-	12 x
+	12 &$rtn_log2
+	12 &x
 
 	%%
 
-	$constructor( 12 log2f( x() ) )
+	$constructor( 12 log2f( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_log2
-	14 x
+	14 &$rtn_log2
+	14 &x
 
 	%%
 
-	$constructor( 14 log2l( x() ) )
+	$constructor( 14 log2l( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_log10
-	12 x
+	12 &$rtn_log10
+	12 &x
 
 	%%
 
-	$constructor( 12 log10f( x() ) )
+	$constructor( 12 log10f( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_log10
-	14 x
+	14 &$rtn_log10
+	14 &x
 
 	%%
 
-	$constructor( 14 log10l( x() ) )
+	$constructor( 14 log10l( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_log1p
-	12 x
+	12 &$rtn_log1p
+	12 &x
 
 	%%
 
-	$constructor( 12 log1pf( x() ) )
+	$constructor( 12 log1pf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_log1p
-	14 x
+	14 &$rtn_log1p
+	14 &x
 
 	%%
 
-	$constructor( 14 log1pl( x() ) )
+	$constructor( 14 log1pl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 x
-	6 $rtn_ilogb
+	12 &x
+	6 &$rtn_ilogb
 
 	%%
 
-	$constructor( 6 ilogbf( x() ) )
+	$constructor( 6 ilogbf( &x ) )
 	$constructor( 6  )
 }
 {
-	14 x
-	6 $rtn_ilogb
+	14 &x
+	6 &$rtn_ilogb
 
 	%%
 
-	$constructor( 6 ilogbl( x() ) )
+	$constructor( 6 ilogbl( &x ) )
 	$constructor( 6  )
 }
 {
-	12 $rtn_logb
-	12 x
+	12 &$rtn_logb
+	12 &x
 
 	%%
 
-	$constructor( 12 logbf( x() ) )
+	$constructor( 12 logbf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_logb
-	14 x
+	14 &$rtn_logb
+	14 &x
 
 	%%
 
-	$constructor( 14 logbl( x() ) )
+	$constructor( 14 logbl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_sqrt
-	12 x
+	12 &$rtn_sqrt
+	12 &x
 
 	%%
 
-	$constructor( 12 sqrtf( x() ) )
+	$constructor( 12 sqrtf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_sqrt
-	14 x
+	14 &$rtn_sqrt
+	14 &x
 
 	%%
 
-	$constructor( 14 sqrtl( x() ) )
+	$constructor( 14 sqrtl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_sqrt
-	15 x
+	15 &$rtn_sqrt
+	15 &x
 
 	%%
 
-	$constructor( 15 csqrtf( x() ) )
+	$constructor( 15 csqrtf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_sqrt
-	16 x
+	16 &$rtn_sqrt
+	16 &x
 
 	%%
 
-	$constructor( 16 csqrt( x() ) )
+	$constructor( 16 csqrt( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_sqrt
-	17 x
+	17 &$rtn_sqrt
+	17 &x
 
 	%%
 
-	$constructor( 17 csqrtl( x() ) )
+	$constructor( 17 csqrtl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_cbrt
-	12 x
+	12 &$rtn_cbrt
+	12 &x
 
 	%%
 
-	$constructor( 12 cbrtf( x() ) )
+	$constructor( 12 cbrtf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_cbrt
-	14 x
+	14 &$rtn_cbrt
+	14 &x
 
 	%%
 
-	$constructor( 14 cbrtl( x() ) )
+	$constructor( 14 cbrtl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_hypot
-	12 x
-	12 y
+	12 &$rtn_hypot
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 hypotf( x() y() ) )
+	$constructor( 12 hypotf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_hypot
-	14 x
-	14 y
+	14 &$rtn_hypot
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 hypotl( x() y() ) )
+	$constructor( 14 hypotl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_sin
-	12 x
+	12 &$rtn_sin
+	12 &x
 
 	%%
 
-	$constructor( 12 sinf( x() ) )
+	$constructor( 12 sinf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_sin
-	14 x
+	14 &$rtn_sin
+	14 &x
 
 	%%
 
-	$constructor( 14 sinl( x() ) )
+	$constructor( 14 sinl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_sin
-	15 x
+	15 &$rtn_sin
+	15 &x
 
 	%%
 
-	$constructor( 15 csinf( x() ) )
+	$constructor( 15 csinf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_sin
-	16 x
+	16 &$rtn_sin
+	16 &x
 
 	%%
 
-	$constructor( 16 csin( x() ) )
+	$constructor( 16 csin( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_sin
-	17 x
+	17 &$rtn_sin
+	17 &x
 
 	%%
 
-	$constructor( 17 csinl( x() ) )
+	$constructor( 17 csinl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_cos
-	12 x
+	12 &$rtn_cos
+	12 &x
 
 	%%
 
-	$constructor( 12 cosf( x() ) )
+	$constructor( 12 cosf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_cos
-	14 x
+	14 &$rtn_cos
+	14 &x
 
 	%%
 
-	$constructor( 14 cosl( x() ) )
+	$constructor( 14 cosl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_cos
-	15 x
+	15 &$rtn_cos
+	15 &x
 
 	%%
 
-	$constructor( 15 ccosf( x() ) )
+	$constructor( 15 ccosf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_cos
-	16 x
+	16 &$rtn_cos
+	16 &x
 
 	%%
 
-	$constructor( 16 ccos( x() ) )
+	$constructor( 16 ccos( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_cos
-	17 x
+	17 &$rtn_cos
+	17 &x
 
 	%%
 
-	$constructor( 17 ccosl( x() ) )
+	$constructor( 17 ccosl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_tan
-	12 x
+	12 &$rtn_tan
+	12 &x
 
 	%%
 
-	$constructor( 12 tanf( x() ) )
+	$constructor( 12 tanf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_tan
-	14 x
+	14 &$rtn_tan
+	14 &x
 
 	%%
 
-	$constructor( 14 tanl( x() ) )
+	$constructor( 14 tanl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_tan
-	15 x
+	15 &$rtn_tan
+	15 &x
 
 	%%
 
-	$constructor( 15 ctanf( x() ) )
+	$constructor( 15 ctanf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_tan
-	16 x
+	16 &$rtn_tan
+	16 &x
 
 	%%
 
-	$constructor( 16 ctan( x() ) )
+	$constructor( 16 ctan( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_tan
-	17 x
+	17 &$rtn_tan
+	17 &x
 
 	%%
 
-	$constructor( 17 ctanl( x() ) )
+	$constructor( 17 ctanl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_asin
-	12 x
+	12 &$rtn_asin
+	12 &x
 
 	%%
 
-	$constructor( 12 asinf( x() ) )
+	$constructor( 12 asinf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_asin
-	14 x
+	14 &$rtn_asin
+	14 &x
 
 	%%
 
-	$constructor( 14 asinl( x() ) )
+	$constructor( 14 asinl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_asin
-	15 x
+	15 &$rtn_asin
+	15 &x
 
 	%%
 
-	$constructor( 15 casinf( x() ) )
+	$constructor( 15 casinf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_asin
-	16 x
+	16 &$rtn_asin
+	16 &x
 
 	%%
 
-	$constructor( 16 casin( x() ) )
+	$constructor( 16 casin( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_asin
-	17 x
+	17 &$rtn_asin
+	17 &x
 
 	%%
 
-	$constructor( 17 casinl( x() ) )
+	$constructor( 17 casinl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_acos
-	12 x
+	12 &$rtn_acos
+	12 &x
 
 	%%
 
-	$constructor( 12 acosf( x() ) )
+	$constructor( 12 acosf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_acos
-	14 x
+	14 &$rtn_acos
+	14 &x
 
 	%%
 
-	$constructor( 14 acosl( x() ) )
+	$constructor( 14 acosl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_acos
-	15 x
+	15 &$rtn_acos
+	15 &x
 
 	%%
 
-	$constructor( 15 cacosf( x() ) )
+	$constructor( 15 cacosf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_acos
-	16 x
+	16 &$rtn_acos
+	16 &x
 
 	%%
 
-	$constructor( 16 cacos( x() ) )
+	$constructor( 16 cacos( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_acos
-	17 x
+	17 &$rtn_acos
+	17 &x
 
 	%%
 
-	$constructor( 17 cacosl( x() ) )
+	$constructor( 17 cacosl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_atan
-	12 x
+	12 &$rtn_atan
+	12 &x
 
 	%%
 
-	$constructor( 12 atanf( x() ) )
+	$constructor( 12 atanf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_atan
-	14 x
+	14 &$rtn_atan
+	14 &x
 
 	%%
 
-	$constructor( 14 atanl( x() ) )
+	$constructor( 14 atanl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_atan
-	15 x
+	15 &$rtn_atan
+	15 &x
 
 	%%
 
-	$constructor( 15 catanf( x() ) )
+	$constructor( 15 catanf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_atan
-	16 x
+	16 &$rtn_atan
+	16 &x
 
 	%%
 
-	$constructor( 16 catan( x() ) )
+	$constructor( 16 catan( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_atan
-	17 x
+	17 &$rtn_atan
+	17 &x
 
 	%%
 
-	$constructor( 17 catanl( x() ) )
+	$constructor( 17 catanl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_atan2
-	12 x
-	12 y
+	12 &$rtn_atan2
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 atan2f( x() y() ) )
+	$constructor( 12 atan2f( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_atan2
-	14 x
-	14 y
+	14 &$rtn_atan2
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 atan2l( x() y() ) )
+	$constructor( 14 atan2l( &x &y ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_atan
-	12 x
-	12 y
+	12 &$rtn_atan
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 atan2f( x() y() ) )
+	$constructor( 12 atan2f( &x &y ) )
 	$constructor( 12  )
 }
 {
-	13 $rtn_atan
-	13 x
-	13 y
+	13 &$rtn_atan
+	13 &x
+	13 &y
 
 	%%
 
-	$constructor( 13 atan2( x() y() ) )
+	$constructor( 13 atan2( &x &y ) )
 	$constructor( 13  )
 }
 {
-	14 $rtn_atan
-	14 x
-	14 y
+	14 &$rtn_atan
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 atan2l( x() y() ) )
+	$constructor( 14 atan2l( &x &y ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_sinh
-	12 x
+	12 &$rtn_sinh
+	12 &x
 
 	%%
 
-	$constructor( 12 sinhf( x() ) )
+	$constructor( 12 sinhf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_sinh
-	14 x
+	14 &$rtn_sinh
+	14 &x
 
 	%%
 
-	$constructor( 14 sinhl( x() ) )
+	$constructor( 14 sinhl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_sinh
-	15 x
+	15 &$rtn_sinh
+	15 &x
 
 	%%
 
-	$constructor( 15 csinhf( x() ) )
+	$constructor( 15 csinhf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_sinh
-	16 x
+	16 &$rtn_sinh
+	16 &x
 
 	%%
 
-	$constructor( 16 csinh( x() ) )
+	$constructor( 16 csinh( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_sinh
-	17 x
+	17 &$rtn_sinh
+	17 &x
 
 	%%
 
-	$constructor( 17 csinhl( x() ) )
+	$constructor( 17 csinhl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_cosh
-	12 x
+	12 &$rtn_cosh
+	12 &x
 
 	%%
 
-	$constructor( 12 coshf( x() ) )
+	$constructor( 12 coshf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_cosh
-	14 x
+	14 &$rtn_cosh
+	14 &x
 
 	%%
 
-	$constructor( 14 coshl( x() ) )
+	$constructor( 14 coshl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_cosh
-	15 x
+	15 &$rtn_cosh
+	15 &x
 
 	%%
 
-	$constructor( 15 ccoshf( x() ) )
+	$constructor( 15 ccoshf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_cosh
-	16 x
+	16 &$rtn_cosh
+	16 &x
 
 	%%
 
-	$constructor( 16 ccosh( x() ) )
+	$constructor( 16 ccosh( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_cosh
-	17 x
+	17 &$rtn_cosh
+	17 &x
 
 	%%
 
-	$constructor( 17 ccoshl( x() ) )
+	$constructor( 17 ccoshl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_tanh
-	12 x
+	12 &$rtn_tanh
+	12 &x
 
 	%%
 
-	$constructor( 12 tanhf( x() ) )
+	$constructor( 12 tanhf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_tanh
-	14 x
+	14 &$rtn_tanh
+	14 &x
 
 	%%
 
-	$constructor( 14 tanhl( x() ) )
+	$constructor( 14 tanhl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_tanh
-	15 x
+	15 &$rtn_tanh
+	15 &x
 
 	%%
 
-	$constructor( 15 ctanhf( x() ) )
+	$constructor( 15 ctanhf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_tanh
-	16 x
+	16 &$rtn_tanh
+	16 &x
 
 	%%
 
-	$constructor( 16 ctanh( x() ) )
+	$constructor( 16 ctanh( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_tanh
-	17 x
+	17 &$rtn_tanh
+	17 &x
 
 	%%
 
-	$constructor( 17 ctanhl( x() ) )
+	$constructor( 17 ctanhl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_asinh
-	12 x
+	12 &$rtn_asinh
+	12 &x
 
 	%%
 
-	$constructor( 12 asinhf( x() ) )
+	$constructor( 12 asinhf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_asinh
-	14 x
+	14 &$rtn_asinh
+	14 &x
 
 	%%
 
-	$constructor( 14 asinhl( x() ) )
+	$constructor( 14 asinhl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_asinh
-	15 x
+	15 &$rtn_asinh
+	15 &x
 
 	%%
 
-	$constructor( 15 casinhf( x() ) )
+	$constructor( 15 casinhf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_asinh
-	16 x
+	16 &$rtn_asinh
+	16 &x
 
 	%%
 
-	$constructor( 16 casinh( x() ) )
+	$constructor( 16 casinh( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_asinh
-	17 x
+	17 &$rtn_asinh
+	17 &x
 
 	%%
 
-	$constructor( 17 casinhl( x() ) )
+	$constructor( 17 casinhl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_acosh
-	12 x
+	12 &$rtn_acosh
+	12 &x
 
 	%%
 
-	$constructor( 12 acoshf( x() ) )
+	$constructor( 12 acoshf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_acosh
-	14 x
+	14 &$rtn_acosh
+	14 &x
 
 	%%
 
-	$constructor( 14 acoshl( x() ) )
+	$constructor( 14 acoshl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_acosh
-	15 x
+	15 &$rtn_acosh
+	15 &x
 
 	%%
 
-	$constructor( 15 cacoshf( x() ) )
+	$constructor( 15 cacoshf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_acosh
-	16 x
+	16 &$rtn_acosh
+	16 &x
 
 	%%
 
-	$constructor( 16 cacosh( x() ) )
+	$constructor( 16 cacosh( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_acosh
-	17 x
+	17 &$rtn_acosh
+	17 &x
 
 	%%
 
-	$constructor( 17 cacoshl( x() ) )
+	$constructor( 17 cacoshl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_atanh
-	12 x
+	12 &$rtn_atanh
+	12 &x
 
 	%%
 
-	$constructor( 12 atanhf( x() ) )
+	$constructor( 12 atanhf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_atanh
-	14 x
+	14 &$rtn_atanh
+	14 &x
 
 	%%
 
-	$constructor( 14 atanhl( x() ) )
+	$constructor( 14 atanhl( &x ) )
 	$constructor( 14  )
 }
 {
-	15 $rtn_atanh
-	15 x
+	15 &$rtn_atanh
+	15 &x
 
 	%%
 
-	$constructor( 15 catanhf( x() ) )
+	$constructor( 15 catanhf( &x ) )
 	$constructor( 15  )
 }
 {
-	16 $rtn_atanh
-	16 x
+	16 &$rtn_atanh
+	16 &x
 
 	%%
 
-	$constructor( 16 catanh( x() ) )
+	$constructor( 16 catanh( &x ) )
 	$constructor( 16  )
 }
 {
-	17 $rtn_atanh
-	17 x
+	17 &$rtn_atanh
+	17 &x
 
 	%%
 
-	$constructor( 17 catanhl( x() ) )
+	$constructor( 17 catanhl( &x ) )
 	$constructor( 17  )
 }
 {
-	12 $rtn_erf
-	12 x
+	12 &$rtn_erf
+	12 &x
 
 	%%
 
-	$constructor( 12 erff( x() ) )
+	$constructor( 12 erff( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_erf
-	14 x
+	14 &$rtn_erf
+	14 &x
 
 	%%
 
-	$constructor( 14 erfl( x() ) )
+	$constructor( 14 erfl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_erfc
-	12 x
+	12 &$rtn_erfc
+	12 &x
 
 	%%
 
-	$constructor( 12 erfcf( x() ) )
+	$constructor( 12 erfcf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_erfc
-	14 x
+	14 &$rtn_erfc
+	14 &x
 
 	%%
 
-	$constructor( 14 erfcl( x() ) )
+	$constructor( 14 erfcl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_lgamma
-	12 x
+	12 &$rtn_lgamma
+	12 &x
 
 	%%
 
-	$constructor( 12 lgammaf( x() ) )
+	$constructor( 12 lgammaf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_lgamma
-	14 x
+	14 &$rtn_lgamma
+	14 &x
 
 	%%
 
-	$constructor( 14 lgammal( x() ) )
+	$constructor( 14 lgammal( &x ) )
 	$constructor( 14  )
 }
 {
-	#$ptr<6> sign
-	12 $rtn_lgamma
-	12 x
+	#$ptr<6> &sign
+	12 &$rtn_lgamma
+	12 &x
 
 	%%
 
-	$constructor( 12 lgammaf_r( x() sign() ) )
+	$constructor( 12 lgammaf_r( &x &sign ) )
 	$constructor( 12  )
 }
 {
-	#$ptr<6> sign
-	13 $rtn_lgamma
-	13 x
+	#$ptr<6> &sign
+	13 &$rtn_lgamma
+	13 &x
 
 	%%
 
-	$constructor( 13 lgamma_r( x() sign() ) )
+	$constructor( 13 lgamma_r( &x &sign ) )
 	$constructor( 13  )
 }
 {
-	#$ptr<6> sign
-	14 $rtn_lgamma
-	14 x
+	#$ptr<6> &sign
+	14 &$rtn_lgamma
+	14 &x
 
 	%%
 
-	$constructor( 14 lgammal_r( x() sign() ) )
+	$constructor( 14 lgammal_r( &x &sign ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_tgamma
-	12 x
+	12 &$rtn_tgamma
+	12 &x
 
 	%%
 
-	$constructor( 12 tgammaf( x() ) )
+	$constructor( 12 tgammaf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_tgamma
-	14 x
+	14 &$rtn_tgamma
+	14 &x
 
 	%%
 
-	$constructor( 14 tgammal( x() ) )
+	$constructor( 14 tgammal( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_floor
-	12 x
+	12 &$rtn_floor
+	12 &x
 
 	%%
 
-	$constructor( 12 floorf( x() ) )
+	$constructor( 12 floorf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_floor
-	14 x
+	14 &$rtn_floor
+	14 &x
 
 	%%
 
-	$constructor( 14 floorl( x() ) )
+	$constructor( 14 floorl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_ceil
-	12 x
+	12 &$rtn_ceil
+	12 &x
 
 	%%
 
-	$constructor( 12 ceilf( x() ) )
+	$constructor( 12 ceilf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_ceil
-	14 x
+	14 &$rtn_ceil
+	14 &x
 
 	%%
 
-	$constructor( 14 ceill( x() ) )
+	$constructor( 14 ceill( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_trunc
-	12 x
+	12 &$rtn_trunc
+	12 &x
 
 	%%
 
-	$constructor( 12 truncf( x() ) )
+	$constructor( 12 truncf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_trunc
-	14 x
+	14 &$rtn_trunc
+	14 &x
 
 	%%
 
-	$constructor( 14 truncl( x() ) )
+	$constructor( 14 truncl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_rint
-	12 x
+	12 &$rtn_rint
+	12 &x
 
 	%%
 
-	$constructor( 12 rintf( x() ) )
+	$constructor( 12 rintf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_rint
-	14 x
+	14 &$rtn_rint
+	14 &x
 
 	%%
 
-	$constructor( 14 rintl( x() ) )
+	$constructor( 14 rintl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 x
-	8 $rtn_rint
+	12 &x
+	8 &$rtn_rint
 
 	%%
 
-	$constructor( 8 lrintf( x() ) )
+	$constructor( 8 lrintf( &x ) )
 	$constructor( 8  )
 }
 {
-	13 x
-	8 $rtn_rint
+	13 &x
+	8 &$rtn_rint
 
 	%%
 
-	$constructor( 8 lrint( x() ) )
+	$constructor( 8 lrint( &x ) )
 	$constructor( 8  )
 }
 {
-	14 x
-	8 $rtn_rint
+	14 &x
+	8 &$rtn_rint
 
 	%%
 
-	$constructor( 8 lrintl( x() ) )
+	$constructor( 8 lrintl( &x ) )
 	$constructor( 8  )
 }
 {
-	10 $rtn_rint
-	12 x
+	10 &$rtn_rint
+	12 &x
 
 	%%
 
-	$constructor( 10 llrintf( x() ) )
+	$constructor( 10 llrintf( &x ) )
 	$constructor( 10  )
 }
 {
-	10 $rtn_rint
-	13 x
+	10 &$rtn_rint
+	13 &x
 
 	%%
 
-	$constructor( 10 llrint( x() ) )
+	$constructor( 10 llrint( &x ) )
 	$constructor( 10  )
 }
 {
-	10 $rtn_rint
-	14 x
+	10 &$rtn_rint
+	14 &x
 
 	%%
 
-	$constructor( 10 llrintl( x() ) )
+	$constructor( 10 llrintl( &x ) )
 	$constructor( 10  )
 }
 {
-	12 x
-	8 $rtn_lrint
+	12 &x
+	8 &$rtn_lrint
 
 	%%
 
-	$constructor( 8 lrintf( x() ) )
+	$constructor( 8 lrintf( &x ) )
 	$constructor( 8  )
 }
 {
-	14 x
-	8 $rtn_lrint
+	14 &x
+	8 &$rtn_lrint
 
 	%%
 
-	$constructor( 8 lrintl( x() ) )
+	$constructor( 8 lrintl( &x ) )
 	$constructor( 8  )
 }
 {
-	10 $rtn_llrint
-	12 x
+	10 &$rtn_llrint
+	12 &x
 
 	%%
 
-	$constructor( 10 llrintf( x() ) )
+	$constructor( 10 llrintf( &x ) )
 	$constructor( 10  )
 }
 {
-	10 $rtn_llrint
-	14 x
+	10 &$rtn_llrint
+	14 &x
 
 	%%
 
-	$constructor( 10 llrintl( x() ) )
+	$constructor( 10 llrintl( &x ) )
 	$constructor( 10  )
 }
 {
-	12 $rtn_nearbyint
-	12 x
+	12 &$rtn_nearbyint
+	12 &x
 
 	%%
 
-	$constructor( 12 nearbyintf( x() ) )
+	$constructor( 12 nearbyintf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_nearbyint
-	14 x
+	14 &$rtn_nearbyint
+	14 &x
 
 	%%
 
-	$constructor( 14 nearbyintl( x() ) )
+	$constructor( 14 nearbyintl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_round
-	12 x
+	12 &$rtn_round
+	12 &x
 
 	%%
 
-	$constructor( 12 roundf( x() ) )
+	$constructor( 12 roundf( &x ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_round
-	14 x
+	14 &$rtn_round
+	14 &x
 
 	%%
 
-	$constructor( 14 roundl( x() ) )
+	$constructor( 14 roundl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 x
-	8 $rtn_round
+	12 &x
+	8 &$rtn_round
 
 	%%
 
-	$constructor( 8 lroundf( x() ) )
+	$constructor( 8 lroundf( &x ) )
 	$constructor( 8  )
 }
 {
-	13 x
-	8 $rtn_round
+	13 &x
+	8 &$rtn_round
 
 	%%
 
-	$constructor( 8 lround( x() ) )
+	$constructor( 8 lround( &x ) )
 	$constructor( 8  )
 }
 {
-	14 x
-	8 $rtn_round
+	14 &x
+	8 &$rtn_round
 
 	%%
 
-	$constructor( 8 lroundl( x() ) )
+	$constructor( 8 lroundl( &x ) )
 	$constructor( 8  )
 }
 {
-	10 $rtn_round
-	12 x
+	10 &$rtn_round
+	12 &x
 
 	%%
 
-	$constructor( 10 llroundf( x() ) )
+	$constructor( 10 llroundf( &x ) )
 	$constructor( 10  )
 }
 {
-	10 $rtn_round
-	13 x
+	10 &$rtn_round
+	13 &x
 
 	%%
 
-	$constructor( 10 llround( x() ) )
+	$constructor( 10 llround( &x ) )
 	$constructor( 10  )
 }
 {
-	10 $rtn_round
-	14 x
+	10 &$rtn_round
+	14 &x
 
 	%%
 
-	$constructor( 10 llroundl( x() ) )
+	$constructor( 10 llroundl( &x ) )
 	$constructor( 10  )
 }
 {
-	12 x
-	8 $rtn_lround
+	12 &x
+	8 &$rtn_lround
 
 	%%
 
-	$constructor( 8 lroundf( x() ) )
+	$constructor( 8 lroundf( &x ) )
 	$constructor( 8  )
 }
 {
-	14 x
-	8 $rtn_lround
+	14 &x
+	8 &$rtn_lround
 
 	%%
 
-	$constructor( 8 lroundl( x() ) )
+	$constructor( 8 lroundl( &x ) )
 	$constructor( 8  )
 }
 {
-	10 $rtn_llround
-	12 x
+	10 &$rtn_llround
+	12 &x
 
 	%%
 
-	$constructor( 10 llroundf( x() ) )
+	$constructor( 10 llroundf( &x ) )
 	$constructor( 10  )
 }
 {
-	10 $rtn_llround
-	14 x
+	10 &$rtn_llround
+	14 &x
 
 	%%
 
-	$constructor( 10 llroundl( x() ) )
+	$constructor( 10 llroundl( &x ) )
 	$constructor( 10  )
 }
 {
-	12 $rtn_copysign
-	12 x
-	12 y
+	12 &$rtn_copysign
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 copysignf( x() y() ) )
+	$constructor( 12 copysignf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_copysign
-	14 x
-	14 y
+	14 &$rtn_copysign
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 copysignl( x() y() ) )
+	$constructor( 14 copysignl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	#$ptr<6> ip
-	12 $rtn_frexp
-	12 x
+	#$ptr<6> &ip
+	12 &$rtn_frexp
+	12 &x
 
 	%%
 
-	$constructor( 12 frexpf( x() ip() ) )
+	$constructor( 12 frexpf( &x &ip ) )
 	$constructor( 12  )
 }
 {
-	#$ptr<6> ip
-	14 $rtn_frexp
-	14 x
+	#$ptr<6> &ip
+	14 &$rtn_frexp
+	14 &x
 
 	%%
 
-	$constructor( 14 frexpl( x() ip() ) )
+	$constructor( 14 frexpl( &x &ip ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_ldexp
-	12 x
-	6 exp2
+	12 &$rtn_ldexp
+	12 &x
+	6 &exp2
 
 	%%
 
-	$constructor( 12 ldexpf( x() exp2() ) )
+	$constructor( 12 ldexpf( &x &exp2 ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_ldexp
-	14 x
-	6 exp2
+	14 &$rtn_ldexp
+	14 &x
+	6 &exp2
 
 	%%
 
-	$constructor( 14 ldexpl( x() exp2() ) )
+	$constructor( 14 ldexpl( &x &exp2 ) )
 	$constructor( 14  )
 }
 {
-	#$2<12 12> $rtn_modf
-	12 i
-	12 x
+	#$2<12 12> &$rtn_modf
+	12 &i
+	12 &x
 
 	%%
 
 	$constructor( $rtn_modf() )
-	$assign( x() modff( x() $addr( i() ) ) )
-	$constructor( #$2<12 12> i()x() )
+	$assign( &x modff( &x $addr( &i ) ) )
+	$constructor( #$2<12 12> &i&x )
 	$constructor( #$2<12 12>  )
 }
 {
-	#$ptr<12> i
-	12 $rtn_modf
-	12 x
+	#$ptr<12> &i
+	12 &$rtn_modf
+	12 &x
 
 	%%
 
-	$constructor( 12 modff( x() i() ) )
+	$constructor( 12 modff( &x &i ) )
 	$constructor( 12  )
 }
 {
-	#$2<13 13> $rtn_modf
-	13 i
-	13 x
+	#$2<13 13> &$rtn_modf
+	13 &i
+	13 &x
 
 	%%
 
 	$constructor( $rtn_modf() )
-	$assign( x() modf( x() $addr( i() ) ) )
-	$constructor( #$2<13 13> i()x() )
+	$assign( &x modf( &x $addr( &i ) ) )
+	$constructor( #$2<13 13> &i&x )
 	$constructor( #$2<13 13>  )
 }
 {
-	#$2<14 14> $rtn_modf
-	14 i
-	14 x
+	#$2<14 14> &$rtn_modf
+	14 &i
+	14 &x
 
 	%%
 
 	$constructor( $rtn_modf() )
-	$assign( x() modfl( x() $addr( i() ) ) )
-	$constructor( #$2<14 14> i()x() )
+	$assign( &x modfl( &x $addr( &i ) ) )
+	$constructor( #$2<14 14> &i&x )
 	$constructor( #$2<14 14>  )
 }
 {
-	#$ptr<14> i
-	14 $rtn_modf
-	14 x
+	#$ptr<14> &i
+	14 &$rtn_modf
+	14 &x
 
 	%%
 
-	$constructor( 14 modfl( x() i() ) )
+	$constructor( 14 modfl( &x &i ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_nextafter
-	12 x
-	12 y
+	12 &$rtn_nextafter
+	12 &x
+	12 &y
 
 	%%
 
-	$constructor( 12 nextafterf( x() y() ) )
+	$constructor( 12 nextafterf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_nextafter
-	14 x
-	14 y
+	14 &$rtn_nextafter
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 nextafterl( x() y() ) )
+	$constructor( 14 nextafterl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_nexttoward
-	12 x
-	14 y
+	12 &$rtn_nexttoward
+	12 &x
+	14 &y
 
 	%%
 
-	$constructor( 12 nexttowardf( x() y() ) )
+	$constructor( 12 nexttowardf( &x &y ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_nexttoward
-	14 x
-	14 y
+	14 &$rtn_nexttoward
+	14 &x
+	14 &y
 
 	%%
 
-	$constructor( 14 nexttowardl( x() y() ) )
+	$constructor( 14 nexttowardl( &x &y ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_scalbn
-	12 x
-	6 exp
+	12 &$rtn_scalbn
+	12 &x
+	6 &exp
 
 	%%
 
-	$constructor( 12 scalbnf( x() exp() ) )
+	$constructor( 12 scalbnf( &x &exp ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_scalbn
-	14 x
-	6 exp
+	14 &$rtn_scalbn
+	14 &x
+	6 &exp
 
 	%%
 
-	$constructor( 14 scalbnl( x() exp() ) )
+	$constructor( 14 scalbnl( &x &exp ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_scalbn
-	12 x
-	8 exp
+	12 &$rtn_scalbn
+	12 &x
+	8 &exp
 
 	%%
 
-	$constructor( 12 scalblnf( x() exp() ) )
+	$constructor( 12 scalblnf( &x &exp ) )
 	$constructor( 12  )
 }
 {
-	13 $rtn_scalbn
-	13 x
-	8 exp
+	13 &$rtn_scalbn
+	13 &x
+	8 &exp
 
 	%%
 
-	$constructor( 13 scalbln( x() exp() ) )
+	$constructor( 13 scalbln( &x &exp ) )
 	$constructor( 13  )
 }
 {
-	14 $rtn_scalbn
-	14 x
-	8 exp
+	14 &$rtn_scalbn
+	14 &x
+	8 &exp
 
 	%%
 
-	$constructor( 14 scalblnl( x() exp() ) )
+	$constructor( 14 scalblnl( &x &exp ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_scalbln
-	12 x
-	8 exp
+	12 &$rtn_scalbln
+	12 &x
+	8 &exp
 
 	%%
 
-	$constructor( 12 scalblnf( x() exp() ) )
+	$constructor( 12 scalblnf( &x &exp ) )
 	$constructor( 12  )
 }
 {
-	14 $rtn_scalbln
-	14 x
-	8 exp
+	14 &$rtn_scalbln
+	14 &x
+	8 &exp
 
 	%%
 
-	$constructor( 14 scalblnl( x() exp() ) )
+	$constructor( 14 scalblnl( &x &exp ) )
 	$constructor( 14  )
 }
 {
-	2 v
-	3 $rtn_abs
+	2 &v
+	3 &$rtn_abs
 
 	%%
 
@@ -5634,141 +5624,141 @@ $constructor( _IEEE_()  )
 	$constructor( 3  )
 }
 {
-	8 v
-	9 $rtn_abs
+	8 &v
+	9 &$rtn_abs
 
 	%%
 
-	$constructor( 9 labs( v() ) )
+	$constructor( 9 labs( &v ) )
 	$constructor( 9  )
 }
 {
-	10 v
-	11 $rtn_abs
+	10 &v
+	11 &$rtn_abs
 
 	%%
 
-	$constructor( 11 llabs( v() ) )
+	$constructor( 11 llabs( &v ) )
 	$constructor( 11  )
 }
 {
-	12 $rtn_abs
-	12 x
+	12 &$rtn_abs
+	12 &x
 
 	%%
 
-	$constructor( 12 fabsf( x() ) )
+	$constructor( 12 fabsf( &x ) )
 	$constructor( 12  )
 }
 {
-	13 $rtn_abs
-	13 x
+	13 &$rtn_abs
+	13 &x
 
 	%%
 
-	$constructor( 13 fabs( x() ) )
+	$constructor( 13 fabs( &x ) )
 	$constructor( 13  )
 }
 {
-	14 $rtn_abs
-	14 x
+	14 &$rtn_abs
+	14 &x
 
 	%%
 
-	$constructor( 14 fabsl( x() ) )
+	$constructor( 14 fabsl( &x ) )
 	$constructor( 14  )
 }
 {
-	12 $rtn_abs
-	15 x
+	12 &$rtn_abs
+	15 &x
 
 	%%
 
-	$constructor( 12 cabsf( x() ) )
+	$constructor( 12 cabsf( &x ) )
 	$constructor( 12  )
 }
 {
-	13 $rtn_abs
-	16 x
+	13 &$rtn_abs
+	16 &x
 
 	%%
 
-	$constructor( 13 cabs( x() ) )
+	$constructor( 13 cabs( &x ) )
 	$constructor( 13  )
 }
 {
-	14 $rtn_abs
-	17 x
+	14 &$rtn_abs
+	17 &x
 
 	%%
 
-	$constructor( 14 cabsl( x() ) )
+	$constructor( 14 cabsl( &x ) )
 	$constructor( 14  )
 }
 {
-	#T $anon
 	#T $assign #T #T
-	#T $rtn_assign
-	#T $rtn_min
-	#T t1
-	#T t2
+	#T &$anon
+	#T &$rtn_assign
+	#T &$rtn_min
+	#T &t1
+	#T &t2
 	$constructor #T
 	$constructor #T #T
 	$destructor #T
 	6 $less #T #T
-	6 $rtn_less
+	6 &$rtn_less
 
 	%%
 
-	$constructor( #T $if( 6 t1() t2() ) )
+	$constructor( #T $if( 6 &t1 &t2 ) )
 	$constructor( #T  )
 }
 {
-	#T $anon
 	#T $assign #T #T
-	#T $rtn_assign
-	#T $rtn_max
-	#T t1
-	#T t2
+	#T &$anon
+	#T &$rtn_assign
+	#T &$rtn_max
+	#T &t1
+	#T &t2
 	$constructor #T
 	$constructor #T #T
 	$destructor #T
 	6 $greater #T #T
-	6 $rtn_greater
+	6 &$rtn_greater
 
 	%%
 
-	$constructor( #T $if( 6 t1() t2() ) )
+	$constructor( #T $if( 6 &t1 &t2 ) )
 	$constructor( #T  )
 }
 {
-	#T $anon
 	#T $assign #T #T
-	#T $rtn_assign
-	#T $rtn_clamp
-	#T $rtn_max
-	#T $rtn_min
+	#T &$anon
+	#T &$rtn_assign
+	#T &$rtn_clamp
+	#T &$rtn_max
+	#T &$rtn_min
+	#T &max_val
+	#T &min_val
+	#T &value
 	#T max #T #T
-	#T max_val
 	#T min #T #T
-	#T min_val
-	#T value
 	$constructor #T
 	$constructor #T #T
 	$destructor #T
 
 	%%
 
-	$constructor( #T max( min_val() min( value() max_val() ) ) )
+	$constructor( #T max( &min_val min( &value &max_val ) ) )
 	$constructor( #T  )
 }
 {
-	#T $anon
 	#T $assign #T #T
-	#T $rtn_assign
-	#T temp
-	#T v1
-	#T v2
+	#T &$anon
+	#T &$rtn_assign
+	#T &temp
+	#T &v1
+	#T &v2
 	$constructor #T
 	$constructor #T #T
 	$destructor #T
@@ -5776,32 +5766,32 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( temp() )
-	$constructor( #T v1() )
+	$constructor( #T &v1 )
 	$destructor( #T )
-	v1()
-	$assign( v1() v2() )
-	$assign( v2() temp() )
+	&v1
+	$assign( &v1 &v2 )
+	$assign( &v2 &temp )
 }
 {
 	#T $add #T #T
-	#T $anon
 	#T $assign #T #T
 	#T $multiply #T #T
-	#T $rtn_add
-	#T $rtn_assign
-	#T $rtn_lerp
-	#T $rtn_multiply
-	#T $rtn_subtract
 	#T $subtract #T #T
-	#T _compLit0
-	#T a
-	#T x
-	#T y
+	#T &$anon
+	#T &$rtn_add
+	#T &$rtn_assign
+	#T &$rtn_lerp
+	#T &$rtn_multiply
+	#T &$rtn_subtract
+	#T &_compLit0
+	#T &a
+	#T &x
+	#T &y
 	$constructor #T
 	$constructor #T #T
 	$constructor #T 6
 	$destructor #T
-	6 $anon
+	6 &$anon
 
 	%%
 
@@ -5809,25 +5799,25 @@ $constructor( _IEEE_()  )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( #T $add( $multiply( x() $subtract(  a() ) ) $multiply( y() a() ) ) )
+	$constructor( #T $add( $multiply( &x $subtract(  &a ) ) $multiply( &y &a ) ) )
 	$constructor( #T  )
 }
 {
-	#T $anon
 	#T $assign #T #T
-	#T $rtn_assign
-	#T $rtn_step
-	#T _compLit1
-	#T _compLit2
-	#T edge
-	#T x
+	#T &$anon
+	#T &$rtn_assign
+	#T &$rtn_step
+	#T &_compLit1
+	#T &_compLit2
+	#T &edge
+	#T &x
 	$constructor #T
 	$constructor #T #T
 	$constructor #T 6
 	$destructor #T
-	6 $anon
 	6 $less #T #T
-	6 $rtn_less
+	6 &$anon
+	6 &$rtn_less
 
 	%%
 
@@ -5843,31 +5833,31 @@ $constructor( _IEEE_()  )
 	$constructor( #T  )
 }
 {
-	#T $anon
 	#T $assign #T #T
 	#T $divide #T #T
 	#T $multiply #T #T
-	#T $rtn_assign
-	#T $rtn_clamp
-	#T $rtn_divide
-	#T $rtn_multiply
-	#T $rtn_smoothstep
-	#T $rtn_subtract
 	#T $subtract #T #T
-	#T _compLit3
-	#T _compLit4
-	#T _compLit5
-	#T _compLit6
+	#T &$anon
+	#T &$rtn_assign
+	#T &$rtn_clamp
+	#T &$rtn_divide
+	#T &$rtn_multiply
+	#T &$rtn_smoothstep
+	#T &$rtn_subtract
+	#T &_compLit3
+	#T &_compLit4
+	#T &_compLit5
+	#T &_compLit6
+	#T &edge0
+	#T &edge1
+	#T &t
+	#T &x
 	#T clamp #T #T #T
-	#T edge0
-	#T edge1
-	#T t
-	#T x
 	$constructor #T
 	$constructor #T #T
 	$constructor #T 6
 	$destructor #T
-	6 $anon
+	6 &$anon
 
 	%%
 
@@ -5880,9 +5870,9 @@ $constructor( _IEEE_()  )
 	$destructor( #T )
 	6
 	$constructor( t() )
-	$constructor( #T clamp( $divide( $subtract( x() edge0() ) $subtract( edge1() edge0() ) )   ) )
+	$constructor( #T clamp( $divide( $subtract( &x &edge0 ) $subtract( &edge1 &edge0 ) )   ) )
 	$destructor( #T )
-	clamp( $divide( $subtract( x() edge0() ) $subtract( edge1() edge0() ) )   )
+	clamp( $divide( $subtract( &x &edge0 ) $subtract( &edge1 &edge0 ) )   )
 	$constructor( _compLit5() )
 	$constructor( #T 6 )
 	$destructor( #T )
@@ -5891,43 +5881,43 @@ $constructor( _IEEE_()  )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( #T $multiply( $multiply( t() t() ) $subtract(  $multiply(  t() ) ) ) )
+	$constructor( #T $multiply( $multiply( &t &t ) $subtract(  $multiply(  &t ) ) ) )
 	$constructor( #T  )
 }
 {
-	12 f
-	13 d
-	14 l
-	6 $rtn_main
-	6 b
-	6 quot
-	7 e
+	12 &f
+	13 &d
+	14 &l
+	6 &$rtn_main
+	6 &b
+	6 &quot
+	7 &e
 
 	%%
 
-	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) $modulus( 12 $unaryminus( 12 ) ) ) fmod( 12 $unaryminus( 12 ) ) ) $modulus( 13 $unaryminus( 13 ) ) ) fmod( 13 $unaryminus( 13 ) ) ) $modulus( 14 $unaryminus( 14 ) ) ) fmod( 14 $unaryminus( 14 ) ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) remainder( 12 12 ) ) remainder( 13 13 ) ) remainder( 14 14 ) ) endl() )
-	$assign( f() remquo( 12 12 $addr( quot() ) ) )
-	$bitor( $bitor( $bitor( sout() #$ptr<1> ) quot() ) f() )
-	$assign( d() remquo( 13 12 $addr( quot() ) ) )
-	$bitor( $bitor( sout() quot() ) d() )
-	$assign( l() remquo( 14 14 $addr( quot() ) ) )
-	$bitor( $bitor( $bitor( sout() quot() ) l() ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) div( 12 12 ) ) div( 13 13 ) ) div( 14 14 ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) fma( 12 $unaryminus( 12 ) 12 ) ) fma( 13 $unaryminus( 13 ) 13 ) ) fma( 14 $unaryminus( 14 ) 14 ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) fdim( 12 $unaryminus( 12 ) ) ) fdim( 13 $unaryminus( 13 ) ) ) fdim( 14 $unaryminus( 14 ) ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) 12 ) 13 ) 14 ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) exp( 12 ) ) exp( 13 ) ) exp( 14 ) ) exp( $add( 12 15 ) ) ) exp( $add( 13 16 ) ) ) exp( $add( 14 17 ) ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) exp2( 12 ) ) exp2( 13 ) ) exp2( 14 ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) expm1( 12 ) ) expm1( 13 ) ) expm1( 14 ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) pow( 12 12 ) ) pow( 13 13 ) ) pow( 14 14 ) ) pow( $add( 12 15 ) $add( 12 15 ) ) ) pow( $add( 13 16 ) $add( 13 16 ) ) ) pow( $add( 14 17 ) $add( 14 17 ) ) ) endl() )
+	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) $modulus( 12 $unaryminus( 12 ) ) ) fmod( 12 $unaryminus( 12 ) ) ) $modulus( 13 $unaryminus( 13 ) ) ) fmod( 13 $unaryminus( 13 ) ) ) $modulus( 14 $unaryminus( 14 ) ) ) fmod( 14 $unaryminus( 14 ) ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) remainder( 12 12 ) ) remainder( 13 13 ) ) remainder( 14 14 ) ) &endl )
+	$assign( &f remquo( 12 12 $addr( &quot ) ) )
+	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &quot ) &f )
+	$assign( &d remquo( 13 12 $addr( &quot ) ) )
+	$bitor( $bitor( &sout &quot ) &d )
+	$assign( &l remquo( 14 14 $addr( &quot ) ) )
+	$bitor( $bitor( $bitor( &sout &quot ) &l ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) div( 12 12 ) ) div( 13 13 ) ) div( 14 14 ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) fma( 12 $unaryminus( 12 ) 12 ) ) fma( 13 $unaryminus( 13 ) 13 ) ) fma( 14 $unaryminus( 14 ) 14 ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) fdim( 12 $unaryminus( 12 ) ) ) fdim( 13 $unaryminus( 13 ) ) ) fdim( 14 $unaryminus( 14 ) ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) 12 ) 13 ) 14 ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) exp( 12 ) ) exp( 13 ) ) exp( 14 ) ) exp( $add( 12 15 ) ) ) exp( $add( 13 16 ) ) ) exp( $add( 14 17 ) ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) exp2( 12 ) ) exp2( 13 ) ) exp2( 14 ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) expm1( 12 ) ) expm1( 13 ) ) expm1( 14 ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) pow( 12 12 ) ) pow( 13 13 ) ) pow( 14 14 ) ) pow( $add( 12 15 ) $add( 12 15 ) ) ) pow( $add( 13 16 ) $add( 13 16 ) ) ) pow( $add( 14 17 ) $add( 14 17 ) ) ) &endl )
 	$constructor( b() 6 )
 	6
 	$constructor( e() 6 )
 	6
-	$expassign( b() e() )
-	$bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) b() ) $exponential( b() e() ) ) endl() )
-	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( sout() #$ptr<1> ) $exponential( 1 7 ) ) $exponential( 6 7 ) ) $exponential( 6 7 ) ) $exponential( $unaryminus( 6 ) 7 ) ) $exponential( 6 $unaryminus( 6 ) ) ) $exponential( $unaryminus( 6 ) $unaryminus( 6 ) ) ) $exponential( 13 13 ) ) $exponential( $add( 12 15 ) $add( 12 15 ) ) ) endl() )
+	$expassign( &b &e )
+	$bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) &b ) $exponential( &b &e ) ) &endl )
+	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) $exponential( 1 7 ) ) $exponential( 6 7 ) ) $exponential( 6 7 ) ) $exponential( $unaryminus( 6 ) 7 ) ) $exponential( 6 $unaryminus( 6 ) ) ) $exponential( $unaryminus( 6 ) $unaryminus( 6 ) ) ) $exponential( 13 13 ) ) $exponential( $add( 12 15 ) $add( 12 15 ) ) ) &endl )
 	$constructor( 6 6 )
 	$constructor( 6  )
 }
