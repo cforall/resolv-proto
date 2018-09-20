@@ -28,6 +28,7 @@ public:
 
 	/// Creates a type of appropriate arity from the list of types
 	static inline const Type* from(const List<Type>& ts);
+	static inline const Type* from(List<Type>&& ts);
 protected:
 	/// Check this type for equality with other types
 	virtual bool equals(const Type&) const = 0; 
@@ -279,40 +280,24 @@ inline const Type* Type::from(const List<Type>& ts) {
 	}
 }
 
+inline const Type* Type::from(List<Type>&& ts) {
+	switch ( ts.size() ) {
+	case 0:  return new VoidType{};
+	case 1:  return ts.front();
+	default: return new TupleType{ move(ts) };
+	}
+}
+
 /// Represents a function type
 class FuncType : public Type {
 	List<Type> params_;   ///< Parameter types of function
 	const Type* returns_; ///< Return types of function
 	
-	/// Generate appropriate return type from return list
-	static const Type* gen_returns(const List<Type>& rs) {
-		switch ( rs.size() ) {
-		case 0:
-			return new VoidType{};
-		case 1:
-			return rs.front();
-		default:
-			return new TupleType{ rs };
-		}
-	}
-
-	/// Generate appropriate return type from return list
-	static const Type* gen_returns(List<Type>&& rs) {
-		switch ( rs.size() ) {
-		case 0:
-			return new VoidType{};
-		case 1:
-			return rs.front();
-		default:
-			return new TupleType{ move(rs) };
-		}
-	}
-
 public:
 	typedef Type Base;
 
 	FuncType( List<Type>&& params_, List<Type>&& returns_ )
-		: params_(move(params_)), returns_( gen_returns( move(returns_) ) ) {}
+		: params_(move(params_)), returns_( Type::from( move(returns_) ) ) {}
 	
 	FuncType( List<Type>&& params_, const Type* returns_ )
 		: params_(move(params_)), returns_(returns_) {}

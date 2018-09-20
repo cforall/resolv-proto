@@ -46,7 +46,9 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, const Env
 		auto with0Params = index.find( 0 );
 		if ( with0Params == index.end() ) continue;
 
-		for ( const FuncDecl* func : with0Params() ) {
+		for ( const Decl* decl : with0Params() ) {
+			const FuncDecl* func = as_checked<FuncDecl>(decl);  // VarDecl indexed with -1 params
+
 			// skip functions returning no values, unless at top level
 			if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
@@ -81,7 +83,10 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, Interpret
 			auto withNParams = index.find( n );
 			if ( withNParams == index.end() ) continue;
 
-			for ( const FuncDecl* func : withNParams() ) {
+			for ( const Decl* decl : withNParams() ) {
+				// VarDecl indexed with -1 params
+				const FuncDecl* func = as_checked<FuncDecl>(decl);
+
 				// skip functions returning no values, unless at top level
 				if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
@@ -141,7 +146,10 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 	InterpretationList results{};
 
 	for ( const auto& it : funcs ) {
-		for ( const FuncDecl* func : it->second ) {
+		for ( const Decl* decl : it->second ) {
+			// VarDecl indexed with -1 params
+			const FuncDecl* func = as_checked<FuncDecl>(decl);
+
 			// skip void-returning functions unless at top level
 			if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 
@@ -268,7 +276,10 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 			auto withNParams = index.find( n );
 			if ( withNParams == index.end() ) continue;
 
-			for ( const FuncDecl* func : withNParams() ) {
+			for ( const Decl* decl : withNParams() ) {
+				// VarDecl indexed with -1 params
+				const FuncDecl* func = as_checked<FuncDecl>(decl);
+
 				// skip functions returning no values unless at top level
 				if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;
 				

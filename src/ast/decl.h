@@ -21,8 +21,8 @@
 class Decl : public ASTNode {
 	std::string name_;  ///< Name of declaration
 	std::string tag_;   ///< Disambiguating tag of declaration
-public:
 
+public:
 	Decl( const std::string& name_ ) : name_(name_), tag_() {}
 	Decl( const std::string& name_, const std::string& tag_ ) : name_(name_), tag_(tag_) {}
 
@@ -32,6 +32,43 @@ public:
 	const std::string& tag() const { return tag_; }
 
 	virtual const Type* type() const = 0;
+};
+
+/// A variable declaration
+class VarDecl final : public Decl {
+	const Type* type_;  ///< Type of variable
+
+public:
+	typedef Decl Base;
+
+	VarDecl(const std::string& name_, const Type* type_) : Decl(name_), type_(type_) {}
+	VarDecl(const std::string& name_, const std::string& tag_, const Type* type_) 
+		: Decl(name_, tag_), type_(type_) {}
+	VarDecl(const std::string& name_, const std::string& tag_, List<Type>&& type_)
+		: Decl(name_, tag_), type_( Type::from( move(type_) ) ) {}
+	
+	Decl* clone() const override { return new VarDecl{ name(), tag(), type_ }; }
+
+	bool operator== (const VarDecl& that) const { 
+		return name() == that.name() && tag() == that.tag();
+	}
+	bool operator!= (const VarDecl& that) const { return !(*this == that); }
+
+	const Type* type() const override { return type_; }
+
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		if ( style != ASTNode::Print::Concise ) {
+			type_->write( out, style );
+			out << " ";
+		}
+		out << name();
+		if ( ! tag().empty() ) { out << "-" << tag(); }
+	}
+
+protected:
+	void trace(const GC& gc) const override {
+		gc << type_;
+	}
 };
 
 /// A function declaration

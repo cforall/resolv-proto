@@ -125,14 +125,14 @@ void Resolver::addType(const Type* ty) {
 	conversions.addType( ty );
 }
 
-void Resolver::addDecl(FuncDecl* func) {
+void Resolver::addDecl(Decl* decl) {
 	++n_funcs;
 	// insert function at current scope, creating function list for name if necessary
-	auto it = funcs.findAt( funcs.currentScope(), func->name() );
+	auto it = funcs.findAt( funcs.currentScope(), decl->name() );
 	if ( it == funcs.end() ) {
-		it = funcs.insert( func->name(), FuncTable::mapped_type{} ).first;
+		it = funcs.insert( decl->name(), FuncTable::mapped_type{} ).first;
 	}
-	it->second.insert( func );
+	it->second.insert( decl );
 }
 
 void Resolver::addExpr(const Expr* expr) {

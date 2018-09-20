@@ -9,6 +9,7 @@
   * Added function type to resolver prototype
     * **TODO** look into types with ftype parameters ... maybe just get rid of them?
   * Added Name/VarExpr to resolver prototype (old VarExpr now ValExpr)
+  * Added VarDecl to resolver prototype
   * **TODO** Look at hard-coding implicit conversion table into resolver prototype
   * **TODO** Look at hard-coding cast conversion table into ProtoDump
   * **TODO** Look at encoding reference type in resolver prototype

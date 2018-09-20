@@ -212,7 +212,7 @@ bool parse_assertion(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
 bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
-	List<Type> returns, params;
+	List<Type> returns;
 	std::string name;
 	std::string tag = "";
 	unique_ptr<Forall> forall;
@@ -222,8 +222,25 @@ bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
 	while ( parse_type(line, resolver, types, forall, returns) ) {
 		match_whitespace(line);
 	}
+
+	// check for variable decl
+	if ( ! returns.empty() && match_char(line, '&') ) {
+		if ( ! parse_name(line, name) ) return false;
+
+		// optionally parse tag
+		if ( match_char(line, '-') ) {
+			if ( ! parse_name(line, tag) ) return false;
+		}
+
+		// check line consumed
+		if ( ! is_blank(line) ) return false;
+
+		resolver.addDecl( new VarDecl{ name, tag, move(returns) } );
+		return true;
+	}
 	
-	// parse name
+	// parse function decl
+	List<Type> params;
 	if ( ! parse_name(line, name) ) return false;
 	
 	// optionally parse tag

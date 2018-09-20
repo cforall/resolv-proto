@@ -1,13 +1,16 @@
 f-noret 1
 1 f-noargs
 1 f-both 1
+1 &f-var
 
 noret 1 [ : 1 ]
 1 noargs [ 1 : ]
 1 both 1 [ 1 : 1 ]
+var 1
 
 %%
 
 noret( 1 &f )
 noargs( &f )
 both( 1 &f )
+var( &f )

@@ -259,8 +259,8 @@ public:
 	/// Adds a new type to the resolution graph
 	void addType(const Type*);
 
-	/// Adds a new function declaration to the current lexical scope
-	void addDecl(FuncDecl*);
+	/// Adds a new declaration to the current lexical scope
+	void addDecl(Decl*);
 
 	/// Adds a new expression to the current lexical scope, causing it to be resolved and the 
 	/// appropriate effect to be run
