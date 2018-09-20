@@ -112,6 +112,42 @@ bool parse_generic_params(char const *&token, Resolver& resolver, CanonicalTypeM
 	return true;
 }
 
+/// Parses a function type, returning true, appending the result into out, and 
+/// incrementing token if so. Concrete types will be canonicalized according 
+/// to types and polymorphic types according to forall. token must not be null
+bool parse_func_type(const char*& token, Resolver& resolver, CanonicalTypeMap& types, 
+		unique_ptr<Forall>& forall, List<Type>& out ) {
+	List<Type> returns, params;
+	const char* end = token;
+
+	// match opening token
+	if ( ! match_char(end, '[') ) return false;
+	match_whitespace(end);
+
+	// match return types
+	while ( parse_type(end, resolver, types, forall, returns) ) {
+		match_whitespace(end);
+	}
+
+	// match split token
+	if ( ! match_char(end, ':') ) return false;
+	match_whitespace(end);
+
+	// match parameters
+	while ( parse_type(end, resolver, types, forall, params) ) {
+		match_whitespace(end);
+	}
+
+	// match closing token
+	if ( ! match_char(end, ']') ) return false;
+	match_whitespace(end);
+
+	out.push_back( new FuncType{ move(params), move(returns) } );
+
+	token = end;
+	return true;
+}
+
 bool parse_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
 		unique_ptr<Forall>& forall, List<Type>& out) {
 	int t;
@@ -132,6 +168,8 @@ bool parse_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types,
 	} else if ( parse_poly_type(token, n) ) {
 		if ( ! forall ) { forall.reset( new Forall{} ); }
 		out.push_back( forall->add( n ) );
+		return true;
+	} else if ( parse_func_type(token, resolver, types, forall, out) ) {
 		return true;
 	} else return false;
 }
@@ -267,7 +305,18 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 	// Check for a concrete type expression
 	List<Type> cty;
 	if ( parse_conc_type( end, resolver, types, cty ) ) {
-		exprs.push_back( new VarExpr( cty.front() ) );
+		exprs.push_back( new ValExpr( cty.front() ) );
+		token = end;
+		return true;
+	}
+
+	// Check for name expression
+	if ( match_char(end, '&') ) {
+		std::string name;
+		if ( ! parse_name(end, name) ) return false;
+		match_whitespace(end);
+
+		exprs.push_back( new NameExpr( name ) );
 		token = end;
 		return true;
 	}

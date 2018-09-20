@@ -314,9 +314,20 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env& env,
 	InterpretationList results;
 	
 	auto eid = typeof(expr);
-	if ( eid == typeof<VarExpr>() ) {
+	if ( eid == typeof<ValExpr>() ) {
 		// do nothing for expressions which are already typed
-		results.push_back( new Interpretation{ as<VarExpr>(expr), copy(env) } );
+		results.push_back( new Interpretation{ as<ValExpr>(expr), copy(env) } );
+	} else if ( eid == typeof<NameExpr>() ) {
+		const NameExpr* nameExpr = as<NameExpr>( expr );
+
+		// find all candidates with this name
+		Funcs withName = funcs.findAll( nameExpr->name() );
+		for ( const auto& it : funcs ) {
+			for ( const Decl* decl : it.second ) {
+				results.push_back( 
+					new Interpretation{ new VarExpr{ decl }, copy(env), Cost::zero() } );
+			}
+		}
 	} else if ( eid == typeof<FuncExpr>() ) {
 		const FuncExpr* funcExpr = as<FuncExpr>( expr );
 

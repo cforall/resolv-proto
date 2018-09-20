@@ -37,7 +37,7 @@ public:
 		return true;
 	}
 
-	/// Substitute a function declarations types according to the substitution map; 
+	/// Substitute a function declaration's types according to the substitution map; 
 	/// Uses src to produce new IDs for nested forall clauses
 	FuncDecl* operator() ( const FuncDecl* d, unsigned& src );
 

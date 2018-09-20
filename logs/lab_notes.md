@@ -1,4 +1,4 @@
-## 11-18 Sep 2018 ##
+## 11-20 Sep 2018 ##
 * CFA => prototype instance translator
   * Added `#$` and `$` private names to prototype
   * Translator fixes operator names to prototype textual format
@@ -6,11 +6,11 @@
   * Translator translates expressions, including initialization and return
   * Translator encodes field accesses as functions in scope of struct declaration
   * Minor tweaks to resolv-proto parser and RPDump generation to work together
+  * Added function type to resolver prototype
+    * **TODO** look into types with ftype parameters ... maybe just get rid of them?
+  * Added Name/VarExpr to resolver prototype (old VarExpr now ValExpr)
   * **TODO** Look at hard-coding implicit conversion table into resolver prototype
   * **TODO** Look at hard-coding cast conversion table into ProtoDump
-  * **TODO** Look at encoding function type in resolver prototype
-    * This may be necessary to properly handle constraints on io stuff
-    * Should look into types with ftype parameters ... maybe just get rid of them?
   * **TODO** Look at encoding reference type in resolver prototype
   * **TODO** Look at var-args type in resolver prototype
 

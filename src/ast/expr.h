@@ -32,15 +32,15 @@ public:
 	virtual const Type* type() const = 0; 
 };
 
-/// A variable expression
-class VarExpr : public TypedExpr {
+/// An expression representing a single value of a type
+class ValExpr : public TypedExpr {
 	const Type* ty_;  ///< Type of variable expression
 public:
 	typedef Expr Base;
 	
-	VarExpr(const Type* ty_) : ty_( ty_ ) { assume( ty_, "var type is valid" ); }
+	ValExpr(const Type* ty_) : ty_( ty_ ) { assume( ty_, "var type is valid" ); }
 	
-	Expr* clone() const override { return new VarExpr( ty_ ); }
+	Expr* clone() const override { return new ValExpr( ty_ ); }
 	
 	const Type* type() const override { return ty_; }
 
@@ -50,6 +50,45 @@ public:
 
 protected:
 	void trace(const GC& gc) const override { gc << ty_; }
+};
+
+/// An expression representing a declaration name
+class NameExpr : public Expr {
+	std::string name_;  ///< Name of the expression referenced
+public:
+	typedef Expr Base;
+
+	NameExpr(const std::string& name_) : name_(name_) {}
+
+	Expr* clone() const override { return new NameExpr{ name_ }; }
+
+	const std::string& name() const { return name_; }
+
+	void write(std::ostream& out, ASTNode::Print) const override {
+		out << "&" << name_;
+	}
+};
+
+/// An expression resolved to a declaration
+class VarExpr : public TypedExpr {
+	const Decl* var_;  ///< Declaration referenced
+public:
+	typedef Expr Base;
+
+	VarExpr( const Decl* var_ ) : var_( var_ ) {}
+
+	Expr* clone() const override { return new VarExpr{ var_ }; }
+
+	const Decl* var() const { return var_; }
+
+	const Type* type() const override { return var_->type(); }
+
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		out << "&" << var_->name();
+		if ( style != ASTNode::Print::InputStyle && ! var_->tag().empty() ) {
+			out << "-" << var_->tag();
+		}
+	}
 };
 
 /// A converting cast expression

@@ -21,10 +21,10 @@ public:
 
 	TypedExprTypeMutator( SubMutator&& m = SubMutator{} ) : m(move(m)) {}
 
-	bool visit( const VarExpr* e, const TypedExpr*& r ) {
+	bool visit( const ValExpr* e, const TypedExpr*& r ) {
 		const Type* ty = m( e->type() );
 		if ( ty != e->type() ) {
-			r = new VarExpr{ ty };
+			r = new ValExpr{ ty };
 		}
 		return true;
 	}

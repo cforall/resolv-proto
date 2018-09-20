@@ -19,72 +19,58 @@
 
 /// A resolver declaration
 class Decl : public ASTNode {
+	std::string name_;  ///< Name of declaration
+	std::string tag_;   ///< Disambiguating tag of declaration
 public:
+
+	Decl( const std::string& name_ ) : name_(name_), tag_() {}
+	Decl( const std::string& name_, const std::string& tag_ ) : name_(name_), tag_(tag_) {}
+
 	virtual Decl* clone() const = 0;
+
+	const std::string& name() const { return name_; }
+	const std::string& tag() const { return tag_; }
+
+	virtual const Type* type() const = 0;
 };
 
 /// A function declaration
 class FuncDecl final : public Decl {
-	std::string name_;           ///< Name of function
-	std::string tag_;            ///< Disambiguating tag for function
-	List<Type> params_;          ///< Parameter types of function
-	const Type* returns_;        ///< Return types of function
+	const FuncType* type_;       ///< Type of the function
 	unique_ptr<Forall> forall_;  ///< Names of polymorphic type variables
-	
-	/// Generate appropriate return type from return list
-	static const Type* gen_returns(const List<Type>& rs) {
-		switch ( rs.size() ) {
-		case 0:
-			return new VoidType{};
-		case 1:
-			return rs.front();
-		default:
-			return new TupleType{ rs };
-		}
-	}
-
-	/// Generate appropriate return type from return list
-	static const Type* gen_returns(List<Type>&& rs) {
-		switch ( rs.size() ) {
-		case 0:
-			return new VoidType{};
-		case 1:
-			return rs.front();
-		default:
-			return new TupleType{ move(rs) };
-		}
-	}
 	
 public:
 	typedef Decl Base;
 	
 	FuncDecl(const std::string& name_, List<Type>&& params_, List<Type>&& returns_)
-		: name_(name_), tag_(), params_(move(params_)), 
-		  returns_( gen_returns( move(returns_) ) ), forall_() {}
+		: Decl(name_), type_( new FuncType { move(params_), move(returns_) } ), forall_() {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_, 
 	         List<Type>&& params_, List<Type>&& returns_, unique_ptr<Forall>&& forall_ )
-		: name_(name_), tag_(tag_), params_(move(params_)), 
-		  returns_( gen_returns( move(returns_) ) ), forall_( move(forall_) ) {}
+		: Decl(name_, tag_), type_( new FuncType { move(params_), move(returns_) } ), 
+		  forall_( move(forall_) ) {}
 	
 	FuncDecl(const std::string& name_, const std::string& tag_,
 	         List<Type>&& params_, const Type* returns_, unique_ptr<Forall>&& forall_)
-		: name_(name_), tag_(tag_), params_( move(params_) ), 
-		  returns_(returns_), forall_( move(forall_) ) {}
+		: Decl(name_, tag_), type_( new FuncType { move(params_), returns_ } ),  
+		  forall_( move(forall_) ) {}
+	
+	FuncDecl(const std::string& name_, const std::string& tag_, const FuncType* type_, 
+	         unique_ptr<Forall>&& forall_)
+		: Decl(name_, tag_), type_(type_), forall_(move(forall_)) {}
 	
 	Decl* clone() const override {
-		return new FuncDecl{ name_, tag_, copy(params_), returns_, copy(forall_) };
+		return new FuncDecl{ name(), tag(), type_, copy(forall_) };
 	}
 	
 	bool operator== (const FuncDecl& that) const { 
-		return name_ == that.name_ && tag_ == that.tag_;
+		return name() == that.name() && tag() == that.tag();
 	}
 	bool operator!= (const FuncDecl& that) const { return !(*this == that); }
 	
-	const std::string& name() const { return name_; }
-	const std::string& tag() const { return tag_; }
-	const List<Type>& params() const { return params_; }
-	const Type* returns() const { return returns_; }
+	const FuncType* type() const override { return type_; }
+	const List<Type>& params() const { return type_->params(); }
+	const Type* returns() const { return type_->returns(); }
 	const Forall* forall() const { return forall_.get(); }
 
 	/// The cost of this function's forall clause, if any
@@ -96,17 +82,17 @@ public:
 		Cost k = cost_of( *forall_ );
 
 		// sum specialization costs for parameters
-		for ( const Type* p : params_ ) {
+		for ( const Type* p : type_->params() ) {
 			k.spec += count( p ).value_or( 0 );
 		}
 
 		// sum specialization costs for return values
-		if ( const TupleType* rt = as_safe<TupleType>(returns_) ) {
+		if ( const TupleType* rt = as_safe<TupleType>(type_->returns()) ) {
 			for ( const Type* r : rt->types() ) {
 				k.spec += count( r ).value_or( 0 );
 			}
 		} else {
-			k.spec += count( returns_ ).value_or( 0 );
+			k.spec += count( type_->returns() ).value_or( 0 );
 		}
 
 		return k;
@@ -114,13 +100,13 @@ public:
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		if ( style != ASTNode::Print::Concise ) {
-			returns_->write( out, style );
+			type_->returns()->write( out, style );
 			out << " ";
 		}
-		out << name_;
-		if ( ! tag_.empty() ) { out << "-" << tag_; }
+		out << name();
+		if ( ! tag().empty() ) { out << "-" << tag(); }
 		if ( style != ASTNode::Print::Concise ) {
-			for ( auto& t : params_ ) {
+			for ( auto& t : type_->params() ) {
 				out << " ";
 				t->write( out, style );
 			}
@@ -133,6 +119,6 @@ public:
 
 protected:
 	void trace(const GC& gc) const override {
-		gc << params_ << returns_ << forall_.get();
+		gc << type_ << forall_.get();
 	}
 };

@@ -18,8 +18,10 @@ public:
         if ( ! e ) return as<Self>(this)->visit( nullptr, r );
 
         auto tid = typeof(e);
-        if ( tid == typeof<VarExpr>() )
-            return as<Self>(this)->visit( as<VarExpr>(e), r );
+        if ( tid == typeof<ValExpr>() )
+            return as<Self>(this)->visit( as<ValExpr>(e), r );
+        else if ( tid == typeof<VarExpr>() )
+            return as<Self>(this)->visit( as<VarExpr>(e), r);
         else if ( tid == typeof<CastExpr>() ) 
             return as<Self>(this)->visit( as<CastExpr>(e), r );
         else if ( tid == typeof<TruncateExpr>() )
@@ -74,6 +76,8 @@ public:
 
     bool visit( std::nullptr_t, T& ) { return true; }
     
+    bool visit( const ValExpr*, T& ) { return true; }
+
     bool visit( const VarExpr*, T& ) { return true; }
     
     bool visit( const CastExpr* e, T& r ) { return visitChildren( e, r ); }

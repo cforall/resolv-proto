@@ -97,7 +97,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		List<Expr> asnArgs;
 		asnArgs.reserve( asn->params().size() );
 		for ( const Type* pType : asn->params() ) {
-			asnArgs.push_back( new VarExpr( pType ) );
+			asnArgs.push_back( new ValExpr( pType ) );
 		}
 		const FuncExpr* asnExpr = new FuncExpr{ asn->name(), move(asnArgs) };
 

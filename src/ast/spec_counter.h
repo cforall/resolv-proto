@@ -34,4 +34,10 @@ public:
 		updateCount( t->types(), r );
 		return true;
 	}
+
+	bool visit( const FuncType* t, option<Cost::Element>& r ) {
+		visit( t->returns(), r );
+		updateCount( t->params(), r );
+		return true;
+	}
 };

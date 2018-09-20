@@ -164,6 +164,55 @@ public:
 		return true;
 	}
 
+	bool visit( const FuncType* t, const Type*& r ) {
+		// check function type
+		const FuncType* u = as_safe<FuncType>( unifyTo() );
+		if ( u == nullptr ) {
+			r = nullptr;
+			return false;
+		}
+
+		// check equal parameter list sizes
+		const List<Type>& tps = t->params();
+		const List<Type>& ups = u->params();
+		if ( tps.size() != ups.size() ) {
+			r = nullptr;
+			return false;
+		}
+
+		// recursively unify
+		bool oldChangedTo = changedTo;
+		changedTo = false;
+		
+		// recursively unify return types
+		const Type* newReturns = nullptr;
+		{
+			auto guard = swap_in_scope( to, copy(u->returns()) );
+			auto guard2 = swap_in_scope( toIt, TyIt{} );
+			newReturns = Parent::operator()( t->returns() );
+
+			// fail early
+			if ( newReturns == nullptr ) {
+				r = nullptr;
+				return false;
+			}
+		}
+
+		auto guard = swap_in_scope( toIt, TyIt{ ups.begin() } );
+		
+		option<List<Type>> newParams;
+		if ( ! mutateAll( this, tps, newParams ) ) {
+			r = nullptr;
+			return false;
+		}
+		if ( newReturns != t->returns() || newParams.has_value() ) {
+			r = changedTo ? new FuncType{ *move(newParams), newReturns } : u;
+		}
+
+		changedTo |= oldChangedTo;
+		return true;
+	}
+
 	bool visit( const PolyType* p, const Type*& r ) {
 		ClassRef pc = env.getClass( p );
 
