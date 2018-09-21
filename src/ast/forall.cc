@@ -13,7 +13,7 @@ Forall::Forall(const Forall& o, unsigned& src) : vars(), assns() {
 	for ( const PolyType* v : o.vars ) { vars.push_back( new PolyType{ v->name(), ++src } ); }
 	assns.reserve(o.assns.size());
 	ForallSubstitutor m{ this };
-	for ( const FuncDecl* a : o.assns ) { assns.push_back( m(a, src) ); }
+	for ( const Decl* a : o.assns ) { assns.push_back( m(a, src) ); }
 }
 
 const PolyType* Forall::get( const std::string& p ) const {

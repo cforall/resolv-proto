@@ -9,9 +9,11 @@
 #include "env_substitutor.h"
 #include "resolver.h"
 
+#include "ast/decl_visitor.h"
 #include "ast/expr.h"
 #include "ast/typed_expr_mutator.h"
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
 #include "lists/filter.h"
@@ -81,28 +83,51 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 
 	Resolver& resolver;        ///< Resolver to perform searches.
 	Env& env;                  ///< Environment to bind types and assertions into.
-	List<FuncDecl> deferIds;   ///< Assertions that cannot be bound at their own call
+	List<Decl> deferIds;       ///< Assertions that cannot be bound at their own call
 	DeferList deferred;        ///< Available interpretations of deferred assertions
-	List<FuncDecl> openAssns;  ///< Sub-assertions of bound assertions
+	List<Decl> openAssns;      ///< Sub-assertions of bound assertions
 	unsigned recursion_depth;  ///< Depth of sub-assertions being bound
 	bool has_ambiguous;        ///< Expression tree has ambiguous subexpressions; fail fast
 #if defined RP_RES_IMM
 	bool do_recurse;           ///< Should the visitor recurse over the whole tree?
 #endif
 
+	/// Assertion expression and the type to resolve it to
+	struct AssertionInstance {
+		const Expr* expr;    ///< Expression to resolve
+		const Type* target;  ///< Type to resolve to
+	};
+
+	/// Derives an assertion problem instance from a declaration
+	class AssertionInstantiator : public DeclVisitor<AssertionInstantiator, AssertionInstance> {
+	public:
+		using DeclVisitor<AssertionInstantiator, AssertionInstance>::visit;
+		using DeclVisitor<AssertionInstantiator, AssertionInstance>::operator();
+
+		bool visit( const FuncDecl* d, AssertionInstance& r ) {
+			List<Expr> args;
+			args.reserve( d->params().size() );
+			for ( const Type* pType : d->params() ) {
+				args.push_back( new ValExpr{ pType } );
+			}
+			r = AssertionInstance{ new FuncExpr{ d->name(), move(args) }, d->returns() };
+			return true;
+		}
+
+		bool visit( const VarDecl* d, AssertionInstance& r ) {
+			r = AssertionInstance{ new NameExpr{ d->name() }, d->type() };
+			return true;
+		}
+	};
+
 	/// Resolves an assertion, returning false if no satisfying assertion, binding it if one, 
 	/// adding to the defer-list if more than one.
-	bool resolveAssertion( const FuncDecl* asn ) {
-		// generate FuncExpr for assertion
-		List<Expr> asnArgs;
-		asnArgs.reserve( asn->params().size() );
-		for ( const Type* pType : asn->params() ) {
-			asnArgs.push_back( new ValExpr( pType ) );
-		}
-		const FuncExpr* asnExpr = new FuncExpr{ asn->name(), move(asnArgs) };
+	bool resolveAssertion( const Decl* asn ) {
+		// generate expression for assertion
+		AssertionInstance inst = AssertionInstantiator{}( asn );
 
 		// attempt to resolve assertion
-		InterpretationList satisfying = resolver.resolveWithType( asnExpr, asn->returns(), env );
+		InterpretationList satisfying = resolver.resolveWithType( inst.expr, inst.target, env );
 
 		switch ( satisfying.size() ) {
 			case 0: { // no satisfying assertions: return failure
@@ -128,23 +153,29 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	/// Binds an assertion to its resolved expression, adding recursive assertions to the open set. 
 	/// Returns false if resolved expression is ambiguous or contains assertions that would 
 	/// exceed maximum recursion depth, true otherwise.
-	bool bindRecursive( const FuncDecl* asn, const TypedExpr* rexpr ) {
-		// reject any assertion binding that isn't a call expression
-		const CallExpr* cexpr = as_safe<CallExpr>(rexpr);
-		if ( ! cexpr ) return false;
-		
-		// add recursive assertions to open set
-		if ( const Forall* rforall = cexpr->forall() ) {
-			const List<FuncDecl>& rassns = rforall->assertions();
+	bool bindRecursive( const Decl* asn, const TypedExpr* rexpr ) {
+		auto aid = typeof(asn);
+		if ( aid == typeof<FuncDecl>() ) {
+			// reject any function assertion binding that isn't a call expression
+			const CallExpr* cexpr = as_safe<CallExpr>(rexpr);
+			if ( ! cexpr ) return false;
 			
-			// reject if hit max recursion depth
-			if ( recursion_depth >= resolver.max_recursive_assertions && ! rassns.empty() )
-				return false;
-			
-			// add open assertions and variables
-			openAssns.insert( openAssns.end(), rassns.begin(), rassns.end() );
-			for ( const PolyType* v : rforall->variables() ) { env.insertVar( v ); }
-		}
+			// add recursive assertions to open set
+			if ( const Forall* rforall = cexpr->forall() ) {
+				const List<Decl>& rassns = rforall->assertions();
+				
+				// reject if hit max recursion depth
+				if ( recursion_depth >= resolver.max_recursive_assertions && ! rassns.empty() )
+					return false;
+				
+				// add open assertions and variables
+				openAssns.insert( openAssns.end(), rassns.begin(), rassns.end() );
+				for ( const PolyType* v : rforall->variables() ) { env.insertVar( v ); }
+			}
+		} else if ( aid == typeof<VarDecl>() ) {
+			// reject any variable assertion binding that isn't a VarExpr
+			if ( ! is<VarExpr>(rexpr) ) return false;
+		} else unreachable("invalid declaration");
 
 		// bind assertion
 		env.bindAssertion( asn, rexpr );
@@ -209,7 +240,7 @@ public:
 		}
 		
 		// bind assertions
-		for ( const FuncDecl* asn : e->forall()->assertions() ) {
+		for ( const Decl* asn : e->forall()->assertions() ) {
 			if ( ! resolveAssertion( asn ) ) {
 				r = nullptr;
 				return false;
@@ -366,7 +397,7 @@ public:
 			}
 
 			if ( openAssns.empty() ) break;
-			List<FuncDecl> toSolve{};
+			List<Decl> toSolve{};
 			toSolve.swap( openAssns );
 
 			// fail if assertions too deeply nested
@@ -374,7 +405,7 @@ public:
 			if ( recursion_depth > resolver.max_recursive_assertions ) return r = nullptr;
 
 			// bind recursive assertions
-			for ( const FuncDecl* asn : toSolve ) {
+			for ( const Decl* asn : toSolve ) {
 				if ( ! resolveAssertion( asn ) ) return r = nullptr;
 			}
 

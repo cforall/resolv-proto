@@ -184,19 +184,30 @@ bool parse_assertion(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 	// look for type assertion
 	if ( ! match_char(end, '|') ) return false;
 	
-	List<Type> returns, params;
-	std::string name;
-
 	// parse return types
+	List<Type> returns;
 	match_whitespace(end);
 	while ( parse_type(end, resolver, types, forall, returns) ) {
 		match_whitespace(end);
 	}
 
-	// parse name
+	std::string name;
+
+	// try for variable assertion
+	if ( match_char(end, '&') ) {
+		if ( ! parse_name(end, name) ) return false;
+
+		if ( ! forall ) { forall.reset( new Forall{} ); }
+		forall->addAssertion( new VarDecl{ name, move(returns) } );
+		token = end;
+		return true;
+	}
+
+	// function assertion -- parse name
 	if ( ! parse_name(end, name) ) return false;
 	
 	// parse parameters
+	List<Type> params;
 	match_whitespace(end);
 	while ( parse_type(end, resolver, types, forall, params) ) {
 		match_whitespace(end);
@@ -438,6 +449,8 @@ void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& reso
 			continue;
 		}
 
+		// parse and resolve expression
+		if ( args.line_nos() ) { args.out() << n << ": " << std::flush; }
 		bool ok = parse_expr( line.data(), resolver, types );
 		if ( ! ok ) {
 			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;

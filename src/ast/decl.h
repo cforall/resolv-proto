@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <functional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -19,6 +20,9 @@
 
 /// A resolver declaration
 class Decl : public ASTNode {
+	friend bool operator== (const Decl&, const Decl&);
+	friend std::hash<Decl>;
+
 	std::string name_;  ///< Name of declaration
 	std::string tag_;   ///< Disambiguating tag of declaration
 
@@ -32,7 +36,28 @@ public:
 	const std::string& tag() const { return tag_; }
 
 	virtual const Type* type() const = 0;
+
+protected:
+	/// Check this declaration for equality with other declarations
+	virtual bool equals(const Decl& o) const {
+		return name_ == o.name_ && tag_ == o.tag_;
+	}
+	/// Hash this declaration
+	virtual std::size_t hash() const {
+		return ( std::hash<std::string>{}( name_ ) << 1 ) | std::hash<std::string>{}( tag_ );
+	}
 };
+
+inline bool operator== (const Decl& a, const Decl& b) { return a.equals(b); }
+inline bool operator!= (const Decl& a, const Decl& b) { return !(a == b); }
+
+namespace std {
+	template<> struct hash<Decl> {
+		typedef Decl argument_type;
+		typedef std::size_t result_type;
+		result_type operator() (const argument_type& d) { return d.hash(); }
+	};
+}
 
 /// A variable declaration
 class VarDecl final : public Decl {
@@ -44,15 +69,12 @@ public:
 	VarDecl(const std::string& name_, const Type* type_) : Decl(name_), type_(type_) {}
 	VarDecl(const std::string& name_, const std::string& tag_, const Type* type_) 
 		: Decl(name_, tag_), type_(type_) {}
+	VarDecl(const std::string& name_, List<Type>&& type_) 
+		: Decl(name_), type_( Type::from( move(type_) ) ) {}
 	VarDecl(const std::string& name_, const std::string& tag_, List<Type>&& type_)
 		: Decl(name_, tag_), type_( Type::from( move(type_) ) ) {}
 	
 	Decl* clone() const override { return new VarDecl{ name(), tag(), type_ }; }
-
-	bool operator== (const VarDecl& that) const { 
-		return name() == that.name() && tag() == that.tag();
-	}
-	bool operator!= (const VarDecl& that) const { return !(*this == that); }
 
 	const Type* type() const override { return type_; }
 
@@ -66,6 +88,8 @@ public:
 	}
 
 protected:
+	// use default equals() and hash()
+
 	void trace(const GC& gc) const override {
 		gc << type_;
 	}
@@ -99,11 +123,6 @@ public:
 	Decl* clone() const override {
 		return new FuncDecl{ name(), tag(), type_, copy(forall_) };
 	}
-	
-	bool operator== (const FuncDecl& that) const { 
-		return name() == that.name() && tag() == that.tag();
-	}
-	bool operator!= (const FuncDecl& that) const { return !(*this == that); }
 	
 	const FuncType* type() const override { return type_; }
 	const List<Type>& params() const { return type_->params(); }
@@ -155,6 +174,8 @@ public:
 	}
 
 protected:
+	// use default equals() and hash()
+
 	void trace(const GC& gc) const override {
 		gc << type_ << forall_.get();
 	}

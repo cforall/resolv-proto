@@ -1,3 +1,17 @@
+## 21 Sep 2018 ##
+* Start work on cached deferred resolution
+* Modify RP `Forall` to map to `Decl`, not `FuncDecl`
+  * **TODO** Make RPDump handle `forall` the same way
+
+## 20 Sep 2018 ##
+* Begin investigating CFA instances in RP
+  * io1 the only slow suite (15 mins)
+  * io1.in:2919 takes a long time (22 levels deep)
+  * io1.in:2921 also (24 levels deep)
+  * io1.in:2923 also (23 levels deep)
+  * all 3 slow instances bind ~12 polymorphic variables into the same class, then resolve the same ~15 assertions for all of them
+    * class-based-caching in deferred resolution would probably help
+
 ## 11-20 Sep 2018 ##
 * CFA => prototype instance translator
   * Added `#$` and `$` private names to prototype
