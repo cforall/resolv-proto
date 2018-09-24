@@ -17,7 +17,7 @@ all : rp bench_gen
 # handle make flags
 -include .lastmakeflags
 LAST_DIR ?= bu
-LAST_RES ?= def
+LAST_RES ?= tec
 
 # Debug Levels: #
 # 0. -O0, asserts, GC_TRAP
