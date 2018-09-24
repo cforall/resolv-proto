@@ -2,7 +2,7 @@
 
 #include "env.h"
 #include "interpretation.h"
-#if defined RP_RES_DEF || defined RP_RES_IMM
+#if defined RP_RES_DEF || defined RP_RES_TEC || defined RP_RES_IMM
 #include "resolve_assertions.h"
 #endif
 
@@ -44,7 +44,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		return Interpretation::make_invalid();
 	}
 
-#if defined RP_RES_DEF || defined RP_RES_IMM
+#if defined RP_RES_DEF || defined RP_RES_TEC || defined RP_RES_IMM
 	// sort results by cost
 	std::sort( results.begin(), results.end(), ByValueCompare<Interpretation>{} );
 	

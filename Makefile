@@ -55,6 +55,8 @@ endif
 RES ?= ${LAST_RES}
 ifeq "${RES}" "def"
 CXXFLAGS += -DRP_RES_DEF
+else ifeq "${RES}" "tec"
+CXXFLAGS += -DRP_RES_TEC
 else ifeq "${RES}" "imm"
 CXXFLAGS += -DRP_RES_IMM
 else ifeq "${RES}" "top"

@@ -19,7 +19,7 @@
 #include "data/mem.h"
 
 // check on match_funcs for necessity of doing resolution
-#if defined RP_RES_DEF
+#if defined RP_RES_DEF || defined RP_RES_TEC
 #define RP_ASSN_CHECK(expr) false
 #else
 #define RP_ASSN_CHECK(expr) resolve_mode.check_assertions && (expr)

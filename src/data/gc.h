@@ -52,6 +52,29 @@ private:
 
 	bool mark;                     ///< The current collection's mark bit
 	unsigned g;                    ///< The current number generation in use
+
+	/// Trace a traceable object (enabled by SFINAE)
+	template<typename T>
+	static inline auto do_trace(const GC& gc, T& obj, int) -> decltype(gc << obj, void()) {
+		gc << obj;
+	}
+
+	/// Do not trace an untraceable object
+	template<typename T>
+	static inline auto do_trace(const GC&, T&, long) -> void {}
+
+	/// Base case for maybe_trace
+	void maybe_trace() const {}
+
+public:
+	/// Trace any objects that are traceable
+	template<typename T, typename... Args>
+	void maybe_trace(T& obj, Args&... args) const {
+		// uses SFINAE trick to select proper overload; prefers actually tracing version 
+		// (because of int->long conversion), but will fall back to non-tracing
+		do_trace(*this, obj, 0);
+		maybe_trace(args...);
+	}
 };
 
 /// Cleanup object for young generation

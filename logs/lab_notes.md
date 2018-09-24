@@ -1,6 +1,9 @@
-## 21 Sep 2018 ##
+## 21-24 Sep 2018 ##
 * Start work on cached deferred resolution
-* Modify RP `Forall` to map to `Decl`, not `FuncDecl`
+  * Assertion cache is keyed by mangle name of assertion, with poly-types normalized to class root
+  * Re-formatted deferIds for cached form
+  * **TODO** audit uses of `RP_RES_DEF` to include `RP_RES_TEC`
+* Modified RP `Forall` to map to `Decl`, not `FuncDecl`
   * **TODO** Make RPDump handle `forall` the same way
 
 ## 20 Sep 2018 ##

@@ -314,7 +314,7 @@ public:
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << "[ ";
 		returns_->write( out, style );
-		out << " :";
+		out << " : ";
 		auto it = params_.begin();
 		(*it)->write( out, style );
 		for(++it; it != params_.end(); ++it) {

@@ -22,6 +22,21 @@ public:
 	}
 };
 
+/// Replaces polymorphic type variables by their class root in an environment
+class EnvRootSubstitutor : public TypeMutator<EnvRootSubstitutor> {
+	const Env& env;
+public:
+	using Super = TypeMutator<EnvRootSubstitutor>;
+	using Super::visit;
+
+	EnvRootSubstitutor( const Env& env ) : env(env) {}
+
+	bool visit( const PolyType* orig, const Type*& r ) {
+		r = env.replaceWithRoot( orig );
+		return true;
+	}
+};
+
 /// Replaces polymorphic type variables by their subsitution in an environment, tracking 
 /// substitution cost and polymorphic nature of returned type
 class CostedSubstitutor : public TypeMutator<CostedSubstitutor> {

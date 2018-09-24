@@ -643,6 +643,11 @@ public:
 		else return ty;
 	}
 
+	/// Replaces type variable with class root (or self if not in environment)
+	const PolyType* replaceWithRoot( const PolyType* pty ) const {
+		return classes->find_or_default( pty, pty );
+	}
+
 private:
 	/// Writes out this environment
     std::ostream& write(std::ostream& out) const;
