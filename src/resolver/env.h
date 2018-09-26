@@ -99,7 +99,6 @@ class Env final {
 
 public:
 	/// Finds the binding reference for this polytype, { nullptr, _ } for none such.
-	/// Updates the local map with the binding, if found.
 	ClassRef findRef( const PolyType* var ) const {
 		const PolyType* root = classes->find_or_default( var, nullptr );
 		if ( root ) return { this, root };
@@ -641,11 +640,6 @@ public:
 	const Type* replace( const Type* ty ) const {
 		if ( is<PolyType>(ty) ) return replace( as<PolyType>(ty) );
 		else return ty;
-	}
-
-	/// Replaces type variable with class root (or self if not in environment)
-	const PolyType* replaceWithRoot( const PolyType* pty ) const {
-		return classes->find_or_default( pty, pty );
 	}
 
 private:

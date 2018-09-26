@@ -127,29 +127,106 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	};
 
 	/// Derives an assertion problem instance from a declaration
-	class AssertionInstantiator : public DeclVisitor<AssertionInstantiator, AssertionInstance> {
+	class AssertionInstantiator : public DeclVisitor<AssertionInstantiator, AssertionInstance> 
+#ifdef RP_RES_TEC	
+		, TypeVisitor<AssertionInstantiator, std::stringstream>
+#endif
+	{
+
 #ifdef RP_RES_TEC
-		EnvRootSubstitutor norm;  ///< Normalizes poly types according to environment
+		const Env& env;  ///< Environment to do mangle-substitution in)
+#endif
 
 	public:
-		AssertionInstantiator( const Env& env ) : norm{env} {}
-#else
-	public:
-		AssertionInstantiator( const Env& ) {}
-#endif
 		using DeclVisitor<AssertionInstantiator, AssertionInstance>::visit;
 		using DeclVisitor<AssertionInstantiator, AssertionInstance>::operator();
 
+#ifdef RP_RES_TEC
+		using TypeVisitor<AssertionInstantiator, std::stringstream>::visit;
+
+	private:
+		/// print all types in a (non-empty) list, space separated
+		void visit_all( const List<Type>& ts, std::stringstream& out ) {
+			auto it = ts.begin();
+			visit( *it, out );
+			while ( ++it != ts.end() ) {
+				out << " ";
+				visit( *it, out );
+			}
+		}
+
+	public:
+		bool visit( const ConcType* t, std::stringstream& out ) {
+			out << *t;
+			return true;
+		}
+
+		bool visit( const NamedType* t, std::stringstream& out ) {
+			out << t->name();
+			if ( ! t->params().empty() ) {
+				out << "<";
+				visit_all( t->params(), out );
+				out << ">";
+			}
+			return true;
+		}
+
+		bool visit( const PolyType* t, std::stringstream& out ) {
+			// fallback to t if unknown type
+			ClassRef r = env.findRef( t );
+			if ( ! r ) { out << *t; return true; }
+			// print class root if unbound class
+			const Type* bound = r.get_bound();
+			if ( ! bound ) { out << *r.get_root(); return true; }
+			// print bound type, tagged as substitution
+			out << "%";
+			visit( bound, out );
+			return true;
+		}
+
+		bool visit( const VoidType* t, std::stringstream& out ) {
+			out << *t;
+			return true;
+		}
+
+		bool visit( const TupleType* t, std::stringstream& out ) {
+			// class invariant that tuple type is non-empty
+			visit_all( t->types(), out );
+			return true;
+		}
+
+		bool visit( const FuncType* t, std::stringstream& out ) {
+			out << "[";
+			if ( t->returns()->size() > 0 ) {
+				out << " ";
+				visit( t->returns(), out );
+			}
+			out << " :";
+			if ( ! t->params().empty() ) {
+				out << " ";
+				visit_all( t->params(), out );
+			}
+			out << " ]";
+			return true;
+		}
+
+		AssertionInstantiator( const Env& env ) : env{env} {}
+#else
+		AssertionInstantiator( const Env& ) {}
+#endif
+		
 		bool visit( const FuncDecl* d, AssertionInstance& r ) {
 			List<Expr> args;
 			args.reserve( d->params().size() );
 #ifdef RP_RES_TEC
-			r.key << *norm( d->returns() ) << " " << d->name();
+			visit( d->returns(), r.key );
+			r.key << " " << d->name();
 #endif
 			for ( const Type* pType : d->params() ) {
 				args.push_back( new ValExpr{ pType } );
 #ifdef RP_RES_TEC
-				r.key << " " << *norm( pType );
+				r.key << " ";
+				visit( pType, r.key );
 #endif
 			}
 
@@ -161,6 +238,10 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		bool visit( const VarDecl* d, AssertionInstance& r ) {
 			r.expr = new NameExpr{ d->name() };
 			r.target = d->type();
+#ifdef RP_RES_TEC
+			visit( d->type(), r.key );
+			r.key << " &" << d->name();
+#endif
 
 			return true;
 		}

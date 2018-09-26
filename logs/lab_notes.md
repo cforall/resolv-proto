@@ -1,10 +1,23 @@
+## 26 Sep 2018 ##
+* Looked at `rational` test case
+  * 6230 is slow: `$bitor( $bitor( $bitor( $bitor( &sout &a ) &b ) &c ) &endl )`
+    * 8 candidates, 0th candidate post-sort demonstrates hang
+    * call to `?|?( Ostype, Rational(RationalImpl) )` doesn't force the different 
+      `RationalImpl` instantiations to be bound in a class.
+    * Solution to incorporate bound types in key
+      * Important to distinguish bound types from monomorphic types in mangling
+* **TODO** look at generation for 6320, should be `&n`, not `n()`
+* **TODO** should parse function pointer literals
+* **TODO** some tuple generation seems to be missing its spaces
+* **TODO** strip all reference types from codegen
+
 ## 21-24 Sep 2018 ##
-* Start work on cached deferred resolution
+* Got on type-environment cached deferred resolution working
   * Assertion cache is keyed by mangle name of assertion, with poly-types normalized to class root
   * Re-formatted deferIds for cached form
-  * **TODO** audit uses of `RP_RES_DEF` to include `RP_RES_TEC`
+  * 1.2s for `bu-tec` on `io1`, vs. ~15min for `bu-def`
+  * `rational` seems to still have some performance issues...
 * Modified RP `Forall` to map to `Decl`, not `FuncDecl`
-  * **TODO** Make RPDump handle `forall` the same way
 
 ## 20 Sep 2018 ##
 * Begin investigating CFA instances in RP
