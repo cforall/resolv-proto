@@ -1,4 +1,4 @@
-#ptr<T> $addr T
+#$ptr<T> $addr T
 6 $and 6 6
 6 $or 6 6
 T $if 6 T T
@@ -3022,13 +3022,13 @@ write_reverse Iterator_type Iterator_type Ostype | Elt_type $assign Elt_type Elt
 
 %%
 
-$constructor( sepSize() 6 )
-$constructor( fP_NAN() 6 )
-$constructor( fP_INFINITE() 6 )
-$constructor( fP_ZERO() 6 )
-$constructor( fP_SUBNORMAL() 6 )
-$constructor( fP_NORMAL() 6 )
-$constructor( _IEEE_()  )
+$constructor( &sepSize 6 )
+$constructor( &fP_NAN 6 )
+$constructor( &fP_INFINITE 6 )
+$constructor( &fP_ZERO 6 )
+$constructor( &fP_SUBNORMAL 6 )
+$constructor( &fP_NORMAL 6 )
+$constructor( &_IEEE_ 6 )
 {
 	#T $addassign #T 6
 	#T &$anon
@@ -3054,7 +3054,7 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( tmp() )
+	$constructor( &tmp )
 	$constructor( #T &x )
 	$destructor( #T )
 	&x
@@ -3086,7 +3086,7 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( tmp() )
+	$constructor( &tmp )
 	$constructor( #T &x )
 	$destructor( #T )
 	&x
@@ -3101,7 +3101,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 powf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_exponential
@@ -3111,7 +3111,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 13 pow( &x &y ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_exponential
@@ -3121,7 +3121,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 powl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_exponential
@@ -3131,7 +3131,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 cpowf( &x &y ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_exponential
@@ -3141,7 +3141,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 cpow( &x &y ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_exponential
@@ -3151,7 +3151,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 cpowl( &x &y ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	8 &$rtn_exponential
@@ -3163,11 +3163,11 @@ $constructor( _IEEE_()  )
 
 	6
 	$constructor( 8 6 )
-	$constructor( 8  )
+	$constructor( 8 8 )
 	6
 	$constructor( 8 $shiftleft( &ep $subtract( &y 6 ) ) )
-	$constructor( 8  )
-	$constructor( op() 6 )
+	$constructor( 8 8 )
+	$constructor( &op 6 )
 	6
 	6
 	$shiftrightassign( &y 6 )
@@ -3175,7 +3175,7 @@ $constructor( _IEEE_()  )
 	$multassign( &op &ep )
 	$multassign( &ep &ep )
 	$constructor( 8 $multiply( &ep &op ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	#T $assign #T #T
@@ -3198,8 +3198,8 @@ $constructor( _IEEE_()  )
 
 	6
 	$constructor( #T 6 )
-	$constructor( #T  )
-	$constructor( op() )
+	$constructor( #T #T )
+	$constructor( &op )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
@@ -3209,7 +3209,7 @@ $constructor( _IEEE_()  )
 	$assign( &op $multiply( &op &ep ) )
 	$assign( &ep $multiply( &ep &ep ) )
 	$constructor( #T $multiply( &ep &op ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	9 &$rtn_exponential
@@ -3221,11 +3221,11 @@ $constructor( _IEEE_()  )
 
 	6
 	$constructor( 9 6 )
-	$constructor( 9  )
+	$constructor( 9 9 )
 	6
 	$constructor( 9 $shiftleft( &ep $subtract( &y 6 ) ) )
-	$constructor( 9  )
-	$constructor( op() 6 )
+	$constructor( 9 9 )
+	$constructor( &op 6 )
 	6
 	6
 	$shiftrightassign( &y 6 )
@@ -3233,7 +3233,7 @@ $constructor( _IEEE_()  )
 	$multassign( &op &ep )
 	$multassign( &ep &ep )
 	$constructor( 9 $multiply( &ep &op ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	13 &$rtn_exponential
@@ -3244,9 +3244,9 @@ $constructor( _IEEE_()  )
 
 	6
 	$constructor( 13 13 )
-	$constructor( 13  )
+	$constructor( 13 13 )
 	$constructor( 13 $divide( 13 $exponential( &x 7 ) ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	8 &$rtn_expassign
@@ -3257,7 +3257,7 @@ $constructor( _IEEE_()  )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 8 &x )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	9 &$rtn_expassign
@@ -3268,7 +3268,7 @@ $constructor( _IEEE_()  )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 9 &x )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	6 &$rtn_expassign
@@ -3279,7 +3279,7 @@ $constructor( _IEEE_()  )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 6 &x )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	7 &$rtn_expassign
@@ -3290,7 +3290,7 @@ $constructor( _IEEE_()  )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 7 &x )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	#_Istream_cstrUC &_dst
@@ -3318,8 +3318,9 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	#$ptr<1>
 	$constructor( #_Istream_cstrUC #_Istream_cstrUC )
-	$constructor( #_Istream_cstrUC  )
+	$constructor( #_Istream_cstrUC #_Istream_cstrUC )
 }
 {
 	#$ptr<1> &s
@@ -3354,8 +3355,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	#$ptr<1>
+	6
 	$constructor( #_Istream_cstrC #_Istream_cstrC )
-	$constructor( #_Istream_cstrC  )
+	$constructor( #_Istream_cstrC #_Istream_cstrC )
 }
 {
 	#$ptr<1> &s
@@ -3398,8 +3401,9 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	8
 	$constructor( #Duration #Duration )
-	$constructor( #Duration  )
+	$constructor( #Duration #Duration )
 }
 {
 	#Duration &_dst
@@ -3448,8 +3452,9 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	9
 	$constructor( #Time #Time )
-	$constructor( #Time  )
+	$constructor( #Time #Time )
 }
 {
 	#Time &_dst
@@ -3498,8 +3503,9 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	6
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#ofstream &_dst
@@ -3508,9 +3514,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index0() 6 )
+	$constructor( &_index0 6 )
 	6
-	$constructor( _index1() 6 )
+	6
+	6
+	$constructor( &_index1 6 )
+	6
+	6
 	6
 }
 {
@@ -3521,9 +3531,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index2() 6 )
+	$constructor( &_index2 6 )
 	6
-	$constructor( _index3() 6 )
+	6
+	6
+	$constructor( &_index3 6 )
+	6
+	6
 	6
 }
 {
@@ -3533,8 +3547,14 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index4()  )
-	$constructor( _index5()  )
+	$constructor( &_index4 6 )
+	6
+	6
+	6
+	$constructor( &_index5 6 )
+	6
+	6
+	6
 }
 {
 	#ofstream &_dst
@@ -3545,12 +3565,23 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index6() 6 )
+	#$ptr<#void>
+	0
+	0
+	0
+	#$ptr<1>
+	$constructor( &_index6 6 )
 	6
-	$constructor( _index7() 6 )
 	6
+	6
+	1
+	$constructor( &_index7 6 )
+	6
+	6
+	6
+	1
 	$constructor( #ofstream #ofstream )
-	$constructor( #ofstream  )
+	$constructor( #ofstream #ofstream )
 }
 {
 	#$ptr<#void> &file
@@ -3560,9 +3591,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index8() 6 )
+	$constructor( &_index8 6 )
 	6
-	$constructor( _index9() 6 )
+	6
+	6
+	$constructor( &_index9 6 )
+	6
+	6
 	6
 }
 {
@@ -3574,9 +3609,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index10() 6 )
+	$constructor( &_index10 6 )
 	6
-	$constructor( _index11() 6 )
+	6
+	6
+	$constructor( &_index11 6 )
+	6
+	6
 	6
 }
 {
@@ -3589,9 +3628,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index12() 6 )
+	$constructor( &_index12 6 )
 	6
-	$constructor( _index13() 6 )
+	6
+	6
+	$constructor( &_index13 6 )
+	6
+	6
 	6
 }
 {
@@ -3605,9 +3648,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index14() 6 )
+	$constructor( &_index14 6 )
 	6
-	$constructor( _index15() 6 )
+	6
+	6
+	$constructor( &_index15 6 )
+	6
+	6
 	6
 }
 {
@@ -3622,9 +3669,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index16() 6 )
+	$constructor( &_index16 6 )
 	6
-	$constructor( _index17() 6 )
+	6
+	6
+	$constructor( &_index17 6 )
+	6
+	6
 	6
 }
 {
@@ -3640,9 +3691,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index18() 6 )
+	$constructor( &_index18 6 )
 	6
-	$constructor( _index19() 6 )
+	6
+	6
+	$constructor( &_index19 6 )
+	6
+	6
 	6
 }
 {
@@ -3659,9 +3714,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _index20() 6 )
+	$constructor( &_index20 6 )
 	6
-	$constructor( _index21() 6 )
+	6
+	6
+	$constructor( &_index21 6 )
+	6
+	6
 	6
 }
 {
@@ -3690,8 +3749,9 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #ifstream #ifstream )
-	$constructor( #ifstream  )
+	$constructor( #ifstream #ifstream )
 }
 {
 	#$ptr<#void> &file
@@ -3726,8 +3786,9 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	6
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	6 &_dst
@@ -3755,8 +3816,9 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	6
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#exception &_dst
@@ -3784,8 +3846,13 @@ $constructor( _IEEE_()  )
 
 	%%
 
+	6
+	#$ptr<1>
+	13
+	13
+	13
 	$constructor( #exception #exception )
-	$constructor( #exception  )
+	$constructor( #exception #exception )
 }
 {
 	#exception &_dst
@@ -3840,7 +3907,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 fmodf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	12 &$rtn_fmod
@@ -3850,7 +3917,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 fmodf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_modulus
@@ -3860,7 +3927,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 13 fmod( &x &y ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_modulus
@@ -3870,7 +3937,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 fmodl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	14 &$rtn_fmod
@@ -3880,7 +3947,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 fmodl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_remainder
@@ -3890,7 +3957,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 remainderf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_remainder
@@ -3900,7 +3967,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 remainderl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$ptr<6> &quo
@@ -3911,7 +3978,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 remquof( &x &y &quo ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	#$ptr<6> &quo
@@ -3922,7 +3989,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 remquol( &x &y &quo ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$2<6 12> &$rtn_remquo
@@ -3932,10 +3999,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_remquo() )
+	$constructor( &$rtn_remquo )
 	$assign( &x remquof( &x &y $addr( &quo ) ) )
 	$constructor( #$2<6 12> &quo&x )
-	$constructor( #$2<6 12>  )
+	$constructor( #$2<6 12> #$2<6 12> )
 }
 {
 	#$2<6 13> &$rtn_remquo
@@ -3945,10 +4012,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_remquo() )
+	$constructor( &$rtn_remquo )
 	$assign( &x remquo( &x &y $addr( &quo ) ) )
 	$constructor( #$2<6 13> &quo&x )
-	$constructor( #$2<6 13>  )
+	$constructor( #$2<6 13> #$2<6 13> )
 }
 {
 	#$2<6 14> &$rtn_remquo
@@ -3958,10 +4025,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_remquo() )
+	$constructor( &$rtn_remquo )
 	$assign( &x remquol( &x &y $addr( &quo ) ) )
 	$constructor( #$2<6 14> &quo&x )
-	$constructor( #$2<6 14>  )
+	$constructor( #$2<6 14> #$2<6 14> )
 }
 {
 	#$2<12 12> &$rtn_div
@@ -3970,10 +4037,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_div() )
+	$constructor( &$rtn_div )
 	$assign( &y modff( $divide( &x &y ) $addr( &x ) ) )
 	$constructor( #$2<12 12> &x&y )
-	$constructor( #$2<12 12>  )
+	$constructor( #$2<12 12> #$2<12 12> )
 }
 {
 	#$2<13 13> &$rtn_div
@@ -3982,10 +4049,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_div() )
+	$constructor( &$rtn_div )
 	$assign( &y modf( $divide( &x &y ) $addr( &x ) ) )
 	$constructor( #$2<13 13> &x&y )
-	$constructor( #$2<13 13>  )
+	$constructor( #$2<13 13> #$2<13 13> )
 }
 {
 	#$2<14 14> &$rtn_div
@@ -3994,10 +4061,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_div() )
+	$constructor( &$rtn_div )
 	$assign( &y modfl( $divide( &x &y ) $addr( &x ) ) )
 	$constructor( #$2<14 14> &x&y )
-	$constructor( #$2<14 14>  )
+	$constructor( #$2<14 14> #$2<14 14> )
 }
 {
 	12 &$rtn_fma
@@ -4008,7 +4075,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 fmaf( &x &y &z ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_fma
@@ -4019,7 +4086,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 fmal( &x &y &z ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_fdim
@@ -4029,7 +4096,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 fdimf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_fdim
@@ -4039,7 +4106,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 fdiml( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$ptr<1> &tag
@@ -4048,7 +4115,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 nanf( &tag ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	#$ptr<1> &tag
@@ -4057,7 +4124,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 nanl( &tag ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_exp
@@ -4066,7 +4133,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 expf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_exp
@@ -4075,7 +4142,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 expl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_exp
@@ -4084,7 +4151,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 cexpf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_exp
@@ -4093,7 +4160,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 cexp( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_exp
@@ -4102,7 +4169,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 cexpl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_exp2
@@ -4111,7 +4178,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 exp2f( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_exp2
@@ -4120,7 +4187,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 exp2l( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_expm1
@@ -4129,7 +4196,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 expm1f( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_expm1
@@ -4138,7 +4205,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 expm1l( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_pow
@@ -4148,7 +4215,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 powf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_pow
@@ -4158,7 +4225,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 powl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_pow
@@ -4168,7 +4235,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 cpowf( &x &y ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_pow
@@ -4178,7 +4245,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 cpow( &x &y ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_pow
@@ -4188,7 +4255,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 cpowl( &x &y ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_log
@@ -4197,7 +4264,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 logf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_log
@@ -4206,7 +4273,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 logl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_log
@@ -4215,7 +4282,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 clogf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_log
@@ -4224,7 +4291,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 clog( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_log
@@ -4233,7 +4300,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 clogl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_log2
@@ -4242,7 +4309,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 log2f( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_log2
@@ -4251,7 +4318,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 log2l( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_log10
@@ -4260,7 +4327,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 log10f( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_log10
@@ -4269,7 +4336,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 log10l( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_log1p
@@ -4278,7 +4345,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 log1pf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_log1p
@@ -4287,7 +4354,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 log1pl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &x
@@ -4296,7 +4363,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 6 ilogbf( &x ) )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	14 &x
@@ -4305,7 +4372,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 6 ilogbl( &x ) )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	12 &$rtn_logb
@@ -4314,7 +4381,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 logbf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_logb
@@ -4323,7 +4390,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 logbl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_sqrt
@@ -4332,7 +4399,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 sqrtf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_sqrt
@@ -4341,7 +4408,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 sqrtl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_sqrt
@@ -4350,7 +4417,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 csqrtf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_sqrt
@@ -4359,7 +4426,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 csqrt( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_sqrt
@@ -4368,7 +4435,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 csqrtl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_cbrt
@@ -4377,7 +4444,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 cbrtf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_cbrt
@@ -4386,7 +4453,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 cbrtl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_hypot
@@ -4396,7 +4463,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 hypotf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_hypot
@@ -4406,7 +4473,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 hypotl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_sin
@@ -4415,7 +4482,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 sinf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_sin
@@ -4424,7 +4491,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 sinl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_sin
@@ -4433,7 +4500,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 csinf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_sin
@@ -4442,7 +4509,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 csin( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_sin
@@ -4451,7 +4518,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 csinl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_cos
@@ -4460,7 +4527,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 cosf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_cos
@@ -4469,7 +4536,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 cosl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_cos
@@ -4478,7 +4545,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 ccosf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_cos
@@ -4487,7 +4554,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 ccos( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_cos
@@ -4496,7 +4563,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 ccosl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_tan
@@ -4505,7 +4572,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 tanf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_tan
@@ -4514,7 +4581,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 tanl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_tan
@@ -4523,7 +4590,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 ctanf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_tan
@@ -4532,7 +4599,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 ctan( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_tan
@@ -4541,7 +4608,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 ctanl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_asin
@@ -4550,7 +4617,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 asinf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_asin
@@ -4559,7 +4626,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 asinl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_asin
@@ -4568,7 +4635,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 casinf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_asin
@@ -4577,7 +4644,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 casin( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_asin
@@ -4586,7 +4653,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 casinl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_acos
@@ -4595,7 +4662,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 acosf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_acos
@@ -4604,7 +4671,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 acosl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_acos
@@ -4613,7 +4680,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 cacosf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_acos
@@ -4622,7 +4689,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 cacos( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_acos
@@ -4631,7 +4698,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 cacosl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_atan
@@ -4640,7 +4707,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 atanf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_atan
@@ -4649,7 +4716,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 atanl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_atan
@@ -4658,7 +4725,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 catanf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_atan
@@ -4667,7 +4734,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 catan( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_atan
@@ -4676,7 +4743,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 catanl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_atan2
@@ -4686,7 +4753,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 atan2f( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_atan2
@@ -4696,7 +4763,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 atan2l( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_atan
@@ -4706,7 +4773,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 atan2f( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_atan
@@ -4716,7 +4783,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 13 atan2( &x &y ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_atan
@@ -4726,7 +4793,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 atan2l( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_sinh
@@ -4735,7 +4802,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 sinhf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_sinh
@@ -4744,7 +4811,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 sinhl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_sinh
@@ -4753,7 +4820,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 csinhf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_sinh
@@ -4762,7 +4829,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 csinh( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_sinh
@@ -4771,7 +4838,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 csinhl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_cosh
@@ -4780,7 +4847,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 coshf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_cosh
@@ -4789,7 +4856,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 coshl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_cosh
@@ -4798,7 +4865,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 ccoshf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_cosh
@@ -4807,7 +4874,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 ccosh( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_cosh
@@ -4816,7 +4883,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 ccoshl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_tanh
@@ -4825,7 +4892,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 tanhf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_tanh
@@ -4834,7 +4901,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 tanhl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_tanh
@@ -4843,7 +4910,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 ctanhf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_tanh
@@ -4852,7 +4919,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 ctanh( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_tanh
@@ -4861,7 +4928,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 ctanhl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_asinh
@@ -4870,7 +4937,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 asinhf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_asinh
@@ -4879,7 +4946,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 asinhl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_asinh
@@ -4888,7 +4955,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 casinhf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_asinh
@@ -4897,7 +4964,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 casinh( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_asinh
@@ -4906,7 +4973,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 casinhl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_acosh
@@ -4915,7 +4982,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 acoshf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_acosh
@@ -4924,7 +4991,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 acoshl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_acosh
@@ -4933,7 +5000,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 cacoshf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_acosh
@@ -4942,7 +5009,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 cacosh( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_acosh
@@ -4951,7 +5018,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 cacoshl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_atanh
@@ -4960,7 +5027,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 atanhf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_atanh
@@ -4969,7 +5036,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 atanhl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_atanh
@@ -4978,7 +5045,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 15 catanhf( &x ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_atanh
@@ -4987,7 +5054,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 16 catanh( &x ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_atanh
@@ -4996,7 +5063,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 17 catanhl( &x ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	12 &$rtn_erf
@@ -5005,7 +5072,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 erff( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_erf
@@ -5014,7 +5081,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 erfl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_erfc
@@ -5023,7 +5090,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 erfcf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_erfc
@@ -5032,7 +5099,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 erfcl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_lgamma
@@ -5041,7 +5108,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 lgammaf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_lgamma
@@ -5050,7 +5117,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 lgammal( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$ptr<6> &sign
@@ -5060,7 +5127,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 lgammaf_r( &x &sign ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	#$ptr<6> &sign
@@ -5070,7 +5137,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 13 lgamma_r( &x &sign ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	#$ptr<6> &sign
@@ -5080,7 +5147,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 lgammal_r( &x &sign ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_tgamma
@@ -5089,7 +5156,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 tgammaf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_tgamma
@@ -5098,7 +5165,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 tgammal( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_floor
@@ -5107,7 +5174,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 floorf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_floor
@@ -5116,7 +5183,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 floorl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_ceil
@@ -5125,7 +5192,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 ceilf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_ceil
@@ -5134,7 +5201,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 ceill( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_trunc
@@ -5143,7 +5210,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 truncf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_trunc
@@ -5152,7 +5219,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 truncl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_rint
@@ -5161,7 +5228,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 rintf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_rint
@@ -5170,7 +5237,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 rintl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &x
@@ -5179,7 +5246,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lrintf( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	13 &x
@@ -5188,7 +5255,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lrint( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	14 &x
@@ -5197,7 +5264,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lrintl( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	10 &$rtn_rint
@@ -5206,7 +5273,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llrintf( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	10 &$rtn_rint
@@ -5215,7 +5282,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llrint( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	10 &$rtn_rint
@@ -5224,7 +5291,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llrintl( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	12 &x
@@ -5233,7 +5300,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lrintf( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	14 &x
@@ -5242,7 +5309,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lrintl( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	10 &$rtn_llrint
@@ -5251,7 +5318,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llrintf( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	10 &$rtn_llrint
@@ -5260,7 +5327,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llrintl( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	12 &$rtn_nearbyint
@@ -5269,7 +5336,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 nearbyintf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_nearbyint
@@ -5278,7 +5345,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 nearbyintl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_round
@@ -5287,7 +5354,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 roundf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_round
@@ -5296,7 +5363,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 roundl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &x
@@ -5305,7 +5372,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lroundf( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	13 &x
@@ -5314,7 +5381,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lround( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	14 &x
@@ -5323,7 +5390,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lroundl( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	10 &$rtn_round
@@ -5332,7 +5399,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llroundf( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	10 &$rtn_round
@@ -5341,7 +5408,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llround( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	10 &$rtn_round
@@ -5350,7 +5417,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llroundl( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	12 &x
@@ -5359,7 +5426,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lroundf( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	14 &x
@@ -5368,7 +5435,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 8 lroundl( &x ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	10 &$rtn_llround
@@ -5377,7 +5444,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llroundf( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	10 &$rtn_llround
@@ -5386,7 +5453,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 10 llroundl( &x ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	12 &$rtn_copysign
@@ -5396,7 +5463,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 copysignf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_copysign
@@ -5406,7 +5473,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 copysignl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$ptr<6> &ip
@@ -5416,7 +5483,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 frexpf( &x &ip ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	#$ptr<6> &ip
@@ -5426,7 +5493,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 frexpl( &x &ip ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_ldexp
@@ -5436,7 +5503,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 ldexpf( &x &exp2 ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_ldexp
@@ -5446,7 +5513,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 ldexpl( &x &exp2 ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$2<12 12> &$rtn_modf
@@ -5455,10 +5522,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_modf() )
+	$constructor( &$rtn_modf )
 	$assign( &x modff( &x $addr( &i ) ) )
 	$constructor( #$2<12 12> &i&x )
-	$constructor( #$2<12 12>  )
+	$constructor( #$2<12 12> #$2<12 12> )
 }
 {
 	#$ptr<12> &i
@@ -5468,7 +5535,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 modff( &x &i ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	#$2<13 13> &$rtn_modf
@@ -5477,10 +5544,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_modf() )
+	$constructor( &$rtn_modf )
 	$assign( &x modf( &x $addr( &i ) ) )
 	$constructor( #$2<13 13> &i&x )
-	$constructor( #$2<13 13>  )
+	$constructor( #$2<13 13> #$2<13 13> )
 }
 {
 	#$2<14 14> &$rtn_modf
@@ -5489,10 +5556,10 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( $rtn_modf() )
+	$constructor( &$rtn_modf )
 	$assign( &x modfl( &x $addr( &i ) ) )
 	$constructor( #$2<14 14> &i&x )
-	$constructor( #$2<14 14>  )
+	$constructor( #$2<14 14> #$2<14 14> )
 }
 {
 	#$ptr<14> &i
@@ -5502,7 +5569,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 modfl( &x &i ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_nextafter
@@ -5512,7 +5579,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 nextafterf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_nextafter
@@ -5522,7 +5589,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 nextafterl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_nexttoward
@@ -5532,7 +5599,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 nexttowardf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_nexttoward
@@ -5542,7 +5609,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 nexttowardl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_scalbn
@@ -5552,7 +5619,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 scalbnf( &x &exp ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_scalbn
@@ -5562,7 +5629,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 scalbnl( &x &exp ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_scalbn
@@ -5572,7 +5639,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 scalblnf( &x &exp ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_scalbn
@@ -5582,7 +5649,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 13 scalbln( &x &exp ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_scalbn
@@ -5592,7 +5659,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 scalblnl( &x &exp ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_scalbln
@@ -5602,7 +5669,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 scalblnf( &x &exp ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	14 &$rtn_scalbln
@@ -5612,7 +5679,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 scalblnl( &x &exp ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	2 &v
@@ -5621,7 +5688,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 3 abs( 6 ) )
-	$constructor( 3  )
+	$constructor( 3 3 )
 }
 {
 	8 &v
@@ -5630,7 +5697,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 9 labs( &v ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	10 &v
@@ -5639,7 +5706,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 11 llabs( &v ) )
-	$constructor( 11  )
+	$constructor( 11 11 )
 }
 {
 	12 &$rtn_abs
@@ -5648,7 +5715,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 fabsf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_abs
@@ -5657,7 +5724,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 13 fabs( &x ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_abs
@@ -5666,7 +5733,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 fabsl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_abs
@@ -5675,7 +5742,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 12 cabsf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_abs
@@ -5684,7 +5751,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 13 cabs( &x ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_abs
@@ -5693,7 +5760,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( 14 cabsl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#T $assign #T #T
@@ -5711,7 +5778,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( #T $if( 6 &t1 &t2 ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5729,7 +5796,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( #T $if( 6 &t1 &t2 ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5750,7 +5817,7 @@ $constructor( _IEEE_()  )
 	%%
 
 	$constructor( #T max( &min_val min( &value &max_val ) ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5765,7 +5832,7 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( temp() )
+	$constructor( &temp )
 	$constructor( #T &v1 )
 	$destructor( #T )
 	&v1
@@ -5795,12 +5862,12 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _compLit0() )
+	$constructor( &_compLit0 )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( #T $add( $multiply( &x $subtract(  &a ) ) $multiply( &y &a ) ) )
-	$constructor( #T  )
+	$constructor( #T $add( $multiply( &x $subtract( #T &a ) ) $multiply( &y &a ) ) )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5821,16 +5888,16 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _compLit1() )
+	$constructor( &_compLit1 )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( _compLit2() )
+	$constructor( &_compLit2 )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( #T $if( 6   ) )
-	$constructor( #T  )
+	$constructor( #T $if( 6 #T #T ) )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5861,28 +5928,28 @@ $constructor( _IEEE_()  )
 
 	%%
 
-	$constructor( _compLit3() )
+	$constructor( &_compLit3 )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( _compLit4() )
+	$constructor( &_compLit4 )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( t() )
-	$constructor( #T clamp( $divide( $subtract( &x &edge0 ) $subtract( &edge1 &edge0 ) )   ) )
+	$constructor( &t )
+	$constructor( #T clamp( $divide( $subtract( &x &edge0 ) $subtract( &edge1 &edge0 ) ) #T #T ) )
 	$destructor( #T )
-	clamp( $divide( $subtract( &x &edge0 ) $subtract( &edge1 &edge0 ) )   )
-	$constructor( _compLit5() )
+	clamp( $divide( $subtract( &x &edge0 ) $subtract( &edge1 &edge0 ) ) #T #T )
+	$constructor( &_compLit5 )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( _compLit6() )
+	$constructor( &_compLit6 )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
-	$constructor( #T $multiply( $multiply( &t &t ) $subtract(  $multiply(  &t ) ) ) )
-	$constructor( #T  )
+	$constructor( #T $multiply( $multiply( &t &t ) $subtract( #T $multiply( #T &t ) ) ) )
+	$constructor( #T #T )
 }
 {
 	12 &f
@@ -5911,13 +5978,13 @@ $constructor( _IEEE_()  )
 	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) exp2( 12 ) ) exp2( 13 ) ) exp2( 14 ) ) &endl )
 	$bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) expm1( 12 ) ) expm1( 13 ) ) expm1( 14 ) ) &endl )
 	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) pow( 12 12 ) ) pow( 13 13 ) ) pow( 14 14 ) ) pow( $add( 12 15 ) $add( 12 15 ) ) ) pow( $add( 13 16 ) $add( 13 16 ) ) ) pow( $add( 14 17 ) $add( 14 17 ) ) ) &endl )
-	$constructor( b() 6 )
+	$constructor( &b 6 )
 	6
-	$constructor( e() 6 )
+	$constructor( &e 6 )
 	6
 	$expassign( &b &e )
 	$bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) &b ) $exponential( &b &e ) ) &endl )
 	$bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) $exponential( 1 7 ) ) $exponential( 6 7 ) ) $exponential( 6 7 ) ) $exponential( $unaryminus( 6 ) 7 ) ) $exponential( 6 $unaryminus( 6 ) ) ) $exponential( $unaryminus( 6 ) $unaryminus( 6 ) ) ) $exponential( 13 13 ) ) $exponential( $add( 12 15 ) $add( 12 15 ) ) ) &endl )
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }

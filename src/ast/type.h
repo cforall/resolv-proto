@@ -313,13 +313,14 @@ public:
 
 	void write(std::ostream& out, ASTNode::Print style) const override {
 		out << "[ ";
-		returns_->write( out, style );
-		out << " : ";
-		auto it = params_.begin();
-		(*it)->write( out, style );
-		for(++it; it != params_.end(); ++it) {
+		if ( returns_->size() > 0 ) {
+			returns_->write( out, style );
 			out << " ";
-			(*it)->write( out, style );
+		}
+		out << ":";
+		for ( const Type* pType : params_ ) {
+			out << " ";
+			pType->write( out, style );
 		}
 		out << " ]";
 	}

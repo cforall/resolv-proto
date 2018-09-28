@@ -17,8 +17,9 @@ class SpecCounter : public TypeVisitor<SpecCounter, option<Cost::Element>> {
 	}
 
 public:
-	using TypeVisitor<SpecCounter, option<Cost::Element>>::visit;
-	using TypeVisitor<SpecCounter, option<Cost::Element>>::operator();
+	using Super = TypeVisitor<SpecCounter, option<Cost::Element>>;
+	using Super::visit;
+	using Super::operator();
 
 	bool visit( const NamedType* t, option<Cost::Element>& r ) {
 		updateCount( t->params(), r );

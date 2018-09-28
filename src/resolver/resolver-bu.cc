@@ -147,8 +147,8 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 
 	for ( const auto& it : funcs ) {
 		for ( const Decl* decl : it->second ) {
-			// VarDecl indexed with -1 params
-			const FuncDecl* func = as_checked<FuncDecl>(decl);
+			const FuncDecl* func = as_safe<FuncDecl>(decl);
+			if ( ! func ) continue; // skip VarDecl
 
 			// skip void-returning functions unless at top level
 			if ( ! resolve_mode.allow_void && func->returns()->size() == 0 ) continue;

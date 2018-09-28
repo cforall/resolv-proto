@@ -1,4 +1,4 @@
-#ptr<T> $addr T
+#$ptr<T> $addr T
 6 $and 6 6
 6 $or 6 6
 T $if 6 T T
@@ -2072,7 +2072,7 @@ free #$ptr<#void>
 
 	%%
 
-	$constructor( tmp() )
+	$constructor( &tmp )
 	$constructor( #T &x )
 	$destructor( #T )
 	&x
@@ -2104,7 +2104,7 @@ free #$ptr<#void>
 
 	%%
 
-	$constructor( tmp() )
+	$constructor( &tmp )
 	$constructor( #T &x )
 	$destructor( #T )
 	&x
@@ -2119,7 +2119,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 12 powf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_exponential
@@ -2129,7 +2129,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 13 pow( &x &y ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_exponential
@@ -2139,7 +2139,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 14 powl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_exponential
@@ -2149,7 +2149,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 15 cpowf( &x &y ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_exponential
@@ -2159,7 +2159,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 16 cpow( &x &y ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_exponential
@@ -2169,7 +2169,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 17 cpowl( &x &y ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	8 &$rtn_exponential
@@ -2181,11 +2181,11 @@ free #$ptr<#void>
 
 	6
 	$constructor( 8 6 )
-	$constructor( 8  )
+	$constructor( 8 8 )
 	6
 	$constructor( 8 $shiftleft( &ep $subtract( &y 6 ) ) )
-	$constructor( 8  )
-	$constructor( op() 6 )
+	$constructor( 8 8 )
+	$constructor( &op 6 )
 	6
 	6
 	$shiftrightassign( &y 6 )
@@ -2193,7 +2193,7 @@ free #$ptr<#void>
 	$multassign( &op &ep )
 	$multassign( &ep &ep )
 	$constructor( 8 $multiply( &ep &op ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	#T $assign #T #T
@@ -2216,8 +2216,8 @@ free #$ptr<#void>
 
 	6
 	$constructor( #T 6 )
-	$constructor( #T  )
-	$constructor( op() )
+	$constructor( #T #T )
+	$constructor( &op )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
@@ -2227,7 +2227,7 @@ free #$ptr<#void>
 	$assign( &op $multiply( &op &ep ) )
 	$assign( &ep $multiply( &ep &ep ) )
 	$constructor( #T $multiply( &ep &op ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	9 &$rtn_exponential
@@ -2239,11 +2239,11 @@ free #$ptr<#void>
 
 	6
 	$constructor( 9 6 )
-	$constructor( 9  )
+	$constructor( 9 9 )
 	6
 	$constructor( 9 $shiftleft( &ep $subtract( &y 6 ) ) )
-	$constructor( 9  )
-	$constructor( op() 6 )
+	$constructor( 9 9 )
+	$constructor( &op 6 )
 	6
 	6
 	$shiftrightassign( &y 6 )
@@ -2251,7 +2251,7 @@ free #$ptr<#void>
 	$multassign( &op &ep )
 	$multassign( &ep &ep )
 	$constructor( 9 $multiply( &ep &op ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	13 &$rtn_exponential
@@ -2262,9 +2262,9 @@ free #$ptr<#void>
 
 	6
 	$constructor( 13 13 )
-	$constructor( 13  )
+	$constructor( 13 13 )
 	$constructor( 13 $divide( 13 $exponential( &x 7 ) ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	8 &$rtn_expassign
@@ -2275,7 +2275,7 @@ free #$ptr<#void>
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 8 &x )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	9 &$rtn_expassign
@@ -2286,7 +2286,7 @@ free #$ptr<#void>
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 9 &x )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	6 &$rtn_expassign
@@ -2297,7 +2297,7 @@ free #$ptr<#void>
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 6 &x )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	7 &$rtn_expassign
@@ -2308,7 +2308,7 @@ free #$ptr<#void>
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 7 &x )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	6 &$rtn_multiply
@@ -2318,7 +2318,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	6 &$rtn_call
@@ -2328,7 +2328,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 6 $multiply( &number1 &number2 ) )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	6 &$rtn_add
@@ -2338,7 +2338,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	6 &$rtn_assign
@@ -2348,7 +2348,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#accumulator &_dst
@@ -2376,8 +2376,9 @@ free #$ptr<#void>
 
 	%%
 
+	6
 	$constructor( #accumulator #accumulator )
-	$constructor( #accumulator  )
+	$constructor( #accumulator #accumulator )
 }
 {
 	#accumulator &_dst
@@ -2395,7 +2396,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 1 1 )
-	$constructor( 1  )
+	$constructor( 1 1 )
 }
 {
 	1 &a
@@ -2415,7 +2416,7 @@ free #$ptr<#void>
 	%%
 
 	$constructor( 6 6 )
-	$constructor( 6  )
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
+	$constructor( 6 6 )
 }

@@ -309,17 +309,43 @@ bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 	int t;
 	std::string n;
 
-	if ( parse_int(token, t) ) {
+	if ( parse_int(token, t) ) {  // ConcType
 		auto it = get_canon<ConcType>( types, t );
 		if ( it.second ) resolver.addType( it.first );
 		out.push_back( it.first );
 		return true;
-	} else if ( parse_named_type(token, n) ) {
+	} else if ( parse_named_type(token, n) ) {  // concrete NamedType
 		List<Type> params;
 		parse_conc_generic_params( token, resolver, types, params );
 		auto it = get_canon( types, n, move(params) );
 		if ( it.second ) resolver.addType( it.first );
 		out.push_back( it.first );
+		return true;
+	} else if ( match_char(token, '[') ) {  // concrete FuncType
+		match_whitespace(token);
+
+		// match return types
+		List<Type> returns;
+		while ( parse_conc_type(token, resolver, types, returns) ) {
+			match_whitespace(token);
+		}
+
+		// match split token
+		if ( ! match_char(token, ':') ) return false;
+		match_whitespace(token);
+
+		// match parameters
+		List<Type> params;
+		while ( parse_conc_type(token, resolver, types, params) ) {
+			match_whitespace(token);
+		}
+
+		// match closing token
+		if ( ! match_char(token, ']') ) return false;
+		match_whitespace(token);
+
+		// return type
+		out.push_back( new FuncType{ move(params), move(returns) } );
 		return true;
 	} else return false;
 }

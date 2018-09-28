@@ -23,7 +23,8 @@ class Resolver;
 /// var_decl := <type> " &"<name>("-"<tag>)?
 /// type_assertion := "|" (<type>" ")* ( <name> (" "<type>)* ) | ( "&"<name> )
 /// resolv_expr := <subexpr> NL+
-/// subexpr := <conc_type> | <named_type> | <name> " (" (" "<subexpr>)* " )" | "&"<name>
+/// subexpr := <conc_type> | <named_type> | <func_type> 
+///            | <name> " (" (" "<subexpr>)* " )" | "&"<name>
 /// name := [a-z_$][A-Za-z_0-9]*
 /// tag := <name>
 /// type := <conc_type> | <named_type> | <poly_type> | <func_type>

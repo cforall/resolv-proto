@@ -1,4 +1,4 @@
-## 26 Sep 2018 ##
+## 26-28 Sep 2018 ##
 * Looked at `rational` test case
   * 6230 is slow: `$bitor( $bitor( $bitor( $bitor( &sout &a ) &b ) &c ) &endl )`
     * 8 candidates, 0th candidate post-sort demonstrates hang
@@ -6,10 +6,22 @@
       `RationalImpl` instantiations to be bound in a class.
     * Solution to incorporate bound types in key
       * Important to distinguish bound types from monomorphic types in mangling
-* **TODO** look at generation for 6320, should be `&n`, not `n()`
-* **TODO** should parse function pointer literals
+* RP now parses function pointer literals as arguments
+  * **TODO** canonicalize function types in parser
+* stripped reference types from codegen (can be re-added when RP supports proper conversions)
+* re-wrote constructor expressions to generate a variable expression rather than a function call
+* corrected for implmentation of `{wchar,char{16,32}}_t` as `TypeInstType`
+* normalized compiler-generated function declarations to collide with user declarations in RPDump
 * **TODO** some tuple generation seems to be missing its spaces
-* **TODO** strip all reference types from codegen
+* More detailed look at test suites
+  * most resolution errors are due to the `zero_t => T*` conversion not existing
+    * ditto for no `void* => T*` conversion
+  * Others due to missing var-args support in prototype (including `ttype`)
+  * There's a conditional around `__assert_fail` that consistently doesn't work
+  * Can't assign to `dtype&`, e.g. in returns from builtin `++?`, etc.
+  * No support for function operator in prototype resolution impacts `function-operator`
+  * No support for `WithStmt` or `AsmStmt`
+* Re-ran tests up to ...
 
 ## 21-24 Sep 2018 ##
 * Got on type-environment cached deferred resolution working

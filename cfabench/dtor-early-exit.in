@@ -1,4 +1,4 @@
-#ptr<T> $addr T
+#$ptr<T> $addr T
 6 $and 6 6
 6 $or 6 6
 T $if 6 T T
@@ -2720,7 +2720,7 @@ write_reverse Iterator_type Iterator_type Ostype | Elt_type $assign Elt_type Elt
 
 %%
 
-$constructor( sepSize() 6 )
+$constructor( &sepSize 6 )
 {
 	#T $addassign #T 6
 	#T &$anon
@@ -2746,7 +2746,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( tmp() )
+	$constructor( &tmp )
 	$constructor( #T &x )
 	$destructor( #T )
 	&x
@@ -2778,7 +2778,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( tmp() )
+	$constructor( &tmp )
 	$constructor( #T &x )
 	$destructor( #T )
 	&x
@@ -2793,7 +2793,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 12 powf( &x &y ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_exponential
@@ -2803,7 +2803,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 13 pow( &x &y ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_exponential
@@ -2813,7 +2813,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 14 powl( &x &y ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	15 &$rtn_exponential
@@ -2823,7 +2823,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 15 cpowf( &x &y ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	16 &$rtn_exponential
@@ -2833,7 +2833,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 16 cpow( &x &y ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	17 &$rtn_exponential
@@ -2843,7 +2843,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 17 cpowl( &x &y ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	8 &$rtn_exponential
@@ -2855,11 +2855,11 @@ $constructor( sepSize() 6 )
 
 	6
 	$constructor( 8 6 )
-	$constructor( 8  )
+	$constructor( 8 8 )
 	6
 	$constructor( 8 $shiftleft( &ep $subtract( &y 6 ) ) )
-	$constructor( 8  )
-	$constructor( op() 6 )
+	$constructor( 8 8 )
+	$constructor( &op 6 )
 	6
 	6
 	$shiftrightassign( &y 6 )
@@ -2867,7 +2867,7 @@ $constructor( sepSize() 6 )
 	$multassign( &op &ep )
 	$multassign( &ep &ep )
 	$constructor( 8 $multiply( &ep &op ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	#T $assign #T #T
@@ -2890,8 +2890,8 @@ $constructor( sepSize() 6 )
 
 	6
 	$constructor( #T 6 )
-	$constructor( #T  )
-	$constructor( op() )
+	$constructor( #T #T )
+	$constructor( &op )
 	$constructor( #T 6 )
 	$destructor( #T )
 	6
@@ -2901,7 +2901,7 @@ $constructor( sepSize() 6 )
 	$assign( &op $multiply( &op &ep ) )
 	$assign( &ep $multiply( &ep &ep ) )
 	$constructor( #T $multiply( &ep &op ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	9 &$rtn_exponential
@@ -2913,11 +2913,11 @@ $constructor( sepSize() 6 )
 
 	6
 	$constructor( 9 6 )
-	$constructor( 9  )
+	$constructor( 9 9 )
 	6
 	$constructor( 9 $shiftleft( &ep $subtract( &y 6 ) ) )
-	$constructor( 9  )
-	$constructor( op() 6 )
+	$constructor( 9 9 )
+	$constructor( &op 6 )
 	6
 	6
 	$shiftrightassign( &y 6 )
@@ -2925,7 +2925,7 @@ $constructor( sepSize() 6 )
 	$multassign( &op &ep )
 	$multassign( &ep &ep )
 	$constructor( 9 $multiply( &ep &op ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	13 &$rtn_exponential
@@ -2936,9 +2936,9 @@ $constructor( sepSize() 6 )
 
 	6
 	$constructor( 13 13 )
-	$constructor( 13  )
+	$constructor( 13 13 )
 	$constructor( 13 $divide( 13 $exponential( &x 7 ) ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	8 &$rtn_expassign
@@ -2949,7 +2949,7 @@ $constructor( sepSize() 6 )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 8 &x )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	9 &$rtn_expassign
@@ -2960,7 +2960,7 @@ $constructor( sepSize() 6 )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 9 &x )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	6 &$rtn_expassign
@@ -2971,7 +2971,7 @@ $constructor( sepSize() 6 )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 6 &x )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	7 &$rtn_expassign
@@ -2982,7 +2982,7 @@ $constructor( sepSize() 6 )
 
 	$assign( &x $exponential( &x &y ) )
 	$constructor( 7 &x )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	#_Istream_cstrUC &_dst
@@ -3010,8 +3010,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<1>
 	$constructor( #_Istream_cstrUC #_Istream_cstrUC )
-	$constructor( #_Istream_cstrUC  )
+	$constructor( #_Istream_cstrUC #_Istream_cstrUC )
 }
 {
 	#$ptr<1> &s
@@ -3046,8 +3047,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<1>
+	6
 	$constructor( #_Istream_cstrC #_Istream_cstrC )
-	$constructor( #_Istream_cstrC  )
+	$constructor( #_Istream_cstrC #_Istream_cstrC )
 }
 {
 	#$ptr<1> &s
@@ -3090,8 +3093,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	8
 	$constructor( #Duration #Duration )
-	$constructor( #Duration  )
+	$constructor( #Duration #Duration )
 }
 {
 	#Duration &_dst
@@ -3140,8 +3144,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	9
 	$constructor( #Time #Time )
-	$constructor( #Time  )
+	$constructor( #Time #Time )
 }
 {
 	#Time &_dst
@@ -3190,8 +3195,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	6
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#ofstream &_dst
@@ -3200,9 +3206,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index0() 6 )
+	$constructor( &_index0 6 )
 	6
-	$constructor( _index1() 6 )
+	6
+	6
+	$constructor( &_index1 6 )
+	6
+	6
 	6
 }
 {
@@ -3213,9 +3223,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index2() 6 )
+	$constructor( &_index2 6 )
 	6
-	$constructor( _index3() 6 )
+	6
+	6
+	$constructor( &_index3 6 )
+	6
+	6
 	6
 }
 {
@@ -3225,8 +3239,14 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index4()  )
-	$constructor( _index5()  )
+	$constructor( &_index4 6 )
+	6
+	6
+	6
+	$constructor( &_index5 6 )
+	6
+	6
+	6
 }
 {
 	#ofstream &_dst
@@ -3237,12 +3257,23 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index6() 6 )
+	#$ptr<#void>
+	0
+	0
+	0
+	#$ptr<1>
+	$constructor( &_index6 6 )
 	6
-	$constructor( _index7() 6 )
 	6
+	6
+	1
+	$constructor( &_index7 6 )
+	6
+	6
+	6
+	1
 	$constructor( #ofstream #ofstream )
-	$constructor( #ofstream  )
+	$constructor( #ofstream #ofstream )
 }
 {
 	#$ptr<#void> &file
@@ -3252,9 +3283,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index8() 6 )
+	$constructor( &_index8 6 )
 	6
-	$constructor( _index9() 6 )
+	6
+	6
+	$constructor( &_index9 6 )
+	6
+	6
 	6
 }
 {
@@ -3266,9 +3301,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index10() 6 )
+	$constructor( &_index10 6 )
 	6
-	$constructor( _index11() 6 )
+	6
+	6
+	$constructor( &_index11 6 )
+	6
+	6
 	6
 }
 {
@@ -3281,9 +3320,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index12() 6 )
+	$constructor( &_index12 6 )
 	6
-	$constructor( _index13() 6 )
+	6
+	6
+	$constructor( &_index13 6 )
+	6
+	6
 	6
 }
 {
@@ -3297,9 +3340,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index14() 6 )
+	$constructor( &_index14 6 )
 	6
-	$constructor( _index15() 6 )
+	6
+	6
+	$constructor( &_index15 6 )
+	6
+	6
 	6
 }
 {
@@ -3314,9 +3361,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index16() 6 )
+	$constructor( &_index16 6 )
 	6
-	$constructor( _index17() 6 )
+	6
+	6
+	$constructor( &_index17 6 )
+	6
+	6
 	6
 }
 {
@@ -3332,9 +3383,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index18() 6 )
+	$constructor( &_index18 6 )
 	6
-	$constructor( _index19() 6 )
+	6
+	6
+	$constructor( &_index19 6 )
+	6
+	6
 	6
 }
 {
@@ -3351,9 +3406,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index20() 6 )
+	$constructor( &_index20 6 )
 	6
-	$constructor( _index21() 6 )
+	6
+	6
+	$constructor( &_index21 6 )
+	6
+	6
 	6
 }
 {
@@ -3382,8 +3441,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #ifstream #ifstream )
-	$constructor( #ifstream  )
+	$constructor( #ifstream #ifstream )
 }
 {
 	#$ptr<#void> &file
@@ -3418,8 +3478,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	6
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#__anonymous2 &_dst
@@ -3427,7 +3488,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index22() 6 )
+	$constructor( &_index22 6 )
+	6
+	6
 	6
 }
 {
@@ -3437,7 +3500,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index23() 6 )
+	$constructor( &_index23 6 )
+	6
+	6
 	6
 }
 {
@@ -3446,7 +3511,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index24()  )
+	$constructor( &_index24 6 )
+	6
+	6
+	6
 }
 {
 	#__anonymous2 &_dst
@@ -3456,10 +3524,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index25() 6 )
+	$constructor( &_index25 6 )
+	6
+	6
+	6
 	6
 	$constructor( #__anonymous2 #__anonymous2 )
-	$constructor( #__anonymous2  )
+	$constructor( #__anonymous2 #__anonymous2 )
 }
 {
 	#$ptr<6> &__val
@@ -3468,7 +3539,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index26() 6 )
+	$constructor( &_index26 6 )
+	6
+	6
 	6
 }
 {
@@ -3478,7 +3551,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 7 __builtin_bswap32( &__bsx ) )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	9 &$rtn___bswap_64
@@ -3487,7 +3560,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 9 __builtin_bswap64( &__bsx ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	#__wait____anonymous4 &_dst
@@ -3515,8 +3588,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	7
+	7
 	$constructor( #__wait____anonymous4 #__wait____anonymous4 )
-	$constructor( #__wait____anonymous4  )
+	$constructor( #__wait____anonymous4 #__wait____anonymous4 )
 }
 {
 	#__wait____anonymous4 &_dst
@@ -3559,8 +3634,11 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	7
+	7
+	7
 	$constructor( #__wait____anonymous3 #__wait____anonymous3 )
-	$constructor( #__wait____anonymous3  )
+	$constructor( #__wait____anonymous3 #__wait____anonymous3 )
 }
 {
 	#__wait____anonymous3 &_dst
@@ -3598,6 +3676,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#wait &_dst
@@ -3612,8 +3691,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #wait #wait )
-	$constructor( #wait  )
+	$constructor( #wait #wait )
 }
 {
 	#wait &_dst
@@ -3621,6 +3701,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous5 &_dst
@@ -3634,6 +3715,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous5 &_dst
@@ -3648,8 +3730,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous5 #__anonymous5 )
-	$constructor( #__anonymous5  )
+	$constructor( #__anonymous5 #__anonymous5 )
 }
 {
 	#$ptr<#wait> &__uptr
@@ -3657,6 +3740,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous6 &_dst
@@ -3684,8 +3768,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	6
+	6
 	$constructor( #__anonymous6 #__anonymous6 )
-	$constructor( #__anonymous6  )
+	$constructor( #__anonymous6 #__anonymous6 )
 }
 {
 	#__anonymous6 &_dst
@@ -3728,8 +3814,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	8
+	8
 	$constructor( #__anonymous7 #__anonymous7 )
-	$constructor( #__anonymous7  )
+	$constructor( #__anonymous7 #__anonymous7 )
 }
 {
 	#__anonymous7 &_dst
@@ -3772,8 +3860,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	10
+	10
 	$constructor( #__anonymous8 #__anonymous8 )
-	$constructor( #__anonymous8  )
+	$constructor( #__anonymous8 #__anonymous8 )
 }
 {
 	#__anonymous8 &_dst
@@ -3796,7 +3886,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index27() 6 )
+	$constructor( &_index27 6 )
+	6
+	6
 	6
 }
 {
@@ -3806,7 +3898,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index28() 6 )
+	$constructor( &_index28 6 )
+	6
+	6
 	6
 }
 {
@@ -3815,7 +3909,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index29() 6 )
+	$constructor( &_index29 6 )
+	6
+	6
 	6
 }
 {
@@ -3826,10 +3922,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index30() 6 )
+	$constructor( &_index30 6 )
 	6
+	6
+	6
+	9
 	$constructor( #__anonymous9 #__anonymous9 )
-	$constructor( #__anonymous9  )
+	$constructor( #__anonymous9 #__anonymous9 )
 }
 {
 	#$ptr<9> &__val
@@ -3838,7 +3937,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index31() 6 )
+	$constructor( &_index31 6 )
+	6
+	6
 	6
 }
 {
@@ -3867,8 +3968,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	8
+	8
 	$constructor( #timespec #timespec )
-	$constructor( #timespec  )
+	$constructor( #timespec #timespec )
 }
 {
 	#timespec &_dst
@@ -3911,8 +4014,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	8
+	8
 	$constructor( #timeval #timeval )
-	$constructor( #timeval  )
+	$constructor( #timeval #timeval )
 }
 {
 	#timeval &_dst
@@ -3935,7 +4040,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index32() 6 )
+	$constructor( &_index32 6 )
+	6
+	6
 	6
 }
 {
@@ -3945,7 +4052,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index33() 6 )
+	$constructor( &_index33 6 )
+	6
+	6
 	6
 }
 {
@@ -3954,7 +4063,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index34()  )
+	$constructor( &_index34 6 )
+	6
+	6
+	6
 }
 {
 	#__anonymous10 &_dst
@@ -3964,10 +4076,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index35() 6 )
+	$constructor( &_index35 6 )
 	6
+	6
+	6
+	8
 	$constructor( #__anonymous10 #__anonymous10 )
-	$constructor( #__anonymous10  )
+	$constructor( #__anonymous10 #__anonymous10 )
 }
 {
 	#$ptr<8> &__fds_bits
@@ -3976,7 +4091,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index36() 6 )
+	$constructor( &_index36 6 )
+	6
+	6
 	6
 }
 {
@@ -3991,6 +4108,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#pthread_attr_t &_dst
@@ -4005,8 +4123,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #pthread_attr_t #pthread_attr_t )
-	$constructor( #pthread_attr_t  )
+	$constructor( #pthread_attr_t #pthread_attr_t )
 }
 {
 	#$ptr<1> &__size
@@ -4014,6 +4133,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__pthread_internal_list &_dst
@@ -4041,8 +4161,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#__pthread_internal_list>
+	#$ptr<#__pthread_internal_list>
 	$constructor( #__pthread_internal_list #__pthread_internal_list )
-	$constructor( #__pthread_internal_list  )
+	$constructor( #__pthread_internal_list #__pthread_internal_list )
 }
 {
 	#$ptr<#__pthread_internal_list> &__prev
@@ -4085,8 +4207,16 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	6
+	7
+	6
+	7
+	6
+	4
+	4
+	#__pthread_internal_list
 	$constructor( #____anonymous11____pthread_mutex_s #____anonymous11____pthread_mutex_s )
-	$constructor( #____anonymous11____pthread_mutex_s  )
+	$constructor( #____anonymous11____pthread_mutex_s #____anonymous11____pthread_mutex_s )
 }
 {
 	#____anonymous11____pthread_mutex_s &_dst
@@ -4184,6 +4314,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous11 &_dst
@@ -4198,8 +4329,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous11 #__anonymous11 )
-	$constructor( #__anonymous11  )
+	$constructor( #__anonymous11 #__anonymous11 )
 }
 {
 	#____anonymous11____pthread_mutex_s &__data
@@ -4207,6 +4339,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous12 &_dst
@@ -4220,6 +4353,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous12 &_dst
@@ -4234,8 +4368,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous12 #__anonymous12 )
-	$constructor( #__anonymous12  )
+	$constructor( #__anonymous12 #__anonymous12 )
 }
 {
 	#$ptr<1> &__size
@@ -4243,6 +4378,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#____anonymous14____anonymous13 &_dst
@@ -4270,8 +4406,16 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	6
+	7
+	11
+	11
+	11
+	#$ptr<#void>
+	7
+	7
 	$constructor( #____anonymous14____anonymous13 #____anonymous14____anonymous13 )
-	$constructor( #____anonymous14____anonymous13  )
+	$constructor( #____anonymous14____anonymous13 #____anonymous14____anonymous13 )
 }
 {
 	#____anonymous14____anonymous13 &_dst
@@ -4369,6 +4513,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous14 &_dst
@@ -4383,8 +4528,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous14 #__anonymous14 )
-	$constructor( #__anonymous14  )
+	$constructor( #__anonymous14 #__anonymous14 )
 }
 {
 	#____anonymous14____anonymous13 &__data
@@ -4392,6 +4538,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous15 &_dst
@@ -4405,6 +4552,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous15 &_dst
@@ -4419,8 +4567,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous15 #__anonymous15 )
-	$constructor( #__anonymous15  )
+	$constructor( #__anonymous15 #__anonymous15 )
 }
 {
 	#$ptr<1> &__size
@@ -4428,6 +4577,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#____anonymous17____anonymous16 &_dst
@@ -4435,7 +4585,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index37() 6 )
+	$constructor( &_index37 6 )
+	6
+	6
 	6
 }
 {
@@ -4445,7 +4597,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index38() 6 )
+	$constructor( &_index38 6 )
+	6
+	6
 	6
 }
 {
@@ -4454,7 +4608,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index39()  )
+	$constructor( &_index39 6 )
+	6
+	6
+	6
 }
 {
 	#____anonymous17____anonymous16 &_dst
@@ -4464,10 +4621,24 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index40() 6 )
 	6
+	7
+	7
+	7
+	7
+	7
+	6
+	6
+	2
+	$constructor( &_index40 6 )
+	6
+	6
+	6
+	3
+	9
+	7
 	$constructor( #____anonymous17____anonymous16 #____anonymous17____anonymous16 )
-	$constructor( #____anonymous17____anonymous16  )
+	$constructor( #____anonymous17____anonymous16 #____anonymous17____anonymous16 )
 }
 {
 	#____anonymous17____anonymous16 &_dst
@@ -4476,7 +4647,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index41() 6 )
+	$constructor( &_index41 6 )
+	6
+	6
 	6
 }
 {
@@ -4487,7 +4660,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index42() 6 )
+	$constructor( &_index42 6 )
+	6
+	6
 	6
 }
 {
@@ -4499,7 +4674,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index43() 6 )
+	$constructor( &_index43 6 )
+	6
+	6
 	6
 }
 {
@@ -4512,7 +4689,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index44() 6 )
+	$constructor( &_index44 6 )
+	6
+	6
 	6
 }
 {
@@ -4526,7 +4705,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index45() 6 )
+	$constructor( &_index45 6 )
+	6
+	6
 	6
 }
 {
@@ -4541,7 +4722,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index46() 6 )
+	$constructor( &_index46 6 )
+	6
+	6
 	6
 }
 {
@@ -4557,7 +4740,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index47() 6 )
+	$constructor( &_index47 6 )
+	6
+	6
 	6
 }
 {
@@ -4574,7 +4759,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index48() 6 )
+	$constructor( &_index48 6 )
+	6
+	6
 	6
 }
 {
@@ -4592,7 +4779,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index49() 6 )
+	$constructor( &_index49 6 )
+	6
+	6
 	6
 }
 {
@@ -4611,7 +4800,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index50() 6 )
+	$constructor( &_index50 6 )
+	6
+	6
 	6
 }
 {
@@ -4631,7 +4822,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index51() 6 )
+	$constructor( &_index51 6 )
+	6
+	6
 	6
 }
 {
@@ -4652,7 +4845,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index52() 6 )
+	$constructor( &_index52 6 )
+	6
+	6
 	6
 }
 {
@@ -4667,6 +4862,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous17 &_dst
@@ -4681,8 +4877,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous17 #__anonymous17 )
-	$constructor( #__anonymous17  )
+	$constructor( #__anonymous17 #__anonymous17 )
 }
 {
 	#____anonymous17____anonymous16 &__data
@@ -4690,6 +4887,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous18 &_dst
@@ -4703,6 +4901,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous18 &_dst
@@ -4717,8 +4916,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous18 #__anonymous18 )
-	$constructor( #__anonymous18  )
+	$constructor( #__anonymous18 #__anonymous18 )
 }
 {
 	#$ptr<1> &__size
@@ -4726,6 +4926,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous19 &_dst
@@ -4739,6 +4940,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous19 &_dst
@@ -4753,8 +4955,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous19 #__anonymous19 )
-	$constructor( #__anonymous19  )
+	$constructor( #__anonymous19 #__anonymous19 )
 }
 {
 	#$ptr<1> &__size
@@ -4762,6 +4965,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous20 &_dst
@@ -4775,6 +4979,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#__anonymous20 &_dst
@@ -4789,8 +4994,9 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 	$constructor( #__anonymous20 #__anonymous20 )
-	$constructor( #__anonymous20  )
+	$constructor( #__anonymous20 #__anonymous20 )
 }
 {
 	#$ptr<1> &__size
@@ -4798,6 +5004,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<#void>
 }
 {
 	#random_data &_dst
@@ -4825,8 +5032,15 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<6>
+	#$ptr<6>
+	#$ptr<6>
+	6
+	6
+	6
+	#$ptr<6>
 	$constructor( #random_data #random_data )
-	$constructor( #random_data  )
+	$constructor( #random_data #random_data )
 }
 {
 	#$ptr<6> &fptr
@@ -4905,9 +5119,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index53() 6 )
+	$constructor( &_index53 6 )
 	6
-	$constructor( _index54() 6 )
+	6
+	6
+	$constructor( &_index54 6 )
+	6
+	6
 	6
 }
 {
@@ -4918,9 +5136,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index55() 6 )
+	$constructor( &_index55 6 )
 	6
-	$constructor( _index56() 6 )
+	6
+	6
+	$constructor( &_index56 6 )
+	6
+	6
 	6
 }
 {
@@ -4930,8 +5152,14 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index57()  )
-	$constructor( _index58()  )
+	$constructor( &_index57 6 )
+	6
+	6
+	6
+	$constructor( &_index58 6 )
+	6
+	6
+	6
 }
 {
 	#drand48_data &_dst
@@ -4942,12 +5170,21 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index59() 6 )
+	$constructor( &_index59 6 )
 	6
-	$constructor( _index60() 6 )
 	6
+	6
+	5
+	$constructor( &_index60 6 )
+	6
+	6
+	6
+	5
+	5
+	5
+	11
 	$constructor( #drand48_data #drand48_data )
-	$constructor( #drand48_data  )
+	$constructor( #drand48_data #drand48_data )
 }
 {
 	#$ptr<5> &__x
@@ -4957,9 +5194,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index61() 6 )
+	$constructor( &_index61 6 )
 	6
-	$constructor( _index62() 6 )
+	6
+	6
+	$constructor( &_index62 6 )
+	6
+	6
 	6
 }
 {
@@ -4971,9 +5212,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index63() 6 )
+	$constructor( &_index63 6 )
 	6
-	$constructor( _index64() 6 )
+	6
+	6
+	$constructor( &_index64 6 )
+	6
+	6
 	6
 }
 {
@@ -4986,9 +5231,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index65() 6 )
+	$constructor( &_index65 6 )
 	6
-	$constructor( _index66() 6 )
+	6
+	6
+	$constructor( &_index66 6 )
+	6
+	6
 	6
 }
 {
@@ -5002,9 +5251,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index67() 6 )
+	$constructor( &_index67 6 )
 	6
-	$constructor( _index68() 6 )
+	6
+	6
+	$constructor( &_index68 6 )
+	6
+	6
 	6
 }
 {
@@ -5019,9 +5272,13 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( _index69() 6 )
+	$constructor( &_index69 6 )
 	6
-	$constructor( _index70() 6 )
+	6
+	6
+	$constructor( &_index70 6 )
+	6
+	6
 	6
 }
 {
@@ -5030,7 +5287,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_calloc
@@ -5039,7 +5296,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_realloc
@@ -5049,7 +5306,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_memalign
@@ -5058,7 +5315,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_aligned_alloc
@@ -5067,7 +5324,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#$ptr<#T>> &ptr
@@ -5077,7 +5334,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 6 posix_memalign( #$ptr<#$ptr<#void>> &align 9 ) )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#$ptr<#T> &$rtn_alloc
@@ -5085,41 +5342,41 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
-}
-{
-	#$ptr<#T> &$rtn_alloc
-	#$ptr<#T> &ptr
-	1 &fill
-
-	%%
-
-	$constructor( ptr() #$ptr<#T> )
-	#$ptr<#T>
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
-}
-{
-	#$ptr<#T> &$rtn_alloc
-	9 &dim
-
-	%%
-
-	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
 }
 {
 	#$ptr<#T> &$rtn_alloc
 	#$ptr<#T> &ptr
 	1 &fill
+
+	%%
+
+	$constructor( &ptr #$ptr<#T> )
+	#$ptr<#T>
+	$constructor( #$ptr<#T> #$ptr<#T> )
+	$constructor( #$ptr<#T> #$ptr<#T> )
+}
+{
+	#$ptr<#T> &$rtn_alloc
 	9 &dim
 
 	%%
 
-	$constructor( ptr() #$ptr<#T> )
+	$constructor( #$ptr<#T> #$ptr<#T> )
+	$constructor( #$ptr<#T> #$ptr<#T> )
+}
+{
+	#$ptr<#T> &$rtn_alloc
+	#$ptr<#T> &ptr
+	1 &fill
+	9 &dim
+
+	%%
+
+	$constructor( &ptr #$ptr<#T> )
 	#$ptr<#T>
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_alloc
@@ -5129,7 +5386,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_align_alloc
@@ -5138,7 +5395,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_align_alloc
@@ -5148,10 +5405,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( ptr() #$ptr<#T> )
+	$constructor( &ptr #$ptr<#T> )
 	#$ptr<#T>
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_align_alloc
@@ -5161,7 +5418,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_align_alloc
@@ -5176,9 +5433,9 @@ $constructor( sepSize() 6 )
 	$assign( &ptr #$ptr<#T> )
 	$assign( &ptr #$ptr<#T> )
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 	$constructor( #$ptr<#T> &ptr )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_memset
@@ -5188,7 +5445,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_memcpy
@@ -5198,7 +5455,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_amemset
@@ -5209,7 +5466,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#T> &$rtn_amemcpy
@@ -5220,7 +5477,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #$ptr<#T> #$ptr<#T> )
-	$constructor( #$ptr<#T>  )
+	$constructor( #$ptr<#T> #$ptr<#T> )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5231,7 +5488,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5242,7 +5499,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 7 7 )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5253,7 +5510,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 8 strtol( &sptr &eptr &base ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5264,7 +5521,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 9 strtoul( &sptr &eptr &base ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5275,7 +5532,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 10 strtoll( &sptr &eptr &base ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5286,7 +5543,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 11 strtoull( &sptr &eptr &base ) )
-	$constructor( 11  )
+	$constructor( 11 11 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5296,7 +5553,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 12 strtof( &sptr &eptr ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5306,7 +5563,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 13 strtod( &sptr &eptr ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	#$ptr<#$ptr<1>> &eptr
@@ -5316,7 +5573,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 14 strtold( &sptr &eptr ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$ptr<1> &sptr
@@ -5325,7 +5582,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	#$ptr<1> &sptr
@@ -5334,7 +5591,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 7 7 )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	#$ptr<1> &sptr
@@ -5343,7 +5600,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 8 strtol( &sptr 6 6 ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	#$ptr<1> &sptr
@@ -5352,7 +5609,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 9 strtoul( &sptr 6 6 ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	#$ptr<1> &sptr
@@ -5361,7 +5618,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 10 strtoll( &sptr 6 6 ) )
-	$constructor( 10  )
+	$constructor( 10 10 )
 }
 {
 	#$ptr<1> &sptr
@@ -5370,7 +5627,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 11 strtoull( &sptr 6 6 ) )
-	$constructor( 11  )
+	$constructor( 11 11 )
 }
 {
 	#$ptr<1> &sptr
@@ -5379,7 +5636,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 12 strtof( &sptr 6 ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	#$ptr<1> &sptr
@@ -5388,7 +5645,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 13 strtod( &sptr 6 ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	#$ptr<1> &sptr
@@ -5397,7 +5654,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 14 strtold( &sptr 6 ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#$ptr<1> &sptr
@@ -5406,7 +5663,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 15 strto( &sptr 6 ) )
-	$constructor( 15  )
+	$constructor( 15 15 )
 }
 {
 	#$ptr<1> &sptr
@@ -5415,7 +5672,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 16 strto( &sptr 6 ) )
-	$constructor( 16  )
+	$constructor( 16 16 )
 }
 {
 	#$ptr<1> &sptr
@@ -5424,7 +5681,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 17 strto( &sptr 6 ) )
-	$constructor( 17  )
+	$constructor( 17 17 )
 }
 {
 	8 &$rtn_random
@@ -5436,7 +5693,7 @@ $constructor( sepSize() 6 )
 	6
 	$assign( &u&l &l&u )
 	$constructor( 8 $add( $modulus( lrand48() $subtract( &u &l ) ) &l ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	8 &$rtn_random
@@ -5446,9 +5703,9 @@ $constructor( sepSize() 6 )
 
 	6
 	$constructor( 8 random( &u 6 ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 	$constructor( 8 random( 6 &u ) )
-	$constructor( 8  )
+	$constructor( 8 8 )
 }
 {
 	9 &$rtn_random
@@ -5456,7 +5713,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 9 lrand48() )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	9 &$rtn_random
@@ -5468,7 +5725,7 @@ $constructor( sepSize() 6 )
 	6
 	$assign( &u&l &l&u )
 	$constructor( 9 $add( $modulus( lrand48() $subtract( &u &l ) ) &l ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	9 &$rtn_random
@@ -5477,7 +5734,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 9 $modulus( lrand48() &u ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	1 &$rtn_random
@@ -5485,7 +5742,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 1 9 )
-	$constructor( 1  )
+	$constructor( 1 1 )
 }
 {
 	1 &$rtn_random
@@ -5494,7 +5751,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 1 random( 9 ) )
-	$constructor( 1  )
+	$constructor( 1 1 )
 }
 {
 	1 &$rtn_random
@@ -5504,7 +5761,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 1 random( 9 9 ) )
-	$constructor( 1  )
+	$constructor( 1 1 )
 }
 {
 	6 &$rtn_random
@@ -5512,7 +5769,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 6 8 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	6 &$rtn_random
@@ -5521,7 +5778,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 6 random( 8 ) )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	6 &$rtn_random
@@ -5531,7 +5788,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 6 random( 8 8 ) )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
 {
 	7 &$rtn_random
@@ -5539,7 +5796,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 7 9 )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	7 &$rtn_random
@@ -5548,7 +5805,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 7 random( 9 ) )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	7 &$rtn_random
@@ -5558,7 +5815,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 7 random( 9 9 ) )
-	$constructor( 7  )
+	$constructor( 7 7 )
 }
 {
 	2 &v
@@ -5567,7 +5824,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 3 abs( 6 ) )
-	$constructor( 3  )
+	$constructor( 3 3 )
 }
 {
 	8 &v
@@ -5576,7 +5833,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 9 labs( &v ) )
-	$constructor( 9  )
+	$constructor( 9 9 )
 }
 {
 	10 &v
@@ -5585,7 +5842,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 11 llabs( &v ) )
-	$constructor( 11  )
+	$constructor( 11 11 )
 }
 {
 	12 &$rtn_abs
@@ -5594,7 +5851,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 12 fabsf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_abs
@@ -5603,7 +5860,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 13 fabs( &x ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_abs
@@ -5612,7 +5869,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 14 fabsl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	12 &$rtn_abs
@@ -5621,7 +5878,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 12 cabsf( &x ) )
-	$constructor( 12  )
+	$constructor( 12 12 )
 }
 {
 	13 &$rtn_abs
@@ -5630,7 +5887,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 13 cabs( &x ) )
-	$constructor( 13  )
+	$constructor( 13 13 )
 }
 {
 	14 &$rtn_abs
@@ -5639,7 +5896,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( 14 cabsl( &x ) )
-	$constructor( 14  )
+	$constructor( 14 14 )
 }
 {
 	#T $assign #T #T
@@ -5657,7 +5914,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #T $if( 6 &t1 &t2 ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5675,7 +5932,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #T $if( 6 &t1 &t2 ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5696,7 +5953,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	$constructor( #T max( &min_val min( &value &max_val ) ) )
-	$constructor( #T  )
+	$constructor( #T #T )
 }
 {
 	#T $assign #T #T
@@ -5711,7 +5968,7 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( temp() )
+	$constructor( &temp )
 	$constructor( #T &v1 )
 	$destructor( #T )
 	&v1
@@ -5744,8 +6001,10 @@ $constructor( sepSize() 6 )
 
 	%%
 
+	#$ptr<1>
+	#$ptr<6>
 	$constructor( #A #A )
-	$constructor( #A  )
+	$constructor( #A #A )
 }
 {
 	#$ptr<1> &name
@@ -5797,7 +6056,7 @@ $constructor( sepSize() 6 )
 
 	$bitor( $bitor( $bitor( $bitor( &sout #$ptr<1> ) $field_name( &a ) ) #$ptr<1> ) $field_name( &b ) )
 	$constructor( #A &a )
-	$constructor( #A  )
+	$constructor( #A #A )
 }
 {
 	#A &a
@@ -5825,15 +6084,15 @@ $constructor( sepSize() 6 )
 	%%
 
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &i ) &endl )
-	$constructor( x() )
+	$constructor( &x )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
-	$constructor( y() )
+	$constructor( &y )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
-	$constructor( z() )
+	$constructor( &z )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
@@ -5852,27 +6111,27 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( i() 6 )
+	$constructor( &i 6 )
 	6
 	6
 	$postincr( &i )
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &i ) &endl )
-	$constructor( x() )
+	$constructor( &x )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
 	$bitor( &sout &endl )
-	$constructor( i() 6 )
+	$constructor( &i 6 )
 	6
 	6
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &i ) &endl )
-	$constructor( x() )
+	$constructor( &x )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
 	$postincr( &i )
 	$bitor( &sout &endl )
-	$constructor( i() 6 )
+	$constructor( &i 6 )
 	6
 	6
 	$postincr( &i )
@@ -5880,28 +6139,28 @@ $constructor( sepSize() 6 )
 	6
 	6
 	6
-	$constructor( y() )
+	$constructor( &y )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &i ) &endl )
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &i ) &endl )
-	$constructor( x() )
+	$constructor( &x )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
 	$bitor( &sout &endl )
-	$constructor( k() 6 )
+	$constructor( &k 6 )
 	6
 	6
 	$postincr( &k )
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &k ) &endl )
-	$constructor( i() 6 )
+	$constructor( &i 6 )
 	6
 	6
 	$postincr( &i )
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &i ) &endl )
-	$constructor( x() )
+	$constructor( &x )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
@@ -5909,12 +6168,12 @@ $constructor( sepSize() 6 )
 	$bitor( $bitor( &sout #$ptr<1> ) &endl )
 	6
 	$bitor( $bitor( &sout #$ptr<1> ) &endl )
-	$constructor( j() 6 )
+	$constructor( &j 6 )
 	6
 	6
 	$postincr( &j )
 	$bitor( $bitor( $bitor( &sout #$ptr<1> ) &j ) &endl )
-	$constructor( y() )
+	$constructor( &y )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
@@ -5928,12 +6187,12 @@ $constructor( sepSize() 6 )
 	$bitor( $bitor( &sout #$ptr<1> ) &endl )
 	$bitor( &sout &endl )
 	6
-	$constructor( w() )
+	$constructor( &w )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
 	6
-	$constructor( v() )
+	$constructor( &v )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
@@ -5947,15 +6206,15 @@ $constructor( sepSize() 6 )
 
 	%%
 
-	$constructor( i() 6 )
+	$constructor( &i 6 )
 	6
 	$bitor( $bitor( &sout #$ptr<1> ) &endl )
-	$constructor( y() )
+	$constructor( &y )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
 	$bitor( $bitor( &sout #$ptr<1> ) &endl )
-	$constructor( x() )
+	$constructor( &x )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
@@ -5971,7 +6230,7 @@ $constructor( sepSize() 6 )
 	$bitor( $bitor( &sout #$ptr<1> ) &endl )
 	6
 	$preincr( &i )
-	$constructor( z() )
+	$constructor( &z )
 	$constructor( #A #$ptr<1> )
 	$destructor( #A )
 	#$ptr<1>
@@ -5999,7 +6258,7 @@ $constructor( sepSize() 6 )
 	%%
 
 	sepDisable( &sout )
-	$constructor( i() 6 )
+	$constructor( &i 6 )
 	6
 	6
 	$postincr( &i )
@@ -6010,5 +6269,5 @@ $constructor( sepSize() 6 )
 	h()
 	computedGoto()
 	$constructor( 6 6 )
-	$constructor( 6  )
+	$constructor( 6 6 )
 }
