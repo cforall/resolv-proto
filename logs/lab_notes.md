@@ -1,3 +1,7 @@
+## 01 Oct 2018 ##
+* Ran RP tests on CFA stdlib.
+* RPDump now prints var args variable types
+
 ## 26-28 Sep 2018 ##
 * Looked at `rational` test case
   * 6230 is slow: `$bitor( $bitor( $bitor( $bitor( &sout &a ) &b ) &c ) &endl )`
@@ -21,7 +25,8 @@
   * Can't assign to `dtype&`, e.g. in returns from builtin `++?`, etc.
   * No support for function operator in prototype resolution impacts `function-operator`
   * No support for `WithStmt` or `AsmStmt`
-* Re-ran tests up to ...
+* Ran performance tests vs. CFA-CC
+  * average 500x speedup, though CFA-CC is a multi-pass program
 
 ## 21-24 Sep 2018 ##
 * Got on type-environment cached deferred resolution working
