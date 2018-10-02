@@ -1,6 +1,8 @@
-## 01 Oct 2018 ##
+## 01-02 Oct 2018 ##
 * Ran RP tests on CFA stdlib.
 * RPDump now prints var args variable types
+* Fixed deferred cache lifetime issues
+  * deferIds/deferred cleared at the end of the run, assn_cache not
 
 ## 26-28 Sep 2018 ##
 * Looked at `rational` test case

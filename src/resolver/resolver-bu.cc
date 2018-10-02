@@ -188,7 +188,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 
 						if ( unify( param, crntType, cCost, cEnv ) ) {
 							// build new combo which consumes more arguments
-							nextCombos.emplace_back( combo, move(cCost), cEnv, combo.on_last - 1 );
+							nextCombos.emplace_back( combo, move(cCost), cEnv, combo.on_last-1 );
 						}
 
 						// replace combo with truncated expression
@@ -209,7 +209,7 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 						if ( ! unifyFirst( param, i->type(), iCost, iEnv ) ) continue;
 
 						// Build new ArgPack for this interpretation, noting leftovers
-						nextCombos.emplace_back( combo, i, move(iCost), iEnv, i->type()->size() - 1 );
+						nextCombos.emplace_back( combo, i, move(iCost), iEnv, i->type()->size()-1 );
 					}
 				}
 

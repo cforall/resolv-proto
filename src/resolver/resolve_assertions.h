@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -84,45 +85,78 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		}
 	};
 
+#ifdef RP_RES_TEC
+	/// Cached assertion items
+	struct AssnCacheItem {
+		InterpretationList satisfying;  ///< List of satisfying expressions
+		List<Decl>         deferIds;    ///< Deferred assertions which resolve to this cache item
+
+		/// No satisfying assertions
+		AssnCacheItem() = default;
+		/// Unambiguous satisfying assertion
+		AssnCacheItem( const Interpretation* i ) : satisfying{ i }, deferIds{} {}
+		/// Ambiguous satisfying assertions for `d`
+		AssnCacheItem( InterpretationList&& is, const Decl* d )
+			: satisfying( move(is) ), deferIds{ d } {}
+	};
+
+	using AssnCache = std::unordered_map<std::string, AssnCacheItem>;
+
+	/// Wrapper to make an AssnCache item look like a nested vector
+	struct DeferItem {
+		using size_type = InterpretationList::size_type;
+
+		std::string key;         ///< Key for this deferred item
+		const AssnCache* cache;  ///< Cache this key indexes into
+
+		DeferItem( const std::string& k, const AssnCache& c ) : key(k), cache(&c) {}
+
+		// simulate vector interface enough for filter
+		size_type size() const { return cache->at(key).satisfying.size(); }
+		
+		bool empty() const { return cache->at(key).satisfying.empty(); }
+
+		const Interpretation* operator[] ( size_type i ) const {
+			return cache->at(key).satisfying[i];
+		}
+
+		// sortable by key
+		// TODO look into optimizing combination process with other sort orders
+		bool operator< ( const DeferItem& o ) const { return key < o.key; }
+
+		bool operator== ( const DeferItem& o ) const { return key == o.key; }
+	};
+#endif
+
 	Resolver& resolver;        ///< Resolver to perform searches.
 	Env& env;                  ///< Environment to bind types and assertions into.
 #ifdef RP_RES_TEC
-	/// Assertions that cannot be bound at their own call site, batched by equivalence
-	std::vector<List<Decl>> deferIds;
+	/// Map of environment-normalized assertion manglenames to satisfying expressions
+	AssnCache assnCache;
+	/// `assnCache` keys that have more than one satisfying assertion
+	std::vector<DeferItem> deferKeys;
 #else
 	/// Assertions that cannot be bound at their own call site
 	List<Decl> deferIds;
-#endif
 	DeferList deferred;        ///< Available interpretations of deferred assertions
+#endif
 	List<Decl> openAssns;      ///< Sub-assertions of bound assertions
 	unsigned recursion_depth;  ///< Depth of sub-assertions being bound
 	bool has_ambiguous;        ///< Expression tree has ambiguous subexpressions; fail fast
 #if defined RP_RES_IMM
 	bool do_recurse;           ///< Should the visitor recurse over the whole tree?
 #endif
-#if defined RP_RES_TEC
-	/// Cache of unambiguously-resolved assertions
-	InterpretationList resolved;
-	/// Map of environment-normalized assertion manglenames to indices in `deferred` or `resolved`
-	/// * `no_satisfying()` -- no assertions
-	/// * 2k                -- deferred[k]
-	/// * 2k+1              -- resolved[k]
-	std::unordered_map<std::string, unsigned> assn_cache;
-	/// Key for no satisfying assertion
-	static const unsigned no_satisfying() { return -1; };
-#endif
 
 	/// Assertion expression and the type to resolve it to
 	struct AssertionInstance {
 		const Expr* expr;       ///< Expression to resolve
 		const Type* target;     ///< Type to resolve to
-	#ifndef RP_RES_TEC
-
-		AssertionInstance() : expr(nullptr), target(nullptr) {}
-	#else
+	#ifdef RP_RES_TEC
 		std::stringstream key;  ///< Caching key for resolution de-duplication
 
 		AssertionInstance() : expr(nullptr), target(nullptr), key() {}
+	#else
+		AssertionInstance() : expr(nullptr), target(nullptr) {}
 	#endif
 	};
 
@@ -255,51 +289,49 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 
 #ifdef RP_RES_TEC
 		// look in cache for key
-		std::string asn_key = inst.key.str();
-		auto it = assn_cache.find( asn_key );
+		std::string asnKey = inst.key.str();
+		auto it = assnCache.find( asnKey );
 
 		// attempt to resolve assertion if this is the first time seen
-		if ( it == assn_cache.end() ) {
+		if ( it == assnCache.end() ) {
 			InterpretationList satisfying = resolver.resolveWithType( inst.expr, inst.target, env );
 
 			switch ( satisfying.size() ) {
 				case 0: {  // mark no satisfying, fail
-					assn_cache.emplace_hint( it, asn_key, no_satisfying() );
+					assnCache.emplace_hint( it, asnKey, AssnCacheItem{} );
 					return false;
 				} case 1: {  // unique satisfying assertion, add to environment
 					const Interpretation* s = satisfying.front();
 					if ( bindRecursive( asn, s->expr ) ) {  // succeed and mark in cache
 						if ( s->env ) { env.merge( s->env ); }
 						
-						assn_cache.emplace_hint( it, asn_key, (2*resolved.size() + 1) );
-						resolved.emplace_back( s );
+						assnCache.emplace_hint( it, asnKey, AssnCacheItem{ s } );
 						return true;
 					} else {  // can't bind recursively, fail
-						assn_cache.emplace_hint( it, asn_key, no_satisfying() );
+						assnCache.emplace_hint( it, asnKey, AssnCacheItem{} );
 						return false;
 					}
 				} default: {  // ambiguous satisfying assertions, defer evaluation
-					assn_cache.emplace_hint( it, asn_key, (2*deferred.size()) );
-					deferIds.emplace_back( List<Decl>{ asn } );
-					// ambiguous interpretations have environments that are not versions of the 
-					// correct root environment
-					deferred.emplace_back( splitAmbiguous( move(satisfying) ) );
+					assnCache.emplace_hint( it, asnKey, 
+						// correct for ambiguous environments not being descended from root
+						AssnCacheItem{ splitAmbiguous( move(satisfying) ), asn } );
+					deferKeys.emplace_back( asnKey, assnCache );
 					return true;
 				}
 			}
 		}
 
-		// fail on already failed assertions
-		if ( it->second == no_satisfying() ) return false;
-
-		if ( it->second & 0x1 ) {  // odd means single resolution in resolved list
-			// already recursively bound, just need to add individual assertion
-			env.bindAssertion( asn, resolved[it->second/2]->expr );
-			return true;
-		} else {  // even means multiple resolutions in deferred list
-			// add new assertion to list to bind in defer list
-			deferIds[it->second/2].emplace_back( asn );
-			return true;
+		// repeat earlier resolution
+		switch ( it->second.satisfying.size() ) {
+			case 0:   // fail on already failed assertions
+				return false;
+			case 1:   // already recursively bound, just need to add invididual assertion
+				env.bindAssertion( asn, it->second.satisfying[0]->expr );
+				return true;
+			default:  // already ambiguous, ensure that it is deferred
+				it->second.deferIds.emplace_back( asn );
+				deferKeys.emplace_back( asnKey, assnCache );
+				return true;
 		}
 #else
 		// attempt to resolve assertion
@@ -360,13 +392,15 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	}
 
 	AssertionResolver( AssertionResolver& o, Env& env )
-		: resolver(o.resolver), env(env), deferIds(), deferred(), openAssns(),
-		  recursion_depth(o.recursion_depth), has_ambiguous(false) 
+		: resolver(o.resolver), env(env)
+#if defined RP_RES_TEC
+		  , assnCache(), deferKeys()
+#else
+		  , deferIds(), deferred()
+#endif
+		  , openAssns(), recursion_depth(o.recursion_depth), has_ambiguous(false) 
 #if defined RP_RES_IMM
 		  , do_recurse(o.do_recurse)
-#endif
-#if defined RP_RES_TEC
-		  , resolved(), assn_cache()
 #endif
 		  {}
 
@@ -375,13 +409,15 @@ public:
 #if defined RP_RES_IMM
 		, bool recurse = false 
 #endif
-	) : resolver(resolver), env(env), deferIds(), openAssns(), 
-	    recursion_depth(1), has_ambiguous(false)
+	) : resolver(resolver), env(env)
+#if defined RP_RES_TEC
+		, assnCache(), deferKeys()
+#else
+		, deferIds(), deferred()
+#endif
+	    , openAssns(), recursion_depth(1), has_ambiguous(false)
 #if defined RP_RES_IMM
 	    ,  do_recurse(recurse)
-#endif
-#if defined RP_RES_TEC
-	    , resolved(), assn_cache()
 #endif
 	{}
 
@@ -475,8 +511,9 @@ public:
 			} else switch ( compare( *new_alt, *min_alts[0] ) ) {
 			case lt:
 				min_alts.clear();
+				min_alts.push_back( new_alt );
 				local_ambiguous = alt_resolver.has_ambiguous;
-				// fallthrough
+				break;
 			case eq:
 				min_alts.push_back( new_alt );
 				local_ambiguous |= alt_resolver.has_ambiguous;
@@ -519,8 +556,18 @@ public:
 
 		do {
 			// attempt to disambiguate deferred assertion matches with additional information
+#if defined RP_RES_TEC
+			if ( ! deferKeys.empty() ) {
+				// trim deferred keys down to relevant list
+				std::sort( deferKeys.begin(), deferKeys.end() );
+				auto last = std::unique( deferKeys.begin(), deferKeys.end() );
+				deferKeys.erase( last, deferKeys.end() );
+
+				auto compatible = filter_combos( deferKeys, interpretation_env_merger{ env } );
+#else
 			if ( ! deferred.empty() ) {
 				auto compatible = filter_combos( deferred, interpretation_env_merger{ env } );
+#endif
 				if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
 				interpretation_env_coster costs;
@@ -554,23 +601,29 @@ public:
 				auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
 				if ( minPos == compatible.begin() ) {  // unique min-cost
 					env = minPos->first;
-					for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 #ifdef RP_RES_TEC
+					for ( unsigned i = 0; i < deferKeys.size(); ++i ) {
+						AssnCacheItem& cache = assnCache[ deferKeys[i].key ];
 						// fail if cannot bind assertion
-						if ( ! bindRecursive( deferIds[i][0], minPos->second[i]->expr ) ) {
+						if ( ! bindRecursive( cache.deferIds[0], minPos->second[i]->expr ) ) {
 							return r = nullptr;
 						}
-						// binds other assertions to same resolution
-						for ( unsigned j = 1; j < deferIds[i].size(); ++j ) {
-							env.bindAssertion( deferIds[i][j], minPos->second[i]->expr );
+						// bind other assertions to same resolution
+						for ( unsigned j = 1; j < cache.deferIds.size(); ++j ) {
+							env.bindAssertion( cache.deferIds[j], minPos->second[i]->expr );
 						}
+						// done with these deferred IDs
+						cache.satisfying = InterpretationList{ minPos->second[i] };
+						cache.deferIds.clear();
+					}
 #else
+					for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 						// fail if cannot bind assertion
 						if ( ! bindRecursive( deferIds[i], minPos->second[i]->expr ) ) {
 							return r = nullptr;
 						}
-#endif
 					}
+#endif
 				} else {  // ambiguous min-cost assertion matches
 					List<Interpretation> alts;
 					Cost alt_cost = costs.get( *minPos );
@@ -578,23 +631,30 @@ public:
 					while (true) {
 						// build an interpretation for each compatible min-cost assertion binding
 						Env alt_env = it->first;
-						for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 #ifdef RP_RES_TEC
-							for ( unsigned j = 0; j < deferIds[i].size(); ++j ) {
-								alt_env.bindAssertion( deferIds[i][j], it->second[i]->expr );
+						for ( unsigned i = 0; i < deferKeys.size(); ++i ) {
+							const AssnCacheItem& cache = assnCache[ deferKeys[i].key ];
+							for ( unsigned j = 0; j < cache.deferIds.size(); ++j ) {
+								alt_env.bindAssertion( cache.deferIds[j], it->second[i]->expr );
 							}
-#else
-							alt_env.bindAssertion( deferIds[i], it->second[i]->expr );
-#endif
 						}
+#else
+						for ( unsigned i = 0; i < deferIds.size(); ++i ) {
+							alt_env.bindAssertion( deferIds[i], it->second[i]->expr );
+						}
+#endif
 						alts.push_back( new Interpretation{ r, move(alt_env), copy(alt_cost) } );
 						if ( it == minPos ) break; else ++it;
 					}
 					return r = new AmbiguousExpr{ r, r->type(), move(alts) };
 				}
 #endif
+#ifdef RP_RES_TEC
+				deferKeys.clear();
+#else
 				deferIds.clear();
 				deferred.clear();
+#endif
 			}
 
 			if ( openAssns.empty() ) break;
