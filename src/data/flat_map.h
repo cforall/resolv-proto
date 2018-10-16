@@ -1,14 +1,14 @@
 #pragma once
 
 #include <iterator>
-#include <map>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
+
+#include "std_wrappers.h"
 
 /// Gets underlying value type of a map
 template<typename T>
-using value_from = std::remove_reference_t<typename T::value_type::second_type>;
+using value_from_map = std::remove_reference_t<typename T::value_type::second_type>;
 
 /// An iterator for a map with collection-type values that iterates over the 
 /// collections contained in the map entries
@@ -16,13 +16,13 @@ using value_from = std::remove_reference_t<typename T::value_type::second_type>;
 template<typename Underlying>
 class FlatMapIter : public std::iterator<
 		std::forward_iterator_tag,
-		typename value_from<Underlying>::value_type,
-		typename value_from<Underlying>::difference_type,
-		typename value_from<Underlying>::pointer,
-		typename value_from<Underlying>::reference > {
+		typename value_from_map<Underlying>::value_type,
+		typename value_from_map<Underlying>::difference_type,
+		typename value_from_map<Underlying>::pointer,
+		typename value_from_map<Underlying>::reference > {
 template<typename U> friend class ConstFlatMapIter;
 public:
-	using InnerColl = value_from<Underlying>;
+	using InnerColl = value_from_map<Underlying>;
 	using Iter = typename Underlying::iterator;
 	using Inner = typename InnerColl::iterator;
 	using reference = typename InnerColl::reference;
@@ -90,12 +90,12 @@ public:
 template<typename Underlying>
 class ConstFlatMapIter : public std::iterator<
 		std::forward_iterator_tag,
-		typename value_from<Underlying>::value_type,
-		typename value_from<Underlying>::difference_type,
-		typename value_from<Underlying>::const_pointer,
-		typename value_from<Underlying>::const_reference > {
+		typename value_from_map<Underlying>::value_type,
+		typename value_from_map<Underlying>::difference_type,
+		typename value_from_map<Underlying>::const_pointer,
+		typename value_from_map<Underlying>::const_reference > {
 public:
-	using InnerColl = value_from<Underlying>;
+	using InnerColl = value_from_map<Underlying>;
 	using Iter = typename Underlying::const_iterator;
 	using Inner = typename InnerColl::const_iterator;
 	using reference = typename InnerColl::const_reference;
@@ -168,13 +168,8 @@ public:
 	}
 };
 
-/// Wrapper around std::unordered_map declaration with the proper number of template 
-/// parameters for use with FlatMap
-template<typename K, typename V>
-using std_unordered_map = std::unordered_map<K, V>;
-
-/// A map holding a collection that iterates and inserts directly into the 
-/// contained collection.
+/// Provides a federated view of a group of inner collections, indexed by a 
+/// given key function.
 /// @param Key      the key type
 /// @param Inner    the inner collection type; should be default constructable
 /// @param Extract  functor which extracts a key from the value type of the 
@@ -233,6 +228,7 @@ public:
 
 	/// Gets a reference to the underlying index, useful if it has features not replicated in the 
 	/// FlatMap API.
+	Underlying& index() { return m; }
 	const Underlying& index() const { return m; }
 	
 	bool empty() const { return n == 0; }
@@ -284,11 +280,6 @@ public:
 	
 	Inner& operator[] ( const Key& k ) { return *find_or_create( k ); }
 };
-
-/// Wrapper around std::map declaration with the proper number of template 
-/// parameters for use with FlatMap
-template<typename K, typename V>
-using std_map = std::map<K, V>;
 
 /// Wrapper for flat map using a sorted map
 template<typename Key, typename Inner, typename Extract>

@@ -415,8 +415,8 @@ InterpretationList resolveToPoly( Resolver& resolver, const FuncSubTable& funcs,
 InterpretationList Resolver::resolve( const Expr* expr, const Env& env, 
                                       ResolverMode resolve_mode ) {
 	auto eid = typeof(expr);
-	if ( eid == typeof<VarExpr>() ) {
-		InterpretationList results{ new Interpretation{ as<VarExpr>(expr), copy(env) } };
+	if ( eid == typeof<ValExpr>() ) {
+		InterpretationList results{ new Interpretation{ as<ValExpr>(expr), copy(env) } };
 		if ( resolve_mode.expand_conversions ) {
 			expandConversions( results, conversions );
 		}
@@ -450,11 +450,11 @@ InterpretationList resolveWithExtType( Resolver& resolver, const Expr* expr,
 	}
 
 	auto eid = typeof(expr);
-	if ( eid == typeof<VarExpr>() ) {
+	if ( eid == typeof<ValExpr>() ) {
 		// convert leaf expression to given type
 		Env rEnv = env;
 		const TypedExpr* rExpr =
-			convertTo( targetType, as<VarExpr>(expr), resolver.conversions, rEnv, rCost, 
+			convertTo( targetType, as<ValExpr>(expr), resolver.conversions, rEnv, rCost, 
 			           resolve_mode.truncate );
 		// return expression if applicable
 		return rExpr 

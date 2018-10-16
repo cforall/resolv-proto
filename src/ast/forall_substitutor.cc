@@ -3,31 +3,46 @@
 #include "decl.h"
 
 #include "data/cast.h"
+#include "data/debug.h"
 #include "data/mem.h"
 
-FuncDecl* ForallSubstitutor::operator() ( const FuncDecl* d, unsigned& src ) {
-	// clone assertion foralls, recursively
-	unique_ptr<Forall> forall{};
-	if ( d->forall() ) {
-		// clone forall
-		forall.reset( new Forall{} );
-		forall->vars.reserve( d->forall()->variables().size() );
-		for ( const PolyType* v : d->forall()->variables() ) {
-			forall->vars.push_back( new PolyType{ v->name(), ++src } );
+Decl* ForallSubstitutor::operator() ( const Decl* d, unsigned& src ) {
+	auto did = typeof(d);
+	if ( did == typeof<FuncDecl>() ) {
+		const FuncDecl* fd = as<FuncDecl>(d);
+
+		// clone assertion foralls, recursively
+		unique_ptr<Forall> forall{};
+		if ( fd->forall() ) {
+			// clone forall
+			forall.reset( new Forall{} );
+			forall->vars.reserve( fd->forall()->variables().size() );
+			for ( const PolyType* v : fd->forall()->variables() ) {
+				forall->vars.push_back( new PolyType{ v->name(), ++src } );
+			}
+			ctx.push_back( forall.get() );
+			
+			// clone assertions
+			forall->assns.reserve( fd->forall()->assertions().size() );
+			for ( const Decl* a : fd->forall()->assertions() ) {
+				forall->assns.push_back( (*this)(a, src) );
+			}
 		}
-		ctx.push_back( forall.get() );
-		
-		// clone assertions
-		forall->assns.reserve( d->forall()->assertions().size() );
-		for ( const FuncDecl* a : d->forall()->assertions() ) {
-			forall->assns.push_back( (*this)(a, src) );
-		}
+		// clone parameters and returns
+		List<Type> params = (*this)(fd->params());
+		const Type* returns = (*this)(fd->returns());
+		// remove forall from context
+		if ( forall ) { ctx.pop_back(); }
+		// build new function declaration
+		return new FuncDecl{ fd->name(), fd->tag(), move(params), returns, move(forall) };
+	} else if ( did == typeof<VarDecl>() ) {
+		const VarDecl* vd = as<VarDecl>(d);
+		// clone type
+		const Type* vty = (*this)(vd->type());
+		// build new declaration
+		return new VarDecl{ vd->name(), vd->tag(), vty };
 	}
-	// clone parameters and returns
-	List<Type> params = (*this)(d->params());
-	const Type* returns = (*this)(d->returns());
-	// remove forall from context
-	if ( forall ) { ctx.pop_back(); }
-	// build new function declaration
-	return new FuncDecl{ d->name(), d->tag(), move(params), returns, move(forall) };
+	
+	unreachable(!"invalid declaration type");
+	return nullptr;
 }

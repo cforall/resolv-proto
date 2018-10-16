@@ -43,6 +43,11 @@ bool unifyTuple(const Type* paramType, const TupleType* argType, Cost& cost, Env
             cost.safe += argType->size() - 1;
             return true;
         } else return false;
+    } else if ( pid == typeof<FuncType>() ) {
+        if ( unify( as<FuncType>(paramType), argType->types()[0], cost, env ) ) {
+            cost.safe += argType->size() - 1;
+            return true;
+        } else return false;
     } else if ( pid == typeof<TupleType>() ) {
         const TupleType* tParam = as<TupleType>(paramType);
         // no unification if too few elements in argument
@@ -91,6 +96,8 @@ bool unifyTuple(const Type* paramType, const Type* argType, Cost& cost, Env& env
             return unify( as<NamedType>(paramType), argType, cost, env );
         } else if ( pid == typeof<PolyType>() ) {
             return unify( as<PolyType>(paramType), argType, cost, env );
+        } else if ( pid == typeof<FuncType>() ) {
+            return unify( as<FuncType>(paramType), argType, cost, env );
         } else unreachable("Unhandled parameter type");
 
         return false; // unreachable

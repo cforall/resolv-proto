@@ -1,27 +1,8 @@
 # TODO #
 
-## Next few days ##
-* Finish `persistent_map`-based environment
-  * I think I want an `Entry` API and index operator, also a `try_emplace`
-* Make git branch for deferred resolution
-
-## Next few weeks ##
-1. Make resolution deferred
-2. Switch resolution semantic from unification to resolution
-3. Integrate better `Env` data structure from prototype (?)
-   * Might need GC
-   * Might just "flatten" (easier if persistent-map based)
-
-## Next few months ##
-* Look at increment-based merging for `persistent_map`-Env
-  1. reroot at merged-to Env
-  2. recursively attempt to apply each transition in reverse order from merged-from Env
-     * keep "seen" set to avoid duplication
-     * possibly works better if there isn't an explicit class representation in `Env`
-       * fewer update nodes for class rebindings
-       * would need a linear pass to reconstruct classes (possibly similar to two-phase environment in CFA-CC)
-       * main problem would be occurs check
-       * might be able to "skip" update nodes that are just class re-linking
+* Make resolution deferred
+  * cfa-cc ties assertions to the types they depend upon -- if you have the same assertion(s) depending on a set of unified type variables, can potentially only resolve them once
+* Switch resolution semantic from unification to resolution
 * Look at sub-interpretation result caching for deferred resolution order
 * Make mode that throws away alternatives of ambiguous expression
 * Modify semantics of top-level resolution to resolve to `void` (see `void` test case)
@@ -29,16 +10,11 @@
   * Look at tuple truncations as conversions in expand_conversions
   * Use Rob's semantics for tuples (just flatten to lists, maybe truncate at top-level)
     * Check if `tuple-return.in` has any better performance afterward
-* Rewrite uses of `merge()` in `resolve_assertions.h` to use `flattenOut()`
-  * possibly just take advantage of new Env as GC_Object
-  * audit uses of `Env::from` and trim cases where they're not actually modified
 * more resolver algorithms (hybrid traversal orders, lazy evaluation, caching resolver queries, etc.)
   * Try a variant of `bu`/`td` where it tries to find the combos **before** the next argument (if there's only one, the base environment can be updated)
 * investigate user-defined conversions
   * It's possible that polymorphic conversions will basically push this on us anyway...
-* maybe model traits in the prototype (I have some hazy ideas about using them as a caching mechanism, possibly to cut off the exponential failure case)
 * look up unification data structures literature
-  * Conchon & Filliatre '07 "A Persistent Union-Find Data Structure" may be useful as a basis for an   efficient `Env` implementation (it subsumes Bilson03 cite. 4, which is just "union-find")
   * Martelli & Montanari '82 "An efficient unification algorithm" describes types as sharing common structure (DAG subgraphs), reduces unification time if you're careful (I might already be doing this; it's also Bilson03 cite. 25)
   * Knight '89 "Unification: A multidisciplinary survey" seems like another promising lit review root
 * investigate problem as dynamic programming

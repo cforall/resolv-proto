@@ -37,9 +37,8 @@ public:
 /// Filters combinations from qs by the given combo iterator. If the iterator rejects some prefix 
 /// of a combination, it will not accept any combination with that prefix.
 /// qs should not be empty
-template<typename T, typename Q, typename ComboIter>
-auto filter_combos( const std::vector<Q>& qs, ComboIter&& iter )
-	-> std::vector<typename ComboIter::OutType> {
+template<typename QS, typename ComboIter>
+auto filter_combos( QS& qs, ComboIter&& iter ) -> std::vector<typename ComboIter::OutType> {
     unsigned n = qs.size();  // number of queues to combine
 
 	std::vector<typename ComboIter::OutType> out;  // filtered output
@@ -79,9 +78,9 @@ auto filter_combos( const std::vector<Q>& qs, ComboIter&& iter )
 		while ( ! inds.empty() ) {
 			// try the next value at the previous index
 			++inds.back();
+			iter.backtrack();
 			if ( inds.back() < qs[inds.size()-1].size() ) break;
 			// if the previous index is finished, backtrack out
-			iter.backtrack();
 			inds.pop_back();
 		}
 

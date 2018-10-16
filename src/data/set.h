@@ -45,7 +45,7 @@ inline const T* get_canon(SortedSet<T>& s, Args&&... args) {
 
 template<typename T>
 inline const GC& operator<< (const GC& gc, const Set<T>& container) {
-	for(auto&& obj : container) {
+	for(auto obj : container) {
 		gc << obj;
 	}
 	return gc;
@@ -53,7 +53,7 @@ inline const GC& operator<< (const GC& gc, const Set<T>& container) {
 
 template<typename T>
 inline const GC& operator<< (const GC& gc, const SortedSet<T>& container) {
-	for(auto&& obj : container) {
+	for(auto obj : container) {
 		gc << obj;
 	}
 	return gc;

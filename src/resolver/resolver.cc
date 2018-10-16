@@ -2,7 +2,7 @@
 
 #include "env.h"
 #include "interpretation.h"
-#if defined RP_RES_DEF || defined RP_RES_IMM
+#if defined RP_RES_DEF || defined RP_RES_TEC || defined RP_RES_IMM
 #include "resolve_assertions.h"
 #endif
 
@@ -44,7 +44,7 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 		return Interpretation::make_invalid();
 	}
 
-#if defined RP_RES_DEF || defined RP_RES_IMM
+#if defined RP_RES_DEF || defined RP_RES_TEC || defined RP_RES_IMM
 	// sort results by cost
 	std::sort( results.begin(), results.end(), ByValueCompare<Interpretation>{} );
 	
@@ -111,4 +111,32 @@ const Interpretation* Resolver::operator() ( const Expr* expr ) {
 	
 	trace( candidate );
 	return candidate;
+}
+
+void Resolver::beginScope() {
+	funcs.beginScope();
+}
+
+void Resolver::endScope() {
+	funcs.endScope();
+}
+
+void Resolver::addType(const Type* ty) {
+	conversions.addType( ty );
+}
+
+void Resolver::addDecl(Decl* decl) {
+	++n_funcs;
+	// insert function at current scope, creating function list for name if necessary
+	auto it = funcs.findAt( funcs.currentScope(), decl->name() );
+	if ( it == funcs.end() ) {
+		it = funcs.insert( decl->name(), FuncTable::mapped_type{} ).first;
+	}
+	it->second.insert( decl );
+}
+
+void Resolver::addExpr(const Expr* expr) {
+	++n_exprs;
+	const Interpretation* i = (*this)(expr);
+	if ( i->is_valid() ) { on_valid( expr, i ); }
 }

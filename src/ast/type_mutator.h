@@ -41,6 +41,18 @@ public:
         return true;
     }
 
+    bool visit( const FuncType* t, const Type*& r ) {
+        const Type* newReturns = t->returns();
+        if ( ! visit( t->returns(), newReturns ) ) return false;
+        option<List<Type>> newParams;
+        if ( ! mutateAll( this, t->params(), newParams ) ) return false;
+        if ( newReturns != t->returns() || newParams.has_value() ) {
+            // rebuild with new types
+            r = new FuncType{ *move(newParams), newReturns };
+        }
+        return true;
+    }
+
     /// Mutates the provided type pointer.
     const Type* operator() ( const Type* t ) {
         visit( t, t );

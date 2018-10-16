@@ -10,19 +10,28 @@
 #include "resolver/canonical_type_map.h"
 #include "resolver/func_table.h"
 
+class Resolver;
+
 /// Parses input according to the following format:
 ///
-/// start := NL* <function_decl>* "%%\n" <resolv_expr>*
+/// start := <scope>
+/// scope := <decl>* "%%\n" <body> 
+/// body := (<block> | <resolv_expr>)*
+/// block := "{" NL+ <scope> "}" NL+
+/// decl := <function_decl> | <var_decl>
 /// function_decl := (<type>" ")* <name>("-"<tag>)? (" "<type>)* <type_assertion>* NL+
-/// type_assertion := "|" (<type>" ")* <name> (" "<type>)*
+/// var_decl := <type> " &"<name>("-"<tag>)?
+/// type_assertion := "|" (<type>" ")* ( <name> (" "<type>)* ) | ( "&"<name> )
 /// resolv_expr := <subexpr> NL+
-/// subexpr := <conc_type> | <named_type> | <name> " (" (" "<subexpr>)* " )"
-/// name := [a-z][a-z0-9]*
+/// subexpr := <conc_type> | <named_type> | <func_type> 
+///            | <name> " (" (" "<subexpr>)* " )" | "&"<name>
+/// name := [a-z_$][A-Za-z_0-9]*
 /// tag := <name>
-/// type := <conc_type> | <named_type> | <poly_type>
+/// type := <conc_type> | <named_type> | <poly_type> | <func_type>
 /// conc_type := "-"?[0-9]+
-/// named_type := "#"[A-Za-z_][A-Za-z_0-9]*("<" <type> (" "<type>)* ">")?
-/// poly_type := [A-Z][a-z0-9]*
+/// named_type := "#"[A-Za-z_$][A-Za-z_0-9]*("<" <type> (" "<type>)* ">")?
+/// poly_type := [A-Z][A-Za-z_0-9]*
+/// func_type := "[" <type>* ":" <type>* "]"
 /// NL := "\n" | "//" . ~ "\n" 
 ///
 /// Semantically, types are given numeric identifiers, and also stand in for 
@@ -46,9 +55,11 @@
 ///
 /// Expressions to be resolved are (possibly recursive) function invocations 
 /// with the leaf nodes represented by type identifiers corresponding to 
-/// variables. 
+/// variables. Using a function as a variable can be accomplished by prefixing 
+/// it with an ampersand.
 ///
-/// Returns true and sets funcs, exprs & types if appropriate, 
-/// prints errors otherwise.
-bool parse_input( std::istream& in, FuncTable& funcs, List<Expr>& exprs, 
-                  CanonicalTypeMap& types, Args& args );
+/// Functions and expressions may be grouped into lexically-scoped blocks by 
+/// using curly braces. Only in-scope declarations can be used within a block
+///
+/// Calls resolver on a pipelined basis while parsing input
+void run_input( std::istream& in, Resolver& resolver, Args& args );

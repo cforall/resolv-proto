@@ -1,5 +1,138 @@
-## 01-05 June ##
-* Started on resolving bugs in new `Env`
+## 01-02 Oct 2018 ##
+* Ran RP tests on CFA stdlib.
+* RPDump now prints var args variable types
+* Fixed deferred cache lifetime issues
+  * deferIds/deferred cleared at the end of the run, assn_cache not
+
+## 26-28 Sep 2018 ##
+* Looked at `rational` test case
+  * 6230 is slow: `$bitor( $bitor( $bitor( $bitor( &sout &a ) &b ) &c ) &endl )`
+    * 8 candidates, 0th candidate post-sort demonstrates hang
+    * call to `?|?( Ostype, Rational(RationalImpl) )` doesn't force the different 
+      `RationalImpl` instantiations to be bound in a class.
+    * Solution to incorporate bound types in key
+      * Important to distinguish bound types from monomorphic types in mangling
+* RP now parses function pointer literals as arguments
+  * **TODO** canonicalize function types in parser
+* stripped reference types from codegen (can be re-added when RP supports proper conversions)
+* re-wrote constructor expressions to generate a variable expression rather than a function call
+* corrected for implmentation of `{wchar,char{16,32}}_t` as `TypeInstType`
+* normalized compiler-generated function declarations to collide with user declarations in RPDump
+* **TODO** some tuple generation seems to be missing its spaces
+* More detailed look at test suites
+  * most resolution errors are due to the `zero_t => T*` conversion not existing
+    * ditto for no `void* => T*` conversion
+  * Others due to missing var-args support in prototype (including `ttype`)
+  * There's a conditional around `__assert_fail` that consistently doesn't work
+  * Can't assign to `dtype&`, e.g. in returns from builtin `++?`, etc.
+  * No support for function operator in prototype resolution impacts `function-operator`
+  * No support for `WithStmt` or `AsmStmt`
+* Ran performance tests vs. CFA-CC
+  * average 500x speedup, though CFA-CC is a multi-pass program
+
+## 21-24 Sep 2018 ##
+* Got on type-environment cached deferred resolution working
+  * Assertion cache is keyed by mangle name of assertion, with poly-types normalized to class root
+  * Re-formatted deferIds for cached form
+  * 1.2s for `bu-tec` on `io1`, vs. ~15min for `bu-def`
+  * `rational` seems to still have some performance issues...
+* Modified RP `Forall` to map to `Decl`, not `FuncDecl`
+
+## 20 Sep 2018 ##
+* Begin investigating CFA instances in RP
+  * io1 the only slow suite (15 mins)
+  * io1.in:2919 takes a long time (22 levels deep)
+  * io1.in:2921 also (24 levels deep)
+  * io1.in:2923 also (23 levels deep)
+  * all 3 slow instances bind ~12 polymorphic variables into the same class, then resolve the same ~15 assertions for all of them
+    * class-based-caching in deferred resolution would probably help
+
+## 11-20 Sep 2018 ##
+* CFA => prototype instance translator
+  * Added `#$` and `$` private names to prototype
+  * Translator fixes operator names to prototype textual format
+  * Translator handles global decls and parameter decls in sub-scopes
+  * Translator translates expressions, including initialization and return
+  * Translator encodes field accesses as functions in scope of struct declaration
+  * Minor tweaks to resolv-proto parser and RPDump generation to work together
+  * Added function type to resolver prototype
+    * **TODO** look into types with ftype parameters ... maybe just get rid of them?
+  * Added Name/VarExpr to resolver prototype (old VarExpr now ValExpr)
+  * Added VarDecl to resolver prototype
+  * **TODO** Look at hard-coding implicit conversion table into resolver prototype
+  * **TODO** Look at hard-coding cast conversion table into ProtoDump
+  * **TODO** Look at encoding reference type in resolver prototype
+  * **TODO** Look at var-args type in resolver prototype
+
+## 4-7 Sep 2018 ##
+* Added lexical scopes to resolver
+  * Variable shadowing is an issue -- maybe I can just not put the shadowed variables in the new scope, using a ScopedMap for the manglenames in the cfa-cc end
+
+## 22-30 Aug 2018 ##
+* Go back to debugging breadth-first resolution order
+  * trim `kernel-e.c` down to just problem case `kernel-trim.c`
+  * built minimal `kernel-construct.c` test case from problem
+    * 4-character code bug to update the old resolution state instead of the new one on found deferred assertion...
+
+## 3-21 Aug 2018 ##
+* Vacation
+
+## 11 June-30 July 2018 ##
+* Start work on deferred resolution in CFA-CC
+  * Move find flags over to `ResolvMode` struct
+  * Augmented cost struct with vars/spec costs
+  * Need to write pass to do resolution differently
+    * build is crashing in `rational.c`
+      * stdlib polymorphic `abs` conflicting with implicit `abs` as cheapest assertion resolution
+      * **TODO** make sure that type parameters don't get counted against assertion parameter cost
+        * probably openType/closedType
+      * problem is that current resolver just takes first unifying assertion, doesn't consider cost
+    * started refactoring to use breadth-first assertion resolution order from prototype
+      * `concurrency/kernel.c` fails with a missing assertion error
+        * **TODO** try and trim down input file to just one function call...
+        * `appExpr=0x3ef25c0` type `long double (15, sizeof(...))` // looks wrong...
+          * clone of `ApplicationExpr @0x3e72580` at `AlternativeFinder.cc:838 ResnList resns{...}`
+            * built from `VariableExpr @0x3f54aa0` at `AlternativeFinder.cc:1385 appExpr = new ...`
+        * chosen function is `forall( dtype T | is_thread(T) ) coroutine_desc* get_coroutine(T&)`
+        * function type seems to be the same, `T` is `_13136_71_T`
+          * environment maps `_13136_71_T => struct processorCtx_t`
+        * ...
+      * building, unbounded(?) memory usage in stdlib file `rational.c`
+        * not unbounded, just enormous ...
+          * `rational.c` involves a defer-set with sizes `{ 15, 21, 66, 66, 67, 9, 66 }`
+          * At combo `{ 0, 0, 0, 5, 47, 7, 49 }` ~10GB mem usage, ~200K combos in output
+            * It seems like `T` isn't getting bound in the output matches, thus they *all* match, 
+              rather than just the 100 or so that should match
+        * Functions are `{ T -?(T); int ?<?(T, T); T ?=?(T&, T); void ?{}(T&); void ?{}(T&, T); void ?{}(T&, zero_t); void ^?{}(T&) }`
+          * In initial env, `RationalImpl` same type var as `T`, which is unbound
+          * At combo `{0, 0, 4, 1, 16, 0, 9}` there are two `DT` variables. 
+            * Should they be the same?
+              * no, they're independent, but `T` should be bound to `DT*` and isn't
+                * fixed this, needed to track open vars
+  * BF order requires environment merging
+    * `TypeEnvironment::combine` never used, was broken, so deleted
+    * Decided to port environment structure from prototype
+      * **TL;DR** No appreciable speed change; very slight increase in memory usage
+      * Some trouble with `std::string` keys in existing impl, wrote interned string lib
+      * Problematic enough to actually realize `EqvClass` as separate entity that will cut and 
+        refactor
+        * replaced `EqvClass` with `ClassRef` where appropriate
+      * Some fixes involving not mutating in parallel with an iteration
+      * Fixed some memory bugs relating to not actually tracing things properly...
+      * Stack-overflow in TypeInstType substitution exposed by concurrency examples
+      * Fixed infinite loop in `TypeSubstitution.cc` exposed by `concurrency/thread.c`
+  * The implementations of `bindVar` and `bindVarToVar` in `Unify.cc` are appalling; far too many 
+    copies and full-environment searches for the necessary purpose.
+    * Backported the fixes to this into cfa-head, 5% speedup
+    * Ported fix into GC branch, performance testing ongoing
+
+## 07-08 June 2018 ##
+* Looked into bug #91
+  * Turns out it really needs user-defined conversions
+* Updated user-defined conversions proposal
+
+## 01-06 June 2018 ##
+* Finished fixing bugs in new `Env`
   * `Interpretation::merge_ambiguous()` generated a fresh environment for the ambiguous 
     expressions in a different tree; fixed by giving these an invalid environment, and 
     checking for this invalid environment before merging environments in.
@@ -11,264 +144,12 @@
   * Fixed bug where some added classes weren't getting bindings
   * Fixed bug where forgot to trace `NamedType::params_`
   
-## 24 May-01 June ##
+## 24 May-01 June 2018 ##
 * Started performance testing of GC branch.
 * Started trimming `clone` calls
   * Taking out `clone` in `Alternative` copies broke stdlib, reverted
 * Took out the `EqvClass` copies in `TypeEnvironment::lookup`
   * backported
-
-**baseline - array**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1668342( 19%) |      1635605( 19%) |        55746( 37%) | 
-               resolve |      3040425( 35%) |      3012828( 35%) |       113794( 76%) | 
-               fixInit |      1082417( 12%) |      1047335( 12%) |       131872( 88%) | 
----------------------------------------------------------------------------------------
-                   Sum |      8674133(100%) |      8559772(100%) |       148560(100%) | 
-cfa array.c  2.21s user 0.02s system 98% cpu 2.256 total
-```
-
-**gc - array**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1948997( 19%) |      1912960( 19%) |        63614( 35%) | 
-               resolve |      2812133( 28%) |      2792872( 29%) |       177296(100%) | 
-               fixInit |      1274543( 13%) |      1236852( 12%) |       134716( 75%) | 
----------------------------------------------------------------------------------------
-                   Sum |      9755274(100%) |      9605015(100%) |       177296(100%) | 
-cfa array.c  2.65s user 0.03s system 98% cpu 2.712 total
-```
-
-**8e18b8e - array**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1948997( 20%) |      1912960( 20%) |        63614( 38%) | 
-               resolve |      2602463( 27%) |      2583202( 27%) |       151713( 92%) | 
-               fixInit |      1274193( 13%) |      1236502( 13%) |       134716( 82%) | 
----------------------------------------------------------------------------------------
-                   Sum |      9545248(100%) |      9394989(100%) |       164009(100%) | 
-cfa array.c  2.53s user 0.05s system 99% cpu 2.602 total
-```
-
-**baseline - attributes**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      7744158( 46%) |      7666294( 46%) |       105168( 50%) | 
-               resolve |      3367053( 20%) |      3336438( 20%) |       161760( 77%) | 
-               fixInit |      1353122(  8%) |      1314375(  8%) |       186414( 88%) | 
----------------------------------------------------------------------------------------
-                   Sum |     16540865(100%) |     16379962(100%) |       209832(100%) |  
-cfa attributes.c  3.17s user 0.04s system 99% cpu 3.233 total
-```
-
-**gc - attributes**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      7558786( 42%) |      7512802( 43%) |       109645( 56%) | 
-               resolve |      3355864( 19%) |      3334926( 19%) |       189617( 98%) | 
-               fixInit |      1579318(  8%) |      1537984(  8%) |       152269( 78%) | 
----------------------------------------------------------------------------------------
-                   Sum |     17601239(100%) |     17426696(100%) |       192925(100%) | 
-cfa attributes.c  3.78s user 0.06s system 98% cpu 3.900 total
-```
-
-**8e18b8e - attributes**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      7507691( 43%) |      7461707( 43%) |       104721( 54%) | 
-               resolve |      3177570( 18%) |      3156632( 18%) |       173219( 89%) | 
-               fixInit |      1578968(  9%) |      1537634(  8%) |       152269( 78%) | 
----------------------------------------------------------------------------------------
-                   Sum |     17371491(100%) |     17196948(100%) |       192925(100%) | 
-cfa attributes.c  3.70s user 0.03s system 99% cpu 3.755 total
-```
-
-**baseline - raii/dtor-early-exit**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |     48995173(  9%) |     48637501( 10%) |       403190(  5%) | 
-               resolve |    355445653( 72%) |    353486464( 72%) |      2959112( 37%) | 
-               fixInit |     68173504( 13%) |     62987655( 12%) |      7604708( 95%) | 
----------------------------------------------------------------------------------------
-                   Sum |    492150706(100%) |    484912058(100%) |      7937757(100%) | 
-cfa raii/dtor-early-exit.c  67.18s user 0.38s system 99% cpu 1:07.62 total
-```
-
-**gc - raii/dtor-early-exit**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |     44919556(  8%) |     44808978(  8%) |       254124(  1%) | 
-               resolve |    379612890( 73%) |    379327063( 73%) |     15558395(100%) | 
-               fixInit |     66460462( 12%) |     66300262( 12%) |      1392918(  8%) | 
----------------------------------------------------------------------------------------
-                   Sum |    515907432(100%) |    514916261(100%) |     15558395(100%) | 
-cfa raii/dtor-early-exit.c  82.18s user 0.81s system 99% cpu 1:23.13 total
-```
-
-**8e18b8e - raii/dtor-early-exit**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |     44183964( 10%) |     44073386( 10%) |       241507(  2%) | 
-               resolve |    278778701( 67%) |    278492874( 67%) |     11530048(100%) | 
-               fixInit |     65678011( 15%) |     65517811( 15%) |      1374877( 11%) | 
----------------------------------------------------------------------------------------
-                   Sum |    413555200(100%) |    412564029(100%) |     11530048(100%) | 
-cfa raii/dtor-early-exit.c  65.27s user 0.60s system 99% cpu 1:05.95 total
-```
-
-**baseline - expression**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1812682( 18%) |      1779083( 18%) |        60397( 39%) | 
-               resolve |      3658858( 38%) |      3628841( 38%) |       115423( 75%) | 
-               fixInit |      1112421( 11%) |      1077289( 11%) |       135998( 88%) | 
----------------------------------------------------------------------------------------
-                   Sum |      9582892(100%) |      9465636(100%) |       152904(100%) | 
-cfa expression.c  2.27s user 0.02s system 99% cpu 2.314 total
-```
-
-**gc - expression**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      2082193( 19%) |      2045933( 19%) |        76147( 43%) | 
-               resolve |      3358033( 31%) |      3337948( 31%) |       173239(100%) | 
-               fixInit |      1308784( 12%) |      1271045( 12%) |       136050( 78%) | 
----------------------------------------------------------------------------------------
-                   Sum |     10598879(100%) |     10447115(100%) |       173239(100%) | 
-cfa expression.c  2.70s user 0.04s system 98% cpu 2.769 total
-```
-
-**8e18b8e - expression**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      2080416( 19%) |      2044156( 19%) |        74605( 44%) | 
-               resolve |      3298551( 31%) |      3278466( 31%) |       161360( 97%) | 
-               fixInit |      1308434( 12%) |      1270695( 12%) |       136050( 82%) | 
----------------------------------------------------------------------------------------
-                   Sum |     10537270(100%) |     10385506(100%) |       165846(100%) | 
-cfa expression.c  2.62s user 0.05s system 99% cpu 2.693 total
-```
-
-**baseline - concurrent/monitor**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |    398639948( 66%) |    396464782( 66%) |      2244863( 51%) | 
-               resolve |     77248468( 12%) |     76664731( 12%) |      3147496( 72%) | 
-               fixInit |     94110988( 15%) |     92934426( 15%) |      4150213( 95%) | 
----------------------------------------------------------------------------------------
-                   Sum |    600233343(100%) |    596433822(100%) |      4324127(100%) | 
-cfa concurrent/monitor.c  80.94s user 0.90s system 99% cpu 1:21.90 total
-```
-
-**gc - concurrent/monitor**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |    352792674( 64%) |    352543820( 64%) |      1068361( 10%) | 
-               resolve |     70444761( 12%) |     70355760( 12%) |     10145145(100%) | 
-               fixInit |     87385288( 15%) |     87216527( 15%) |      1381466( 13%) | 
----------------------------------------------------------------------------------------
-                   Sum |    546265216(100%) |    545373659(100%) |     10145145(100%) | 
-cfa concurrent/monitor.c  86.83s user 0.51s system 99% cpu 1:27.41 total
-```
-
-**8e18b8e - concurrent/monitor**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |    341117538( 64%) |    340868684( 64%) |       771424( 13%) | 
-               resolve |     64774959( 12%) |     64685958( 12%) |      5931446(100%) | 
-               fixInit |     87249469( 16%) |     87080708( 16%) |      1363410( 22%) | 
----------------------------------------------------------------------------------------
-                   Sum |    528784446(100%) |    527892889(100%) |      5931446(100%) | 
-cfa concurrent/monitor.c  81.74s user 0.31s system 99% cpu 1:22.15 total
-```
-
-**baseline - operators**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1834397( 19%) |      1796835( 19%) |        64222( 36%) | 
-               resolve |      3199571( 33%) |      3163002( 34%) |       118728( 67%) | 
-               fixInit |      1435135( 15%) |      1385635( 14%) |       160205( 90%) | 
----------------------------------------------------------------------------------------
-                   Sum |      9429797(100%) |      9287709(100%) |       177165(100%) | 
-cfa operators.c  2.27s user 0.04s system 98% cpu 2.350 total
-```
-
-**gc - operators**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      2103999( 19%) |      2067503( 19%) |        79372( 44%) | 
-               resolve |      3117298( 29%) |      3097827( 29%) |       177873(100%) | 
-               fixInit |      1608753( 15%) |      1570496( 14%) |       136614( 76%) | 
----------------------------------------------------------------------------------------
-                   Sum |     10638816(100%) |     10486941(100%) |       177873(100%) | 
-cfa operators.c  2.79s user 0.06s system 99% cpu 2.871 total
-```
-
-**8e18b8e - operators**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      2098149( 20%) |      2061653( 19%) |        76259( 45%) | 
-               resolve |      2980878( 28%) |      2961407( 28%) |       161484( 97%) | 
-               fixInit |      1599895( 15%) |      1561638( 15%) |       136614( 82%) | 
----------------------------------------------------------------------------------------
-                   Sum |     10487688(100%) |     10335813(100%) |       165926(100%) | 
-cfa operators.c  2.74s user 0.02s system 99% cpu 2.781 total
-```
-
-**baseline - typeof**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1663441( 19%) |      1630762( 19%) |        55618( 37%) | 
-               resolve |      3015135( 34%) |      2987788( 35%) |       113674( 76%) | 
-               fixInit |      1078764( 12%) |      1043721( 12%) |       131459( 88%) | 
----------------------------------------------------------------------------------------
-                   Sum |      8629507(100%) |      8515426(100%) |       148067(100%) | 
-cfa typeof.c  2.10s user 0.03s system 98% cpu 2.162 total
-```
-
-**gc - typeof**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1943752( 19%) |      1907770( 19%) |        63470( 37%) | 
-               resolve |      2815347( 28%) |      2796156( 29%) |       167196(100%) | 
-               fixInit |      1270370( 13%) |      1232718( 12%) |       134446( 80%) | 
----------------------------------------------------------------------------------------
-                   Sum |      9735000(100%) |      9585099(100%) |       167196(100%) | 
-cfa typeof.c  2.58s user 0.02s system 99% cpu 2.622 total
-```
-
-**8e18b8e - typeof**
-```
-                  Pass |       Malloc Count |         Free Count |        Peak Allocs |
----------------------------------------------------------------------------------------
-              validate |      1943752( 20%) |      1907770( 20%) |        63470( 38%) | 
-               resolve |      2709169( 28%) |      2689978( 28%) |       160748( 98%) | 
-               fixInit |      1270020( 13%) |      1232368( 13%) |       134446( 82%) | 
----------------------------------------------------------------------------------------
-                   Sum |      9628463(100%) |      9478562(100%) |       163621(100%) | 
-cfa typeof.c  2.57s user 0.03s system 99% cpu 2.621 total
-```
 
 ## 02 Apr-23 May 2018 ##
 * Continue work on persistency-based `Env`

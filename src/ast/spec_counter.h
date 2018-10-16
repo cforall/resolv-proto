@@ -17,8 +17,9 @@ class SpecCounter : public TypeVisitor<SpecCounter, option<Cost::Element>> {
 	}
 
 public:
-	using TypeVisitor<SpecCounter, option<Cost::Element>>::visit;
-	using TypeVisitor<SpecCounter, option<Cost::Element>>::operator();
+	using Super = TypeVisitor<SpecCounter, option<Cost::Element>>;
+	using Super::visit;
+	using Super::operator();
 
 	bool visit( const NamedType* t, option<Cost::Element>& r ) {
 		updateCount( t->params(), r );
@@ -32,6 +33,12 @@ public:
 
 	bool visit( const TupleType* t, option<Cost::Element>& r ) {
 		updateCount( t->types(), r );
+		return true;
+	}
+
+	bool visit( const FuncType* t, option<Cost::Element>& r ) {
+		visit( t->returns(), r );
+		updateCount( t->params(), r );
 		return true;
 	}
 };

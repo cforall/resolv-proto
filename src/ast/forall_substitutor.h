@@ -11,7 +11,7 @@
 #include "data/list.h"
 #include "data/range.h"
 
-class FuncDecl;
+class Decl;
 
 /// Replaces unsourced polymorphic type variables by fresh variables bound to a specified source.
 class ForallSubstitutor : public TypeMutator<ForallSubstitutor> {
@@ -37,9 +37,9 @@ public:
 		return true;
 	}
 
-	/// Substitute a function declarations types according to the substitution map; 
+	/// Substitute a function declaration's types according to the substitution map; 
 	/// Uses src to produce new IDs for nested forall clauses
-	FuncDecl* operator() ( const FuncDecl* d, unsigned& src );
+	Decl* operator() ( const Decl* d, unsigned& src );
 
 	/// Substitute a list of types
 	List<Type> operator() ( const List<Type>& ts ) {

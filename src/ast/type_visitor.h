@@ -28,6 +28,8 @@ public:
             return as<Self>(this)->visit( as<VoidType>(t), r );
         else if ( tid == typeof<TupleType>() )
             return as<Self>(this)->visit( as<TupleType>(t), r );
+        else if ( tid == typeof<FuncType>() )
+            return as<Self>(this)->visit( as<FuncType>(t), r );
 
         unreachable("invalid Type type");
         return false;
@@ -49,6 +51,15 @@ public:
         return true;
     }
 
+    /// Visits all children (parameters first)
+    bool visitChildren( const FuncType* t, T& r ) {
+        for ( const Type* tt : t->params() ) {
+            if ( ! visit( tt, r ) ) return false;
+        }
+        if ( ! visit( t->returns(), r ) ) return false;
+        return true;
+    }
+
     /// Default implmentation of visit
     bool visit( std::nullptr_t, T& ) { return true; }
     
@@ -66,6 +77,9 @@ public:
 
     /// Default implmentation of visit
     bool visit( const TupleType* t, T& r ) { return visitChildren( t, r ); }
+
+    /// Default implmentation of visit
+    bool visit( const FuncType* t, T& r ) { return visitChildren( t, r ); }
 
     /// Returns the result of visiting a default-constructed T
     T operator() ( const Type* t ) {

@@ -28,6 +28,7 @@ public:
 
 	/// Creates a type of appropriate arity from the list of types
 	static inline const Type* from(const List<Type>& ts);
+	static inline const Type* from(List<Type>&& ts);
 protected:
 	/// Check this type for equality with other types
 	virtual bool equals(const Type&) const = 0; 
@@ -278,3 +279,75 @@ inline const Type* Type::from(const List<Type>& ts) {
 	default: return new TupleType{ ts };
 	}
 }
+
+inline const Type* Type::from(List<Type>&& ts) {
+	switch ( ts.size() ) {
+	case 0:  return new VoidType{};
+	case 1:  return ts.front();
+	default: return new TupleType{ move(ts) };
+	}
+}
+
+/// Represents a function type
+class FuncType : public Type {
+	List<Type> params_;   ///< Parameter types of function
+	const Type* returns_; ///< Return types of function
+	
+public:
+	typedef Type Base;
+
+	FuncType( List<Type>&& params_, List<Type>&& returns_ )
+		: params_(move(params_)), returns_( Type::from( move(returns_) ) ) {}
+	
+	FuncType( List<Type>&& params_, const Type* returns_ )
+		: params_(move(params_)), returns_(returns_) {}
+	
+	Type* clone() const override {
+		return new FuncType{ copy(params_), returns_ };
+	}
+
+	const List<Type>& params() const { return params_; }
+	const Type* returns() const { return returns_; }
+
+	unsigned size() const override { return 1; }
+
+	void write(std::ostream& out, ASTNode::Print style) const override {
+		out << "[ ";
+		if ( returns_->size() > 0 ) {
+			returns_->write( out, style );
+			out << " ";
+		}
+		out << ":";
+		for ( const Type* pType : params_ ) {
+			out << " ";
+			pType->write( out, style );
+		}
+		out << " ]";
+	}
+	
+protected:
+	void trace(const GC& gc) const override { gc << params_ << returns_; }
+	
+	bool equals(const Type& obj) const override {
+		const FuncType* that = as_safe<FuncType>(&obj);
+		if ( ! that ) return false;
+		
+		if ( params_.size() != that->params_.size() ) return false;
+		for (unsigned i = 0; i < params_.size(); ++i) {
+			if ( *params_[i] != *that->params_[i] ) return false;
+		}
+		if ( *returns_ != *that->returns_ ) return false;
+		return true;
+	}
+	
+	std::size_t hash() const override {
+		std::size_t r = params_.size();
+		for (const auto& ty : params_) {
+			r <<= 1;
+			r ^= std::hash<Type>{}( *ty );
+		}
+		r <<= 1;
+		r ^= std::hash<Type>{}( *returns_ );
+		return r;
+	}
+};

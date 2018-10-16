@@ -9,16 +9,17 @@
 
 #include "resolver/cost.h"
 
-class FuncDecl;
+class Decl;
 class PolyType;
 
 /// Represents a forall clause; owns a set of type variables and assertions.
 class Forall {
 	friend const GC& operator<< (const GC&, const Forall*);
 	friend class ForallSubstitutor;
+	template<typename S> friend class DeclMutator;
 
 	List<PolyType> vars;  ///< Type variables owned by this forall clause
-	List<FuncDecl> assns; ///< Type assertions owned by this forall clause
+	List<Decl> assns;     ///< Type assertions owned by this forall clause
 
 public:
 	Forall() = default;
@@ -37,7 +38,7 @@ public:
 	}
 	
 	const List<PolyType>& variables() const { return vars; }
-	const List<FuncDecl>& assertions() const { return assns; }
+	const List<Decl>& assertions() const { return assns; }
 
 	/// Finds the existing type variable with the given name; returns null if none such
 	const PolyType* get( const std::string& p ) const;
@@ -51,7 +52,7 @@ public:
 	const PolyType* add( const std::string& p, unsigned& src );
 
 	/// Adds a new assertion to this forall
-	void addAssertion( const FuncDecl* f ) { assns.push_back( f ); }
+	void addAssertion( const Decl* f ) { assns.push_back( f ); }
 
 	/// true iff no variables or assertions
 	bool empty() const { return vars.empty() && assns.empty(); }

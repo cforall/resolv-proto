@@ -26,8 +26,8 @@
 	#define dbg_verify()
 #endif
 
+class Decl;
 class Env;
-class FuncDecl;
 class PolyType;
 class Type;
 class TypedExpr;
@@ -91,7 +91,7 @@ class Env final {
 	/// Type bindings included in this environment (from class root)
 	using Bindings = persistent_map<const PolyType*, const Type*>;
 	/// Assertions known by this environment
-	using Assertions = persistent_map<const FuncDecl*, const TypedExpr*>;
+	using Assertions = persistent_map<const Decl*, const TypedExpr*>;
 
 	Classes* classes;        ///< Backing storage for typeclasses
 	Bindings* bindings;      ///< Bindings from a named type variable to another type
@@ -99,7 +99,6 @@ class Env final {
 
 public:
 	/// Finds the binding reference for this polytype, { nullptr, _ } for none such.
-	/// Updates the local map with the binding, if found.
 	ClassRef findRef( const PolyType* var ) const {
 		const PolyType* root = classes->find_or_default( var, nullptr );
 		if ( root ) return { this, root };
@@ -153,7 +152,7 @@ private:
 		Classes* new_classes = classes->merge( rr, sr );
 
 		// update bindings
-		assume(classes->get_mode() == Classes::REMFROM, "Classes updated to by merge");
+		assume(classes->get_mode() == Classes::REMFROM, "Classes updated to REMFROM by merge");
 		const PolyType* root = classes->get_root();
 		if ( root == rr ) {
 			// erase binding for sr if no longer root
@@ -224,7 +223,7 @@ public:
 	}
 
 	/// Finds an assertion in this environment, returns null if none
-	const TypedExpr* findAssertion( const FuncDecl* f ) const {
+	const TypedExpr* findAssertion( const Decl* f ) const {
 		return assns->get_or_default( f, nullptr );
 	}
 
@@ -255,7 +254,7 @@ public:
 	}
 
 	/// Binds an assertion in this environment. `f` should be currently unbound.
-	void bindAssertion( const FuncDecl* f, const TypedExpr* assn ) {
+	void bindAssertion( const Decl* f, const TypedExpr* assn ) {
 		assns = assns->set( f, assn );
 	}
 
@@ -516,14 +515,14 @@ private:
 		// track assertion changes
 		assns->reroot();
 
-		std::unordered_map<const FuncDecl*, Edit> edits;  // edits to base map
+		std::unordered_map<const Decl*, Edit> edits;  // edits to base map
 		unsigned n[] = { 0, 0, 0, 0 };  // number of nodes for each Mode
 		
 		// trace path from other environment
 		const Assertions* oassns = o.assns;
 		Assertions::Mode omode = oassns->get_mode();
 		while ( omode != Assertions::BASE ) {
-			const FuncDecl* key = oassns->get_key();
+			const Decl* key = oassns->get_key();
 			auto it = edits.find( key );
 
 			if ( it == edits.end() ) {

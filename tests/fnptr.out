@@ -1,0 +1,8 @@
+
+ERROR: ambiguous resolution for noret( 1 &f )
+
+[1 / (0,0,0,0,0)] noargs( &f-noargs )
+
+[1 / (0,0,0,0,0)] both( 1 &f-both )
+
+[Void / (0,0,0,0,0)] var( &f-var )

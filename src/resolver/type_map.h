@@ -81,8 +81,23 @@ struct PolyKey {
     }
 };
 
+/// Key type for FuncType
+struct FuncKey {
+    unsigned params;
+
+    FuncKey( List<Type>::size_type params ) : params(params) {}
+    FuncKey( const FuncType* ft ) : params( ft->params().size() ) {}
+
+    const Type* value() const { return new FuncType{ List<Type>( params, nullptr ), nullptr }; }
+
+    bool operator== (const FuncKey& o) const { return params == o.params; }
+    bool operator< (const FuncKey& o) const { return params < o.params; }
+
+    std::size_t hash() const { return params; }
+};
+
 /// Variants of a key
-enum class KeyMode { Conc, Named, Poly };
+enum class KeyMode { Conc, Named, Poly, Func };
 
 /// Associates key type and enum with node type
 template<typename Ty>
@@ -106,6 +121,12 @@ struct key_info<PolyType> {
     static constexpr KeyMode key = KeyMode::Poly;
 };
 
+template<>
+struct key_info<FuncType> {
+    typedef FuncKey type;
+    static constexpr KeyMode key = KeyMode::Func;
+};
+
 /// Variant key type for map
 class TypeKey {
     KeyMode key_type;  ///< Variant discriminator
@@ -115,6 +136,7 @@ class TypeKey {
         ConcKey conc;
         NamedKey named;
         PolyKey poly;
+        FuncKey func;
 
         data_t() : def('\0') {}
         ~data_t() {}
@@ -145,6 +167,9 @@ class TypeKey {
         case KeyMode::Poly:
             init<PolyType>( o.get<PolyKey>() );
             break;
+        case KeyMode::Func:
+            init<FuncType>( o.get<FuncKey>() );
+            break;
         }
     }
 
@@ -158,6 +183,9 @@ class TypeKey {
             break;
         case KeyMode::Poly:
             init<PolyType>( o.take<PolyKey>() );
+            break;
+        case KeyMode::Func:
+            init<FuncType>( o.take<FuncKey>() );
             break;
         }
     }
@@ -174,6 +202,9 @@ class TypeKey {
         case KeyMode::Poly:
             get<PolyKey>().~PolyKey();
             break;
+        case KeyMode::Func:
+            get<FuncKey>().~FuncKey();
+            break;
         }
     }
 
@@ -181,7 +212,7 @@ class TypeKey {
     TypeKey() {}
 
 public:
-    /// Constructs key from type; type should be ConcType, NamedType or PolyType
+    /// Constructs key from type; type should be ConcType, NamedType, PolyType, or FuncType
     TypeKey( const Type* t ) {
         auto tid = typeof(t);
         if ( tid == typeof<ConcType>() ) {
@@ -190,6 +221,8 @@ public:
             init<NamedType>( as<NamedType>(t) );
         } else if ( tid == typeof<PolyType>() ) {
             init<PolyType>( as<PolyType>(t) );
+        } else if ( tid == typeof<FuncType>() ) {
+            init<FuncType>( as<FuncType>(t) );
         } else unreachable("Invalid key type");
     }
 
@@ -198,6 +231,8 @@ public:
     TypeKey( const NamedType* t ) { init<NamedType>( t ); }
 
     TypeKey( const PolyType* t ) { init<PolyType>( t ); }
+
+    TypeKey( const FuncType* t ) { init<FuncType>( t ); }
 
     // deliberately no nullptr_t implmentation; no meaningful value
 
@@ -229,6 +264,9 @@ public:
             case KeyMode::Poly:
                 get<PolyKey>() = o.get<PolyKey>();
                 break;
+            case KeyMode::Func:
+                get<FuncKey>() = o.get<FuncKey>();
+                break;
             }
         } else {
             reset();
@@ -251,6 +289,9 @@ public:
             case KeyMode::Poly:
                 get<PolyKey>() = o.take<PolyKey>();
                 break;
+            case KeyMode::Func:
+                get<FuncKey>() = o.take<FuncKey>();
+                break;
             }
         } else {
             reset();
@@ -271,6 +312,8 @@ public:
             return get<NamedKey>().value();
         case KeyMode::Poly:
             return get<PolyKey>().value();
+        case KeyMode::Func:
+            return get<FuncKey>().value();
         default: unreachable("Invalid key type"); return nullptr;
         }
     } 
@@ -284,6 +327,8 @@ public:
             return get<NamedKey>() == o.get<NamedKey>();
         case KeyMode::Poly:
             return get<PolyKey>() == o.get<PolyKey>();
+        case KeyMode::Func:
+            return get<FuncKey>() == o.get<FuncKey>();
         default: unreachable("Invalid key type"); return false;
         }
     }
@@ -297,6 +342,8 @@ public:
             return get<NamedKey>() < o.get<NamedKey>();
         case KeyMode::Poly:
             return get<PolyKey>() < o.get<PolyKey>();
+        case KeyMode::Func:
+            return get<FuncKey>() < o.get<FuncKey>();
         default: unreachable("Invalid key type"); return false;
         }
     }
@@ -313,6 +360,9 @@ public:
         case KeyMode::Poly:
             h = get<PolyKey>().hash();
             break;
+        case KeyMode::Func:
+            h = get<FuncKey>().hash();
+            break;
         default: unreachable("Invalid key type"); return 0;
         }
         return (h << 2) | (std::size_t)key_type;
@@ -323,7 +373,9 @@ public:
 
     /// Gets the number of children used by this key to complete the type
     unsigned children() const {
-        return key_type == KeyMode::Named ? get<NamedKey>().params : 0;
+        if ( key_type == KeyMode::Named ) return get<NamedKey>().params;
+        if ( key_type == KeyMode::Func ) return get<FuncKey>().params + 1;
+        return 0;
     }
 
     /// Gets the underlying key variant, or empty for mismatch
@@ -362,6 +414,11 @@ public:
 	bool visit( const PolyType* t, OutIter& out ) {
         *out++ = TypeKey{ t };
         return true;
+    }
+
+    bool visit( const FuncType* t, OutIter& out ) {
+        *out++ = TypeKey{ t };
+        return visitChildren( t, out );
     }
 
     /// Visits the iterator provided by reference
@@ -432,7 +489,7 @@ private:
             Backtrack() = default;
             Backtrack( const ConcIter& i, Base* b ) : it( i ), base( b ) {}
             Backtrack( ConcIter&& i, Base* b ) : it( move(i) ), base( b ) {}
-
+            
             bool operator== ( const Backtrack& o ) const { return it == o.it && base == o.base; }
             bool operator!= ( const Backtrack& that ) const { return !( *this == that ); }
         };
@@ -646,6 +703,16 @@ public:
         return as_non_const(this)->get( ty );
     }
 
+    TypeMap<Value>* get( const FuncType* ty ) {
+        auto it = nodes.find( TypeKey{ ty } );
+        if ( it == nodes.end() ) return nullptr;
+        TypeMap<Value>* tm = it->second->get( ty->params() );
+        return tm ? tm->get( ty->returns() ) : nullptr;
+    }
+    const TypeMap<Value>* get( const FuncType* ty ) const {
+        return as_non_const(this)->get( ty );
+    }
+
     TypeMap<Value>* get( const Type* ty ) {
         if ( ! ty ) return nullptr;
 
@@ -655,6 +722,7 @@ public:
         else if ( tid == typeof<TupleType>() ) return get( as<TupleType>(ty) );
         else if ( tid == typeof<VoidType>() ) return get( as<VoidType>(ty) );
         else if ( tid == typeof<PolyType>() ) return get( as<PolyType>(ty) );
+        else if ( tid == typeof<FuncType>() ) return get( as<FuncType>(ty) );
         
         unreachable("invalid type kind");
         return nullptr;
@@ -1015,26 +1083,29 @@ public:
     }
 
 private:
+    /// Fills in backtrack list for a single node (should not be VoidType or TupleType)
+    TypeMap<Value>* fill_step( const Type* ty, BacktrackList& rpre ) {
+        TypeKey k{ ty };
+        auto it = nodes.find( k );
+        if ( it == nodes.end() ) {
+            // add new node as needed
+            if ( k.mode() == KeyMode::Poly ) {
+                it = nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
+                polys.emplace_back( *k.key_for<PolyType>(), it->second.get() );
+            } else {
+                it = nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
+            }
+        }
+
+        rpre.emplace_back( it, this );
+        return it->second.get();
+    }
+
     /// Finds or fills type maps down a list of types, filling in backtrack list as it goes
     TypeMap<Value>* fill_to( const List<Type>& ts, BacktrackList& rpre ) {
         TypeMap<Value>* tm = this;
         for ( unsigned i = 0; i < ts.size(); ++i ) {
-            TypeKey k{ ts[i] };
-            
-            auto it = tm->nodes.find( k );
-            if ( it == tm->nodes.end() ) {
-                // add new nodes as needed
-                if ( k.mode() == KeyMode::Poly ) {
-                    it = tm->nodes.emplace_hint( it, copy(k), make_unique<TypeMap<Value>>() );
-                    tm->polys.emplace_back( 
-                        *k.key_for<PolyType>(), it->second.get() );
-                } else {
-                    it = tm->nodes.emplace_hint( it, move(k), make_unique<TypeMap<Value>>() );
-                }
-            }
-
-            rpre.emplace_back( it, tm );
-            tm = it->second.get();
+            tm = tm->fill_step( ts[i], rpre );
         }
         return tm;
     }
@@ -1098,6 +1169,40 @@ public:
     }
 
     template<typename V>
+    std::pair<iterator, bool> insert( const FuncType* ty, V&& v ) {
+        BacktrackList rpre;
+        bool r = false;
+
+        // function header
+        TypeKey k{ ty };
+        auto it = nodes.find( k );
+        if ( it == nodes.end() ) {
+            it = nodes.emplace_hint( it, k, make_unique<TypeMap<Value>>() );
+        }
+
+        // parameter list
+        rpre.emplace_back( it, this );
+        TypeMap<Value>* tm = it->second->fill_to( ty->params(), rpre );
+
+        // return types
+        auto rid = typeof( ty->returns() );
+        if ( rid == typeof<VoidType>() ) {
+            /* do nothing */
+        } else if ( rid == typeof<TupleType>() ) {
+            tm = tm->fill_to( as<TupleType>(ty->returns())->types(), rpre );
+        } else {
+            tm = tm->fill_step( ty->returns(), rpre );
+        }
+        
+        if ( ! tm->leaf ) {
+            tm->set( ty, forward<V>(v) );
+            r = true;
+        }
+
+        return { iterator{ Iter{ tm, move(rpre) } }, r };
+    }
+
+    template<typename V>
     std::pair<iterator, bool> insert( const Type* ty, V&& v ) {
         if ( ! ty ) return { end(), false };
 
@@ -1107,6 +1212,7 @@ public:
         else if ( tid == typeof<TupleType>() ) return insert( as<TupleType>(ty), forward<V>(v) );
         else if ( tid == typeof<VoidType>() ) return insert( as<VoidType>(ty), forward<V>(v) );
         else if ( tid == typeof<PolyType>() ) return insert( as<PolyType>(ty), forward<V>(v) );
+        else if ( tid == typeof<FuncType>() ) return insert( as<FuncType>(ty), forward<V>(v) );
         
         unreachable("invalid type kind");
         return { end(), false };
@@ -1134,23 +1240,41 @@ public:
     size_type count( const ConcType* ty ) const {
         auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
-        return it.second->leaf ? 1 : 0;
+        return it->second->leaf ? 1 : 0;
     }
 
     size_type count( const NamedType* ty ) const {
         auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
-        return it.second->count( ty->params() );
+        return it->second->count( ty->params() );
     }
 
     size_type count( const PolyType* ty ) const {
         auto it = nodes.find( TypeKey{ ty } );
         if ( it == nodes.end() ) return 0;
-        return it.second->leaf ? 1 : 0;
+        return it->second->leaf ? 1 : 0;
     }
 
     size_type count( const TupleType* ty ) const {
         return count( ty->types() );
+    }
+
+    size_type count( const FuncType* ty ) const {
+        auto it = nodes.find( TypeKey{ ty } );
+        if ( it == nodes.end() ) return 0;
+
+        // scan down trie for params
+        TypeMap<Value>* tm = it->second.get();
+        const auto& ps = ty->params();
+        for ( unsigned i = 0; i < ps.size(); ++i ) {
+            auto jt = tm->nodes.find( TypeKey{ ps[i] } );
+            if ( jt == tm->nodes.end() ) return 0;
+
+            tm = jt->second.get();
+        }
+
+        // handle return type
+        return tm->count( ty->returns() );
     }
 
     size_type count( const Type* ty ) const {
@@ -1162,6 +1286,7 @@ public:
         else if ( tid == typeof<TupleType>() ) return count( as<TupleType>(ty) );
         else if ( tid == typeof<VoidType>() ) return count( as<VoidType>(ty) );
         else if ( tid == typeof<PolyType>() ) return count( as<PolyType>(ty) );
+        else if ( tid == typeof<FuncType>() ) return count( as<FuncType>(ty) );
         
         unreachable("invalid type kind");
         return 0;
@@ -1180,50 +1305,78 @@ public:
     }
 
 private:
-    Iter locate( const VoidType* ) const {
-        return leaf ? Iter{ as_non_const(this), BacktrackList{} } : Iter{};
-    }
+    const TypeMap<Value>* look_step( const VoidType*, BacktrackList& ) const { return this; }
 
-    Iter locate( const ConcType* ty ) const {
+    const TypeMap<Value>* look_step( const ConcType* ty, BacktrackList& rpre ) const {
         auto it = as_non_const(nodes).find( TypeKey{ ty } );
-        if ( it == as_non_const(nodes).end() ) return Iter{};
-
-        return it->second->leaf ?
-            Iter{ it->second.get(), BacktrackList{ Backtrack{ it, as_non_const(this) } } } :
-            Iter{};
+        if ( it == as_non_const(nodes).end() ) return nullptr;
+        
+        rpre.emplace_back( it, as_non_const(this) );
+        return it->second.get();
     }
 
-    Iter locate( const NamedType* ty ) const {
+    const TypeMap<Value>* look_step( const NamedType* ty, BacktrackList& rpre ) const {
         auto it = as_non_const(nodes).find( TypeKey{ ty } );
-        if ( it == as_non_const(nodes).end() ) return Iter{};
+        if ( it == as_non_const(nodes).end() ) return nullptr;
 
-        return it->second->locate( ty->params(), 
-                BacktrackList{ Backtrack{ it, as_non_const(this) } } );
+        rpre.emplace_back( it, as_non_const(this) );
+        return it->second->look_to( ty->params(), rpre );
     }
 
-    Iter locate( const PolyType* ty ) const {
+    const TypeMap<Value>* look_step( const PolyType* ty, BacktrackList& rpre ) const {
         auto it = as_non_const(nodes).find( TypeKey{ ty } );
-        if ( it == as_non_const(nodes).end() ) return Iter{};
+        if ( it == as_non_const(nodes).end() ) return nullptr;
 
-        return it->second->leaf ?
-            Iter{ it->second.get(), BacktrackList{ Backtrack{ it, as_non_const(this) } } } :
-            Iter{};
+        rpre.emplace_back( it, as_non_const(this) );
+        return it->second.get();
     }
 
-    Iter locate( const TupleType* ty ) const { return locate( ty->types() ); }
+    const TypeMap<Value>* look_step( const TupleType* ty, BacktrackList& rpre ) const {
+        return look_to( ty->types(), rpre );
+    }
+
+    const TypeMap<Value>* look_step( const FuncType* ty, BacktrackList& rpre ) const {
+        auto it = as_non_const(nodes).find( TypeKey{ ty } );
+        if ( it == as_non_const(nodes).end() ) return nullptr;
+
+        rpre.emplace_back( it, as_non_const(this) );
+
+        const TypeMap<Value>* tm = it->second->look_to( ty->params(), rpre );
+        if ( ! tm ) return nullptr;
+
+        return tm->look_step( ty->returns(), rpre );
+    }
+
+    const TypeMap<Value>* look_step( const Type* ty, BacktrackList& rpre ) const {
+        auto tid = typeof(ty);
+        if ( tid == typeof<ConcType>() ) return look_step( as<ConcType>(ty), rpre );
+        else if ( tid == typeof<NamedType>() ) return look_step( as<NamedType>(ty), rpre );
+        else if ( tid == typeof<TupleType>() ) return look_step( as<TupleType>(ty), rpre );
+        else if ( tid == typeof<VoidType>() ) return look_step( as<VoidType>(ty), rpre );
+        else if ( tid == typeof<PolyType>() ) return look_step( as<PolyType>(ty), rpre );
+        else if ( tid == typeof<FuncType>() ) return look_step( as<FuncType>(ty), rpre );
+        
+        unreachable("invalid type kind");
+        return nullptr;
+    }
 
     /// Locates the typemap that matches the list of types, filling in rpre as it traverses.
-    /// Returns empty iterator if no match
-    Iter locate( const List<Type>& ts, BacktrackList&& rpre = BacktrackList{} ) const {
-        TypeMap<Value>* tm = as_non_const(this);
+    /// Returns nullptr if no match
+    const TypeMap<Value>* look_to( const List<Type>& ts, BacktrackList& rpre ) const {
+        const TypeMap<Value>* tm = this;
         for ( unsigned i = 0; i < ts.size(); ++i ) {
-            auto it = tm->nodes.find( TypeKey{ ts[i] } );
-            if ( it == tm->nodes.end() ) return Iter{};
-
-            rpre.emplace_back( it, tm );
-            tm = it->second.get();
+            tm = tm->look_step( ts[i], rpre );
+            if ( ! tm ) return nullptr;
         }
-        return tm->leaf ? Iter{ tm, move(rpre) } : Iter{};
+        return tm;
+    }
+
+    /// Wraps look interface for iterators
+    template<typename Ty>
+    Iter locate( const Ty* ty ) const {
+        BacktrackList rpre;
+        const TypeMap<Value>* tm = look_step( ty, rpre );
+        return ( tm && tm->leaf ) ? Iter{ as_non_const(tm), move(rpre) } : Iter{};
     }
 
 public:
@@ -1245,6 +1398,9 @@ public:
     iterator find( const TupleType* ty ) { return iterator{ locate(ty) }; }
     const_iterator find( const TupleType* ty ) const { return const_iterator{ locate(ty) }; }
 
+    iterator find( const FuncType* ty ) { return iterator{ locate(ty) }; }
+    const_iterator find( const FuncType* ty ) const { return const_iterator{ locate(ty) }; }
+
     iterator find( const Type* ty ) {
         if ( ! ty ) return end();
 
@@ -1254,6 +1410,7 @@ public:
         else if ( tid == typeof<TupleType>() ) return iterator{ locate( as<TupleType>(ty) ) };
         else if ( tid == typeof<VoidType>() ) return iterator{ locate( as<VoidType>(ty) ) };
         else if ( tid == typeof<PolyType>() ) return iterator{ locate( as<PolyType>(ty) ) };
+        else if ( tid == typeof<FuncType>() ) return iterator{ locate( as<FuncType>(ty) ) };
         
         unreachable("invalid type kind");
         return end();
@@ -1267,6 +1424,7 @@ public:
         else if ( tid == typeof<TupleType>() ) return const_iterator{ locate( as<TupleType>(ty) ) };
         else if ( tid == typeof<VoidType>() ) return const_iterator{ locate( as<VoidType>(ty) ) };
         else if ( tid == typeof<PolyType>() ) return const_iterator{ locate( as<PolyType>(ty) ) };
+        else if ( tid == typeof<FuncType>() ) return const_iterator{ locate( as<FuncType>(ty) ) };
         
         unreachable("invalid type kind");
         return end();
