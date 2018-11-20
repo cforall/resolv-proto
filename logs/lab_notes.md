@@ -1,3 +1,104 @@
+## 19-20 Nov 2018 ##
+* First draft of deferred assertion binding
+  * Fails in `concurrency/thread.cfa`
+  * Takes ~2-3x as long to build
+
+## 29 Oct 2018 ##
+* Union-find Seminar
+* Attempt to set up deferred assertion binding
+
+## 22-26 Oct 2018 ##
+* Correctness debugging on deferred assertion resolution
+  * missing inferred parameter bug from `GenPoly/Box.cc:801`
+    * failure is at `rational.cfa:47: r{ (RationalImpl){0}, (RationalImpl){1} };`
+    * I am a little suspicious of "anything with an empty idChain was pulled in by the current assertion" in this context
+      * okay, at top level call to `inferRecursive`, nothing has any `idChain` set
+      * seems like top-level empty chains will be set to `[curDecl->uniqueId]`, which feels wrong
+      * then we follow the chains to set in the `inferParams`
+        * which is likely wrong, because it's either going for the wrong root, or an old clone?
+          * consider adding a unique ID for unification passes, storing assertions in environment by `(uniqueId,unifyId)`, and withdrawing them from there in `Box`
+            * `functionType` in `addInferredParams` only comes from the one caller
+              * derived from `appExpr`
+              * only used for list of assertions (could maybe come from `appExpr`)
+                * safer just to give each `appExpr` an `inferId` that keys into the environment's data
+        * also need to consider ordering factors, need to make sure inner assertions are bound first
+          * this should be accomplished by the BFS
+    * repeats in `simprat.cfa:16`
+      * `appExpr=0x60e0001b61e0`; didn't get any `inferParams` somehow
+        * created at `AlternativeFinder.cc:208` in `pruneAlternatives`
+        * unique IDs for contained assertions are `9477`, `9481`, `9483`, `9486`, `9488`, `9489`
+          * first time in `bindAssertion` for `9477`:
+            * `info.idChain` is empty
+            * target: 
+              ```
+              ConstructorExpr @0x60d0017e0670 {
+                inferParams = []
+                callExpr = ApplicationExpr @0x60e00002b460 {
+                  args = [
+                    VariableExpr @0x60d0017e45d0,
+                    VariableExpr @0x60d0017e4430,
+                    VariableExpr @0x60d0017e4360
+                  ]
+                }
+              }
+              ```
+          * second time: 
+            * `info.idChain` also empty
+            * target: 
+              ```
+              CastExpr @0x60d0019aae80 { arg = ConstructorExpr @0x60d0019aac10 {
+                inferParams = [ ... ],
+                callExpr = ApplicationExpr @0x60e000013520 {
+                  args = [
+                    VariableExpr @0x60d0019a7810,
+                    VariableExpr @0x60d0019a7260,
+                    VariableExpr @0x60d0019a6ff0
+                  ]
+                }
+              } }
+              ```
+              * `arg` has a variety of `inferParams` set
+  * `findUnfinishedKindExpr` now does *not* clone moving `winners` into `candidates`
+  * moved assertion chain computation into `resolveAssertion` from `bindAssertion`
+
+## 17-18 Oct 2018 ##
+* Correctness debugging on deferred assertion resolution
+  * `rational.cfa:37` can't choose between two different `endl` implementations
+    * Both polymorphic, one for `ostream` at `iostream.hfa:92`, one for `istream` at `iostream.hfa:154`
+    * seems to have been fixed by doing a resolution pass on both `resolvAssns` and `prune`
+  * `rational.cfa:[many]` can't choose between different `abs` implementations to satisfy traits
+* Setting up stdlib file for use:
+  ```
+  cd libcfa/src
+  ../../driver/cfa -I. -I../.. -no-include-stdhdr -Istdhdr -XCFA -t -E rational.cfa > ~/Code/cfa-foo/rational-e.cfa
+  cd ../..
+  driver/cfa-cpp -t --prelude-dir=libcfa/x64-debug/prelude ~/Code/cfa-foo/rational-e.cfa
+  ```
+* Have ASAN print memory details: `call (void)__asan_describe_address(0x60e000162b80)`
+
+## 15-17 Oct 2018 ##
+* Memory error debugging on deferred assertion resolution
+  * more disciplined cloning story on `need` lists/sets (need to clone internal DWT)
+  * lost the memory management code in the shift over from Richard's code via GC branch
+
+## 11-12 Oct 2018 ##
+* Continued port of deferred cached assertion resolution to CFA-CC
+  * Modified `Alternative` to also carry `openVars` and `need`
+  * **TODO** write pass looking for ambiguous expressions in `findUnfinishedKindExpression`
+
+## 05 Oct 2018 ##
+* Moved `ResolvMode` flag pack over from GC branch in prep for deferred assertion resolution
+* Started work on deferred cached assertion resolution in CFA-CC
+  * copied `ResolvMode.h` over from GC branch
+  * rewrote `findUnfinishedKindExpression` to pattern from resolver prototype
+
+## 02-03 Oct 2018 ##
+* Started rewrite of cfa-cc to use deferred cached resolution
+* Rewrote `Cost` to use extra fields
+  * regenerated output for `castError`
+  * **TODO** Fix `computeApplicationConversionCost` in `AlternativeFinder.cc`
+* Ported environment merging over old RP code
+
 ## 01-02 Oct 2018 ##
 * Ran RP tests on CFA stdlib.
 * RPDump now prints var args variable types
