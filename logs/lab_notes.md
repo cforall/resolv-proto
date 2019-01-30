@@ -8,7 +8,7 @@
   ```
 * Have ASAN print memory details: `call (void)__asan_describe_address(0x60e000162b80)`
 
-## 28 Jan 2019 ##
+## 28-30 Jan 2019 ##
 * Get TD resolver building again to run tests
   * **TODO** Look into making "vars" list not flatmapped, you always end up using the whole thing
     * alternately, do something a bit more clever when you've got a target type
@@ -16,13 +16,15 @@
   * second assertion failure in `recursive`; "classes must be versions of same map" (`env.h:361`)
     * `classes = 0x729d40, oclasses = 0x72a860`
     * this environment doesn't seem to work with TD resolver caching, which precludes the environments being shared...
-    * ought to pull the old environments out of storage for this, make them flaggable builds
+* Set up flags for choosing environment data structure
+  * PER and ITI build and pass tests for BU-TEC
 
-## 16-25 Jan 2019 ##
+## 16-28 Jan 2019 ##
 * Thesis writing
   * new `cfa-thesis` repo
   * Background work for resolver
-  * Discussion of algorithms
+  * Discussion of resolution algorithms
+  * Analysis of environment algorithms
 
 ## 18-22 Jan 2019 ##
 * Continue porting type-environment-cached resolution to CFA-CC
