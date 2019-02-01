@@ -201,15 +201,17 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
                 ++cost.safe;
                 return new TruncateExpr{ expr, ttype };
             } else return expr;
-        } else if ( tid == typeof<TupleType>() ) {
-            // can't match tuples to non-tuple types
+        } else if ( tid == typeof<TupleType>() || tid == typeof<FuncType>() ) {
+            // can't match tuples (funcs) to non-tuple (-func) types
             return nullptr;
         } else unreachable("Unhandled target type");
     } else if ( eid == typeof<PolyType>() ) {
         ClassRef eclass = env.getClass( as<PolyType>(etype) );
 
-        if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() ) {
+        if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() 
+                || tid == typeof<FuncType>() ) {
             // attempt to bind polymorphic return type to concrete paramter
+            // TODO introduce ftype to distinguish binding to function type parameter
             return classBinds( eclass, ttype, env, cost ) ? expr : nullptr;
         } else if ( tid == typeof<PolyType>() ) {
             // attempt to merge two typeclasses
@@ -293,6 +295,29 @@ const TypedExpr* convertTo( const Type* ttype, const TypedExpr* expr, Conversion
             }
             
         }}
+    } else if ( eid == typeof<FuncType>() ) {
+        if ( tid == typeof<FuncType>() ) {
+            // check exact/poly match
+            Cost k = cost;
+            if ( unify( etype, ttype, k, env ) ) {
+                cost = k;
+                return expr;
+            } else return nullptr;
+        } else if ( tid == typeof<PolyType>() ) {
+            // test for match if target typeclass already has representative
+            ClassRef tclass = env.getClass( as<PolyType>(ttype) );
+            return classBinds( tclass, etype, env, cost ) ? expr : nullptr;
+        } else if ( tid == typeof<VoidType>() ) {
+            // one safe conversion to truncate concrete type to Void
+            if ( truncate ) {
+                ++cost.safe;
+                return new TruncateExpr{ expr, ttype };
+            } else return expr;
+        } else if ( tid == typeof<ConcType>() || tid == typeof<NamedType>() || 
+                tid == typeof<TupleType>() ) {
+            // can't match funcs to non-func types
+            return nullptr;
+        } else unreachable("Unhandled target type");
     } else unreachable("Unhandled expression type");
 
     return nullptr; // unreachable

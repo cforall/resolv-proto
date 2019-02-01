@@ -1,3 +1,274 @@
+## Debugging Notes ##
+* Setting up stdlib file for use:
+  ```
+  cd libcfa/src
+  ../../driver/cfa -I. -I../.. -no-include-stdhdr -Istdhdr -XCFA -t -E rational.cfa > ~/Code/cfa-foo/rational-e.cfa
+  cd ../..
+  driver/cfa-cpp -t --prelude-dir=libcfa/x64-debug/prelude ~/Code/cfa-foo/rational-e.cfa
+  ```
+* Have ASAN print memory details: `call (void)__asan_describe_address(0x60e000162b80)`
+
+## 28-30 Jan 2019 ##
+* Get TD resolver building again to run tests
+  * **TODO** Look into making "vars" list not flatmapped, you always end up using the whole thing
+    * alternately, do something a bit more clever when you've got a target type
+  * fixed assertion failure in `fnptr` to handle `FuncType` in `expand_conversion.h`
+  * second assertion failure in `recursive`; "classes must be versions of same map" (`env.h:361`)
+    * `classes = 0x729d40, oclasses = 0x72a860`
+    * this environment doesn't seem to work with TD resolver caching, which precludes the environments being shared...
+* Set up flags for choosing environment data structure
+  * PER and ITI build and pass tests for BU-TEC
+
+## 16-28 Jan 2019 ##
+* Thesis writing
+  * new `cfa-thesis` repo
+  * Background work for resolver
+  * Discussion of resolution algorithms
+  * Analysis of environment algorithms
+
+## 18-22 Jan 2019 ##
+* Continue porting type-environment-cached resolution to CFA-CC
+  * first compiling version
+  * builds stdlib without error
+  * passes all tests, ~1.5 speedup, pushed to master
+
+## 15-17 Jan 2019 ##
+* Worked on bug #118 for Thierry
+  * minimal case:
+    ```
+    unsigned long long dev = 0;
+    unsigned ret = (unsigned)(dev >> 32);
+    ```
+    * Incorrectly casts `dev` to `unsigned`
+    * `castExpr == 0x331ef70`
+  * long discussion with Peter, Thierry & Andrew:
+    * proper semantics of cast is "choose the cheapest argument interpretation, break ties by cast conversion cost"
+    * Issue here is changes you made to support auto-newline I/O in new cost model
+      * going to try taking return type out of specialization cost
+      * this builds and passes all tests
+    * built with `AlternativeFinder.cc:488-490` commented out
+      * works, cut the Richard approach to assertions out
+
+## 11 Jan 2019 ##
+* Continued porting type-environment-cached resolution to CFA-CC
+* **TODO** Figure out how to only combine each defer item once
+  * second question: do you *need* to always choose the same answer for cache-same?
+  * well, the types *should* have been bound by formal-actual binding, so any free type variables should be set to the unique cheapest value, which should be uniform
+* **TODO** check if you can make a `mangleAssn` variant that will do the `resType` key in `resolveAssertions`
+
+## 7-11 Jan 2019 ##
+* Started looking at OOM on `io` tests
+  * no obvious threads from memory analysis
+  * going to try a 1-thread test run overnight sometime
+    * ran to completion, times all under ~4 min
+  * Looking through the valgrind leakcheck output
+    * some "definitely lost" at `ResolveAssertions.cc:393`
+      * these all look like `VoidType` (?)
+      * added `delete resType` at `398`
+      * builds and passes test suite
+    * "definitely lost" at `ResolveAssertions.cc:354` (`ObjectDecl` in `Alternative`)
+      * similar case at line `401`
+      * similar cases at `370/338` and `418/338`
+      * deleted `need` from `Alternative` on destruction
+      * builds and passes test suite
+    * "definitely lost" at `ResolveAssertions.cc:254/AdjustExprType.cc:53`
+      * also some "possibly lost" at `253`
+      * looks like `adjType` not getting deleted
+      * uncommenting `277` fixed bug (built and passed tests)
+* looked at `ato` test and new newline code
+  * ported modifications to `Cost` from other branch
+  * re-ran memory tests, fixed minor output errors
+  * pushed changes, for 1.5-2x speedup on longest-running tests
+* Started porting manglename-key to CFA-CC for cached assertion resolution
+  * not 100% sure about types which resolve to nested types containing others, but I think I can ignore that and just have slightly iffy cache efficiency
+* looked into Mike's `zero_t` bug, filed bug report #115
+  * think I remember the issue here was that a direct constructor for `int` makes expressions like `0 != 0` ambiguous
+
+## 20-21 Dec 2018 ##
+* Fix `searchsort` test
+  * `?<?` overload was breaking loop control
+* Attempt to merge deferred resolution branch
+  * fails, doesn't handle Peter's new return-value-discriminated IO
+* Raise `safe` cost above `var, spec`, based on results of return-value-discriminated IO
+  * not enough, safe conversions are still the same there...
+  * adding `thisCost` into first-round cost for `CastExpr` seems to make it work
+  * need to regenerate `completeTypeError`
+  * `io*` tests OOM the computer...
+* Look at `cfa-foo/ionl.cfa` for trimmed-down case
+  * Always selects `ostream&` over `void` return
+  * Relevant expr is `(UntypedExpr *) 0x3327450`
+  * Two candidates:
+    ```
+    [0] 
+      cost = (0,0,0,0,0,0), cvtCost = (0,1,1,-4,0,1),
+      expr = ApplicationExpr {
+        function = `forall(dtype O | ostream(O)) O& ?|?( O& out, int x )`,
+        args = [ `(struct stdout&)out`, `42` ]
+      }
+      thisCost (AlternativeFinder.cc:1229) = (0,0,0,0,2,0)
+    
+    [1]
+      cost = (0,0,0,0,0,0), cvtCost = (0,1,1,-3,0,1),
+      expr = ApplicationExpr {
+        function = `forall(dtype O | ostream(O)) void ?|?( O& out, int x )`,
+        args = [ `(struct stdout&)out`, `42` ]
+      }
+      thisCost (AlternativeFinder.cc:1229) = (0,0,0,0,0,0)
+    ```
+    * correct (1) survives `findMinCost` at `AlternativeFinder.cc:1114`
+      * due to costs not being promoted out of `cvtCost` yet
+    * also survives `pruneAlternatives` at `AlternativeFinder.cc:281
+      * due to different return types
+    * correct eliminated at `findMinCost` at `AlternativeFinder.cc:1241`
+      * reference type on `O&` makes it a titch more specialized, and specialization ranks above return-type match
+    
+
+## 19-23 Nov, 03-19 Dec 2018 ##
+* First draft of deferred assertion binding
+  * Fails in `concurrency/thread.cfa`
+    * fixed with missing `renameTyVars` call in `resolveAssertion`, wasn't renaming assertion type
+  * Takes ~2-3x as long to build
+    * This is just running in debug/ASAN mode
+* Second draft fails some tests:
+  * `io2`, `tupleAssign`
+    * translator crashes with segfault
+    * fixed with missing clone in `bindAssertion`
+  * `completeTypeError`
+    * changed error message format, rebuild expected
+  * `function-operator`
+    * failure is at line 93 `iter.out = new(out);`
+      * trimmed down to `funop-build.cfa`
+    * `resolveAssertions` is called on `new(out)` subexpr, due to need to prune
+    * prunes down to version that constructs `void*` from `ofstream*`
+    * solved by stripping pruning step from `resolveAssertions`
+      * this breaks other things, notably `rational`
+    * tried making pruning conditional on `mode.resolveAssns` flag
+      * still broke `rational`
+    * pruning unconditionally to cheapest result(s) for a given result type seems to work
+    * fixed `datingService`, `quickSort`, `multi-monitor` too
+  * `searchSort`
+    * multiple "No reasonable alternatives" errors
+    * line 46: failing assertions for `bsearch`
+      * function: `forall(otype K, otype E | {int ?<?(K, K); K getKey(const E&);}) E* bsearch(K key, const E* vals, unsigned long dim);`
+      * args: `size - i` as `unsigned`, `iarr` as `const int*`, `size` as `unsigned long`
+      * env: `_1877_10_K => unsigned int, _1877_11_E => signed int (no widening)`
+        * `int ?<?(unsigned int, unsigned int);` exists in prelude
+        * missing the `getKey` function, because it actually wants the earlier `K == E` case
+          * of course, the lower overload is cheaper (because more specific), but only if it resolves...
+          * consider attempting to fix this with a generic `getKey` overload
+          * handled properly in resolver-proto, maybe due to the reified `AmbiguousExpr`
+            * but the only places you prune, you also resolve assertions, which should boot the `getKey` version
+            * this might be about the usual issues with type variable binding, then
+      * line 47 fails as well due to missing `v` from previous line
+      * 51/52, 70/71, 75/76 look like the same error pair
+      * trimmed to `searchsort-build.cfa`
+        * failing expression is `0x33219c0`
+          * only the one alternative survives
+          * we get 2 possible resolutions for `bsearch`, 1 for `i`, 1 for `iarr`, 1 for `size`
+          * correct function has `_41_66_E => int` in return type narrowing pass
+            * `formalType => _41_66_E => int`, `actualType => unsigned`
+              * does not unify
+        * if I comment out the wrong declaration, doesn't resolve either, but with "No reasonable alternatives" error.
+          * ditto on HEAD
+          * oddly, HEAD does seem to still work for the full `searchsort` example
+          * and, replacing `i` with `i-0u` does seem to change `searchsort-build` so that it works on HEAD
+          * HEAD converts `i-0u` to `(int)i-(int)0u`
+        * `searchsort-build` with `i-0u`: failing expression is `0x3321dd0`
+          * 18 alternatives for `i-0u`; `alternatives[8]` is correct
+          * 3 alternatives survive `makeFunctionAlternatives`; first has `int ?-?`, second has `short ?-?`, third has `unsigned short ?-?`
+          * deferred branch loses correct resolution at `AlternativeFinder.cc:1229`, when it does a `findMinCost` on the candidates (which are no longer guaranteed resolvable)
+            * stripping that line out breaks `bootloader.c`, and is a non-starter
+            * `findMinCost` has a cost-moving side-effect (who writes this code?), but duplicating it still breaks `bootloader`
+
+
+## 29 Oct 2018 ##
+* Union-find Seminar
+* Attempt to set up deferred assertion binding
+
+## 22-26 Oct 2018 ##
+* Correctness debugging on deferred assertion resolution
+  * missing inferred parameter bug from `GenPoly/Box.cc:801`
+    * failure is at `rational.cfa:47: r{ (RationalImpl){0}, (RationalImpl){1} };`
+    * I am a little suspicious of "anything with an empty idChain was pulled in by the current assertion" in this context
+      * okay, at top level call to `inferRecursive`, nothing has any `idChain` set
+      * seems like top-level empty chains will be set to `[curDecl->uniqueId]`, which feels wrong
+      * then we follow the chains to set in the `inferParams`
+        * which is likely wrong, because it's either going for the wrong root, or an old clone?
+          * consider adding a unique ID for unification passes, storing assertions in environment by `(uniqueId,unifyId)`, and withdrawing them from there in `Box`
+            * `functionType` in `addInferredParams` only comes from the one caller
+              * derived from `appExpr`
+              * only used for list of assertions (could maybe come from `appExpr`)
+                * safer just to give each `appExpr` an `inferId` that keys into the environment's data
+        * also need to consider ordering factors, need to make sure inner assertions are bound first
+          * this should be accomplished by the BFS
+    * repeats in `simprat.cfa:16`
+      * `appExpr=0x60e0001b61e0`; didn't get any `inferParams` somehow
+        * created at `AlternativeFinder.cc:208` in `pruneAlternatives`
+        * unique IDs for contained assertions are `9477`, `9481`, `9483`, `9486`, `9488`, `9489`
+          * first time in `bindAssertion` for `9477`:
+            * `info.idChain` is empty
+            * target: 
+              ```
+              ConstructorExpr @0x60d0017e0670 {
+                inferParams = []
+                callExpr = ApplicationExpr @0x60e00002b460 {
+                  args = [
+                    VariableExpr @0x60d0017e45d0,
+                    VariableExpr @0x60d0017e4430,
+                    VariableExpr @0x60d0017e4360
+                  ]
+                }
+              }
+              ```
+          * second time: 
+            * `info.idChain` also empty
+            * target: 
+              ```
+              CastExpr @0x60d0019aae80 { arg = ConstructorExpr @0x60d0019aac10 {
+                inferParams = [ ... ],
+                callExpr = ApplicationExpr @0x60e000013520 {
+                  args = [
+                    VariableExpr @0x60d0019a7810,
+                    VariableExpr @0x60d0019a7260,
+                    VariableExpr @0x60d0019a6ff0
+                  ]
+                }
+              } }
+              ```
+              * `arg` has a variety of `inferParams` set
+  * `findUnfinishedKindExpr` now does *not* clone moving `winners` into `candidates`
+  * moved assertion chain computation into `resolveAssertion` from `bindAssertion`
+
+## 17-18 Oct 2018 ##
+* Correctness debugging on deferred assertion resolution
+  * `rational.cfa:37` can't choose between two different `endl` implementations
+    * Both polymorphic, one for `ostream` at `iostream.hfa:92`, one for `istream` at `iostream.hfa:154`
+    * seems to have been fixed by doing a resolution pass on both `resolvAssns` and `prune`
+  * `rational.cfa:[many]` can't choose between different `abs` implementations to satisfy traits
+
+## 15-17 Oct 2018 ##
+* Memory error debugging on deferred assertion resolution
+  * more disciplined cloning story on `need` lists/sets (need to clone internal DWT)
+  * lost the memory management code in the shift over from Richard's code via GC branch
+
+## 11-12 Oct 2018 ##
+* Continued port of deferred cached assertion resolution to CFA-CC
+  * Modified `Alternative` to also carry `openVars` and `need`
+  * **TODO** write pass looking for ambiguous expressions in `findUnfinishedKindExpression`
+
+## 05 Oct 2018 ##
+* Moved `ResolvMode` flag pack over from GC branch in prep for deferred assertion resolution
+* Started work on deferred cached assertion resolution in CFA-CC
+  * copied `ResolvMode.h` over from GC branch
+  * rewrote `findUnfinishedKindExpression` to pattern from resolver prototype
+
+## 02-03 Oct 2018 ##
+* Started rewrite of cfa-cc to use deferred cached resolution
+* Rewrote `Cost` to use extra fields
+  * regenerated output for `castError`
+  * **TODO** Fix `computeApplicationConversionCost` in `AlternativeFinder.cc`
+* Ported environment merging over old RP code
+
 ## 01-02 Oct 2018 ##
 * Ran RP tests on CFA stdlib.
 * RPDump now prints var args variable types

@@ -5,7 +5,6 @@
 #include "cost.h"
 #include "interpretation.h"
 #include "env_substitutor.h"
-#include "occurs_in.h"
 #include "type_unifier.h"
 
 #include "ast/decl.h"
@@ -17,9 +16,7 @@
 #include "data/mem.h"
 #include "data/persistent_map.h"
 
-bool Env::occursIn( const List<PolyType>& vars, const Type* t ) const {
-	return OccursIn{ vars, *this }( t );
-}
+#include "env-common.cc"
 
 bool Env::mergeBound( ClassRef& r, const Type* cbound ) {
 	assume(r.env == this, "invalid environment reference");
@@ -77,28 +74,6 @@ void Env::verify() const {
 
 const GC& operator<< (const GC& gc, const Env& env) {
 	return gc << env.classes << env.bindings << env.assns;
-}
-
-std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
-	if ( c.vars.size() == 1 ) {
-		out << *c.vars.front();
-	} else {
-		out << '[';
-		auto it = c.vars.begin();
-		while (true) {
-			out << **it;
-			if ( ++it == c.vars.end() ) break;
-			out << ", ";
-		}
-		out << ']';
-	}
-	
-	out << " => ";
-
-	if ( c.bound ) { out << *c.bound; }
-	else { out << "???"; }
-
-	return out;
 }
 
 std::ostream& Env::write(std::ostream& out) const {

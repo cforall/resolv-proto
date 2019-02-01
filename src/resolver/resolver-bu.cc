@@ -229,8 +229,9 @@ InterpretationList matchFuncs( Resolver& resolver, const Funcs& funcs, ComboList
 				combo.truncate();
 
 				// make interpretation for this combo
-				const TypedExpr* call = new CallExpr{ func, move(combo.args), copy(rForall), rType };
-				const Env cEnv = combo.env;
+				const TypedExpr* call 
+					= new CallExpr{ func, move(combo.args), copy(rForall), rType };
+				Env cEnv = combo.env;
 				
 				// check type assertions if necessary
 				if ( RP_ASSN_CHECK( ! resolveAssertions( resolver, call, cEnv ) ) ) continue;

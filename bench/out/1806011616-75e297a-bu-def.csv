@@ -1,0 +1,25 @@
+"test","user(s)","sys(s)","wall(s)","max-mem(KB)"
+"basic-fewer-easy",2.28,0.34,2.64,574012
+"decls-fewer-easy",1.35,0.12,1.48,253628
+"decls-more2-easy",0.82,0.09,0.92,184052
+"decls-more-easy",0.92,0.12,1.04,204708
+"default2-easy",0.92,0.12,1.05,217936
+"default-easy"Command terminated by signal 11
+,0.45,0.05,0.63,123288
+"nesting-less-easy",1.00,0.07,1.08,215664
+"nesting-more-easy",1.59,0.18,1.78,361676
+"overloads-fewer2",0.24,0.02,0.27,55620
+"overloads-fewer-easy",0.26,0.04,0.31,77092
+"overloads-more2-easy",0.82,0.07,0.90,184372
+"overloads-more-easy"Command terminated by signal 11
+,0.51,0.08,0.71,150160
+"overloads-most-easy",0.97,0.10,1.08,218460
+"overloads-xtra-easy",1.09,0.08,1.18,237020
+"parms-fewer-easy"Command terminated by signal 11
+,0.34,0.10,0.57,122932
+"parms-more-easy",1.33,0.11,1.45,259972
+"poly-less2-easy"Command terminated by signal 11
+,0.25,0.02,0.40,55972
+"poly-less-easy",0.68,0.08,0.77,186580
+"poly-more-easy",0.75,0.07,0.83,161196
+"tuple-return-easy",1.95,0.23,2.20,384488
