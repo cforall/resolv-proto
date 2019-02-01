@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <list>
+#include <ostream>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -12,12 +13,27 @@
 #include "data/cast.h"
 #include "data/debug.h"
 #include "data/gc.h"
+#include "data/list.h"
+#include "data/mem.h"
 #include "data/persistent_disjoint_set.h"
 #include "data/persistent_map.h"
 
 class Decl;
 class Env;
+class PolyType;
+class Type;
 class TypedExpr;
+
+/// Class of equivalent type variables, along with optional concrete bound type
+struct TypeClass {
+	List<PolyType> vars;  ///< Equivalent polymorphic types
+	const Type* bound;    ///< Type which the class binds to
+
+	TypeClass( List<PolyType>&& vars = List<PolyType>{}, const Type* bound = nullptr )
+		: vars( move(vars) ), bound(bound) {}
+};
+
+std::ostream& operator<< (std::ostream&, const TypeClass&);
 
 /// Reference to typeclass, noting containing environment
 class ClassRef {

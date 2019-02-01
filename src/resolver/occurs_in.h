@@ -4,20 +4,20 @@
 
 #include "ast/type.h"
 #include "ast/type_visitor.h"
-#include "data/list.h"
 
 /// Checks if any of a list of forbidden variables occur in the expansion of a type in an 
 /// environment.
-class OccursIn : public TypeVisitor<OccursIn, bool> {
-	const List<PolyType>& vars;
+template<template<typename> class Coll>
+class OccursIn : public TypeVisitor<OccursIn<Coll>, bool> {
+	const Coll<PolyType>& vars;
 	const Env& env;
 
 public:
-	using Super = TypeVisitor<OccursIn, bool>;
+	using Super = TypeVisitor<OccursIn<Coll>, bool>;
 	using Super::visit;
 	using Super::operator();
 
-	OccursIn( const List<PolyType>& vars, const Env& env ) : vars(vars), env(env) {}
+	OccursIn( const Coll<PolyType>& vars, const Env& env ) : vars(vars), env(env) {}
 
 	bool visit( const PolyType* t, bool& r ) {
 		// check forbidden variable list for occurance of t

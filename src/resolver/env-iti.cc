@@ -1,8 +1,11 @@
 #include "env.h"
 
+#include <ostream>
+
 #include "cost.h"
 #include "interpretation.h"
 #include "env_substitutor.h"
+#include "occurs_in.h"
 #include "type_unifier.h"
 
 #include "data/debug.h"
@@ -13,7 +16,27 @@
 #include "data/gc.h"
 #include "data/mem.h"
 
-#include "env-common.cc"
+std::ostream& operator<< (std::ostream& out, const TypeClass& c) {
+	if ( c.vars.size() == 1 ) {
+		out << *c.vars.front();
+	} else {
+		out << '[';
+		auto it = c.vars.begin();
+		while (true) {
+			out << **it;
+			if ( ++it == c.vars.end() ) break;
+			out << ", ";
+		}
+		out << ']';
+	}
+	
+	out << " => ";
+
+	if ( c.bound ) { out << *c.bound; }
+	else { out << "???"; }
+
+	return out;
+}
 
 #if defined RP_DEBUG && RP_DEBUG >= 1
 void EnvGen::verify() const {
@@ -84,15 +107,14 @@ bool EnvGen::mergeClasses( Env& env, ClassRef& r, ClassRef s ) {
 	// ensure bounds match
 	if ( ! mergeBound( env, r, s->bound ) ) return false;
 
+	// find r, s after mergeBound
 	TypeClass& rc = env.self->classes[ r.ind ];
-
-	// ensure occurs check not violated
-	if ( env.occursIn( s->vars, rc.bound ) ) return false;
-
-	// find s in original env in case mergeBound invalidated s
 	Env sEnv{ as_non_const(s.env) };
 	s = sEnv.findRef( st );
 	const TypeClass& sc = *s;
+
+	// ensure occurs check not violated
+	if ( env.occursIn( s->vars, rc.bound ) ) return false;
 
 	if ( s.env == env.self ) {
 		// merging two existing local classes; guaranteed that vars don't overlap
@@ -270,4 +292,8 @@ std::ostream& Env::write(std::ostream& out) const {
 	TypedExprTypeMutator<EnvSubstitutor> sub{ EnvSubstitutor{ *this } };
 	writeAssertions(out, self, sub);
 	return out << "}";
+}
+
+bool Env::occursIn( const List<PolyType>& vars, const Type* t ) const {
+	return OccursIn<List>{ vars, *this }( t );
 }

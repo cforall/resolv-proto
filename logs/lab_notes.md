@@ -8,7 +8,7 @@
   ```
 * Have ASAN print memory details: `call (void)__asan_describe_address(0x60e000162b80)`
 
-## 28-30 Jan 2019 ##
+## 28 Jan-1 Feb 2019 ##
 * Get TD resolver building again to run tests
   * **TODO** Look into making "vars" list not flatmapped, you always end up using the whole thing
     * alternately, do something a bit more clever when you've got a target type
@@ -18,13 +18,15 @@
     * this environment doesn't seem to work with TD resolver caching, which precludes the environments being shared...
 * Set up flags for choosing environment data structure
   * PER and ITI build and pass tests for BU-TEC
+  * started on BAS variant
 
-## 16-28 Jan 2019 ##
+## 16-31 Jan 2019 ##
 * Thesis writing
   * new `cfa-thesis` repo
   * Background work for resolver
   * Discussion of resolution algorithms
   * Analysis of environment algorithms
+  * Resolver-prototype background for experiments chapter
 
 ## 18-22 Jan 2019 ##
 * Continue porting type-environment-cached resolution to CFA-CC
