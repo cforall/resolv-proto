@@ -27,6 +27,9 @@
   * `bu--per,iti,bas`: success
 * modified script to take tests from input file with `-f` flag
 * modified script to repeat tests n times with `-r` flag
+* built Makefile to run tests in parallel
+  * started running on plg7
+* some sort of memory error in `bu-imm-bas`; investigate
 
 ## 28 Jan-1 Feb 2019 ##
 * Get TD resolver building again to run tests
