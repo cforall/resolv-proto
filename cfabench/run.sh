@@ -87,14 +87,12 @@ for m in "${modes[@]}"; do
             echo -n ',"user(s)","sys(s)","wall(s)","max-mem(KB)"' | tee -a $outfile
         done
         echo | tee -a $outfile
-        # echo '"test","user(s)","sys(s)","wall(s)","max-mem(KB)"' | tee $outfile
         for t in "${tests[@]}"; do
             printf "\"%s\"" $t | tee -a $outfile
             for (( i=1; i<=$repeat; i++ )); do
-                /usr/bin/time -f ",%U,%S,%e,%M" $c %t.in 2>&1 | tr -d '\n' | tee -a $outfile
+                /usr/bin/time -f ",%U,%S,%e,%M" $c $t.in 2>&1 | tr -d '\n' | tee -a $outfile
             done
             echo | tee -a $outfile
-            #/usr/bin/time -f ",%U,%S,%e,%M" $c $t.in 2>&1 | tee -a $outfile
         done
     fi
 done
