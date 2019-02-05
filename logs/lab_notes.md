@@ -8,6 +8,26 @@
   ```
 * Have ASAN print memory details: `call (void)__asan_describe_address(0x60e000162b80)`
 
+## 4-5 Feb 2019 ##
+* Investigate `ulimit` for memory bounds
+  * `-m` is resident set size, in kB; `1048576` is 1GB
+  * ineffective; does not kill program
+* Try `prlimit`:
+  * `prlimit -m=1024 ../rp io1.in`
+  * ineffective; does not kill program
+    * internet suggests not still supported
+* `timeout` from `https://github.com/pshved/timeout.git` seems to work
+  * modified `cfabench/run.sh` to take an adjustable memory limit
+  * generated memory-limited test lists for each variant
+* Build combos:
+  * `*-top-*`: omitted, not sufficiently disimilar from `def`
+  * `td-*-per`: segfault, `td` and `per` incompatible
+  * `td-*-*`: non-crash test failures
+  * `co-*-*`: success
+  * `bu--per,iti,bas`: success
+* modified script to take tests from input file with `-f` flag
+* modified script to repeat tests n times with `-r` flag
+
 ## 28 Jan-1 Feb 2019 ##
 * Get TD resolver building again to run tests
   * **TODO** Look into making "vars" list not flatmapped, you always end up using the whole thing
@@ -17,8 +37,7 @@
     * `classes = 0x729d40, oclasses = 0x72a860`
     * this environment doesn't seem to work with TD resolver caching, which precludes the environments being shared...
 * Set up flags for choosing environment data structure
-  * PER and ITI build and pass tests for BU-TEC
-  * started on BAS variant
+  * PER, ITI, and BAS build and pass tests for BU-TEC
 
 ## 16-31 Jan 2019 ##
 * Thesis writing

@@ -114,8 +114,8 @@ BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o expr.o forall.o forall_substitutor.o
 ${OBJS} ${BENCH_OBJS} : ${MAKEFILE_NAME}
 
 rp : $(OBJS)
-	$(COMPILE.cc) -o rp-$(DIR)-$(RES) $^ $(LDFLAGS)
-	ln -sf rp-$(DIR)-$(RES) rp
+	$(COMPILE.cc) -o rp-$(DIR)-$(RES)-$(ENV) $^ $(LDFLAGS)
+	ln -sf rp-$(DIR)-$(RES)-$(ENV) rp
 
 bench_gen : $(BENCH_OBJS)
 	$(COMPILE.cc) -o bench_gen $^ $(LDFLAGS)
