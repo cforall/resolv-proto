@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstddef>
+#include <ostream>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -10,11 +11,26 @@
 
 #include "data/cast.h"
 #include "data/gc.h"
+#include "data/list.h"
+#include "data/mem.h"
 
 class Decl;
 class Env;
 class EnvGen;
+class PolyType;
+class Type;
 class TypedExpr;
+
+/// Class of equivalent type variables, along with optional concrete bound type
+struct TypeClass {
+	List<PolyType> vars;  ///< Equivalent polymorphic types
+	const Type* bound;    ///< Type which the class binds to
+
+	TypeClass( List<PolyType>&& vars = List<PolyType>{}, const Type* bound = nullptr )
+		: vars( move(vars) ), bound(bound) {}
+};
+
+std::ostream& operator<< (std::ostream&, const TypeClass&);
 
 /// Reference to typeclass, noting containing environment
 class ClassRef {
@@ -267,13 +283,13 @@ public:
 		if ( r.env != self ) { self->copyClass(r); }  // ensure r is local
 		if ( vr ) {
 			// merge variable's existing class into this one
-			self->mergeClasses( *this, r, vr );
+			return self->mergeClasses( *this, r, vr );
 		} else {
 			// add unbound variable to class if no cycle
 			if ( occursIn( var, self->classes[r.ind].bound ) ) return false;
 			self->addToClass( r.ind, var );
+			return true;
 		}
-		return true;
 	}
 
 	/// Binds an assertion in this environment. `f` should be currently unbound

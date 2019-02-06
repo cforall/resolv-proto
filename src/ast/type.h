@@ -155,6 +155,8 @@ protected:
 
 /// Representation of a polymorphic type
 class PolyType : public Type {
+	friend std::hash<PolyType>;
+
 	/// Name of the polymorphic type variable
 	std::string name_;
 	/// Unique ID of this type variable instantiation; 0 for type variable declaration.
@@ -195,6 +197,14 @@ protected:
 		return (std::hash<std::string>{}( name_ ) << 1) ^ id_;
 	}
 };
+
+namespace std {
+	template<> struct hash<PolyType> {
+		typedef PolyType argument_type;
+		typedef std::size_t result_type;
+		result_type operator() (const argument_type& t) { return t.hash(); }
+	};
+}
 
 /// Represents the lack of a return type
 class VoidType : public Type {
