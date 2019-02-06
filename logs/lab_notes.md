@@ -8,6 +8,12 @@
   ```
 * Have ASAN print memory details: `call (void)__asan_describe_address(0x60e000162b80)`
 
+## 6 Feb 2019 ##
+* Track down segfault on `bu-imm-bas`
+  * occurs in `forall.in:2513`
+  * allocd at `unify.h:16 -- Env newEnv = env;`
+  * `TypeUnifier` call at `unify.h:17` involves an `insert` which invalidates an iterator 
+
 ## 4-5 Feb 2019 ##
 * Investigate `ulimit` for memory bounds
   * `-m` is resident set size, in kB; `1048576` is 1GB

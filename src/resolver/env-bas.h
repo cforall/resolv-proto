@@ -28,33 +28,35 @@ std::ostream& operator<< (std::ostream&, const TypeClass&);
 class ClassRef {
 	friend Env;
 
-	const TypeClass* clz;  ///< Reference to class
+	const Env* env;   ///< Containing environment
+	std::size_t ind;  ///< Index into that environment's class storage
 public:
-	ClassRef() : clz(nullptr) {}
-	ClassRef( const TypeClass* c ) : clz(c) {}
+	ClassRef() : env(nullptr), ind(0) {}
+	ClassRef( const Env* env, std::size_t ind ) : env(env), ind(ind) {}
 
 	/// Gets the representative element of the referenced typeclass
-	const PolyType* get_root() const { return *clz->vars.begin(); }
+	inline const PolyType* get_root() const;
 
 	/// Ensures root is still representative element of this typeclass.
 	/// Not implemented for this variant.
 	void update_root() {}
 
 	/// Gets the bound type of the referenced typeclass, nullptr for none such.
-	const Type* get_bound() const { return clz->bound; }
+	inline const Type* get_bound() const;
 
 	/// Get referenced typeclass
-	const TypeClass& operator* () const { return *clz; }
-	const TypeClass* operator-> () const { return clz; }
+	inline const TypeClass& operator* () const;
+	const TypeClass* operator-> () const { return &(this->operator*()); }
 
 	/// Check that there is a referenced typeclass
-	explicit operator bool() const { return clz != nullptr; }
+	explicit operator bool() const { return env != nullptr; }
 
-	bool operator== (const ClassRef& o) const { return clz == o.clz; }
-	bool operator!= (const ClassRef& o) const { return clz != o.clz; }
+	bool operator== (const ClassRef& o) const { return env == o.env && ind == o.ind; }
+	bool operator!= (const ClassRef& o) const { return !(*this == o); }
 };
 
 class Env final {
+	friend ClassRef;
 	friend const GC& operator<< (const GC&, const Env&);
 	friend std::ostream& operator<< (std::ostream&, const Env&);
 
@@ -100,8 +102,8 @@ public:
 
 	/// Finds the binding reference for this polytype, { nullptr } for none such.
 	ClassRef findRef( const PolyType* var ) const {
-		for ( const TypeClass& c : classes ) {
-			if ( c.vars.count( var ) ) return { &c };
+		for ( unsigned i = 0; i < classes.size(); ++i ) {
+			if ( classes[i].vars.count( var ) ) return { this, i };
 		}
 		return {};
 	}
@@ -141,7 +143,7 @@ public:
 		if ( r ) return r;
 		
 		insert( var );
-		return { &classes.back() };
+		return { this, classes.size() - 1 };
 	}
 
 	/// Finds an assertion in this environment, returns null if none
@@ -214,5 +216,11 @@ private:
 inline std::ostream& operator<< (std::ostream& out, const Env& env) {
 	return env.write( out );
 }
+
+const PolyType* ClassRef::get_root() const { return *env->classes[ind].vars.begin(); }
+
+const Type* ClassRef::get_bound() const { return env->classes[ind].bound; }
+
+const TypeClass& ClassRef::operator* () const { return env->classes[ind]; }
 
 inline void swap( Env& a, Env& b ) { a.swap( b ); }
