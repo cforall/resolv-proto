@@ -74,6 +74,7 @@ typedefRedef
 typeof
 user_literals
 variableDeclarator
+vector
 voidPtr
 wait
 when

@@ -2,6 +2,10 @@ alloc
 array
 attributes
 avl_test
+alloc
+array
+attributes
+avl_test
 castError
 cast
 completeTypeError

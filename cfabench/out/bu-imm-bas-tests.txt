@@ -29,6 +29,7 @@ extension
 fallthrough
 fibonacci
 fmtLines
+forall
 forctrl
 fstream_test
 function-operator

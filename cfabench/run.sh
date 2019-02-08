@@ -72,7 +72,10 @@ for m in "${modes[@]}"; do
     printf "\n== $m ==\n"
     c="../rp-$m -q"
     if [ $memlim ]; then
-        outfile="$outdir/$vercode-$m-tests.txt"
+        outfile="$outdir/$m-tests.txt"
+		if [ -f $outfile ]; then
+			truncate -s 0 $outfile
+		fi
         for t in "${tests[@]}"; do
             printf "%24s\t" $t
             if ../../timeout/timeout -m=$memlim --no-info-on-success -c $c $t.in; then

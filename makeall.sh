@@ -8,7 +8,7 @@ for DIR in bu co td; do
 		for ENV in per iti bas; do
 			# 'td' caching not compatible with 'per' relationship 
 			if [ ! \( $DIR = "td" -a $ENV = "per" \) ]; then
-				make DIR=$DIR RES=$RES ENV=$ENV rp
+				make -j 8 DIR=$DIR RES=$RES ENV=$ENV rp
 			fi
 		done
 	done 
