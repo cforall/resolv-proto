@@ -19,6 +19,7 @@ modes=()
 memlim=""
 repeat=1
 reading="T"
+dryrun=""
 for a in "$@"; do
     case $a in
     -m|--mode) reading="M" ;;
@@ -39,14 +40,17 @@ for a in "$@"; do
             tests+=(`basename $f .in`)
         done
         ;;
+    -d|--dry-run) dryrun="y" ;;
     *)
         case $reading in
         T) tests+=($a) ;;
         M) modes+=($a) ;;
         F)
-            cat $a | while read t; do
-                tests+=($t)
-            done
+            if [ ! -f $a ]; then
+                echo "Invalid test suite $a"
+                exit 1
+            fi
+            mapfile -t -O ${#tests[@]} tests < $a
             ;;
         R) repeat=$a ;;
         L) memlim=$a ;;
@@ -62,9 +66,19 @@ if [ ${#modes[@]} -eq 0 ]; then
     done
 fi
 if [ ${#tests[@]} -eq 0 ]; then
+    if [ $dryrun ]; then
+        echo "no tests; autogenerating list"
+    fi
     for f in *.in; do
         tests+=(`basename $f .in`)
     done
+fi
+
+if [ $dryrun ]; then
+    for t in "${tests[@]}"; do
+        echo $t
+    done
+    exit 0
 fi
 
 for m in "${modes[@]}"; do
