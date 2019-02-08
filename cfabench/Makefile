@@ -1,13 +1,13 @@
 .PHONY = jobs
-jobs = bu-tec-per bu-tec-iti bu-tec-bas \
-bu-def-per bu-def-iti bu-def-bas \
-bu-imm-per bu-imm-iti bu-imm-bas \
-co-tec-per co-tec-iti co-tec-bas \
-co-def-per co-def-iti co-def-bas \
-co-imm-per co-imm-iti co-imm-bas \
-td-tec-iti td-tec-bas \
-td-def-iti td-def-bas \
-td-imm-iti td-imm-bas 
+jobs = td-imm-bas td-imm-iti \
+co-imm-bas co-imm-iti co-imm-per \
+bu-imm-bas bu-imm-iti bu-imm-per \
+td-def-bas td-def-iti \
+co-def-bas co-def-iti co-def-per \
+bu-def-bas bu-def-iti bu-def-per \
+td-tec-bas td-tec-iti \
+co-tec-bas co-tec-iti co-tec-per \
+bu-tec-bas bu-tec-iti bu-tec-per
 
 all: $(jobs)
 
