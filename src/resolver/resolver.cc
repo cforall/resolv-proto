@@ -126,12 +126,10 @@ void Resolver::addType(const Type* ty) {
 }
 
 void Resolver::addDecl(Decl* decl) {
-	++n_funcs;
 	::addDecl( funcs, decl );
 }
 
 void Resolver::addExpr(const Expr* expr) {
-	++n_exprs;
 	const Interpretation* i = (*this)(expr);
 	if ( i->is_valid() ) { on_valid( expr, i ); }
 }

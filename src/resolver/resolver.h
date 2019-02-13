@@ -211,8 +211,6 @@ public:
 	ConversionGraph conversions;        ///< Conversions between known types
 	FuncTable funcs;                    ///< Known function declarations
 	unsigned id_src;                    ///< Source of type variable IDs
-	unsigned n_funcs;                   ///< Total count of functions
-	unsigned n_exprs;                   ///< Total count of expressions
 	unsigned max_recursive_assertions;  ///< Maximum recursive assertion depth
 
 #if defined RP_DIR_TD
@@ -227,8 +225,9 @@ public:
 	/// Constructor for dynamically-generated function table and conversion graph
 	Resolver( ValidEffect on_valid, InvalidEffect on_invalid, AmbiguousEffect on_ambiguous, 
 	          UnboundEffect on_unbound,
-			  unsigned max_recursive_assertions = default_max_recursive_assertions )
-		: conversions(), funcs(), id_src( 0 ), n_funcs( 0 ), n_exprs( 0 ),
+			  unsigned max_recursive_assertions = default_max_recursive_assertions,
+			  bool metrics_only = false )
+		: conversions(), funcs(), id_src( 0 ), 
 		  max_recursive_assertions( max_recursive_assertions ), 
 #if defined RP_DIR_TD
 		  cached(), 

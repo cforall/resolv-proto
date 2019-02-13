@@ -89,21 +89,21 @@ bool parse_poly_type(char const *&token, std::string& ret) {
 /// Parses a type name, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
 /// to types and polymorphic types according to forall. token must not be null.  
-bool parse_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
-	unique_ptr<Forall>& forall, List<Type>& out);
+bool parse_type(char const *&token, Resolver& resolver, Args& args, 
+	CanonicalTypeMap& types, unique_ptr<Forall>& forall, List<Type>& out);
 
 /// Parses an angle-bracket surrounded type list for the paramters of a generic named type
-bool parse_generic_params(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
-		unique_ptr<Forall>& forall, List<Type>& out) {
+bool parse_generic_params(char const *&token, Resolver& resolver, Args& args, 
+		CanonicalTypeMap& types, unique_ptr<Forall>& forall, List<Type>& out) {
 	const char *end = token;
 
 	if ( ! match_char(end, '<') ) return false;
 	match_whitespace(end);
 
-	if ( ! parse_type(end, resolver, types, forall, out) ) return false;
+	if ( ! parse_type(end, resolver, args, types, forall, out) ) return false;
 
 	while ( match_whitespace(end) ) {
-		if ( ! parse_type(end, resolver, types, forall, out) ) break;
+		if ( ! parse_type(end, resolver, args, types, forall, out) ) break;
 	}
 
 	if ( ! match_char(end, '>') ) return false;
@@ -115,8 +115,8 @@ bool parse_generic_params(char const *&token, Resolver& resolver, CanonicalTypeM
 /// Parses a function type, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
 /// to types and polymorphic types according to forall. token must not be null
-bool parse_func_type(const char*& token, Resolver& resolver, CanonicalTypeMap& types, 
-		unique_ptr<Forall>& forall, List<Type>& out ) {
+bool parse_func_type(const char*& token, Resolver& resolver, Args& args, 
+		CanonicalTypeMap& types, unique_ptr<Forall>& forall, List<Type>& out ) {
 	List<Type> returns, params;
 	const char* end = token;
 
@@ -125,7 +125,7 @@ bool parse_func_type(const char*& token, Resolver& resolver, CanonicalTypeMap& t
 	match_whitespace(end);
 
 	// match return types
-	while ( parse_type(end, resolver, types, forall, returns) ) {
+	while ( parse_type(end, resolver, args, types, forall, returns) ) {
 		match_whitespace(end);
 	}
 
@@ -134,7 +134,7 @@ bool parse_func_type(const char*& token, Resolver& resolver, CanonicalTypeMap& t
 	match_whitespace(end);
 
 	// match parameters
-	while ( parse_type(end, resolver, types, forall, params) ) {
+	while ( parse_type(end, resolver, args, types, forall, params) ) {
 		match_whitespace(end);
 	}
 
@@ -148,28 +148,28 @@ bool parse_func_type(const char*& token, Resolver& resolver, CanonicalTypeMap& t
 	return true;
 }
 
-bool parse_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
-		unique_ptr<Forall>& forall, List<Type>& out) {
+bool parse_type(char const *&token, Resolver& resolver, Args& args, 
+		CanonicalTypeMap& types, unique_ptr<Forall>& forall, List<Type>& out) {
 	int t;
 	std::string n;
 
 	if ( parse_int(token, t) ) {
 		auto it = get_canon<ConcType>( types, t );
-		if ( it.second ) resolver.addType( it.first );
+		if ( it.second && ! args.metrics_only() ) resolver.addType( it.first );
 		out.push_back( it.first );
 		return true;
 	} else if ( parse_named_type(token, n) ) {
 		List<Type> params;
-		parse_generic_params( token, resolver, types, forall, params );
+		parse_generic_params( token, resolver, args, types, forall, params );
 		auto it = get_canon( types, n, move(params) );
-		if ( it.second ) resolver.addType( it.first );
+		if ( it.second && ! args.metrics_only() ) resolver.addType( it.first );
 		out.push_back( it.first );
 		return true;
 	} else if ( parse_poly_type(token, n) ) {
 		if ( ! forall ) { forall.reset( new Forall{} ); }
 		out.push_back( forall->add( n ) );
 		return true;
-	} else if ( parse_func_type(token, resolver, types, forall, out) ) {
+	} else if ( parse_func_type(token, resolver, args, types, forall, out) ) {
 		return true;
 	} else return false;
 }
@@ -177,8 +177,8 @@ bool parse_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types,
 /// Parses a type assertion, returning true and adding the assertion into 
 /// binding if so. Concrete types will be canonicalized according to types. 
 /// token must not be null.
-bool parse_assertion(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
-		unique_ptr<Forall>& forall) {
+bool parse_assertion(char const *&token, Resolver& resolver, Args& args, 
+		CanonicalTypeMap& types, unique_ptr<Forall>& forall) {
 	const char* end = token;
 
 	// look for type assertion
@@ -187,7 +187,7 @@ bool parse_assertion(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 	// parse return types
 	List<Type> returns;
 	match_whitespace(end);
-	while ( parse_type(end, resolver, types, forall, returns) ) {
+	while ( parse_type(end, resolver, args, types, forall, returns) ) {
 		match_whitespace(end);
 	}
 
@@ -209,7 +209,7 @@ bool parse_assertion(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 	// parse parameters
 	List<Type> params;
 	match_whitespace(end);
-	while ( parse_type(end, resolver, types, forall, params) ) {
+	while ( parse_type(end, resolver, args, types, forall, params) ) {
 		match_whitespace(end);
 	}
 
@@ -222,7 +222,8 @@ bool parse_assertion(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 /// Parses a declaration from line; returns true and adds the declaration to 
 /// funcs if found; will fail if given a valid func that does not consume the 
 /// whole line. line must not be null.
-bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
+bool parse_decl( char const *line, Resolver& resolver, CanonicalTypeMap& types, 
+		Args& args, Metrics& metrics ) {
 	List<Type> returns;
 	std::string name;
 	std::string tag = "";
@@ -230,7 +231,7 @@ bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
 	
 	// parse return types
 	match_whitespace(line);
-	while ( parse_type(line, resolver, types, forall, returns) ) {
+	while ( parse_type(line, resolver, args, types, forall, returns) ) {
 		match_whitespace(line);
 	}
 
@@ -246,7 +247,10 @@ bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
 		// check line consumed
 		if ( ! is_blank(line) ) return false;
 
-		resolver.addDecl( new VarDecl{ name, tag, move(returns) } );
+		if ( ! args.metrics_only() ) {
+			resolver.addDecl( new VarDecl{ name, tag, move(returns) } );
+		}
+		++metrics.n_decls;
 		return true;
 	}
 	
@@ -262,18 +266,22 @@ bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
 	
 	// parse parameters
 	match_whitespace(line);
-	while ( parse_type(line, resolver, types, forall, params) ) {
+	while ( parse_type(line, resolver, args, types, forall, params) ) {
 		match_whitespace(line);
 	}
 
 	// parse type assertions
-	while ( parse_assertion(line, resolver, types, forall) );
+	while ( parse_assertion(line, resolver, args, types, forall) );
 	
 	// check line consumed
 	if ( ! is_empty(line) ) return false;
 	
 	// pass completed declaration into return list
-	resolver.addDecl( new FuncDecl{ name, tag, move(params), move(returns), move(forall) } );
+	if ( ! args.metrics_only() ) {
+		resolver.addDecl( 
+			new FuncDecl{ name, tag, move(params), move(returns), move(forall) } );
+	}
+	++metrics.n_decls;
 	
 	return true;
 }
@@ -281,21 +289,21 @@ bool parse_decl(char const *line, Resolver& resolver, CanonicalTypeMap& types) {
 /// Parses a concrete type name, returning true, appending the result into out, and 
 /// incrementing token if so. Concrete types will be canonicalized according 
 /// to types and polymorphic types forbidden. token must not be null.  
-bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
-	List<Type>& out);
+bool parse_conc_type(char const *&token, Resolver& resolver, Args& args, 
+	CanonicalTypeMap& types, List<Type>& out);
 
 /// Parses an angle-bracket surrounded type list for the paramters of a concrete generic named type
-bool parse_conc_generic_params(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
-		List<Type>& out) {
+bool parse_conc_generic_params(char const *&token, Resolver& resolver, 
+		Args& args, CanonicalTypeMap& types, List<Type>& out) {
 	const char *end = token;
 
 	if ( ! match_char(end, '<') ) return false;
 	match_whitespace(end);
 
-	if ( ! parse_conc_type(end, resolver, types, out) ) return false;
+	if ( ! parse_conc_type(end, resolver, args, types, out) ) return false;
 
 	while ( match_whitespace(end) ) {
-		if ( ! parse_conc_type(end, resolver, types, out) ) break;
+		if ( ! parse_conc_type(end, resolver, args, types, out) ) break;
 	}
 
 	if ( ! match_char(end, '>') ) return false;
@@ -304,21 +312,21 @@ bool parse_conc_generic_params(char const *&token, Resolver& resolver, Canonical
 	return true;
 }
 
-bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& types, 
-		List<Type>& out) {
+bool parse_conc_type(char const *&token, Resolver& resolver, Args& args, 
+		CanonicalTypeMap& types, List<Type>& out) {
 	int t;
 	std::string n;
 
 	if ( parse_int(token, t) ) {  // ConcType
 		auto it = get_canon<ConcType>( types, t );
-		if ( it.second ) resolver.addType( it.first );
+		if ( it.second && ! args.metrics_only() ) resolver.addType( it.first );
 		out.push_back( it.first );
 		return true;
 	} else if ( parse_named_type(token, n) ) {  // concrete NamedType
 		List<Type> params;
-		parse_conc_generic_params( token, resolver, types, params );
+		parse_conc_generic_params( token, resolver, args, types, params );
 		auto it = get_canon( types, n, move(params) );
-		if ( it.second ) resolver.addType( it.first );
+		if ( it.second && ! args.metrics_only() ) resolver.addType( it.first );
 		out.push_back( it.first );
 		return true;
 	} else if ( match_char(token, '[') ) {  // concrete FuncType
@@ -326,7 +334,7 @@ bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 
 		// match return types
 		List<Type> returns;
-		while ( parse_conc_type(token, resolver, types, returns) ) {
+		while ( parse_conc_type(token, resolver, args, types, returns) ) {
 			match_whitespace(token);
 		}
 
@@ -336,7 +344,7 @@ bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 
 		// match parameters
 		List<Type> params;
-		while ( parse_conc_type(token, resolver, types, params) ) {
+		while ( parse_conc_type(token, resolver, args, types, params) ) {
 			match_whitespace(token);
 		}
 
@@ -353,12 +361,12 @@ bool parse_conc_type(char const *&token, Resolver& resolver, CanonicalTypeMap& t
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
 bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver, 
-		CanonicalTypeMap& types ) {
+		Args& args, CanonicalTypeMap& types ) {
 	const char *end = token;
 	
 	// Check for a concrete type expression
 	List<Type> cty;
-	if ( parse_conc_type( end, resolver, types, cty ) ) {
+	if ( parse_conc_type( end, resolver, args, types, cty ) ) {
 		exprs.push_back( new ValExpr( cty.front() ) );
 		token = end;
 		return true;
@@ -382,9 +390,9 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 	if ( ! match_char(end, '(') ) return false;
 	
 	// Read function args
-	List<Expr> args;
+	List<Expr> eargs;
 	match_whitespace(end);
-	while ( parse_subexpr(end, args, resolver, types) ) {
+	while ( parse_subexpr(end, eargs, resolver, args, types) ) {
 		match_whitespace(end);
 	}
 	
@@ -392,7 +400,7 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
-	exprs.push_back( new FuncExpr( name, move(args) ) );
+	exprs.push_back( new FuncExpr( name, move(eargs) ) );
 	token = end;
 	return true;
 }
@@ -400,12 +408,14 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr( char const *line, Resolver& resolver, CanonicalTypeMap& types ) {
+bool parse_expr( char const *line, Resolver& resolver, Args& args, 
+		Metrics& metrics, CanonicalTypeMap& types ) {
 	match_whitespace(line);
 	List<Expr> exprs;
-	if ( parse_subexpr(line, exprs, resolver, types) && is_empty(line) ) {
+	if ( parse_subexpr(line, exprs, resolver, args, types) && is_empty(line) ) {
 		assume( exprs.size() == 1, "successful expression parse results in single expression" );
-		resolver.addExpr( exprs[0] );
+		if ( ! args.metrics_only() ) { resolver.addExpr( exprs[0] ); }
+		++metrics.n_exprs;
 		return true;
 	} else return false;
 }
@@ -425,7 +435,7 @@ void echo_line( std::string& line, Args& args, EchoMode mode = EXPR ) {
 /// continuing until end-of-input or terminating "}" line is found.
 /// Prints an error and exits if invalid declaration or expression found
 void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& resolver, 
-		CanonicalTypeMap& types, Args& args ) {
+		CanonicalTypeMap& types, Args& args, Metrics& metrics ) {
 	std::string line;
 	
 	// parse declarations and delimiter
@@ -443,7 +453,7 @@ void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& reso
 			break;
 		}
 
-		bool ok = parse_decl( line.data(), resolver, types );
+		bool ok = parse_decl( line.data(), resolver, types, args, metrics );
 		if ( ! ok ) {
 			std::cerr << "Invalid declaration [" << n << "]: \"" << line << "\"" << std::endl;
 			std::exit(1);
@@ -471,13 +481,13 @@ void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& reso
 		if ( line_matches( line, "{" ) ) {
 			++scope;
 			resolver.beginScope();
-			parse_block( in, n, scope, resolver, types, args );
+			parse_block( in, n, scope, resolver, types, args, metrics );
 			continue;
 		}
 
 		// parse and resolve expression
 		if ( args.line_nos() ) { args.out() << n << ": " << std::flush; }
-		bool ok = parse_expr( line.data(), resolver, types );
+		bool ok = parse_expr( line.data(), resolver, args, metrics, types );
 		if ( ! ok ) {
 			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;
 			std::exit(1);
@@ -487,11 +497,11 @@ void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& reso
 	}
 }
 
-void run_input( std::istream& in, Resolver& resolver, Args& args ) {
+void run_input( std::istream& in, Resolver& resolver, Args& args, Metrics& metrics ) {
 	CanonicalTypeMap types;
 	unsigned n = 0, scope = 0;
 
-	parse_block(in, n, scope, resolver, types, args);
+	parse_block(in, n, scope, resolver, types, args, metrics);
 
 	if ( scope != 0 ) {
 		std::cerr << "Unmatched braces" << std::endl;

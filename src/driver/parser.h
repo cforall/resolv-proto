@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "args.h"
+#include "metrics.h"
 
 #include "ast/expr.h"
 #include "ast/type.h"
@@ -62,4 +63,4 @@ class Resolver;
 /// using curly braces. Only in-scope declarations can be used within a block
 ///
 /// Calls resolver on a pipelined basis while parsing input
-void run_input( std::istream& in, Resolver& resolver, Args& args );
+void run_input( std::istream& in, Resolver& resolver, Args& args, Metrics& metrics );

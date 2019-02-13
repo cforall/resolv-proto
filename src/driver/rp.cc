@@ -1,6 +1,7 @@
 #include <ctime>
 
 #include "args.h"
+#include "metrics.h"
 #include "parser.h"
 
 #include "ast/expr.h"
@@ -106,13 +107,18 @@ int main(int argc, char **argv) {
 
 	volatile std::clock_t start, end;
 	Resolver resolver{ on_valid, on_invalid, on_ambiguous, on_unbound };
+	Metrics metrics{};
 	start = std::clock();
-	run_input( args.in(), resolver, args );
+	run_input( args.in(), resolver, args, metrics );
 	end = std::clock();
 
 	if ( args.bench() ) {
 		// num_decls,num_exprs,runtime(ms)
-		out << "\n" << resolver.n_funcs << "," << resolver.n_exprs << "," << ms_between(start, end) << std::endl;
+		out << "\n" << metrics.n_decls << "," << metrics.n_exprs;
+		if ( ! args.metrics_only() ) {
+			out << "," << ms_between(start, end);
+		}
+		out << std::endl;
 	}
 	
 	collect();

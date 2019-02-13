@@ -21,6 +21,7 @@ private:
     Filter filter_;
     bool bench_;
     bool line_nos_;
+    bool metrics_only_;
 
 private:
     /// Consumes an argument.
@@ -62,7 +63,7 @@ private:
     bool is_flag( char f, char s, const char* l ) { return is_flag(f, s) || is_flag(f, l); }
 
     void usage( char* name ) {
-        std::cerr << "Usage: " << name << "[-vq | --test | --filter (invalid|unambiguous|resolvable)] [--bench] [--line-nos] [ infile [ outfile ] ]" << std::endl;
+        std::cerr << "Usage: " << name << "[-vq | --test | --filter (invalid|unambiguous|resolvable)] [--bench] [--line-nos] [--metrics-only] [ infile [ outfile ] ]" << std::endl;
         std::exit(1);
     }
 
@@ -92,6 +93,10 @@ public:
                 bench_ = true;
             } else if ( is_flag( f, "line-nos" ) ) {
                 line_nos_ = true;
+            } else if ( is_flag( f, "metrics-only" ) ) {
+                metrics_only_ = true;
+                bench_ = true;
+                verbosity_ = Verbosity::Quiet;
             } else if ( argc > 2 && is_flag( f, "filter" ) ) {
                 if ( std::strcmp(argv[1], "invalid") == 0 ) {
                     filter_ = Filter::Invalid;
@@ -138,4 +143,5 @@ public:
     Filter filter() const { return filter_; }
     bool bench() const { return bench_; }
     bool line_nos() const { return line_nos_; }
+    bool metrics_only() const { return metrics_only_; }
 };
