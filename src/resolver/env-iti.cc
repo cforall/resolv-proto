@@ -260,6 +260,19 @@ void EnvGen::trace( const GC& gc ) const {
 	gc << parent;
 }
 
+unsigned numAssertions(const EnvGen* env, std::unordered_set<const Decl*>&& seen = {}) {
+	unsigned n = 0;
+	for ( const auto& assn : env->getAssertions() ) {
+		// only count unseen assertions
+		n += seen.insert( assn.first ).second;
+	}
+	return ( env->parent ) ? n + numAssertions(env->parent, move(seen)) : n;
+}
+
+unsigned Env::numAssertions() const {
+	return ::numAssertions(self);
+}
+
 void writeClasses(std::ostream& out, const EnvGen* env, bool printed = false, 
 		EnvGen::SeenTypes&& seen = {}) {
 	for ( const TypeClass& c : env->getClasses() ) {

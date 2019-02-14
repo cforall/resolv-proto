@@ -11,6 +11,7 @@
 #include "ast/expr.h"
 #include "ast/forall.h"
 #include "ast/type.h"
+#include "data/clock.h"
 #include "data/debug.h"
 #include "data/list.h"
 #include "data/mem.h"
@@ -417,13 +418,24 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
-bool parse_expr( char const *line, Resolver& resolver, Args& args, 
+bool parse_expr( unsigned n, char const *line, Resolver& resolver, Args& args, 
 		Metrics& metrics, CanonicalTypeMap& types ) {
 	match_whitespace(line);
 	List<Expr> exprs;
 	if ( parse_subexpr(line, exprs, resolver, args, metrics, types) && is_empty(line) ) {
 		assume( exprs.size() == 1, "successful expression parse results in single expression" );
-		if ( ! args.metrics_only() ) { resolver.addExpr( exprs[0] ); }
+		if ( ! args.metrics_only() ) {
+			if ( args.per_prob() ) {
+				volatile std::clock_t start, end;
+				args.out() << n << ",";
+				start = std::clock();
+				resolver.addExpr( exprs[0] );
+				end = std::clock();
+				args.out() << "," << ms_between(start, end) << std::endl;
+			} else {
+				resolver.addExpr( exprs[0] );
+			}
+		}
 		metrics.mark_expr();
 		return true;
 	} else {
@@ -501,7 +513,7 @@ void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& reso
 
 		// parse and resolve expression
 		if ( args.line_nos() ) { args.out() << n << ": " << std::flush; }
-		bool ok = parse_expr( line.data(), resolver, args, metrics, types );
+		bool ok = parse_expr( n, line.data(), resolver, args, metrics, types );
 		if ( ! ok ) {
 			std::cerr << "Invalid expression [" << n << "]: \"" << line << "\"" << std::endl;
 			std::exit(1);

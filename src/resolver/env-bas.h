@@ -91,6 +91,7 @@ private:
 public:
 	const Storage& getClasses() const { return classes; }
 	const AssertionMap& getAssertions() const { return assns; }
+	unsigned numAssertions() const { return assns.size(); }
 
 	/// true iff t occurs in vars, recursively expanded according to this environment
 	bool occursIn( const Set<PolyType>& vars, const Type* t ) const;

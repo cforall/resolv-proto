@@ -266,6 +266,8 @@ public:
 		return nullptr;
 	}
 
+	unsigned numAssertions() const;
+
 	/// Binds this class to the given type; class should be currently unbound.
 	/// Class should belong to this environment. Returns false if would create recursive loop.
 	bool bindType( ClassRef& r, const Type* sub ) {

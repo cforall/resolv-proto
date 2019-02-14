@@ -22,6 +22,7 @@ private:
     bool bench_;
     bool line_nos_;
     bool metrics_only_;
+    bool per_prob_;
 
 private:
     /// Consumes an argument.
@@ -63,7 +64,7 @@ private:
     bool is_flag( char f, char s, const char* l ) { return is_flag(f, s) || is_flag(f, l); }
 
     void usage( char* name ) {
-        std::cerr << "Usage: " << name << "[-vq | --test | --filter (invalid|unambiguous|resolvable)] [--bench] [--line-nos] [--metrics-only] [ infile [ outfile ] ]" << std::endl;
+        std::cerr << "Usage: " << name << "[-vq | --test | --filter (invalid|unambiguous|resolvable)] [--bench] [--line-nos] [--metrics-only] [--per-prob] [ infile [ outfile ] ]" << std::endl;
         std::exit(1);
     }
 
@@ -75,7 +76,9 @@ public:
           verbosity_(Verbosity::Default),
           filter_(Filter::None),
           bench_(false),
-          line_nos_(false)
+          line_nos_(false),
+          metrics_only_(false),
+          per_prob_(false)
     {
         char* name = argv[0];
 
@@ -97,6 +100,9 @@ public:
                 metrics_only_ = true;
                 bench_ = true;
                 verbosity_ = Verbosity::Quiet;
+            } else if ( is_flag( f, "per-prob" ) ) {
+                per_prob_ = true;
+                filter_ = Filter::Invalid;
             } else if ( argc > 2 && is_flag( f, "filter" ) ) {
                 if ( std::strcmp(argv[1], "invalid") == 0 ) {
                     filter_ = Filter::Invalid;
@@ -144,4 +150,5 @@ public:
     bool bench() const { return bench_; }
     bool line_nos() const { return line_nos_; }
     bool metrics_only() const { return metrics_only_; }
+    bool per_prob() const { return per_prob_; }
 };

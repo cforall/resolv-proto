@@ -219,6 +219,9 @@ public:
 		return assns->get_or_default( f, nullptr );
 	}
 
+	/// Count of assertions in this environment
+	unsigned numAssertions() const { return assns->size(); }
+
 	/// Binds this class to the given type; class should be currently unbound.
 	/// Class should belong to this environment. Returns false if would create recursive loop.
 	bool bindType( ClassRef& r, const Type* sub ) {

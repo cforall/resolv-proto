@@ -1,11 +1,11 @@
-#include <ctime>
-
 #include "args.h"
 #include "metrics.h"
 #include "parser.h"
 
 #include "ast/expr.h"
+#include "ast/typed_expr_visitor.h"
 #include "ast/type.h"
+#include "data/clock.h"
 #include "data/list.h"
 #include "resolver/canonical_type_map.h"
 #include "resolver/conversion.h"
@@ -14,9 +14,25 @@
 #include "resolver/interpretation.h"
 #include "resolver/resolver.h"
 
-long ms_between(std::clock_t start, std::clock_t end) {
-	return (end - start) / (CLOCKS_PER_SEC / 1000);
-}
+/// Finds the number of input classes in an output expression
+class InputExprDepth : public TypedExprVisitor<InputExprDepth, unsigned> {
+public:
+	using Super = TypedExprVisitor<InputExprDepth, unsigned>;
+	using Super::visit;
+
+	bool visit( const ValExpr*, unsigned& d ) { ++d; return true; }
+	bool visit( const VarExpr*, unsigned& d ) { ++d; return true; }
+	bool visit( const CallExpr* e, unsigned & d ) {
+		unsigned max_d = 1;
+		for ( const TypedExpr* arg : e->args() ) {
+			unsigned local_d = 1;
+			visit( arg, local_d );
+			if ( local_d > max_d ) { max_d = local_d; }
+		}
+		d += max_d;
+		return true;
+	}
+};
 
 int main(int argc, char **argv) {
 	Args args{argc, argv};
@@ -84,7 +100,11 @@ int main(int argc, char **argv) {
 		break;
 	}
 
-	if ( args.quiet() ) {
+	if ( args.per_prob() ) {
+		on_valid = [&out]( const Expr* e, const Interpretation* i ) {
+			out << InputExprDepth{}( i->expr ) << "," << i->env.numAssertions();
+		};
+	} else if ( args.quiet() ) {
 		// empty valid effect is correct in this case
 	} else if ( args.testing() ) {
 		on_valid = [&out]( const Expr* e, const Interpretation* i ) {
