@@ -431,7 +431,7 @@ bool parse_expr( unsigned n, char const *line, Resolver& resolver, Args& args,
 				start = std::clock();
 				resolver.addExpr( exprs[0] );
 				end = std::clock();
-				args.out() << "," << ms_between(start, end) << std::endl;
+				args.out() << "," << (end-start)/*microseconds*/ << std::endl;
 			} else {
 				resolver.addExpr( exprs[0] );
 			}
