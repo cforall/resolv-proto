@@ -276,13 +276,17 @@ bool parse_decl( char const *line, Resolver& resolver, CanonicalTypeMap& types,
 	// check line consumed
 	if ( ! is_empty(line) ) return false;
 	
-	// pass completed declaration into return list
+	// complete declaration
+	if ( forall ) {
+		metrics.mark_decl( forall->assertions().size() );
+	} else {
+		metrics.mark_decl();
+	}
 	if ( ! args.metrics_only() ) {
 		resolver.addDecl( 
 			new FuncDecl{ name, tag, move(params), move(returns), move(forall) } );
 	}
-	++metrics.n_decls;
-	
+		
 	return true;
 }
 
@@ -361,13 +365,14 @@ bool parse_conc_type(char const *&token, Resolver& resolver, Args& args,
 /// Parses a subexpression; returns true and adds the expression to exprs if found.
 /// line must not be null.
 bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver, 
-		Args& args, CanonicalTypeMap& types ) {
+		Args& args, Metrics& metrics, CanonicalTypeMap& types ) {
 	const char *end = token;
 	
 	// Check for a concrete type expression
 	List<Type> cty;
 	if ( parse_conc_type( end, resolver, args, types, cty ) ) {
 		exprs.push_back( new ValExpr( cty.front() ) );
+		metrics.mark_sub();
 		token = end;
 		return true;
 	}
@@ -379,6 +384,7 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 		match_whitespace(end);
 
 		exprs.push_back( new NameExpr( name ) );
+		metrics.mark_sub();
 		token = end;
 		return true;
 	}
@@ -390,17 +396,20 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 	if ( ! match_char(end, '(') ) return false;
 	
 	// Read function args
+	metrics.start_subs();
 	List<Expr> eargs;
 	match_whitespace(end);
-	while ( parse_subexpr(end, eargs, resolver, args, types) ) {
+	while ( parse_subexpr(end, eargs, resolver, args, metrics, types) ) {
 		match_whitespace(end);
 	}
+	metrics.end_subs();
 	
 	// Find closing bracket
 	if ( ! match_char(end, ')') ) return false;
 	match_whitespace(end);
 	
 	exprs.push_back( new FuncExpr( name, move(eargs) ) );
+	metrics.mark_sub();
 	token = end;
 	return true;
 }
@@ -412,12 +421,15 @@ bool parse_expr( char const *line, Resolver& resolver, Args& args,
 		Metrics& metrics, CanonicalTypeMap& types ) {
 	match_whitespace(line);
 	List<Expr> exprs;
-	if ( parse_subexpr(line, exprs, resolver, args, types) && is_empty(line) ) {
+	if ( parse_subexpr(line, exprs, resolver, args, metrics, types) && is_empty(line) ) {
 		assume( exprs.size() == 1, "successful expression parse results in single expression" );
 		if ( ! args.metrics_only() ) { resolver.addExpr( exprs[0] ); }
-		++metrics.n_exprs;
+		metrics.mark_expr();
 		return true;
-	} else return false;
+	} else {
+		metrics.reset_expr();
+		return false;
+	}
 }
 
 /// Mode for echo_line -- declarations are echoed for Filtered verbosity, expressions are not

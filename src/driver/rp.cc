@@ -113,12 +113,17 @@ int main(int argc, char **argv) {
 	end = std::clock();
 
 	if ( args.bench() ) {
-		// num_decls,num_exprs,runtime(ms)
-		out << "\n" << metrics.n_decls << "," << metrics.n_exprs;
 		if ( ! args.metrics_only() ) {
-			out << "," << ms_between(start, end);
+			out << "\n" << ms_between(start, end) << ",";
 		}
-		out << std::endl;
+		out << metrics.n_decls << "," 
+		    << metrics.n_exprs << "," 
+		    << metrics.n_subexprs << "," 
+			<< (((double)metrics.sum_depth)/metrics.n_exprs) << "," // avg. max depth
+			<< metrics.max_depth << ","
+			<< metrics.n_assns << ","
+			<< metrics.n_poly_decls << ","
+			<< metrics.max_assns << std::endl;
 	}
 	
 	collect();
