@@ -28,11 +28,8 @@
 /// @param Key     The key type
 /// @param Value   The mapped type
 /// @param Map     Internal map type for each scope [default std::unordered_map]
-// /// @param Output  Output type for findAll [default std::unordered_set]
 template<typename Key, typename Value, 
 		 template<typename, typename> class Map = std_unordered_map>
-        //  template<typename, typename> class Map = std_unordered_map, 
-        //  template<typename> class Output = std_unordered_set>
 class ScopedMap {
 	typedef Map< Key, Value > Scope;
 	typedef std::vector< Scope > ScopeList;
@@ -228,7 +225,7 @@ public:
 	const_iterator end() const { return const_iterator(scopes, scopes[0].end(), 0); }
 	const_iterator cend() const { return const_iterator(scopes, scopes[0].end(), 0); }
 
-	/// Gets the index of the current scope (counted from 1)
+	/// Gets the index of the current scope (counted from 0)
 	size_type currentScope() const { return scopes.size() - 1; }
 
 	/// Finds the given key in the outermost scope it occurs; returns end() for none such

@@ -250,7 +250,7 @@ bool parse_decl( char const *line, Resolver& resolver, CanonicalTypeMap& types,
 		if ( ! args.metrics_only() ) {
 			resolver.addDecl( new VarDecl{ name, tag, move(returns) } );
 		}
-		++metrics.n_decls;
+		metrics.mark_decl( name );
 		return true;
 	}
 	
@@ -278,9 +278,9 @@ bool parse_decl( char const *line, Resolver& resolver, CanonicalTypeMap& types,
 	
 	// complete declaration
 	if ( forall ) {
-		metrics.mark_decl( forall->assertions().size() );
+		metrics.mark_decl( name, forall->assertions().size() );
 	} else {
-		metrics.mark_decl();
+		metrics.mark_decl( name );
 	}
 	if ( ! args.metrics_only() ) {
 		resolver.addDecl( 
@@ -486,6 +486,7 @@ void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& reso
 		if ( line_matches( line, "}" ) ) {
 			--scope;
 			resolver.endScope();
+			metrics.end_lex_scope();
 			break;
 		}
 
@@ -493,6 +494,7 @@ void parse_block( std::istream& in, unsigned& n, unsigned& scope, Resolver& reso
 		if ( line_matches( line, "{" ) ) {
 			++scope;
 			resolver.beginScope();
+			metrics.begin_lex_scope();
 			parse_block( in, n, scope, resolver, types, args, metrics );
 			continue;
 		}

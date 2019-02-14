@@ -117,6 +117,7 @@ int main(int argc, char **argv) {
 			out << "\n" << ms_between(start, end) << ",";
 		}
 		out << metrics.n_decls << "," 
+		    << metrics.max_decls_per_name << ","
 		    << metrics.n_exprs << "," 
 		    << metrics.n_subexprs << "," 
 			<< (((double)metrics.sum_depth)/metrics.n_exprs) << "," // avg. max depth
