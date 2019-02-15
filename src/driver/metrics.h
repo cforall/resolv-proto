@@ -35,6 +35,13 @@ public:
 	/// End lexical scope for names
 	void end_lex_scope() { decls_per_name.endScope(); }
 
+	/// Count declarations for a given name
+	unsigned n_decls_for(const std::string& name) const {
+		unsigned decls = 0;
+		for ( auto i : decls_per_name.findAll(name) ) { decls += i->second; }
+		return decls;
+	}
+
 	/// Mark a monomorphic declaration
 	void mark_decl(const std::string& name) {
 		++n_decls;
@@ -47,8 +54,7 @@ public:
 			++it->second;                      // exists in last scope
 		}
 		// check for max decls
-		unsigned decls = 0;
-		for ( auto i : decls_per_name.findAll(name) ) { decls += i->second; }
+		unsigned decls = n_decls_for(name);
 		if ( decls > max_decls_per_name ) { max_decls_per_name = decls; }
 	}
 
