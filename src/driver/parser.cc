@@ -10,6 +10,7 @@
 #include "ast/decl.h"
 #include "ast/expr.h"
 #include "ast/forall.h"
+#include "ast/input_expr_visitor.h"
 #include "ast/type.h"
 #include "data/clock.h"
 #include "data/debug.h"
@@ -415,6 +416,64 @@ bool parse_subexpr( char const *&token, List<Expr>& exprs, Resolver& resolver,
 	return true;
 }
 
+/// Per-instance input metrics
+struct InputMetrics {
+	unsigned max_depth = 0;
+	unsigned max_params = 0;
+	unsigned n_subexprs = 0;
+	unsigned max_overloads = 0;
+};
+
+/// Calculates metrics on input expression
+class InputExprMetrics : public InputExprVisitor<InputExprMetrics, InputMetrics> {
+	const Metrics& ftab;
+public:
+	using Super = InputExprVisitor<InputExprMetrics, InputMetrics>;
+	using Super::visit;
+
+	InputExprMetrics(const Metrics& ftab) : ftab(ftab) {}
+
+	bool visit( const ValExpr*, InputMetrics& m ) {
+		++m.max_depth;
+		++m.n_subexprs;
+		return true;
+	}
+
+	bool visit( const NameExpr* e, InputMetrics& m ) {
+		++m.max_depth;
+		++m.n_subexprs;
+
+		// update max overloads
+		unsigned n_decls = ftab.n_decls_for( e->name() );
+		if ( n_decls > m.max_overloads ) { m.max_overloads = n_decls; }
+		return true;
+	}
+
+	bool visit( const FuncExpr* e, InputMetrics & m ) {
+		++m.n_subexprs;
+
+		// update max params
+		unsigned n_params = e->args().size();
+		if ( n_params > m.max_params ) { m.max_params = n_params; }
+		
+		// update max depth
+		unsigned local_d = ++m.max_depth;
+		unsigned max_d = local_d;
+		for ( const Expr* arg : e->args() ) {
+			visit( arg, m );
+			if ( m.max_depth > max_d ) { max_d = m.max_depth; }
+			m.max_depth = local_d;
+		}
+		m.max_depth = max_d;
+
+		// update max overloads
+		unsigned n_decls = ftab.n_decls_for( e->name() );
+		if ( n_decls > m.max_overloads ) { m.max_overloads = n_decls; }
+		
+		return true;
+	}
+};
+
 /// Parses an expression from line; returns true and adds the expression to 
 /// exprs if found; will fail if given a valid expr that does not consume the 
 /// whole line. line must not be null.
@@ -427,7 +486,12 @@ bool parse_expr( unsigned n, char const *line, Resolver& resolver, Args& args,
 		if ( ! args.metrics_only() ) {
 			if ( args.per_prob() ) {
 				volatile std::clock_t start, end;
-				args.out() << n << ",";
+				InputMetrics m = InputExprMetrics{metrics}( exprs[0] );
+				args.out() << n << "," 
+				           << m.max_depth << "," 
+						   << m.max_params << ","
+						   << m.n_subexprs << ","
+						   << m.max_overloads << ",";
 				start = std::clock();
 				resolver.addExpr( exprs[0] );
 				end = std::clock();
