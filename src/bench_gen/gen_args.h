@@ -275,14 +275,14 @@ public:
 
 private:
     /// Checks if `name` matches the provided flag
-    static bool is_flag( const char* flag, char* name ) {
+    static bool is_flag( const char* flag, const char* name ) {
         return std::strcmp( flag, name ) == 0;
     }
 
     /// Assigns the unsigned from `line` into `val` if present, prints an error otherwise.
     /// Will not overwrite val.
-    static void read_unsigned( char* name, char* line, option<unsigned>& val ) {
-        char* orig = line;
+    static void read_unsigned( const char* name, const char* line, option<unsigned>& val ) {
+        const char* orig = line;
         unsigned ret;
         if ( parse_unsigned( line, ret ) 
                 && ( match_whitespace( line ) || true ) 
@@ -296,8 +296,9 @@ private:
 
     /// Assigns the unsigned array from `line` into `val` if present, prints an error otherwise.
     /// Will not overwrite val.
-    static void read_unsigned_array( char* name, char* line, std::vector<unsigned>& val ) {
-        char* orig = line;
+    static void read_unsigned_array( const char* name, const char* line, 
+            std::vector<unsigned>& val ) {
+        const char* orig = line;
         std::vector<unsigned> ret;
         unsigned r;
         while ( parse_unsigned( line, r ) ) {
@@ -314,8 +315,8 @@ private:
 
     /// Assigns the decimal value from `line` into `val` if present, prints an error otherwise.
     /// Will not overwrite val.
-    static void read_float( char* name, char* line, option<double>& val ) {
-        char* orig = line;
+    static void read_float( const char* name, const char* line, option<double>& val ) {
+        const char* orig = line;
         double ret;
         if ( parse_float( line, ret ) 
                 && ( match_whitespace( line ) || true ) 
@@ -329,8 +330,8 @@ private:
 
     /// Assigns the decimal array from `line` into `val` if present, prints an error otherwise.
     /// Will not overwrite val.
-    static void read_float_array( char* name, char* line, std::vector<double>& val ) {
-        char* orig = line;
+    static void read_float_array( const char* name, const char* line, std::vector<double>& val ) {
+        const char* orig = line;
         std::vector<double> ret;
         double r;
         while ( parse_float( line, r ) ) {
@@ -347,8 +348,8 @@ private:
 
     /// Parses a generator, returning true, storing the result into `val`, and incrementing 
     /// `token` if so. `token` must not be null.
-    bool parse_generator( char*& token, unique_ptr<Generator>& val ) {
-        char *end = token;
+    bool parse_generator( const char*& token, unique_ptr<Generator>& val ) {
+        const char *end = token;
         
         if ( match_string( end, "constant" ) ) {
             unsigned c;
@@ -415,8 +416,8 @@ private:
 
     /// Assigns the generator described by `line` into `val` if present, prints an error 
     /// otherwise. Will not overwrite val.
-    void read_generator( char* name, char* line, unique_ptr<Generator>& val ) {
-        char* orig = line;
+    void read_generator( const char* name, const char* line, unique_ptr<Generator>& val ) {
+        const char* orig = line;
         unique_ptr<Generator> ret;
         if ( parse_generator( line, ret )
                 && ( match_whitespace( line ) || true )
@@ -430,7 +431,7 @@ private:
     }
 
     /// Parses the given name and flag into the argument set
-    void parse_flag(char* name, char* line) {
+    void parse_flag( const char* name, const char* line) {
         if ( is_flag( "n_decls", name ) ) {
             read_unsigned( name, line, _n_decls );
         } else if ( is_flag( "n_exprs", name ) ) {
@@ -483,7 +484,7 @@ private:
     }
 
     /// Skips over all lowercase-ASCII + '_' chars at token
-    bool match_name(char*& token) {
+    bool match_name(const char*& token) {
         if ( ( 'a' <= *token && *token <= 'z' ) || '_' == *token ) ++token;
         else return false;
 
@@ -516,26 +517,26 @@ public:
             while ( std::getline( file, orig_line ) ) {
                 unique_ptr<char[]> line = make_unique<char[]>( orig_line.size() + 1 );
                 std::strcpy( line.get(), orig_line.c_str() );
-                char* s = line.get();
+                const char* s = line.get();
                 
                 // skip empty lines
                 match_whitespace( s );
                 if ( is_empty( s ) ) continue;
 
                 // find name
-                char *name = s;
+                const char *name = s;
                 if ( ! match_name( s ) ) goto err;
 
                 // find ':' delimiter (with optional preceding whitespace)
                 switch ( *s ) {
                 case ' ': case '\t':
-                    *s = '\0';
+                    *as_non_const(s) = '\0';
                     ++s;
                     match_whitespace( s );
                     if ( ':' != *s ) goto err;
                     break;
                 case ':':
-                    *s = '\0';
+                    *as_non_const(s) = '\0';
                     break;
                 default:
                     goto err;

@@ -290,7 +290,7 @@ class BenchGenerator {
         def_random_engine& engine;
         double p_nested;
         const Forall& forall;
-        Env*& env;
+        Env& env;
 
         // replaces t by a random type variable, returning false and setting r to nullptr 
         // if that random type variable doesn't bind
@@ -307,7 +307,7 @@ class BenchGenerator {
         }
     public:
         ReplaceWithPoly(
-            def_random_engine& engine, double p_nested, const Forall& forall, Env*& env )
+            def_random_engine& engine, double p_nested, const Forall& forall, Env& env )
             : engine(engine), p_nested(p_nested), forall(forall), env(env) {}
         
         using TypeMutator<ReplaceWithPoly>::visit;
@@ -332,20 +332,23 @@ class BenchGenerator {
     /// Replace a polymorphic type with a random compatible concrete type
     class ReplaceWithConcrete : public TypeMutator<ReplaceWithConcrete> {
         BenchGenerator& gen;
-        Env*& env;
+        Env& env;
         bool nested;
     public:
-        ReplaceWithConcrete( BenchGenerator& gen, Env*& env ) : gen(gen), env(env), nested(false) {}
+        ReplaceWithConcrete( BenchGenerator& gen, Env& env ) : gen(gen), env(env), nested(false) {}
 
         using TypeMutator<ReplaceWithConcrete>::visit;
 
         bool visit( const PolyType* t, const Type*& r ) {
             // Find type in environment
-            ClassRef tr = getClass( env, t );
+            ClassRef tr = env.getClass( t );
             // replace with bound type if bound
-            if ( tr && tr->bound ) {
-                r = tr->bound;
-                return visit( r, r );
+            if ( tr ) {
+                const Type* tb = tr.get_bound();
+                if ( tb ) {
+                    r = tb;
+                    return visit( r, r );
+                }
             }
             // if unbound generate random types until a non-polymorphic one is generated
             unique_ptr<Forall> dummy{};
@@ -361,7 +364,7 @@ class BenchGenerator {
                 r = gen.get_type( it, dummy );
             } while ( i_poly > 0 );
             // bind type in environment
-            bindType( env, tr, r );
+            env.bindType( tr, r );
             return true;
         }
 
@@ -390,9 +393,10 @@ class BenchGenerator {
         }
 
         const Forall* forall = decl.forall();
-        if ( forall ) for ( const FuncDecl* asn : forall->assertions() ) {
+        if ( forall ) for ( const Decl* asn : forall->assertions() ) {
+            if ( ! is<FuncDecl>( asn ) ) continue;
             std::cout << " | ";
-            print_decl( *asn );
+            print_decl( *as<FuncDecl>(asn) );
         }
     }
 
@@ -496,7 +500,7 @@ class BenchGenerator {
             unsigned max_tries = a.max_tries() * 2;
             std::unordered_set<unsigned> decls_used;
             decls_used.insert( i );
-            Env* env = nullptr;
+            Env env{};
             for ( unsigned i_assn = 0; i_assn < n_assns && tries <= max_tries; ) {
                 // look for a declaration not already used in this assertion list or base
                 unsigned base_i = 0;
@@ -587,10 +591,10 @@ class BenchGenerator {
     /// Generates an expression with type matching `ty`, at top level if `ty == toplevel`.
     /// Returns return type of the expression
     const Type* generate_expr( const Type* ty = nullptr ) {
-        unique_ptr<Forall> forall;      ///< Local polymorphic variables
-        Env* env = nullptr;             ///< Environment to track consistent bindings
-        const FuncDecl* decl= nullptr;  ///< Function to call
-        const Type* rtype;              ///< Return type of this function
+        unique_ptr<Forall> forall;       ///< Local polymorphic variables
+        Env env{};                       ///< Environment to track consistent bindings
+        const FuncDecl* decl = nullptr;  ///< Function to call
+        const Type* rtype;               ///< Return type of this function
 
         // get function declaration from functions with appropriate return type
         if ( ty == nullptr || ty == toplevel ) {
@@ -649,8 +653,8 @@ class BenchGenerator {
                 // bind target type to new poly-type for this expression
                 const PolyType* prtype = 
                     forall->get( as<PolyType>(decl->returns())->name() );
-                ClassRef pr = getClass( env, prtype );
-                bindType( env, pr, ty );
+                ClassRef pr = env.getClass( prtype );
+                env.bindType( pr, ty );
                 rtype = ty;
             }
         }
@@ -700,7 +704,7 @@ class BenchGenerator {
         }
         std::cout << " )";
 
-        return replace( env, rtype );
+        return env.replace( rtype );
     }
 
     void generate_exprs( bool is_toplevel = false ) {
