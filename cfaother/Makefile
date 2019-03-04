@@ -1,3 +1,8 @@
+# Copyright (c) 2015 University of Waterloo
+#
+# The contents of this file are covered under the licence agreement in 
+# the file "LICENCE" distributed with this repository.
+
 .PHONY = jobs
 jobs = td-imm-bas td-imm-iti \
 co-imm-bas co-imm-iti co-imm-per \

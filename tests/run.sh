@@ -2,9 +2,6 @@
 
 cd `dirname "${BASH_SOURCE[0]}"`
 
-#ensure renumber works (not needed with concise printing)
-#make --silent renumber
-
 tests=()
 if [ $# -eq 0 ]; then
     # get tests from all .in files in test directory if none given

@@ -14,6 +14,11 @@ vercode="`date +%y%m%d%H%M`-`git log -1 --format=%h`"
 # can take all tests from folder by passing --all-tests argument
 # can specify which resolver modes to run after the --mode flag
 # can explicitly specify a list of tests after the --test flag
+# Copyright (c) 2015 University of Waterloo
+#
+# The contents of this file are covered under the licence agreement in 
+# the file "LICENCE" distributed with this repository.
+
 tests=()
 modes=()
 memlim=""

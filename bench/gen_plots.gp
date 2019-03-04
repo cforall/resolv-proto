@@ -1,3 +1,8 @@
+# Copyright (c) 2015 University of Waterloo
+#
+# The contents of this file are covered under the licence agreement in 
+# the file "LICENCE" distributed with this repository.
+
 # Plots output from resolv-proto benchmarks
 # requires parameters:
 #        n: number of data files
