@@ -19,7 +19,7 @@
 #include "data/mem.h"
 
 // check on match_funcs for necessity of doing resolution
-#if defined RP_RES_DEF || defined RP_RES_TEC
+#if defined RP_ASN_DEF || defined RP_ASN_DCA
 #define RP_ASSN_CHECK(expr) false
 #else
 #define RP_ASSN_CHECK(expr) resolve_mode.check_assertions && (expr)
@@ -67,7 +67,7 @@ public:
 
 	/// Default flags
 	constexpr ResolverMode() : expand_conversions(true), allow_void(false)
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 		, check_assertions(true) 
 #else
 		, check_assertions(false)
@@ -109,7 +109,7 @@ public:
 		return move(*this);
 	}
 
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 	// Turn off check assertions
 	ResolverMode&& without_assertions() && {
 		as_non_const(check_assertions) = false;

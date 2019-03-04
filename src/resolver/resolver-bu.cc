@@ -389,7 +389,7 @@ InterpretationList Resolver::resolve( const Expr* expr, const Env& env,
 
 InterpretationList Resolver::resolveWithType( const Expr* expr, const Type* targetType, 
 	                                          const Env& env ) {
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 	auto resolve_mode = ResolverMode{}.without_conversions().with_void_as( targetType ).without_assertions();
 #else
 	auto resolve_mode = ResolverMode{}.without_conversions().with_void_as( targetType );

@@ -85,7 +85,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		}
 	};
 
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 	/// Cached assertion items
 	struct AssnCacheItem {
 		InterpretationList satisfying;  ///< List of satisfying expressions
@@ -130,7 +130,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 
 	Resolver& resolver;        ///< Resolver to perform searches.
 	Env& env;                  ///< Environment to bind types and assertions into.
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 	/// Map of environment-normalized assertion manglenames to satisfying expressions
 	AssnCache assnCache;
 	/// `assnCache` keys that have more than one satisfying assertion
@@ -143,7 +143,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	List<Decl> openAssns;      ///< Sub-assertions of bound assertions
 	unsigned recursion_depth;  ///< Depth of sub-assertions being bound
 	bool has_ambiguous;        ///< Expression tree has ambiguous subexpressions; fail fast
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 	bool do_recurse;           ///< Should the visitor recurse over the whole tree?
 #endif
 
@@ -151,7 +151,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 	struct AssertionInstance {
 		const Expr* expr;       ///< Expression to resolve
 		const Type* target;     ///< Type to resolve to
-	#ifdef RP_RES_TEC
+	#ifdef RP_ASN_DCA
 		std::stringstream key;  ///< Caching key for resolution de-duplication
 
 		AssertionInstance() : expr(nullptr), target(nullptr), key() {}
@@ -162,12 +162,12 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 
 	/// Derives an assertion problem instance from a declaration
 	class AssertionInstantiator : public DeclVisitor<AssertionInstantiator, AssertionInstance> 
-#ifdef RP_RES_TEC	
+#ifdef RP_ASN_DCA	
 		, TypeVisitor<AssertionInstantiator, std::stringstream>
 #endif
 	{
 
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 		const Env& env;  ///< Environment to do mangle-substitution in)
 #endif
 
@@ -175,7 +175,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		using DeclVisitor<AssertionInstantiator, AssertionInstance>::visit;
 		using DeclVisitor<AssertionInstantiator, AssertionInstance>::operator();
 
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 		using TypeVisitor<AssertionInstantiator, std::stringstream>::visit;
 
 	private:
@@ -252,13 +252,13 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		bool visit( const FuncDecl* d, AssertionInstance& r ) {
 			List<Expr> args;
 			args.reserve( d->params().size() );
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 			visit( d->returns(), r.key );
 			r.key << " " << d->name();
 #endif
 			for ( const Type* pType : d->params() ) {
 				args.push_back( new ValExpr{ pType } );
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 				r.key << " ";
 				visit( pType, r.key );
 #endif
@@ -272,7 +272,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		bool visit( const VarDecl* d, AssertionInstance& r ) {
 			r.expr = new NameExpr{ d->name() };
 			r.target = d->type();
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 			visit( d->type(), r.key );
 			r.key << " &" << d->name();
 #endif
@@ -287,7 +287,7 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		// generate expression for assertion
 		AssertionInstance inst = AssertionInstantiator{ env }( asn );
 
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 		// look in cache for key
 		std::string asnKey = inst.key.str();
 		auto it = assnCache.find( asnKey );
@@ -393,30 +393,30 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 
 	AssertionResolver( AssertionResolver& o, Env& env )
 		: resolver(o.resolver), env(env)
-#if defined RP_RES_TEC
+#if defined RP_ASN_DCA
 		  , assnCache(), deferKeys()
 #else
 		  , deferIds(), deferred()
 #endif
 		  , openAssns(), recursion_depth(o.recursion_depth), has_ambiguous(false) 
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 		  , do_recurse(o.do_recurse)
 #endif
 		  {}
 
 public:
 	AssertionResolver( Resolver& resolver, Env& env 
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 		, bool recurse = false 
 #endif
 	) : resolver(resolver), env(env)
-#if defined RP_RES_TEC
+#if defined RP_ASN_DCA
 		, assnCache(), deferKeys()
 #else
 		, deferIds(), deferred()
 #endif
 	    , openAssns(), recursion_depth(1), has_ambiguous(false)
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 	    ,  do_recurse(recurse)
 #endif
 	{}
@@ -425,7 +425,7 @@ public:
 	using TypedExprMutator<AssertionResolver>::operator();
 
 	bool visit( const CallExpr* e, const TypedExpr*& r ) {		
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 		if ( do_recurse ) {
 #endif
 			// recurse on children first
@@ -447,7 +447,7 @@ public:
 				// TODO should maybe run a ForallSubstitutor over the environment here...
 				e = new CallExpr{ e->func(), *move(newArgs), Forall::from( e->forall() ) };
 			}
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 			// skip re-resolving assertions if recursing back over the tree in immediate mode
 			r = e;
 			return true;
@@ -546,7 +546,7 @@ public:
 	const TypedExpr* mutate( const TypedExpr*& r ) {
 		(*this)( r, r );
 
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 		// end early if failure, no need to resolve assertions
 		if ( r == nullptr ) return r;
 #else
@@ -556,7 +556,7 @@ public:
 
 		do {
 			// attempt to disambiguate deferred assertion matches with additional information
-#if defined RP_RES_TEC
+#if defined RP_ASN_DCA
 			if ( ! deferKeys.empty() ) {
 				// trim deferred keys down to relevant list
 				std::sort( deferKeys.begin(), deferKeys.end() );
@@ -571,7 +571,7 @@ public:
 				if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
 				interpretation_env_coster costs;
-#if defined RP_RES_IMM
+#if defined RP_ASN_IMM
 				if ( compatible.size() == 1 ) {  // unique set of compatible matches
 					env = compatible.front().first;
 					for ( unsigned i = 0; i < deferIds.size(); ++i ) {
@@ -601,7 +601,7 @@ public:
 				auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
 				if ( minPos == compatible.begin() ) {  // unique min-cost
 					env = minPos->first;
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 					for ( unsigned i = 0; i < deferKeys.size(); ++i ) {
 						AssnCacheItem& cache = assnCache[ deferKeys[i].key ];
 						// fail if cannot bind assertion
@@ -631,7 +631,7 @@ public:
 					while (true) {
 						// build an interpretation for each compatible min-cost assertion binding
 						Env alt_env = it->first;
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 						for ( unsigned i = 0; i < deferKeys.size(); ++i ) {
 							const AssnCacheItem& cache = assnCache[ deferKeys[i].key ];
 							for ( unsigned j = 0; j < cache.deferIds.size(); ++j ) {
@@ -649,7 +649,7 @@ public:
 					return r = new AmbiguousExpr{ r, r->type(), move(alts) };
 				}
 #endif
-#ifdef RP_RES_TEC
+#ifdef RP_ASN_DCA
 				deferKeys.clear();
 #else
 				deferIds.clear();

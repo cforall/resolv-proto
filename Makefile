@@ -17,7 +17,7 @@ all : rp bench_gen
 # handle make flags
 -include .lastmakeflags
 LAST_DIR ?= bu
-LAST_RES ?= tec
+LAST_ASN ?= dca
 LAST_ENV ?= per
 
 # Debug Levels: #
@@ -53,17 +53,17 @@ else
 $(error invalid DIR ${DIR})
 endif
 
-RES ?= ${LAST_RES}
-ifeq "${RES}" "def"
-CXXFLAGS += -DRP_RES_DEF
-else ifeq "${RES}" "tec"
-CXXFLAGS += -DRP_RES_TEC
-else ifeq "${RES}" "imm"
-CXXFLAGS += -DRP_RES_IMM
-else ifeq "${RES}" "top"
-CXXFLAGS += -DRP_RES_TOP
+ASN ?= ${LAST_ASN}
+ifeq "${ASN}" "def"
+CXXFLAGS += -DRP_ASN_DEF
+else ifeq "${ASN}" "dca"
+CXXFLAGS += -DRP_ASN_DCA
+else ifeq "${ASN}" "imm"
+CXXFLAGS += -DRP_ASN_IMM
+else ifeq "${ASN}" "top"
+CXXFLAGS += -DRP_ASN_TOP
 else
-$(error invalid RES ${RES})
+$(error invalid ASN ${ASN})
 endif
 
 ENV ?= ${LAST_ENV}
@@ -71,7 +71,7 @@ ifeq "${ENV}" "per"
 CXXFLAGS += -DRP_ENV_PER
 ENV_OBJS = env-per.o
 else ifeq "${ENV}" "iti"
-CXXFLAGS += -DRP_ENV_ITI
+CXXFLAGS += -DRP_ENV_INC
 ENV_OBJS = env-iti.o
 else ifeq "${ENV}" "bas"
 CXXFLAGS += -DRP_ENV_BAS
@@ -80,7 +80,7 @@ else
 $(error invalid ENV ${ENV})
 endif
 
-ifeq "${LAST_DBG};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DIR};${LAST_RES};${LAST_ENV}" "${DBG};${SORTED};${USER_CONVS};${DIR};${RES};${ENV}"
+ifeq "${LAST_DBG};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DIR};${LAST_ASN};${LAST_ENV}" "${DBG};${SORTED};${USER_CONVS};${DIR};${ASN};${ENV}"
 .lastmakeflags:
 	@touch .lastmakeflags
 else
@@ -89,7 +89,7 @@ else
 	@echo "LAST_SORTED=${SORTED}" >> .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
 	@echo "LAST_DIR=${DIR}" >> .lastmakeflags
-	@echo "LAST_RES=${RES}" >> .lastmakeflags
+	@echo "LAST_ASN=${ASN}" >> .lastmakeflags
 	@echo "LAST_ENV=${ENV}" >> .lastmakeflags
 endif
 
@@ -114,8 +114,8 @@ BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o expr.o forall.o forall_substitutor.o
 ${OBJS} ${BENCH_OBJS} : ${MAKEFILE_NAME}
 
 rp : $(OBJS)
-	$(COMPILE.cc) -o rp-$(DIR)-$(RES)-$(ENV) $^ $(LDFLAGS)
-	ln -sf rp-$(DIR)-$(RES)-$(ENV) rp
+	$(COMPILE.cc) -o rp-$(DIR)-$(ASN)-$(ENV) $^ $(LDFLAGS)
+	ln -sf rp-$(DIR)-$(ASN)-$(ENV) rp
 
 bench_gen : $(BENCH_OBJS)
 	$(COMPILE.cc) -o bench_gen $^ $(LDFLAGS)
@@ -135,4 +135,4 @@ bench : rp
 %.d : ;
 
 # include dependency files
--include $(OBJS:.o=.d) $(RESOLVER_OPTS:.o=.d)
+-include $(OBJS:.o=.d) $(DIR_OBJS:.o=.d) $(ENV_OBJS:.o=.d)
