@@ -1,11 +1,6 @@
 # TODO #
 
-* Make resolution deferred
-  * cfa-cc ties assertions to the types they depend upon -- if you have the same assertion(s) depending on a set of unified type variables, can potentially only resolve them once
-* Switch resolution semantic from unification to resolution
-* Look at sub-interpretation result caching for deferred resolution order
-* Make mode that throws away alternatives of ambiguous expression
-* Modify semantics of top-level resolution to resolve to `void` (see `void` test case)
+* Modify semantics of top-level resolution to resolve to `void` (see `void.in` test case)
 * Possibly distinguish in AST between Type and Multitype (just an alias for List<Type> -- empty list is VoidType, list > 1 is TupleType)
   * Look at tuple truncations as conversions in expand_conversions
   * Use Rob's semantics for tuples (just flatten to lists, maybe truncate at top-level)
@@ -18,7 +13,7 @@
   * Martelli & Montanari '82 "An efficient unification algorithm" describes types as sharing common structure (DAG subgraphs), reduces unification time if you're careful (I might already be doing this; it's also Bilson03 cite. 25)
   * Knight '89 "Unification: A multidisciplinary survey" seems like another promising lit review root
 * investigate problem as dynamic programming
-* Possibly change mapped assertion value to an Interpretation from a TypedExpr
+* Possibly change mapped assertion value to an `Interpretation` from a `TypedExpr`
 * Investigate better fundamental data structures - LLVM's ShortVec, ShortMap, etc. might be useful (check licence compatibility, but you may be able to just take them.)
   * small-set optimization on TypeMap may also be a good idea
 * Ideas for improvements to TD resolver:
@@ -27,9 +22,3 @@
     * Maybe cache against null environment unless argument is basic type
     * Maybe just don't cache against environment -- can you make lower environment independent?
   * TD variant that builds a "filter set" of types to search for, avoids caching
-* refactoring (?):
-  * Rewrite the mergeClasses() algorithm to have a public entry point, count cost
-  * classBinds in `expand_conversions.h` should be merged in to TypeUnifier or something
-  * TypeUnifier should maybe take `env` by reference
-
-
