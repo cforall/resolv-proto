@@ -70,9 +70,9 @@ ENV ?= ${LAST_ENV}
 ifeq "${ENV}" "per"
 CXXFLAGS += -DRP_ENV_PER
 ENV_OBJS = env-per.o
-else ifeq "${ENV}" "iti"
+else ifeq "${ENV}" "inc"
 CXXFLAGS += -DRP_ENV_INC
-ENV_OBJS = env-iti.o
+ENV_OBJS = env-inc.o
 else ifeq "${ENV}" "bas"
 CXXFLAGS += -DRP_ENV_BAS
 ENV_OBJS = env-bas.o
