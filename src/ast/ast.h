@@ -8,10 +8,16 @@
 #include <ostream>
 
 #include "data/gc.h"
+#include "data/stats.h"
 
 /// Base class for all AST objects
 class ASTNode : public GC_Object {
 public:
+
+#ifdef RP_STATS
+	ASTNode() { ++allocs_in[crnt_pass]; }
+#endif
+
 	/// Printing modes
 	enum class Print {
 		Default,     ///< Using the default style.

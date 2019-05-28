@@ -11,6 +11,7 @@
 #include "ast/type.h"
 #include "data/clock.h"
 #include "data/list.h"
+#include "data/stats.h"
 #include "resolver/canonical_type_map.h"
 #include "resolver/conversion.h"
 #include "resolver/env.h"
@@ -130,6 +131,11 @@ int main(int argc, char **argv) {
 			<< metrics.n_poly_decls << ","
 			<< metrics.max_assns << std::endl;
 	}
+
+	#ifdef RP_STATS
+		out << "parse allocs:    " << allocs_in[Parse] << "\n"
+		    << "resolve allocs:  " << allocs_in[Resolve] << std::endl;
+	#endif
 	
 	collect();
 }

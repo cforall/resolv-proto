@@ -22,8 +22,10 @@
 #include "data/list.h"
 #include "data/mem.h"
 #include "data/option.h"
+#include "data/stats.h"
 #include "resolver/func_table.h"
 #include "resolver/resolver.h"
+
 
 /// Parses a name (lowercase alphanumeric ASCII string starting with a 
 /// lowercase letter), returning true, storing result into ret, and  
@@ -497,12 +499,24 @@ bool parse_expr( unsigned n, char const *line, Resolver& resolver, Args& args,
 						   << m.max_params << ","
 						   << m.n_subexprs << ","
 						   << m.max_overloads << ",";
+				#ifdef RP_STATS
+					crnt_pass = Resolve;
+				#endif
 				start = std::clock();
 				resolver.addExpr( exprs[0] );
 				end = std::clock();
+				#ifdef RP_STATS
+					crnt_pass = Parse;
+				#endif
 				args.out() << "," << (end-start)/*microseconds*/ << std::endl;
 			} else {
+				#ifdef RP_STATS
+					crnt_pass = Resolve;
+				#endif
 				resolver.addExpr( exprs[0] );
+				#ifdef RP_STATS
+					crnt_pass = Parse;
+				#endif
 			}
 		}
 		metrics.mark_expr();

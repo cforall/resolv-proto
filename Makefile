@@ -44,6 +44,10 @@ ifdef USER_CONVS
 CXXFLAGS += -DRP_USER_CONVS
 endif
 
+ifdef STATS
+CXXFLAGS += -DRP_STATS
+endif
+
 DIR ?= ${LAST_DIR}
 ifeq "${DIR}" "td"
 CXXFLAGS += -DRP_DIR_TD
@@ -85,7 +89,7 @@ else
 $(error invalid ENV ${ENV})
 endif
 
-ifeq "${LAST_DBG};${LAST_SORTED};${LAST_USER_CONVS};${LAST_DIR};${LAST_ASN};${LAST_ENV}" "${DBG};${SORTED};${USER_CONVS};${DIR};${ASN};${ENV}"
+ifeq "${LAST_DBG};${LAST_SORTED};${LAST_USER_CONVS};${LAST_STATS};${LAST_DIR};${LAST_ASN};${LAST_ENV}" "${DBG};${SORTED};${USER_CONVS};${STATS};${DIR};${ASN};${ENV}"
 .lastmakeflags:
 	@touch .lastmakeflags
 else
@@ -93,6 +97,7 @@ else
 	@echo "LAST_DBG=${DBG}" >> .lastmakeflags
 	@echo "LAST_SORTED=${SORTED}" >> .lastmakeflags
 	@echo "LAST_USER_CONVS=${USER_CONVS}" >> .lastmakeflags
+	@echo "LAST_STATS=${STATS}" >> .lastmakeflags
 	@echo "LAST_DIR=${DIR}" >> .lastmakeflags
 	@echo "LAST_ASN=${ASN}" >> .lastmakeflags
 	@echo "LAST_ENV=${ENV}" >> .lastmakeflags
@@ -111,10 +116,10 @@ $(BUILDDIR)/%.o : %.cc $(BUILDDIR)/%.d .lastmakeflags
 	$(COMPILE.cc) $(OUTPUT_OPTION) -c $<
 
 # rp objects
-OBJS = $(addprefix $(BUILDDIR)/, conversion.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o $(DIR_OBJS) $(ENV_OBJS) rp.o)
+OBJS = $(addprefix $(BUILDDIR)/, conversion.o expr.o forall.o forall_substitutor.o gc.o parser.o resolver.o stats.o $(DIR_OBJS) $(ENV_OBJS) rp.o)
 
 # bench_gen objects
-BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o expr.o forall.o forall_substitutor.o random_partitioner.o $(ENV_OBJS) bench_gen.o)
+BENCH_OBJS = $(addprefix $(BUILDDIR)/, gc.o expr.o forall.o forall_substitutor.o random_partitioner.o stats.o $(ENV_OBJS) bench_gen.o)
 
 ${OBJS} ${BENCH_OBJS} : ${MAKEFILE_NAME}
 
