@@ -42,8 +42,18 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		/// Stack of environments, to support backtracking
 		std::vector<Env> envs;
 	public:
-		/// Outputs a pair consisting of the merged environment and the list of interpretations
-		using OutType = std::pair<Env, InterpretationList>;
+		/// Outputs the merged environment, the list of interpretations, and the summed cost
+		struct OutType {
+			Env env;
+			InterpretationList matches;
+			Cost cost;
+
+			OutType( const Env& e, const InterpretationList & ms ) : env(e), matches(ms), cost() {
+				for ( const Interpretation* i : matches ) { cost += i->cost; }
+			}
+
+			bool operator< ( const OutType & o ) const { return cost < o.cost; }
+		};
 
 		interpretation_env_merger( const Env& env ) : crnt{}, envs{} {
 			envs.push_back( env );
@@ -63,31 +73,6 @@ class AssertionResolver : public TypedExprMutator<AssertionResolver> {
 		}
 
 		OutType finalize() { return { envs.back(), crnt }; }
-	};
-
-	/// Comparator for interpretation_env_merger outputs that sums their costs and caches 
-	/// the stored sums
-	class interpretation_env_coster {
-	public:
-		using Element = interpretation_env_merger::OutType;
-	private:
-		using Memo = std::unordered_map<const Element*, Cost>;
-		Memo cache;  ///< Cache of element costs
-	public:
-		/// Reports cached cost of an element
-		const Cost& get( const Element& x ) {
-			Memo::const_iterator it = cache.find( &x );
-			if ( it == cache.end() ) {
-				Cost k;
-				for ( const Interpretation* i : x.second ) { k += i->cost; }
-				it = cache.emplace_hint( it, &x, k );
-			}
-			return it->second;
-		}
-
-		bool operator() ( const Element& a, const Element& b ) {
-			return get( a ) < get( b );
-		}
 	};
 
 #ifdef RP_ASN_DCA
@@ -575,7 +560,6 @@ public:
 #endif
 				if ( compatible.empty() ) return r = nullptr; // no mutually-compatible assertions
 
-				interpretation_env_coster costs;
 #if defined RP_ASN_IMM
 				if ( compatible.size() == 1 ) {  // unique set of compatible matches
 					env = compatible.front().first;
@@ -603,49 +587,49 @@ public:
 				}
 #else
 				// sort deferred assertion matches by cost
-				auto minPos = sort_mins( compatible.begin(), compatible.end(), costs );
+				auto minPos = sort_mins( compatible.begin(), compatible.end() );
 				if ( minPos == compatible.begin() ) {  // unique min-cost
-					env = minPos->first;
+					env = minPos->env;
 #ifdef RP_ASN_DCA
 					for ( unsigned i = 0; i < deferKeys.size(); ++i ) {
 						AssnCacheItem& cache = assnCache[ deferKeys[i].key ];
 						// fail if cannot bind assertion
-						if ( ! bindRecursive( cache.deferIds[0], minPos->second[i]->expr ) ) {
+						if ( ! bindRecursive( cache.deferIds[0], minPos->matches[i]->expr ) ) {
 							return r = nullptr;
 						}
 						// bind other assertions to same resolution
 						for ( unsigned j = 1; j < cache.deferIds.size(); ++j ) {
-							env.bindAssertion( cache.deferIds[j], minPos->second[i]->expr );
+							env.bindAssertion( cache.deferIds[j], minPos->matches[i]->expr );
 						}
 						// done with these deferred IDs
-						cache.satisfying = InterpretationList{ minPos->second[i] };
+						cache.satisfying = InterpretationList{ minPos->matches[i] };
 						cache.deferIds.clear();
 					}
 #else
 					for ( unsigned i = 0; i < deferIds.size(); ++i ) {
 						// fail if cannot bind assertion
-						if ( ! bindRecursive( deferIds[i], minPos->second[i]->expr ) ) {
+						if ( ! bindRecursive( deferIds[i], minPos->matches[i]->expr ) ) {
 							return r = nullptr;
 						}
 					}
 #endif
 				} else {  // ambiguous min-cost assertion matches
 					List<Interpretation> alts;
-					Cost alt_cost = costs.get( *minPos );
+					Cost alt_cost = minPos->cost;
 					auto it = compatible.begin();
 					while (true) {
 						// build an interpretation for each compatible min-cost assertion binding
-						Env alt_env = it->first;
+						Env alt_env = it->env;
 #ifdef RP_ASN_DCA
 						for ( unsigned i = 0; i < deferKeys.size(); ++i ) {
 							const AssnCacheItem& cache = assnCache[ deferKeys[i].key ];
 							for ( unsigned j = 0; j < cache.deferIds.size(); ++j ) {
-								alt_env.bindAssertion( cache.deferIds[j], it->second[i]->expr );
+								alt_env.bindAssertion( cache.deferIds[j], it->matches[i]->expr );
 							}
 						}
 #else
 						for ( unsigned i = 0; i < deferIds.size(); ++i ) {
-							alt_env.bindAssertion( deferIds[i], it->second[i]->expr );
+							alt_env.bindAssertion( deferIds[i], it->matches[i]->expr );
 						}
 #endif
 						alts.push_back( new Interpretation{ r, move(alt_env), copy(alt_cost) } );
