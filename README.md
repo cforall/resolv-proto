@@ -29,4 +29,4 @@ Changing any build flag will cause a clean rebuild.
 
 ## Test Instructions ##
 
-Regression tests are in [`tests`](./tests/) and can be run with `run.sh`. Various benchmark suites are located in [`bench`](./bench/), a[`cfabench`](./cfabench/), [`cfastdlib`](./cfastdlib/), and [`cfaother`](./cfaother/), and can also be run with the appropriate `run.sh`.
+Regression tests are in [`tests`](./tests/) and can be run with `run.sh`. Various benchmark suites are located in [`bench`](./bench/), [`cfabench`](./cfabench/), [`cfastdlib`](./cfastdlib/), and [`cfaother`](./cfaother/), and can also be run with the appropriate `run.sh`.
