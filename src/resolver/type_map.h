@@ -765,7 +765,7 @@ public:
     }
     template<typename T, typename... Args>
     const TypeMap<Value>* get_as( Args&&... args ) const {
-        return as_non_const(this)->get_as<T>( forward<Args>(args)... );
+        return as_non_const(this)->template get_as<T>( forward<Args>(args)... );
     }
 
     /// Iterator for all non-exact matches of a type

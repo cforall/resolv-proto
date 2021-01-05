@@ -12,6 +12,7 @@ SRCDIR = src
 VPATH = $(SRCDIR) $(addprefix $(SRCDIR)/, ast data driver merge resolver bench_gen)
 IFLAGS = -I$(SRCDIR)
 BUILDDIR = build
+$(shell mkdir -p $(BUILDDIR) >/dev/null)
 
 .PHONY : all clean test bench
 
